@@ -6,6 +6,8 @@
     `.avatar-square` are the only modifiers.
 
     Props:
+    - user: a model exposing ->name and ->profile_photo_url — sets name/src
+      for you; explicit name/src props (below) always take precedence
     - name: derives initials (and sets the `title` attribute)
     - src: image URL — falls back to initials if absent or if it fails to load
     - size: xs, sm, md, lg, xl (default: md — no class needed, it's the default)
@@ -14,6 +16,7 @@
     - square: bool — rounded-box instead of a circle (default: false)
 --}}
 @props([
+    'user' => null,
     'name' => '',
     'src' => null,
     'size' => 'md',
@@ -23,6 +26,9 @@
 ])
 
 @php
+    $name = $name ?: ($user->name ?? '');
+    $src = $src ?: ($user->profile_photo_url ?? null);
+
     $initials = collect(preg_split('/\s+/', trim($name)))
         ->filter()
         ->take(2)

@@ -5,7 +5,7 @@
 --}}
 <div class="dropdown dropdown-end">
     <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
-        <x-avatar color="primary" :name="auth()->user()->name" size="md" />
+        <x-avatar color="primary" :user="auth()->user()" size="md" />
     </div>
     <ul tabindex="0" class="dropdown-content menu z-[60] mt-2 w-52 rounded-box bg-base-100 p-2 shadow">
         <li class="menu-title">{{ __('Manage Account') }}</li>

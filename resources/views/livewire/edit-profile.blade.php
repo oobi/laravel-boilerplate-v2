@@ -14,7 +14,7 @@
                     class="flex items-center gap-4"
                 >
                     <template x-if="!preview">
-                        <x-avatar :name="Auth::user()->full_name" :src="Auth::user()->profile_photo_url" size="lg" />
+                        <x-avatar :user="Auth::user()" size="lg" />
                     </template>
 
                     <img x-show="preview" :src="preview" class="avatar avatar-lg" x-cloak>
@@ -100,6 +100,19 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="card bg-base-100">
+        <div class="card-body">
+            <h2 class="card-title">{{ __('admin.two_factor_authentication') }}</h2>
+            <p class="ui-subtle">{{ __('admin.two_factor_authentication_description') }}</p>
+
+            <div>
+                <a href="{{ route('two-factor.show') }}" class="btn btn-outline">
+                    {{ __('admin.two_factor_manage') }}
+                </a>
+            </div>
         </div>
     </div>
 </div>

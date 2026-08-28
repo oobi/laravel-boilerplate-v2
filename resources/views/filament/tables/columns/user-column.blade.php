@@ -5,7 +5,7 @@
 @endphp
 
 <div class="flex items-center gap-3">
-    <x-avatar :name="$record->full_name" :src="$record->profile_photo_url" color="info" class="shrink-0" />
+    <x-avatar :user="$record" color="info" class="shrink-0" />
 
     {{-- Name, email, "You" badge --}}
     <div>
