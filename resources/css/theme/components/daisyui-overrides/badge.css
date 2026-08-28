@@ -4,18 +4,33 @@
 
 /*
 |--------------------------------------------------------------------------
-| `.badge-soft` text — match Filament's `fi-text-color-700` contrast
+| `.badge-soft` — match Filament's contrast in both themes
 |--------------------------------------------------------------------------
+| daisyUI mixes text/bg toward the same target (black/base-100) regardless
+| of theme, which reads as near-invisible in dark mode. `--soft-fg-mix`/
+| `--soft-bg-mix`/`--soft-ring-strength` (tokens.css) flip per theme so dark
+| mode lightens instead of darkens, like Filament's own dark badges.
 */
 .badge-soft {
+    --soft-base: color-mix(
+        in oklab,
+        var(--badge-color, var(--color-base-content))
+            calc(100% - var(--soft-lighten)),
+        white
+    );
     color: color-mix(
         in oklab,
-        var(--badge-color, var(--color-base-content)) var(--soft-fg-strength),
-        black
+        var(--soft-base) var(--soft-fg-strength),
+        var(--soft-fg-mix)
+    );
+    background-color: color-mix(
+        in oklab,
+        var(--soft-base) 8%,
+        var(--soft-bg-mix)
     );
     border-color: color-mix(
         in oklab,
-        var(--badge-color, var(--color-base-content)) var(--soft-ring-strength),
+        var(--soft-base) var(--soft-ring-strength),
         transparent
     );
 }

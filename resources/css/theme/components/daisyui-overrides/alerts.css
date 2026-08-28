@@ -12,11 +12,12 @@
 | ones regardless of import order.
 */
 .alert-soft {
-    border-color: color-mix(
+    --soft-base: color-mix(
         in oklab,
-        var(--alert-color, var(--color-base-content)) var(--soft-ring-strength),
-        transparent
+        var(--alert-color, var(--color-base-content)) calc(100% - var(--soft-lighten)),
+        white
     );
+    border-color: color-mix(in oklab, var(--soft-base) var(--soft-ring-strength), transparent);
 }
 
 /*
@@ -27,9 +28,6 @@
 | file's comment. `warning` keeps its own fix in warning-contrast.css.
 */
 .alert-soft {
-    color: color-mix(
-        in oklab,
-        var(--alert-color, var(--color-base-content)) var(--soft-fg-strength),
-        black
-    );
+    color: color-mix(in oklab, var(--soft-base) var(--soft-fg-strength), var(--soft-fg-mix));
+    background-color: color-mix(in oklab, var(--soft-base) 8%, var(--soft-bg-mix));
 }

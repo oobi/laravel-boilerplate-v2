@@ -42,6 +42,14 @@
   --border: 1px;
   --depth: 1;
   --noise: 0;
+
+  /* "Soft" variants (daisyui-overrides/*.css) mix light-mode text toward
+     black and blend their background into the (near-white) page. */
+  --soft-fg-mix: black;
+  --soft-bg-mix: var(--color-base-100);
+  --soft-fg-strength: 83%;
+  --soft-ring-strength: 8%;
+  --soft-lighten: 0%;
 }
 
 @plugin "daisyui/theme" {
@@ -78,21 +86,22 @@
   --border: 1px;
   --depth: 1;
   --noise: 0;
+
+  /* Same "soft" variants, inverted: mix text toward white and let the
+     background/ring stay translucent instead of blending into near-black.
+     `--soft-lighten` also pre-lightens the badge color itself first —
+     Filament's own dark badges use a lighter (400) shade, not just a more
+     opaque ring on the raw (600) one. */
+  --soft-fg-mix: white;
+  --soft-bg-mix: transparent;
+  --soft-fg-strength: 60%;
+  --soft-ring-strength: 35%;
+  --soft-lighten: 45%;
 }
 
 /* ── Design tokens ──────────────────────────────────────────────
    --font-sans: prepends Figtree before TW4's default sans-serif stack.
-
-   --soft-fg-strength: how far btn/badge/alert-soft text mixes toward black
-   (daisyui-overrides/*.css) — matches the --{name}-700 ramp step in
-   filament-colors.css so daisyUI's soft text weighs the same as Filament's.
-
-   --soft-ring-strength: how opaque the same soft variants' border is,
-   mixed toward transparent (not daisyUI's base-100) so it reads as a
-   translucent ring like Filament's `ring-color-600/10` badges.
 ─────────────────────────────────────────────────────────────── */
 @theme {
   --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --soft-fg-strength: 83%;
-  --soft-ring-strength: 8%;
 }

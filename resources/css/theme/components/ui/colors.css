@@ -2,61 +2,71 @@
  * Color-spanning extensions — one block per daisyUI color. Add or rename a
  * color here (only 8 colors, hand-maintained — no codegen needed for a
  * fixed, rarely-changed set inside a single owned app).
+ *
+ * Avatars compose two classes (`avatar-{color} avatar-{variant}` — see
+ * avatar.blade.php) rather than one `avatar-{variant}-{color}` per pair, so
+ * each variant's rule (solid/soft/ghost/outline) is only written once and
+ * reads the color via `--avatar-color`/`--avatar-color-content`.
  */
 @layer components {
-    .ui-banner-primary { --ui-banner-color: var(--color-primary); }
-    .bg-soft-primary   { background-color: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); }
-    .avatar-solid-primary   { background-color: var(--color-primary); color: var(--color-primary-content); }
-    .avatar-soft-primary    { background-color: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); color: var(--color-primary); }
-    .avatar-ghost-primary   { background-color: transparent; color: var(--color-primary); border: 1px solid color-mix(in oklab, var(--color-primary) 40%, transparent); }
-    .avatar-outline-primary { background-color: transparent; color: var(--color-primary); border: 1px solid var(--color-primary); }
+    .ui-banner-primary   { --ui-banner-color: var(--color-primary); }
+    .bg-soft-primary     { background-color: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); }
+    .avatar-primary      { --avatar-color: var(--color-primary); --avatar-color-content: var(--color-primary-content); }
 
     .ui-banner-secondary { --ui-banner-color: var(--color-secondary); }
     .bg-soft-secondary   { background-color: color-mix(in oklab, var(--color-secondary) 8%, var(--color-base-100)); }
-    .avatar-solid-secondary   { background-color: var(--color-secondary); color: var(--color-secondary-content); }
-    .avatar-soft-secondary    { background-color: color-mix(in oklab, var(--color-secondary) 8%, var(--color-base-100)); color: var(--color-secondary); }
-    .avatar-ghost-secondary   { background-color: transparent; color: var(--color-secondary); border: 1px solid color-mix(in oklab, var(--color-secondary) 40%, transparent); }
-    .avatar-outline-secondary { background-color: transparent; color: var(--color-secondary); border: 1px solid var(--color-secondary); }
+    .avatar-secondary    { --avatar-color: var(--color-secondary); --avatar-color-content: var(--color-secondary-content); }
 
-    .ui-banner-accent { --ui-banner-color: var(--color-accent); }
-    .bg-soft-accent   { background-color: color-mix(in oklab, var(--color-accent) 8%, var(--color-base-100)); }
-    .avatar-solid-accent   { background-color: var(--color-accent); color: var(--color-accent-content); }
-    .avatar-soft-accent    { background-color: color-mix(in oklab, var(--color-accent) 8%, var(--color-base-100)); color: var(--color-accent); }
-    .avatar-ghost-accent   { background-color: transparent; color: var(--color-accent); border: 1px solid color-mix(in oklab, var(--color-accent) 40%, transparent); }
-    .avatar-outline-accent { background-color: transparent; color: var(--color-accent); border: 1px solid var(--color-accent); }
+    .ui-banner-accent    { --ui-banner-color: var(--color-accent); }
+    .bg-soft-accent      { background-color: color-mix(in oklab, var(--color-accent) 8%, var(--color-base-100)); }
+    .avatar-accent       { --avatar-color: var(--color-accent); --avatar-color-content: var(--color-accent-content); }
 
-    .ui-banner-neutral { --ui-banner-color: var(--color-neutral); }
-    .bg-soft-neutral   { background-color: color-mix(in oklab, var(--color-neutral) 8%, var(--color-base-100)); }
-    .avatar-solid-neutral   { background-color: var(--color-neutral); color: var(--color-neutral-content); }
-    .avatar-soft-neutral    { background-color: color-mix(in oklab, var(--color-neutral) 8%, var(--color-base-100)); color: var(--color-neutral); }
-    .avatar-ghost-neutral   { background-color: transparent; color: var(--color-neutral); border: 1px solid color-mix(in oklab, var(--color-neutral) 40%, transparent); }
-    .avatar-outline-neutral { background-color: transparent; color: var(--color-neutral); border: 1px solid var(--color-neutral); }
+    .ui-banner-neutral   { --ui-banner-color: var(--color-neutral); }
+    .bg-soft-neutral     { background-color: color-mix(in oklab, var(--color-neutral) 8%, var(--color-base-100)); }
+    .avatar-neutral      { --avatar-color: var(--color-neutral); --avatar-color-content: var(--color-neutral-content); }
 
-    .ui-banner-info { --ui-banner-color: var(--color-info); }
-    .bg-soft-info   { background-color: color-mix(in oklab, var(--color-info) 8%, var(--color-base-100)); }
-    .avatar-solid-info   { background-color: var(--color-info); color: var(--color-info-content); }
-    .avatar-soft-info    { background-color: color-mix(in oklab, var(--color-info) 8%, var(--color-base-100)); color: var(--color-info); }
-    .avatar-ghost-info   { background-color: transparent; color: var(--color-info); border: 1px solid color-mix(in oklab, var(--color-info) 40%, transparent); }
-    .avatar-outline-info { background-color: transparent; color: var(--color-info); border: 1px solid var(--color-info); }
+    .ui-banner-info      { --ui-banner-color: var(--color-info); }
+    .bg-soft-info        { background-color: color-mix(in oklab, var(--color-info) 8%, var(--color-base-100)); }
+    .avatar-info         { --avatar-color: var(--color-info); --avatar-color-content: var(--color-info-content); }
 
-    .ui-banner-success { --ui-banner-color: var(--color-success); }
-    .bg-soft-success   { background-color: color-mix(in oklab, var(--color-success) 8%, var(--color-base-100)); }
-    .avatar-solid-success   { background-color: var(--color-success); color: var(--color-success-content); }
-    .avatar-soft-success    { background-color: color-mix(in oklab, var(--color-success) 8%, var(--color-base-100)); color: var(--color-success); }
-    .avatar-ghost-success   { background-color: transparent; color: var(--color-success); border: 1px solid color-mix(in oklab, var(--color-success) 40%, transparent); }
-    .avatar-outline-success { background-color: transparent; color: var(--color-success); border: 1px solid var(--color-success); }
+    .ui-banner-success   { --ui-banner-color: var(--color-success); }
+    .bg-soft-success     { background-color: color-mix(in oklab, var(--color-success) 8%, var(--color-base-100)); }
+    .avatar-success      { --avatar-color: var(--color-success); --avatar-color-content: var(--color-success-content); }
 
-    .ui-banner-warning { --ui-banner-color: var(--color-warning); }
-    .bg-soft-warning   { background-color: color-mix(in oklab, var(--color-warning) 8%, var(--color-base-100)); }
-    .avatar-solid-warning   { background-color: var(--color-warning); color: var(--color-warning-content); }
-    .avatar-soft-warning    { background-color: color-mix(in oklab, var(--color-warning) 8%, var(--color-base-100)); color: var(--color-warning); }
-    .avatar-ghost-warning   { background-color: transparent; color: var(--color-warning); border: 1px solid color-mix(in oklab, var(--color-warning) 40%, transparent); }
-    .avatar-outline-warning { background-color: transparent; color: var(--color-warning); border: 1px solid var(--color-warning); }
+    .ui-banner-warning   { --ui-banner-color: var(--color-warning); }
+    .bg-soft-warning     { background-color: color-mix(in oklab, var(--color-warning) 8%, var(--color-base-100)); }
+    .avatar-warning      { --avatar-color: var(--color-warning); --avatar-color-content: var(--color-warning-content); }
 
-    .ui-banner-error { --ui-banner-color: var(--color-error); }
-    .bg-soft-error   { background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); }
-    .avatar-solid-error   { background-color: var(--color-error); color: var(--color-error-content); }
-    .avatar-soft-error    { background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); color: var(--color-error); }
-    .avatar-ghost-error   { background-color: transparent; color: var(--color-error); border: 1px solid color-mix(in oklab, var(--color-error) 40%, transparent); }
-    .avatar-outline-error { background-color: transparent; color: var(--color-error); border: 1px solid var(--color-error); }
+    .ui-banner-error     { --ui-banner-color: var(--color-error); }
+    .bg-soft-error       { background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); }
+    .avatar-error        { --avatar-color: var(--color-error); --avatar-color-content: var(--color-error-content); }
+
+    /* ── Avatar variants — one rule each, driven by --avatar-color(-content) ── */
+    .avatar-solid {
+        background-color: var(--avatar-color, var(--color-neutral));
+        color: var(--avatar-color-content, var(--color-neutral-content));
+    }
+
+    .avatar-soft {
+        background-color: color-mix(in oklab, var(--avatar-color, var(--color-neutral)) 8%, var(--color-base-100));
+        color: var(--avatar-color, var(--color-neutral));
+
+        @variant dark {
+            --soft-base: color-mix(in oklab, var(--avatar-color, var(--color-neutral)) calc(100% - var(--soft-lighten)), white);
+            background-color: color-mix(in oklab, var(--soft-base) 8%, var(--soft-bg-mix));
+            color: color-mix(in oklab, var(--soft-base) var(--soft-fg-strength), var(--soft-fg-mix));
+        }
+    }
+
+    .avatar-ghost {
+        background-color: transparent;
+        color: var(--avatar-color, var(--color-neutral));
+        border: 1px solid color-mix(in oklab, var(--avatar-color, var(--color-neutral)) 40%, transparent);
+    }
+
+    .avatar-outline {
+        background-color: transparent;
+        color: var(--avatar-color, var(--color-neutral));
+        border: 1px solid var(--avatar-color, var(--color-neutral));
+    }
 }

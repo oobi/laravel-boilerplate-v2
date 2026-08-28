@@ -1,8 +1,8 @@
 {{--
     Avatar component. Renders daisyUI's own <div class="avatar"> structure —
     `.avatar` is patched (daisyui-overrides/avatar.css) to always center its
-    content and default to a sensible initials size/shape. `.avatar-{variant}-
-    {color}` (colors.css) supplies the tint; `.avatar-{xs,sm,lg,xl}` /
+    content and default to a sensible initials size/shape. `avatar-{color}
+    avatar-{variant}` (colors.css) supplies the tint; `.avatar-{xs,sm,lg,xl}` /
     `.avatar-square` are the only modifiers.
 
     Props:
@@ -37,7 +37,7 @@
 @endphp
 
 <div {{ $attributes->merge(['class' => $outerClasses]) }}>
-    <div class="avatar-{{ $variant }}-{{ $color }}" title="{{ $name }}">
+    <div class="avatar-{{ $color }} avatar-{{ $variant }}" title="{{ $name }}">
         @if ($src)
             <img
                 src="{{ $src }}"

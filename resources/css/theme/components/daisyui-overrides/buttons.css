@@ -9,14 +9,12 @@
 | its own bespoke tone.
 */
 .btn-soft {
-    --btn-rest-fg: color-mix(
+    --soft-base: color-mix(
         in oklab,
-        var(--btn-color, var(--color-base-content)) var(--soft-fg-strength),
-        black
+        var(--btn-color, var(--color-base-content)) calc(100% - var(--soft-lighten)),
+        white
     );
-    --btn-border: color-mix(
-        in oklab,
-        var(--btn-color, var(--color-base-content)) var(--soft-ring-strength),
-        transparent
-    );
+    --btn-rest-fg: color-mix(in oklab, var(--soft-base) var(--soft-fg-strength), var(--soft-fg-mix));
+    --btn-soft-bg: var(--soft-bg-mix);
+    --btn-border: color-mix(in oklab, var(--soft-base) var(--soft-ring-strength), transparent);
 }
