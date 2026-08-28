@@ -23,6 +23,22 @@
 */
 @custom-variant dark (&:where([data-theme="boilerplate-dark"], [data-theme="boilerplate-dark"] *));
 
+/*
+  Filament (standalone tables/actions, no panel) — this app never registers
+  Filament assets via a PanelProvider, so @filamentStyles renders nothing.
+  Filament v5's component CSS ships as plain Tailwind source though, meant
+  to be compiled straight into the host app's own build (see
+  vendor/filament/support/stubs/scaffolding/resources/css/app.css) — so we
+  import it here instead, alongside our own `--{name}-*` color ramps (see
+  filament-colors.css) that its badges/buttons/pagination read from. Only
+  the packages actually used on admin screens: support (badges, dropdowns,
+  buttons, pagination, modals), tables, actions (row action buttons/modals).
+*/
+@import "../../../vendor/filament/support/resources/css/index.css";
+@import "../../../vendor/filament/tables/resources/css/index.css";
+@import "../../../vendor/filament/actions/resources/css/index.css";
+@import "./components/ui/filament-colors.css";
+
 /* ── App shell / chrome (ours — daisyUI has no opinion on this) ─────── */
 @import "./components/ui/typography.css";
 @import "./components/ui/layout.css";
