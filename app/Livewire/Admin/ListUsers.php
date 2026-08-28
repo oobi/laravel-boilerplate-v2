@@ -7,6 +7,7 @@ namespace App\Livewire\Admin;
 use App\Enums\SystemPermission;
 use App\Enums\SystemRole;
 use App\Enums\UserStatus;
+use App\Livewire\Concerns\ManagesTrashedRecords;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -40,6 +41,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     use InteractsWithActions;
     use InteractsWithSchemas;
     use InteractsWithTable;
+    use ManagesTrashedRecords;
 
     public function mount(): void
     {
@@ -158,31 +160,15 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }
 
-    public function activeUsersCount(): int
+    /** Never let "Empty Trash" force-delete the current admin's own trashed account. */
+    protected function emptyTrashQuery(): Builder
     {
-        return User::query()->count();
+        return User::onlyTrashed()->where('id', '!=', Auth::id());
     }
 
-    public function trashedUsersCount(): int
+    protected function emptyTrashPermission(): ?string
     {
-        return User::onlyTrashed()->count();
-    }
-
-    /** Permanently delete all trashed users (except the current user) and reset the filter to active. */
-    public function emptyTrash(): void
-    {
-        Gate::authorize(SystemPermission::MANAGE_USERS->value);
-
-        $count = User::onlyTrashed()->where('id', '!=', Auth::id())->count();
-
-        User::onlyTrashed()->where('id', '!=', Auth::id())->forceDelete();
-
-        $this->tableFilters['trashed']['value'] = '';
-
-        Notification::make()
-            ->title(__('admin.empty_trash_success', ['count' => $count]))
-            ->success()
-            ->send();
+        return SystemPermission::MANAGE_USERS->value;
     }
 
     public function render(): View

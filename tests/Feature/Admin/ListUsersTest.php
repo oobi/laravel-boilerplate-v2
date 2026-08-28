@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Enums\SystemRole;
 use App\Livewire\Admin\ListUsers;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,5 +67,31 @@ class ListUsersTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
             ->assertTableActionHidden('toggleActive', $admin);
+    }
+
+    public function test_admins_can_empty_the_trash_except_their_own_account(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $admin->delete();
+        $trashed = User::factory()->count(2)->create();
+        $trashed->each->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callAction('emptyTrash');
+
+        $this->assertModelMissing($trashed->first());
+        $this->assertModelMissing($trashed->last());
+        $this->assertNotNull($admin->fresh());
+    }
+
+    public function test_a_non_privileged_admin_cannot_empty_the_trash(): void
+    {
+        $support = User::factory()->create(['system_role' => SystemRole::SUPPORT]);
+        User::factory()->create()->delete();
+
+        Livewire::actingAs($support)
+            ->test(ListUsers::class)
+            ->assertActionHidden('emptyTrash');
     }
 }

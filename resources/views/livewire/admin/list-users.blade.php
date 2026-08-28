@@ -44,14 +44,14 @@
         <x-slot:counts>
             <x-table-trash-toggle
                 :value="$trashedFilterValue"
-                :active-count="$this->activeUsersCount()"
-                :trashed-count="$this->trashedUsersCount()"
+                :active-count="$this->activeRecordsCount()"
+                :trashed-count="$this->trashedRecordsCount()"
             />
         </x-slot:counts>
 
-        @if ($trashedFilterValue === '0' && $this->trashedUsersCount() > 0)
+        @if ($trashedFilterValue === '0' && $this->trashedRecordsCount() > 0)
             <x-slot:actions>
-                <x-table-empty-trash-action :confirm="__('admin.empty_trash_confirm')">
+                <x-table-empty-trash-action>
                     {{ __('admin.empty_trash') }}
                 </x-table-empty-trash-action>
             </x-slot:actions>
