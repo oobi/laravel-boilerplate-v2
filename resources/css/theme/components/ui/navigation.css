@@ -1,0 +1,44 @@
+/**
+ * Navigation Component Styles
+ *
+ * Uses native CSS nesting (Tailwind v4 supports this directly) and
+ * `@variant dark {}` for the dark-theme override, tied to our actual
+ * `data-theme="boilerplate-dark"` toggle via `@custom-variant dark` in
+ * index.css (not a `.dark` class).
+ */
+
+@layer components {
+    .nav-section-label {
+        @apply px-3 py-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider;
+
+        @variant dark {
+            @apply text-base-content/50;
+        }
+
+        &:not(:first-child) {
+            @apply pt-4 mt-4;
+        }
+    }
+
+    .nav-item {
+        @apply flex items-center gap-2 px-3 py-2 rounded-md text-sm relative;
+        transition: background 0.15s, color 0.15s;
+
+        &:hover {
+            background: color-mix(in srgb, var(--color-primary) 6%, var(--color-base-100));
+
+            @variant dark {
+                background: var(--color-base-300);
+            }
+        }
+    }
+
+    .nav-item-active {
+        @apply font-medium;
+        background: color-mix(in srgb, var(--color-primary) 8%, var(--color-base-100));
+
+        @variant dark {
+            background: var(--color-base-300);
+        }
+    }
+}

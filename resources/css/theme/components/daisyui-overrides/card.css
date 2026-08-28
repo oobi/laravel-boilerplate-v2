@@ -1,0 +1,11 @@
+/*
+|--------------------------------------------------------------------------
+| .card — standard island shadow
+|--------------------------------------------------------------------------
+| daisyUI's `.card` ships with no box-shadow of its own, so this is a pure
+| addition. Every `.card` gets the same elevation — override per-instance
+| with a `shadow-*` utility if a specific card needs a different depth.
+*/
+.card {
+    box-shadow: var(--ui-island-shadow);
+}

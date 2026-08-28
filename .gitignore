@@ -42,6 +42,10 @@ node_modules/
 /public/hot
 /public/storage
 
+# --- Published vendor assets (regenerate with `php artisan filament:assets`) ---
+/public/css/filament
+/public/js/filament
+
 # --- Laravel storage / runtime ---
 /storage/*.key
 /storage/pail

@@ -1,0 +1,88 @@
+/*
+|--------------------------------------------------------------------------
+| daisyUI theme definitions
+|--------------------------------------------------------------------------
+| Two daisyUI themes (light + dark) carrying the app's brand colors. daisyUI
+| maps these onto every component (btn-primary, badge-success, alert-error,
+| …) automatically — adding/renaming a brand color here is a ONE-LINE change
+| that updates every component.
+*/
+
+@plugin "daisyui/theme" {
+  name: "boilerplate";
+  default: true;
+  color-scheme: light;
+
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(97% 0 0);
+  --color-base-300: oklch(92% 0 0);
+  --color-base-content: oklch(24% 0.01 260);
+
+  --color-primary: #2563eb;
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: #293b67;
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: #9333ea;
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: #4a5565;
+  --color-neutral-content: oklch(100% 0 0);
+  --color-info: #0284c7;
+  --color-info-content: oklch(100% 0 0);
+  --color-success: #16a34a;
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: #fcb700;
+  --color-warning-content: oklch(20% 0.02 90);
+  --color-warning-soft: #a16207;
+  --color-error: #dc2626;
+  --color-error-content: oklch(100% 0 0);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.5rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: "boilerplate-dark";
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(22% 0.01 260);
+  --color-base-200: oklch(18% 0.01 260);
+  --color-base-300: oklch(14% 0.01 260);
+  --color-base-content: oklch(95% 0 0);
+
+  --color-primary: #2563eb;
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: #4a5c96;
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: #a855f7;
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: #6b7280;
+  --color-neutral-content: oklch(100% 0 0);
+  --color-info: #38bdf8;
+  --color-info-content: oklch(20% 0.02 230);
+  --color-success: #22c55e;
+  --color-success-content: oklch(20% 0.02 150);
+  --color-warning: #eab308;
+  --color-warning-content: oklch(20% 0.02 90);
+  --color-warning-soft: #facc15;
+  --color-error: #ef4444;
+  --color-error-content: oklch(100% 0 0);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.5rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* ── Font family ────────────────────────────────────────────────
+   Prepends Figtree before TW4's default sans-serif stack.
+─────────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}

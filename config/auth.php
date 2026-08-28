@@ -114,4 +114,15 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Account suspension
+    |--------------------------------------------------------------------------
+    | When true, AuthenticateUser/ResetUserPassword refuse users whose `active`
+    | column is false, with the same vague error as a wrong password (so a
+    | login attempt can't be used to tell suspended accounts from wrong
+    | credentials).
+    */
+    'block_inactive_users' => env('AUTH_BLOCK_INACTIVE_USERS', true),
+
 ];

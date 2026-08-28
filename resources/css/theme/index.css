@@ -1,0 +1,57 @@
+/*
+|--------------------------------------------------------------------------
+| Boilerplate Theme — design system entry
+|--------------------------------------------------------------------------
+| Imported from app.css, AFTER the `@import 'tailwindcss';` line.
+|
+| Component styling (buttons, badges, alerts, inputs, tabs, tables, cards,
+| avatars, …) is provided by daisyUI — see tokens.css for the two themes
+| ("boilerplate" / "boilerplate-dark") that carry the brand colors. Adding
+| or changing a brand color is a one-line edit in tokens.css that updates
+| every component.
+*/
+
+@plugin "daisyui" {
+    themes: boilerplate --default, boilerplate-dark --prefersdark;
+}
+
+/*
+  Tie Tailwind's `dark:` variant (and `@variant dark {}` in custom CSS) to our
+  actual dark theme, instead of the default `prefers-color-scheme` media
+  query — dark mode here is a manual `data-theme="boilerplate-dark"` toggle,
+  not an OS preference.
+*/
+@custom-variant dark (&:where([data-theme="boilerplate-dark"], [data-theme="boilerplate-dark"] *));
+
+/* ── App shell / chrome (ours — daisyUI has no opinion on this) ─────── */
+@import "./components/ui/typography.css";
+@import "./components/ui/layout.css";
+@import "./components/ui/navigation.css";
+@import "./components/ui/sidebar-layout.css";
+@import "./components/ui/sidebar-layout.utilities.css";
+@import "./components/ui/shadows.css";
+@import "./components/ui/colors.css";
+@import "./components/ui/banner.css";
+@import "./components/ui/toolbar.css";
+@import "./components/ui/admin-table.css";
+
+/* ── Overrides/patches to daisyUI's own component behaviour ──────────── */
+@import "./components/daisyui-overrides/alerts.css";
+@import "./components/daisyui-overrides/warning-contrast.css";
+@import "./components/daisyui-overrides/card.css";
+@import "./components/daisyui-overrides/avatar.css";
+@import "./components/daisyui-overrides/forms.css";
+
+/* ── Theme + design tokens — must come after daisyUI is initialised ─── */
+@import "./tokens.css";
+
+/*
+  Some views build classes like `badge-{{ $color }}` dynamically — Tailwind's
+  content scanner can't see those since they only exist after Blade
+  interpolates them. Force-generate the full set here.
+*/
+@source inline("btn-{primary,secondary,accent,neutral,info,success,warning,error,soft,outline,dash,ghost}");
+@source inline("badge-{primary,secondary,accent,neutral,info,success,warning,error,soft}");
+@source inline("bg-{primary,secondary,accent,neutral,info,success,warning,error,base-100,base-200,base-300}");
+@source inline("text-{primary,secondary,accent,neutral,info,success,warning,error}");
+@source inline("text-{primary,secondary,accent,neutral,info,success,warning,error}-content");

@@ -1,0 +1,52 @@
+/*
+|--------------------------------------------------------------------------
+| ui-toolbar / <x-table-header> — semantic table chrome
+|--------------------------------------------------------------------------
+| Styles the <x-table-header> that sits ABOVE a Filament table, replacing
+| Filament's own header/search/filter bar (hidden in daisyui-overrides —
+| see the "hide Filament's own table header" rule). This is OUR markup and
+| OUR classes — it deliberately targets no Filament `.fi-*` selectors, so
+| Filament upgrades cannot break it.
+*/
+
+@layer components {
+    .ui-toolbar {
+        display: flex;
+        flex-flow: row wrap;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: var(--border, 1px) solid var(--color-base-300);
+        border-radius: var(--radius-box, 0.5rem);
+        background: var(--color-base-100);
+        box-shadow: var(--ui-island-shadow-xs);
+    }
+
+    .ui-toolbar__search {
+        flex: 1 1 0%;
+        min-width: 14rem;
+    }
+
+    .ui-toolbar__filters {
+        display: flex;
+        flex-flow: row wrap;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 0 1 auto;
+    }
+
+    .ui-toolbar__counts {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .ui-toolbar__actions {
+        margin-inline-start: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+}

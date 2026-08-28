@@ -1,0 +1,16 @@
+/*
+|--------------------------------------------------------------------------
+| Admin tables — hide Filament's own header/search/filter chrome
+|--------------------------------------------------------------------------
+| Deliberate, explicit exception to "never structurally override Filament's
+| .fi-* DOM": every admin table renders its own <x-table-header> above the
+| table (search/filters/counts/actions, wired to the table's public state —
+| tableSearch / tableFilters.*.value), so Filament's own header row would
+| just duplicate it. Hiding one container with `display: none` is a stable,
+| low-risk exception (it degrades obviously — the row reappears — rather
+| than misrendering silently, unlike reflowing/repositioning Filament's
+| internal DOM would).
+*/
+.fi-ta-header-ctn {
+    display: none;
+}

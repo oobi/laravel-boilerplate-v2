@@ -1,0 +1,40 @@
+/*
+|--------------------------------------------------------------------------
+| daisyUI override — avatar
+|--------------------------------------------------------------------------
+| daisyUI's `.avatar-placeholder` centers content, but only when explicitly
+| added — a fallback initials <span> still needs centering when an image
+| fails to load, so `.avatar` just always behaves like `.avatar-placeholder`.
+|
+| Also gives every avatar a sensible default size/shape/font treatment for
+| initials/icon content. A real Tailwind utility (w-16, rounded-box, …)
+| still overrides these.
+|
+| The display/centering rule is UNLAYERED on purpose: daisyUI's own
+| `.avatar > div { display: block }` lives inside its own named layer, and
+| unlayered rules always win over ANY layered rule regardless of source
+| order or selector specificity. The size/shape/font defaults stay LAYERED
+| so a real Tailwind utility (also layered) can still override them.
+*/
+.avatar > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@layer components {
+    .avatar > div {
+        width: 2.5rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .avatar-xs > div { width: 1.5rem; font-size: 0.625rem; }
+    .avatar-sm > div { width: 2rem; font-size: 0.75rem; }
+    .avatar-lg > div { width: 3rem; font-size: 1.125rem; }
+    .avatar-xl > div { width: 4rem; font-size: 1.5rem; }
+
+    .avatar-square > div { border-radius: var(--radius-box, 0.5rem); }
+}

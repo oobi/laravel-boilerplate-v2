@@ -1,0 +1,27 @@
+/*
+|--------------------------------------------------------------------------
+| Warning contrast fix
+|--------------------------------------------------------------------------
+| daisyUI's soft/outline/dash/ghost variants render TEXT in the raw accent
+| color, which fails contrast for warning (an inherently light/yellow hue) —
+| solid variants are unaffected (they use --color-warning-content already).
+|
+| --color-warning-soft (tokens.css) is a separate, theme-aware, darker amber
+| tone used only for text on these light/tinted backgrounds. Buttons expose
+| a --btn-rest-fg hook for exactly this override; badges/alerts don't, so
+| those get a direct color override instead. Only the TEXT changes.
+|
+| Unlayered on purpose — see daisyui-overrides/alerts.css for why.
+*/
+.btn-warning {
+    --btn-rest-fg: var(--color-warning-soft);
+}
+
+.badge-warning.badge-soft,
+.badge-warning.badge-outline {
+    color: var(--color-warning-soft);
+}
+
+.alert-warning.alert-soft {
+    color: var(--color-warning-soft);
+}

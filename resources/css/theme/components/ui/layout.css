@@ -1,0 +1,37 @@
+/**
+ * Layout Component Styles
+ *
+ * Colors ride daisyUI's base-* theme variables so the app shell re-themes
+ * automatically (light/dark) without a separate dark: pass per element.
+ */
+
+@layer components {
+    :root {
+        --ui-impersonation-banner-height: 32px; /* Condensed banner height */
+    }
+
+    /* Body & Application Wrapper */
+    .ui-app {
+        @apply min-h-screen bg-base-200;
+    }
+
+    .ui-app > .ui-app-inner {
+        @apply relative flex h-screen overflow-hidden;
+    }
+
+    /* Containers */
+    .ui-page {
+        @apply mx-auto px-4 sm:px-6 lg:px-8;
+    }
+
+    /* Page header */
+    .ui-page-header {
+        @apply flex items-center justify-between gap-3 mb-6;
+    }
+    .ui-page-title {
+        @apply ui-h1;
+    }
+    .ui-page-actions {
+        @apply flex items-center gap-2;
+    }
+}

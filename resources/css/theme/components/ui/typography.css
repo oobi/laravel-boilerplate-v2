@@ -1,0 +1,49 @@
+/**
+ * Typography Component Styles
+ *
+ * Defined as @utility so they can be referenced by @apply in other files.
+ */
+
+@utility ui-h1 {
+    @apply text-3xl font-semibold tracking-tight text-base-content;
+}
+@utility ui-h2 {
+    @apply text-2xl font-semibold tracking-tight text-base-content;
+}
+@utility ui-h3 {
+    @apply text-xl font-semibold tracking-tight text-base-content;
+}
+@utility ui-subtle {
+    @apply text-sm text-base-content/60;
+}
+
+@layer components {
+    /* Page Title Pattern */
+    .page-title {
+        @apply text-2xl font-bold text-base-content;
+    }
+    .page-title-description {
+        @apply text-base-content/60 mt-1 text-sm;
+    }
+
+    /* Links */
+    .ui-link {
+        @apply text-info hover:text-info/70 hover:underline;
+    }
+
+    /*
+     * daisyUI's bare `.link`/`.link-hover` set no color at all (inherit
+     * currentColor) — default them to the info color so plain links don't
+     * need a `link-{color}` modifier remembered every time. Wrapped in
+     * `:where()` on purpose: a plain `.link { color: ... }` rule here is
+     * silently dropped from the compiled output entirely (not merely
+     * outranked) since it shares an exact selector string with daisyUI's
+     * own `.link` utility-layer rule.
+     */
+    :where(.link) {
+        color: var(--color-info);
+    }
+    :where(.link):hover {
+        color: color-mix(in oklab, var(--color-info) 80%, #000);
+    }
+}

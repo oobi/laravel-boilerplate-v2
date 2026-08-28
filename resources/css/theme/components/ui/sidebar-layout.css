@@ -1,0 +1,53 @@
+/**
+ * Sidebar Layout Component Styles
+ *
+ * Height calculation: admin header (h-16 = 4rem) + main content padding-top
+ * (py-4 = 1rem) + sticky offset (top-4 = 1rem) = 6rem total offset, so
+ * sidebars fit the viewport with the admin layout's own spacing.
+ */
+
+@layer components {
+    .sidebar-layout-toggle {
+        position: sticky;
+        top: 1rem;
+        flex-shrink: 0;
+    }
+
+    .sidebar-layout-toggle-container {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        max-height: calc(100vh - 6rem);
+    }
+
+    body.is-impersonating .sidebar-layout-toggle-container {
+        max-height: calc(100vh - 6rem - var(--ui-impersonation-banner-height));
+    }
+
+    .sidebar-layout-drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgb(0 0 0 / 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 40;
+    }
+
+    .sidebar-layout-drawer-panel {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .sidebar-layout-drawer-panel-left {
+        left: 0;
+    }
+
+    .sidebar-layout-drawer-panel-right {
+        right: 0;
+    }
+}

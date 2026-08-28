@@ -2,16 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\SystemRole;
+use App\Models\Concerns\HasSystemRole;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasSystemRole, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -22,6 +25,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'system_role',
+        'active',
     ];
 
     /**
@@ -44,6 +49,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'active' => 'boolean',
+            'system_role' => SystemRole::class,
         ];
+    }
+
+    /** Admin screens (ShowUser/EditUser) need to resolve soft-deleted users too. */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        return $this->withTrashed()->where($field ?? $this->getRouteKeyName(), $value)->first();
     }
 }
