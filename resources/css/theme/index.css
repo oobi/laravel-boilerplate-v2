@@ -49,7 +49,7 @@
 @import "./components/ui/colors.css";
 @import "./components/ui/banner.css";
 @import "./components/ui/toolbar.css";
-@import "./components/ui/admin-table.css";
+@import "./components/ui/filament-table.css";
 
 /* ── Overrides/patches to daisyUI's own component behaviour ──────────── */
 @import "./components/daisyui-overrides/alerts.css";

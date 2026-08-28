@@ -17,8 +17,13 @@
         @csrf
 
         <fieldset class="fieldset">
-            <label class="label" for="name">{{ __('Name') }}</label>
-            <input id="name" class="input w-full" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name">
+            <label class="label" for="first_name">{{ __('First Name') }}</label>
+            <input id="first_name" class="input w-full" type="text" name="first_name" value="{{ old('first_name') }}" required autofocus autocomplete="given-name">
+        </fieldset>
+
+        <fieldset class="fieldset">
+            <label class="label" for="last_name">{{ __('Last Name') }}</label>
+            <input id="last_name" class="input w-full" type="text" name="last_name" value="{{ old('last_name') }}" required autofocus autocomplete="family-name">
         </fieldset>
 
         <fieldset class="fieldset">

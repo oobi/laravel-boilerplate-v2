@@ -56,6 +56,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * User name attribute (alias fullName)
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->full_name;
+    }
+
+    /**
      * User full name (as appears in the admin user list, e.g. "John Doe")
      */
     public function getFullNameAttribute(): string

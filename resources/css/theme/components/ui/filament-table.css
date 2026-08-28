@@ -35,6 +35,8 @@
     font-size: 0.75rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    padding-top: .75rem;
+    padding-bottom: .75rem;
 }
 
 .fi-ta-header-cell:not(.fi-ta-header-cell-sorted) .fi-icon {

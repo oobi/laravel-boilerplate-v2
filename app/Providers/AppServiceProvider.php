@@ -9,6 +9,9 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Enums\SystemPermission;
 use App\Http\Responses\PasswordResetLinkResponse;
+use Filament\Support\Facades\FilamentIcon;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\View\TablesIconAlias;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -36,6 +39,17 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerGates();
         $this->registerFortify();
+        $this->registerFilamentIcons();
+    }
+
+    /** Swaps the table header sort icon for the "bars-arrow" style used throughout the admin UI. */
+    private function registerFilamentIcons(): void
+    {
+        FilamentIcon::register([
+            TablesIconAlias::HEADER_CELL_SORT_BUTTON => Heroicon::BarsArrowUp,
+            TablesIconAlias::HEADER_CELL_SORT_ASC_BUTTON => Heroicon::BarsArrowUp,
+            TablesIconAlias::HEADER_CELL_SORT_DESC_BUTTON => Heroicon::BarsArrowDown,
+        ]);
     }
 
     /** One gate per SystemPermission, named after its string value (`@can('access admin panel')`). */

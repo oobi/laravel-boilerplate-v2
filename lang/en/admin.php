@@ -15,6 +15,8 @@ return [
     'save_changes' => 'Save Changes',
 
     'name' => 'Name',
+    'first_name' => 'First Name',
+    'last_name' => 'Last Name',
     'email' => 'Email',
     'password' => 'Password',
     'confirm_password' => 'Confirm Password',

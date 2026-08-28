@@ -9,9 +9,15 @@
 
             <form wire:submit="updateProfileInformation" class="flex flex-col gap-4">
                 <fieldset class="fieldset">
-                    <label class="label" for="name">{{ __('admin.name') }}</label>
-                    <input id="name" type="text" wire:model="name" class="input w-full" required>
-                    @error('name') <p class="text-error text-sm">{{ $message }}</p> @enderror
+                    <label class="label" for="first_name">{{ __('admin.first_name') }}</label>
+                    <input id="first_name" type="text" wire:model="first_name" class="input w-full" required>
+                    @error('first_name') <p class="text-error text-sm">{{ $message }}</p> @enderror
+                </fieldset>
+
+                <fieldset class="fieldset">
+                    <label class="label" for="last_name">{{ __('admin.last_name') }}</label>
+                    <input id="last_name" type="text" wire:model="last_name" class="input w-full" required>
+                    @error('last_name') <p class="text-error text-sm">{{ $message }}</p> @enderror
                 </fieldset>
 
                 <fieldset class="fieldset">
