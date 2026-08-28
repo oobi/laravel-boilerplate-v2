@@ -121,6 +121,15 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->url(fn (User $record): string => route('users.edit', $record))
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
+                    Action::make('impersonate')
+                        ->label(__('admin.impersonate'))
+                        ->icon('heroicon-o-finger-print')
+                        ->color('warning')
+                        ->url(fn (User $record): string => route('users.impersonate', $record->id))
+                        ->hidden(fn (User $record): bool => $record->trashed()
+                            || ! Auth::user()->canImpersonate()
+                            || ! $record->canBeImpersonated()),
+
                     Action::make('toggleActive')
                         ->label(fn (User $record): string => $record->active
                             ? __('admin.deactivate')

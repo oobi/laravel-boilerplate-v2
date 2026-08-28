@@ -39,6 +39,10 @@ return [
     'user_information' => 'User Information',
     'view' => 'View',
     'edit' => 'Edit',
+    'impersonate' => 'Impersonate',
+    'impersonate_user' => 'Impersonate User',
+    'impersonating' => 'Impersonating',
+    'stop_impersonating' => 'Stop Impersonating',
 
     'search_placeholder' => 'Search users by name or email...',
     'no_users_found' => 'No users found',

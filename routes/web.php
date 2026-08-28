@@ -28,5 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::get('/create', CreateUser::class)->name('create');
         Route::get('/{user}', ShowUser::class)->name('show');
         Route::get('/{user}/edit', EditUser::class)->name('edit');
+
+        // Registers users.impersonate / users.impersonate.leave (lab404/laravel-impersonate).
+        Route::impersonate();
     });
 });

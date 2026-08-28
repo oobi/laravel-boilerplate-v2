@@ -24,6 +24,24 @@
         @apply relative flex h-screen overflow-hidden;
     }
 
+    /* When impersonating, reserve space at the top for the fixed banner */
+    body.is-impersonating .ui-app {
+        min-height: 0;
+        height: 100vh;
+    }
+
+    body.is-impersonating .ui-app > .ui-app-inner {
+        height: 100%;
+        padding-top: var(--ui-impersonation-banner-height);
+    }
+
+    /* Impersonation banner */
+    .ui-impersonation-banner {
+        @apply fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-2 px-3 shadow-md;
+        @apply bg-warning text-warning-content text-xs;
+        height: var(--ui-impersonation-banner-height);
+    }
+
     /* Containers */
     .ui-page {
         @apply mx-auto px-4 sm:px-6 lg:px-8;

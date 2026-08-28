@@ -18,6 +18,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
@@ -42,6 +43,13 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->components([
                 Section::make(__('admin.user_information'))
                     ->headerActions([
+                        Action::make('impersonate')
+                            ->label(__('admin.impersonate_user'))
+                            ->icon('heroicon-o-finger-print')
+                            ->color('gray')
+                            ->url(fn (): string => route('users.impersonate', $this->user->id))
+                            ->visible(fn (): bool => Auth::user()->canImpersonate() && $this->user->canBeImpersonated()),
+
                         Action::make('editProfile')
                             ->label(__('admin.edit'))
                             ->icon('heroicon-o-pencil')

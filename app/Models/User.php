@@ -12,12 +12,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
+use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasProfilePhoto, HasSystemRole, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, HasProfilePhoto, HasSystemRole, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -116,5 +118,45 @@ class User extends Authenticatable implements MustVerifyEmail
     public function resolveRouteBinding($value, $field = null): ?self
     {
         return $this->withTrashed()->where($field ?? $this->getRouteKeyName(), $value)->first();
+    }
+
+    /**
+     * Determine if the user can impersonate other users.
+     * Only super admins and support staff can impersonate, and nested
+     * impersonation is disallowed (hides controls while already impersonating).
+     */
+    public function canImpersonate(): bool
+    {
+        if ($this->isImpersonated()) {
+            return false;
+        }
+
+        return $this->isSuperAdmin() || $this->isSupport();
+    }
+
+    /**
+     * Determine if this user can be impersonated by the currently authenticated user.
+     * Rules: must be logged in, can't impersonate yourself, super admins can
+     * never be impersonated, and support staff can't impersonate other support staff.
+     */
+    public function canBeImpersonated(): bool
+    {
+        if (! Auth::check()) {
+            return false;
+        }
+
+        if (Auth::id() === $this->id) {
+            return false;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        if (Auth::user()->isSupport() && $this->isSupport()) {
+            return false;
+        }
+
+        return true;
     }
 }
