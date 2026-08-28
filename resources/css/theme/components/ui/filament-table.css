@@ -26,6 +26,7 @@
 .fi-ta-ctn {
     border: 1px solid var(--color-base-300);
     box-shadow: var(--ui-island-shadow);
+    overflow: hidden;
 }
 
 /*
@@ -109,4 +110,9 @@
 .fi-ta-cell {
     padding-bottom: 0.75rem;
     padding: 1rem 1.5rem;
+}
+
+/* Footer (pagination bar) — same tint as the column header row above it. */
+.fi-pagination {
+    background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
 }

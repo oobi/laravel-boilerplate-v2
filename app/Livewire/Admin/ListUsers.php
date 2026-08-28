@@ -74,9 +74,9 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
                     ->badge()
-                    ->getStateUsing(fn (User $record): string => self::statusFor($record))
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
-                    ->color(fn (string $state): string => match ($state) {
+                    ->getStateUsing(fn(User $record): string => self::statusFor($record))
+                    ->formatStateUsing(fn(string $state): string => ucfirst($state))
+                    ->color(fn(string $state): string => match ($state) {
                         'active' => 'success',
                         'pending' => 'info',
                         'inactive' => 'warning',
@@ -93,7 +93,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                 Tables\Filters\SelectFilter::make('system_role')
                     ->label(__('admin.system_role'))
                     ->options(SystemRole::options())
-                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms')),
+                    ->modifyFormFieldUsing(fn($field) => $field->live(debounce: '1ms')),
 
                 Tables\Filters\SelectFilter::make('active')
                     ->label(__('admin.status'))
@@ -101,7 +101,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         '1' => __('admin.active'),
                         '0' => __('admin.inactive'),
                     ])
-                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms')),
+                    ->modifyFormFieldUsing(fn($field) => $field->live(debounce: '1ms')),
 
                 TrashedFilter::make(),
             ])
@@ -111,21 +111,21 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     Action::make('view')
                         ->label(__('admin.view'))
                         ->icon('heroicon-o-eye')
-                        ->url(fn (User $record): string => route('users.show', $record))
-                        ->hidden(fn (User $record): bool => $record->trashed()),
+                        ->url(fn(User $record): string => route('users.show', $record))
+                        ->hidden(fn(User $record): bool => $record->trashed()),
 
                     Action::make('edit')
                         ->label(__('admin.edit'))
                         ->icon('heroicon-o-pencil-square')
-                        ->url(fn (User $record): string => route('users.edit', $record))
-                        ->hidden(fn (User $record): bool => $record->trashed()),
+                        ->url(fn(User $record): string => route('users.edit', $record))
+                        ->hidden(fn(User $record): bool => $record->trashed()),
 
                     Action::make('toggleActive')
-                        ->label(fn (User $record): string => $record->active
+                        ->label(fn(User $record): string => $record->active
                             ? __('admin.deactivate')
                             : __('admin.activate'))
-                        ->icon(fn (User $record): string => $record->active ? 'heroicon-o-pause-circle' : 'heroicon-o-check-circle')
-                        ->color(fn (User $record): string => $record->active ? 'warning' : 'success')
+                        ->icon(fn(User $record): string => $record->active ? 'heroicon-o-pause-circle' : 'heroicon-o-check-circle')
+                        ->color(fn(User $record): string => $record->active ? 'warning' : 'success')
                         ->requiresConfirmation()
                         ->action(function (User $record): void {
                             Gate::authorize(SystemPermission::SUSPEND_USERS->value);
@@ -141,17 +141,17 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                                 ->success()
                                 ->send();
                         })
-                        ->hidden(fn (User $record): bool => $record->trashed() || $record->id === Auth::id()),
+                        ->hidden(fn(User $record): bool => $record->trashed() || $record->id === Auth::id()),
 
                     DeleteAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_USERS->value))
-                        ->hidden(fn (User $record): bool => $record->id === Auth::id()),
+                        ->authorize(fn(): bool => Gate::allows(SystemPermission::MANAGE_USERS->value))
+                        ->hidden(fn(User $record): bool => $record->id === Auth::id()),
 
                     RestoreAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_USERS->value)),
+                        ->authorize(fn(): bool => Gate::allows(SystemPermission::MANAGE_USERS->value)),
 
                     ForceDeleteAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_USERS->value)),
+                        ->authorize(fn(): bool => Gate::allows(SystemPermission::MANAGE_USERS->value)),
                 ]),
             ])
             ->searchPlaceholder(__('admin.search_placeholder'))

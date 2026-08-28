@@ -80,9 +80,19 @@
   --noise: 0;
 }
 
-/* ── Font family ────────────────────────────────────────────────
-   Prepends Figtree before TW4's default sans-serif stack.
+/* ── Design tokens ──────────────────────────────────────────────
+   --font-sans: prepends Figtree before TW4's default sans-serif stack.
+
+   --soft-fg-strength: how far btn/badge/alert-soft text mixes toward black
+   (daisyui-overrides/*.css) — matches the --{name}-700 ramp step in
+   filament-colors.css so daisyUI's soft text weighs the same as Filament's.
+
+   --soft-ring-strength: how opaque the same soft variants' border is,
+   mixed toward transparent (not daisyUI's base-100) so it reads as a
+   translucent ring like Filament's `ring-color-600/10` badges.
 ─────────────────────────────────────────────────────────────── */
 @theme {
   --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --soft-fg-strength: 83%;
+  --soft-ring-strength: 8%;
 }

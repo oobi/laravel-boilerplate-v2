@@ -1,0 +1,22 @@
+/*
+|--------------------------------------------------------------------------
+| `.btn-soft` text + border — match Filament's contrast
+|--------------------------------------------------------------------------
+| Same darkening as `.badge-soft` (daisyui-overrides/badge.css) — see that
+| file's comment. `--btn-rest-fg`/`--btn-border` are the hooks `.btn-soft`/
+| `.btn-outline`/`.btn-ghost` already read (vendor daisyUI button.css);
+| `.btn-warning` overrides `--btn-rest-fg` again in warning-contrast.css for
+| its own bespoke tone.
+*/
+.btn-soft {
+    --btn-rest-fg: color-mix(
+        in oklab,
+        var(--btn-color, var(--color-base-content)) var(--soft-fg-strength),
+        black
+    );
+    --btn-border: color-mix(
+        in oklab,
+        var(--btn-color, var(--color-base-content)) var(--soft-ring-strength),
+        transparent
+    );
+}

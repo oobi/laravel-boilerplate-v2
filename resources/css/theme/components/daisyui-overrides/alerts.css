@@ -2,14 +2,34 @@
 |--------------------------------------------------------------------------
 | Alerts — border fix
 |--------------------------------------------------------------------------
-| daisyUI's `.alert-soft` sets its border to a ~10% color mix, which reads as
-| almost invisible against the ~8% tinted background. Match the border to
-| the text color instead so soft alerts get a readable accent border.
+| daisyUI's `.alert-soft` sets its border to a ~10% color mix against its own
+| tinted background, which reads as almost invisible. Mix toward transparent
+| instead — same `--soft-ring-strength` ring as badge-soft/btn-soft — so it
+| reads as a translucent accent ring like Filament's own badges.
 |
 | Unlayered on purpose: daisyUI's own rule lives inside a named `@layer`, and
 | per the CSS cascade-layers spec, unlayered rules always win over layered
 | ones regardless of import order.
 */
 .alert-soft {
-    border-color: currentColor;
+    border-color: color-mix(
+        in oklab,
+        var(--alert-color, var(--color-base-content)) var(--soft-ring-strength),
+        transparent
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| `.alert-soft` text — match Filament's `fi-text-color-700` contrast
+|--------------------------------------------------------------------------
+| Same darkening as `.badge-soft` (daisyui-overrides/badge.css) — see that
+| file's comment. `warning` keeps its own fix in warning-contrast.css.
+*/
+.alert-soft {
+    color: color-mix(
+        in oklab,
+        var(--alert-color, var(--color-base-content)) var(--soft-fg-strength),
+        black
+    );
 }

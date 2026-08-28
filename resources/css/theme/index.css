@@ -49,10 +49,15 @@
 @import "./components/ui/colors.css";
 @import "./components/ui/banner.css";
 @import "./components/ui/toolbar.css";
+
+/* ── Filament overrides (ours — daisyUI has no opinion on this) ───────── */
 @import "./components/ui/filament-table.css";
+@import "./components/ui/filament-badge.css";
 
 /* ── Overrides/patches to daisyUI's own component behaviour ──────────── */
 @import "./components/daisyui-overrides/alerts.css";
+@import "./components/daisyui-overrides/badge.css";
+@import "./components/daisyui-overrides/buttons.css";
 @import "./components/daisyui-overrides/warning-contrast.css";
 @import "./components/daisyui-overrides/card.css";
 @import "./components/daisyui-overrides/avatar.css";

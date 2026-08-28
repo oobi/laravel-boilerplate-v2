@@ -1,0 +1,32 @@
+/*
+|--------------------------------------------------------------------------
+| Badges — daisyUI's shape, Filament's border + text
+|--------------------------------------------------------------------------
+| Filament ships `.fi-badge` as `rounded-md` (see vendor/filament/support/
+| resources/css/components/badge.css) — squarer than daisyUI's own `.badge`
+| (resources/views/components/badge.blade.php), which reads as a pill because
+| it uses the same `--radius-selector` token as every other daisyUI control.
+| Only the shape needs to change here: Filament's ring border and
+| `text-(--text)` shade are already the "slight border, legible dark text"
+| look this app wants, so they're left untouched.
+*/
+.fi-badge {
+    border-radius: var(--radius-selector);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Table/infolist badge columns — same box as daisyUI's (unsized) `.badge`
+|--------------------------------------------------------------------------
+| `->badge()` table columns always render at Filament's "sm" size (see
+| vendor/filament/tables/src/Columns/TextColumn.php), which is shorter and
+| tighter (20px tall, 6px/2px padding) than the daisyUI `<x-badge>` pill used
+| everywhere else in this app (24px tall, 11px/0px padding — daisyUI's own
+| default md size, since <x-badge> never sets a badge-{size} class). Match
+| that box so a "success" badge looks the same whether it comes from a table
+| column or `<x-badge>`.
+*/
+.fi-badge.fi-size-sm {
+    height: 1.5rem;
+    padding: 0 0.6875rem;
+}

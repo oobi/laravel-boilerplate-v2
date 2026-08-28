@@ -1,0 +1,21 @@
+.badge {
+    font-weight: 500;
+}
+
+/*
+|--------------------------------------------------------------------------
+| `.badge-soft` text — match Filament's `fi-text-color-700` contrast
+|--------------------------------------------------------------------------
+*/
+.badge-soft {
+    color: color-mix(
+        in oklab,
+        var(--badge-color, var(--color-base-content)) var(--soft-fg-strength),
+        black
+    );
+    border-color: color-mix(
+        in oklab,
+        var(--badge-color, var(--color-base-content)) var(--soft-ring-strength),
+        transparent
+    );
+}
