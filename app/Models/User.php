@@ -53,6 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'active' => 'boolean',
             'system_role' => SystemRole::class,
+            'last_login_at' => 'datetime',
         ];
     }
 
