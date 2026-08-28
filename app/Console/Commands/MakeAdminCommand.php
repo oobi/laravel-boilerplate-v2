@@ -19,7 +19,7 @@ use function Laravel\Prompts\text;
  */
 class MakeAdminCommand extends Command
 {
-    protected $signature = 'app:make-admin';
+    protected $signature = 'bp:make-admin';
 
     protected $description = 'Create the first super-admin user interactively.';
 
