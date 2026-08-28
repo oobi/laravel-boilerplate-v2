@@ -7,6 +7,17 @@
  * index.css (not a `.dark` class).
  */
 
+@layer base {
+    :root {
+        /* Shared with the daisyUI `.menu` override (see daisyui-overrides/menu.css) so dropdown items match sidebar nav-item hover. */
+        --nav-item-hover-bg: color-mix(in srgb, var(--color-primary) 6%, var(--color-base-100));
+
+        @variant dark {
+            --nav-item-hover-bg: var(--color-base-300);
+        }
+    }
+}
+
 @layer components {
     .nav-section-label {
         @apply px-3 py-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider;
@@ -25,11 +36,7 @@
         transition: background 0.15s, color 0.15s;
 
         &:hover {
-            background: color-mix(in srgb, var(--color-primary) 6%, var(--color-base-100));
-
-            @variant dark {
-                background: var(--color-base-300);
-            }
+            background: var(--nav-item-hover-bg);
         }
     }
 

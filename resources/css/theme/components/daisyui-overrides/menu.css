@@ -1,0 +1,16 @@
+/*
+|--------------------------------------------------------------------------
+| .menu — match sidebar nav-item hover background
+|--------------------------------------------------------------------------
+| daisyUI's own hover for `.menu` items is a fixed base-content color-mix.
+| Reuse the sidebar nav-item's hover background (--nav-item-hover-bg, see
+| components/ui/navigation.css) so the header account dropdown feels
+| consistent with the sidebar.
+|
+| Unlayered on purpose: daisyUI's own rule lives inside a named `@layer`, and
+| per the CSS cascade-layers spec, unlayered rules always win over layered
+| ones regardless of import order.
+*/
+.menu :where(li:not(.menu-title, .disabled) > *:not(ul, .menu-title)):not(.menu-active, :active, .btn):hover {
+    background-color: var(--nav-item-hover-bg);
+}
