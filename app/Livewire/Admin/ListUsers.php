@@ -26,12 +26,13 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Standalone Filament table for managing users, rendered inside the admin
  * shell layout (not a full Filament panel). Its own <x-table-header> (see
  * the Blade view) replaces Filament's built-in header/search/filter chrome,
- * which is hidden via CSS — see resources/css/theme/components/ui/admin-table.css.
+ * which is hidden via CSS — see resources/css/theme/components/ui/filament-table.css.
  */
 class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 {
@@ -50,15 +51,25 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
             ->query(User::query())
             ->defaultSort('last_name')
             ->columns([
-                Tables\Columns\TextColumn::make('list_name')
-                    ->label(__('admin.name'))
-                    ->description(fn (User $record): string => $record->email)
-                    ->searchable(['first_name', 'last_name', 'email']),
+                Tables\Columns\ViewColumn::make('user_composite')
+                    ->label(__('admin.user'))
+                    ->view('filament.tables.columns.user-column')
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->orderBy('last_name', $direction);
+                    })
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->where(function ($q) use ($search) {
+                            $q->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                    }),
 
                 Tables\Columns\TextColumn::make('system_role')
                     ->label(__('admin.system_role'))
                     ->badge()
-                    ->placeholder(__('admin.no_system_role')),
+                    ->placeholder(__('admin.no_system_role'))
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
@@ -70,7 +81,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         'pending' => 'info',
                         'inactive' => 'warning',
                         default => 'gray',
-                    }),
+                    })
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('admin.joined'))
