@@ -14,3 +14,10 @@
 .menu :where(li:not(.menu-title, .disabled) > *:not(ul, .menu-title)):not(.menu-active, :active, .btn):hover {
     background-color: var(--nav-item-hover-bg);
 }
+
+/* A `.join` button row (e.g. the theme switcher) shouldn't get the menu-item
+   hover treatment — only each button's own ghost/soft hover should show. */
+.menu :where(li > .join):hover {
+    background-color: transparent !important;
+}
+

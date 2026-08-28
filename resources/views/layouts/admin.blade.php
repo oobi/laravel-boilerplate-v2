@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="boilerplate">
+@php
+    $themeMode = request()->cookie('theme', 'auto');
+@endphp
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $themeMode === 'dark' ? 'boilerplate-dark' : 'boilerplate' }}" data-theme-mode="{{ $themeMode }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
+
+    <x-theme-init-script />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @filamentStyles
