@@ -87,15 +87,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
                                 TextEntry::make('status')
                                     ->label(__('admin.status'))
-                                    ->badge()
-                                    ->getStateUsing(fn (User $record): string => ListUsers::statusFor($record))
-                                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
-                                    ->color(fn (string $state): string => match ($state) {
-                                        'active' => 'success',
-                                        'pending' => 'info',
-                                        'inactive' => 'warning',
-                                        default => 'gray',
-                                    }),
+                                    ->badge(),
 
                                 TextEntry::make('created_at')
                                     ->label(__('admin.joined'))

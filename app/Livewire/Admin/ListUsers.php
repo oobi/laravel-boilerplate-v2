@@ -6,6 +6,7 @@ namespace App\Livewire\Admin;
 
 use App\Enums\SystemPermission;
 use App\Enums\SystemRole;
+use App\Enums\UserStatus;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -74,14 +75,6 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
                     ->badge()
-                    ->getStateUsing(fn (User $record): string => self::statusFor($record))
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'pending' => 'info',
-                        'inactive' => 'warning',
-                        default => 'gray',
-                    })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -95,13 +88,18 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     ->options(SystemRole::options())
                     ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms')),
 
-                Tables\Filters\SelectFilter::make('active')
+                Tables\Filters\SelectFilter::make('status')
                     ->label(__('admin.status'))
-                    ->options([
-                        '1' => __('admin.active'),
-                        '0' => __('admin.inactive'),
-                    ])
-                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms')),
+                    ->options(UserStatus::options())
+                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
+                    ->query(function (Builder $query, array $data): Builder {
+                        return match ($data['value'] ?? null) {
+                            UserStatus::ACTIVE->value => $query->where('active', true)->whereNotNull('email_verified_at'),
+                            UserStatus::PENDING->value => $query->where('active', true)->whereNull('email_verified_at'),
+                            UserStatus::INACTIVE->value => $query->where('active', false),
+                            default => $query,
+                        };
+                    }),
 
                 TrashedFilter::make(),
             ])
@@ -158,20 +156,6 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
             ->emptyStateHeading(__('admin.no_users_found'))
             ->paginated(config('pagination.page_sizes'))
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
-    }
-
-    /** Shared with ShowUser's infolist so both screens agree on the derived status. */
-    public static function statusFor(User $record): string
-    {
-        if (! $record->active) {
-            return 'inactive';
-        }
-
-        if (! $record->hasVerifiedEmail()) {
-            return 'pending';
-        }
-
-        return 'active';
     }
 
     public function activeUsersCount(): int

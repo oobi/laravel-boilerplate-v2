@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SystemRole;
+use App\Enums\UserStatus;
 use App\Models\Concerns\HasSystemRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -68,7 +69,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getFullNameAttribute(): string
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return $this->first_name.' '.$this->last_name;
     }
 
     /**
@@ -76,7 +77,25 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getListNameAttribute(): string
     {
-        return strtoupper($this->last_name) . ', ' . $this->first_name;
+        return strtoupper($this->last_name).', '.$this->first_name;
+    }
+
+    /**
+     * Derived, read-only status (active + email verification). Not a stored
+     * column and never mass assignable/writable — there is no admin action
+     * that sets a user to "pending", it is purely inferred.
+     */
+    public function getStatusAttribute(): UserStatus
+    {
+        if (! $this->active) {
+            return UserStatus::INACTIVE;
+        }
+
+        if (! $this->hasVerifiedEmail()) {
+            return UserStatus::PENDING;
+        }
+
+        return UserStatus::ACTIVE;
     }
 
     /** Admin screens (ShowUser/EditUser) need to resolve soft-deleted users too. */
