@@ -1,12 +1,14 @@
 /*
 |--------------------------------------------------------------------------
-| Form fields — primary focus ring + resting shadow
+| Form fields — primary focus border + resting shadow
 |--------------------------------------------------------------------------
 | daisyUI's `.input`/`.select`/`.textarea` drive both their focus outline and
 | focus box-shadow off `--input-color`, which defaults to
 | `var(--color-base-content)` (near-black) on focus. Swap that to our brand
-| primary. Also add a subtle resting shadow (Tailwind's `shadow-sm`) for
-| depth, matching Buzz's form fields.
+| primary, and drop daisyUI's `outline: 2px solid` ring — just the colored
+| border is enough, the extra outer ring reads as too heavy. Also add a
+| subtle resting shadow (Tailwind's `shadow-sm`) for depth, matching Buzz's
+| form fields.
 |
 | Unlayered on purpose: daisyUI's own rules live inside a named `@layer`, and
 | per the CSS cascade-layers spec, unlayered rules always win over layered
@@ -26,4 +28,5 @@
 .textarea:focus,
 .textarea:focus-within {
     --input-color: var(--color-primary);
+    outline: none;
 }

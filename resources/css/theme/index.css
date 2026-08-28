@@ -49,6 +49,8 @@
 @import "./components/ui/colors.css";
 @import "./components/ui/banner.css";
 @import "./components/ui/toolbar.css";
+@import "./components/ui/floating-label.css";
+@import "./components/ui/button-group.css";
 
 /* ── Filament overrides (ours — daisyUI has no opinion on this) ───────── */
 @import "./components/ui/filament-table.css";

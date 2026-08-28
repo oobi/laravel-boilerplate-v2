@@ -2,7 +2,7 @@
     <x-table-header> — reusable, upgrade-proof chrome that sits ABOVE a
     Filament table, replacing Filament's own header/search/filter row
     (hidden via .fi-ta-header-ctn { display: none } — see
-    theme/components/ui/admin-table.css). Wire the slots to the table's
+    theme/components/ui/filament-table.css). Wire the slots to the table's
     PUBLIC state (wire:model.live="tableSearch", wire:model.live=
     "tableFilters.{name}.value") rather than overriding Filament's DOM.
 

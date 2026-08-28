@@ -1,0 +1,58 @@
+/*
+|--------------------------------------------------------------------------
+| ui-floating-label — Material-style floating label (matches Buzz)
+|--------------------------------------------------------------------------
+| For text inputs: acts as a placeholder (inline, normal size) while empty
+| and unfocused, then floats above the field — overlapping its border,
+| like a <fieldset><legend> — once focused or filled. Turns primary only
+| while actually focused.
+|
+| For <select>: always floated, since a <select> is never really "empty"
+| (see Buzz's forms.css — same rationale).
+|
+| Requires the input to have a real `placeholder` attribute (even just " ")
+| for `:placeholder-shown` to apply. Uses `:has()` rather than the `peer`/
+| sibling pattern so it still works when the field is nested (e.g. inside
+| daisyUI's `<label class="input">` icon wrapper), not just a direct
+| sibling of the label text.
+|
+| `--ui-floating-label-inset` lets a call site (e.g. a search box with a
+| leading icon) shift where the label sits while inline/unfocused, without
+| affecting its floated position (which always sits at the standard inset).
+*/
+
+@layer components {
+    .ui-floating-label {
+        position: relative;
+    }
+
+    .ui-floating-label-text {
+        position: absolute;
+        top: 50%;
+        left: var(--ui-floating-label-inset, 0.75rem);
+        z-index: 1;
+        transform: translateY(-50%) scale(1);
+        transform-origin: left center;
+        font-size: 0.875rem;
+        color: var(--color-base-content);
+        opacity: 0.6;
+        white-space: nowrap;
+        pointer-events: none;
+        transition: top 150ms ease, left 150ms ease, transform 150ms ease, background-color 150ms ease, color 150ms ease, opacity 150ms ease;
+    }
+
+    .ui-floating-label:has(input:not(:placeholder-shown)) .ui-floating-label-text,
+    .ui-floating-label:has(select) .ui-floating-label-text,
+    .ui-floating-label:has(:focus) .ui-floating-label-text {
+        top: 0;
+        left: 0.75rem;
+        transform: translateY(-50%) scale(0.85);
+        background: var(--color-base-100);
+        padding-inline: 0.375rem;
+        opacity: 1;
+    }
+
+    .ui-floating-label:has(:focus) .ui-floating-label-text {
+        color: var(--color-primary);
+    }
+}
