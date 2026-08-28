@@ -11,7 +11,7 @@
     <div>
         <h1 class="ui-page-title">{!! $title !!}</h1>
         @if ($description)
-            <p class="page-title-description">{{ $description }}</p>
+            <p class="ui-page-title-description">{{ $description }}</p>
         @endif
     </div>
 

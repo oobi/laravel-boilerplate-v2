@@ -33,9 +33,16 @@
     .ui-page-header {
         @apply flex items-center justify-between gap-3 mb-6;
     }
+
+    /* Page Title Pattern */
     .ui-page-title {
-        @apply ui-h1;
+        @apply text-2xl font-bold text-base-content;
     }
+
+    .ui-page-title-description {
+        @apply text-base-content/60 mt-1 text-sm;
+    }
+
     .ui-page-actions {
         @apply flex items-center gap-2;
     }

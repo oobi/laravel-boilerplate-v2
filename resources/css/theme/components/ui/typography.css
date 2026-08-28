@@ -5,27 +5,19 @@
  */
 
 @utility ui-h1 {
-    @apply text-3xl font-semibold tracking-tight text-base-content;
-}
-@utility ui-h2 {
     @apply text-2xl font-semibold tracking-tight text-base-content;
 }
-@utility ui-h3 {
+@utility ui-h2 {
     @apply text-xl font-semibold tracking-tight text-base-content;
+}
+@utility ui-h3 {
+    @apply text-lg font-semibold tracking-tight text-base-content;
 }
 @utility ui-subtle {
     @apply text-sm text-base-content/60;
 }
 
 @layer components {
-    /* Page Title Pattern */
-    .page-title {
-        @apply text-2xl font-bold text-base-content;
-    }
-    .page-title-description {
-        @apply text-base-content/60 mt-1 text-sm;
-    }
-
     /* Links */
     .ui-link {
         @apply text-info hover:text-info/70 hover:underline;

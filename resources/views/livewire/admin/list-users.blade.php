@@ -1,18 +1,13 @@
 <div>
     @section('page-title', __('admin.users'))
 
-    <div class="ui-page-header">
-        <div>
-            <h1 class="ui-page-title">{{ __('admin.users') }}</h1>
-            <p class="ui-subtle">{{ __('admin.users_description') }}</p>
-        </div>
-
-        <div class="ui-page-actions">
+    <x-page-header :title="__('admin.users')" :description="__('admin.users_description')">
+        <x-slot:actions>
             <a href="{{ route('users.create') }}" class="btn btn-primary">
                 {{ __('admin.add_user') }}
             </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     @php $trashedFilterValue = data_get($tableFilters, 'trashed.value') ?? ''; @endphp
 
