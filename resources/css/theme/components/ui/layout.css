@@ -12,7 +12,8 @@
 
     /* Body & Application Wrapper */
     .ui-app {
-        @apply min-h-screen bg-base-200;
+        @apply min-h-screen;
+        background-color: #f7f8fc;
     }
 
     .ui-app > .ui-app-inner {
