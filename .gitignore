@@ -1,0 +1,82 @@
+# --- Server stuff ---
+.htpasswd
+.well-known
+.user.ini
+web.config
+htusers
+htpasswd
+cgi-bin
+php.ini
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- IDE / Editor ---
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+.phpactor.json
+*.swp
+*.swo
+
+# --- SVN / Git ---
+**/.svn/
+**/.git/
+.svn
+
+# --- Config files (sensitive) ---
+.env
+.env.*
+/auth.json
+
+# --- Dependencies ---
+node_modules/
+**/node_modules/
+/vendor
+
+# --- Build artifacts ---
+/public/build
+/public/hot
+/public/storage
+
+# --- Laravel storage / runtime ---
+/storage/*.key
+/storage/pail
+
+# --- Logs ---
+*.log
+debug.log
+error_log
+
+# --- Testing / cache ---
+/.phpunit.cache
+.phpunit.result.cache
+
+# --- Vagrant / Homestead ---
+Homestead.json
+Homestead.yaml
+
+# --- Backup files ---
+*.bak
+*.bk
+*.backup
+*.old
+*.orig
+
+# --- Temp files ---
+/tmp/
+/temp/
+/google*.html
+~*
+*~
+
+# --- Misc ---
+*.zip
+*.tar.gz
+*.bak
+*.tmp
+*.sql
+*.sqlite
