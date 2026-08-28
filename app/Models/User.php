@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\SystemRole;
 use App\Enums\UserStatus;
+use App\Models\Concerns\HasProfilePhoto;
 use App\Models\Concerns\HasSystemRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasSystemRole, Notifiable, SoftDeletes;
+    use HasFactory, HasProfilePhoto, HasSystemRole, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -39,6 +40,15 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'profile_photo_url',
     ];
 
     /**

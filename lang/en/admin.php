@@ -55,6 +55,8 @@ return [
 
     'my_profile' => 'My Profile',
     'profile_information' => 'Profile Information',
+    'select_new_photo' => 'Select New Photo',
+    'remove_photo' => 'Remove Photo',
     'update_password' => 'Update Password',
     'profile_updated' => 'Profile updated successfully.',
     'password_updated' => 'Password updated successfully.',

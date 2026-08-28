@@ -10,17 +10,24 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Self-service "my profile" screen — updates the logged-in user's own name/
- * email/password by delegating to the app's registered Fortify actions
+ * email/password/photo by delegating to the app's registered Fortify actions
  * (same validation/rules a real Fortify update-profile request would run).
  */
 class EditProfile extends Component
 {
-    public string $name = '';
+    use WithFileUploads;
+
+    public string $first_name = '';
+
+    public string $last_name = '';
 
     public string $email = '';
+
+    public $photo = null;
 
     public string $current_password = '';
 
@@ -32,16 +39,31 @@ class EditProfile extends Component
     {
         $user = Auth::user();
 
-        $this->name = $user->name;
+        $this->first_name = $user->first_name;
+        $this->last_name = $user->last_name;
         $this->email = $user->email;
     }
 
     public function updateProfileInformation(UpdatesUserProfileInformation $updater): void
     {
-        $updater->update(Auth::user(), [
-            'name' => $this->name,
+        $updater->update(Auth::user(), array_filter([
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
             'email' => $this->email,
-        ]);
+            'photo' => $this->photo,
+        ], fn ($value): bool => ! is_null($value)));
+
+        $this->reset('photo');
+
+        Notification::make()
+            ->title(__('admin.profile_updated'))
+            ->success()
+            ->send();
+    }
+
+    public function removeProfilePhoto(): void
+    {
+        Auth::user()->deleteProfilePhoto();
 
         Notification::make()
             ->title(__('admin.profile_updated'))

@@ -8,6 +8,43 @@
             <h2 class="card-title">{{ __('admin.profile_information') }}</h2>
 
             <form wire:submit="updateProfileInformation" class="flex flex-col gap-4">
+                <div
+                    x-data="{ preview: null }"
+                    x-on:livewire-upload-start="preview = null"
+                    class="flex items-center gap-4"
+                >
+                    <template x-if="!preview">
+                        <x-avatar :name="Auth::user()->full_name" :src="Auth::user()->profile_photo_url" size="lg" />
+                    </template>
+
+                    <img x-show="preview" :src="preview" class="avatar avatar-lg" x-cloak>
+
+                    <div class="flex flex-col gap-2">
+                        <label class="btn btn-sm btn-outline">
+                            {{ __('admin.select_new_photo') }}
+                            <input
+                                type="file"
+                                wire:model="photo"
+                                x-on:change="
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => { preview = e.target.result };
+                                    reader.readAsDataURL($event.target.files[0]);
+                                "
+                                class="hidden"
+                                accept="image/png, image/jpeg"
+                            >
+                        </label>
+
+                        @if (Auth::user()->profile_photo_path)
+                            <button type="button" wire:click="removeProfilePhoto" class="btn btn-sm btn-outline btn-error">
+                                {{ __('admin.remove_photo') }}
+                            </button>
+                        @endif
+
+                        @error('photo') <p class="text-error text-sm">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
                 <fieldset class="fieldset">
                     <label class="label" for="first_name">{{ __('admin.first_name') }}</label>
                     <input id="first_name" type="text" wire:model="first_name" class="input w-full" required>

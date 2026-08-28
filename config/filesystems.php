@@ -64,6 +64,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Profile Photo Disk
+    |--------------------------------------------------------------------------
+    |
+    | The disk used to store user profile photos. Defaults to "public" but
+    | can be pointed at "s3" (or any other configured disk) via env alone.
+    |
+    */
+
+    'profile_photo_disk' => env('PROFILE_PHOTO_DISK', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Symbolic Links
     |--------------------------------------------------------------------------
     |
