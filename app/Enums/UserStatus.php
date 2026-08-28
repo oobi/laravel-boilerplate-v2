@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Enums\Concerns\HasOptions;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
 /**
  * Derived user status (not a stored column): combines the `active` flag with
- * email verification. See ListUsers::statusFor() for the derivation, shared
- * with ShowUser's infolist so both screens agree.
+ * email verification. See User::getStatusAttribute() for the derivation,
+ * shared by ListUsers' table and ShowUser's infolist so both agree.
  *
  * Implements Filament's HasLabel/HasColor so this enum works out of the box
  * with Filament's ->badge() columns/entries (and our own <x-badge>) without
@@ -18,6 +19,8 @@ use Filament\Support\Contracts\HasLabel;
  */
 enum UserStatus: string implements HasColor, HasLabel
 {
+    use HasOptions;
+
     case ACTIVE = 'active';
     case PENDING = 'pending';
     case INACTIVE = 'inactive';
@@ -39,17 +42,5 @@ enum UserStatus: string implements HasColor, HasLabel
             self::PENDING => 'info',
             self::INACTIVE => 'warning',
         };
-    }
-
-    /** @return array<string, string> value => label, for select/dropdown options. */
-    public static function options(): array
-    {
-        $options = [];
-
-        foreach (self::cases() as $status) {
-            $options[$status->value] = $status->getLabel();
-        }
-
-        return $options;
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Enums\Concerns\HasOptions;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
@@ -21,6 +22,8 @@ use Filament\Support\Contracts\HasLabel;
  */
 enum SystemRole: string implements HasColor, HasLabel
 {
+    use HasOptions;
+
     case SUPER_ADMIN = 'super_admin';
     case SUPPORT = 'support';
 
@@ -51,17 +54,5 @@ enum SystemRole: string implements HasColor, HasLabel
                 SystemPermission::VIEW_SYSTEM_ANALYTICS,
             ],
         };
-    }
-
-    /** @return array<string, string> value => label, for select/dropdown options. */
-    public static function options(): array
-    {
-        $options = [];
-
-        foreach (self::cases() as $role) {
-            $options[$role->value] = $role->getLabel();
-        }
-
-        return $options;
     }
 }
