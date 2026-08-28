@@ -12,7 +12,8 @@ class UserSeeder extends Seeder {
     {
         // Seed super admin user
         User::factory()->create([
-            'name' => 'Super Admin',
+            'first_name' => 'Super',
+            'last_name' => 'Admin',
             'email' => 'admin@email.com',
             'password' => bcrypt('password'),
             'system_role' => SystemRole::SUPER_ADMIN->value,
@@ -20,7 +21,8 @@ class UserSeeder extends Seeder {
 
         // Seed support user
         User::factory()->create([
-            'name' => 'Support User',
+            'first_name' => 'Support',
+            'last_name' => 'User',
             'email' => 'support@email.com',
             'password' => bcrypt('password'),
             'system_role' => SystemRole::SUPPORT->value,

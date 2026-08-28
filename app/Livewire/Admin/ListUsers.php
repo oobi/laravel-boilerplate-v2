@@ -48,12 +48,12 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     {
         return $table
             ->query(User::query())
-            ->defaultSort('name')
+            ->defaultSort('last_name')
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('list_name')
                     ->label(__('admin.name'))
                     ->description(fn (User $record): string => $record->email)
-                    ->searchable(['name', 'email']),
+                    ->searchable(['first_name', 'last_name', 'email']),
 
                 Tables\Columns\TextColumn::make('system_role')
                     ->label(__('admin.system_role'))

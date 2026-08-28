@@ -22,7 +22,8 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'system_role',
@@ -52,6 +53,22 @@ class User extends Authenticatable implements MustVerifyEmail
             'active' => 'boolean',
             'system_role' => SystemRole::class,
         ];
+    }
+
+    /**
+     * User full name (as appears in the admin user list, e.g. "John Doe")
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * User list name (as appears in lists, e.g. "DOE, John")
+     */
+    public function getListNameAttribute(): string
+    {
+        return strtoupper($this->last_name) . ', ' . $this->first_name;
     }
 
     /** Admin screens (ShowUser/EditUser) need to resolve soft-deleted users too. */
