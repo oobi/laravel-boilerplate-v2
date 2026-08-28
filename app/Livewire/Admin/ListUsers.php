@@ -144,8 +144,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
             ])
             ->searchPlaceholder(__('admin.search_placeholder'))
             ->emptyStateHeading(__('admin.no_users_found'))
-            ->paginated([10, 15, 25, 50, 100])
-            ->defaultPaginationPageOption(15);
+            ->paginated(config('pagination.page_sizes'))
+            ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }
 
     /** Shared with ShowUser's infolist so both screens agree on the derived status. */
