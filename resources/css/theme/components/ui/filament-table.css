@@ -109,8 +109,8 @@ th.fi-ta-selection-cell {
 |--------------------------------------------------------------------------
 */
 .fi-ta-cell {
-    padding-bottom: 0.75rem;
-    padding: 1rem 1.5rem;
+    /* padding-bottom: 0.75rem; */
+    /* padding: 1rem 1.5rem; */
 }
 
 /* Footer (pagination bar) — same tint as the column header row above it. */

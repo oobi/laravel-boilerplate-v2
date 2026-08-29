@@ -4,7 +4,7 @@
     $isCurrent = $record->id === auth()->id();
 @endphp
 
-<div class="flex items-center gap-3">
+<div class="flex items-center gap-3 py-3">
     <x-avatar :user="$record" color="info" class="shrink-0" />
 
     {{-- Name, email, "You" badge --}}
