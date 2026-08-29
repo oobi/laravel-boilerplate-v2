@@ -5,6 +5,15 @@
     "description": "Curated Laravel starter kit — scaffolded auth, RBAC, admin, theme and opt-in teams, owned in-app.",
     "keywords": ["laravel", "boilerplate", "starter-kit"],
     "license": "proprietary",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/theme-demo",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
         "php": "^8.4",
         "filament/tables": "^5.7",
@@ -16,6 +25,7 @@
         "livewire/livewire": "^4.4"
     },
     "require-dev": {
+        "concise-dot-digital/theme-demo": "@dev",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",

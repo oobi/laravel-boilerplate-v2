@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d16246ba4718807d6b65ad5e5c725ef6",
+    "content-hash": "6d95d4cb96340223db203eb1f24dfba6",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -9144,6 +9144,40 @@
     ],
     "packages-dev": [
         {
+            "name": "concise-dot-digital/theme-demo",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/theme-demo",
+                "reference": "83df9a5fe0c431c01627c19f0552bad03ef7bb39"
+            },
+            "require": {
+                "illuminate/support": "^12.0",
+                "php": "^8.4"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Concise\\ThemeDemo\\ThemeDemoServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Concise\\ThemeDemo\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Removable local dev package — a Style Demo showcase of every daisyUI/Filament UI pattern the boilerplate ships, for keeping the two aligned. Delete this folder + its two composer.json entries to remove it entirely.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "fakerphp/faker",
             "version": "v1.24.1",
             "source": {
@@ -11509,7 +11543,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "concise-dot-digital/theme-demo": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

@@ -1,0 +1,24 @@
+{
+    "name": "concise-dot-digital/theme-demo",
+    "description": "Removable local dev package — a Style Demo showcase of every daisyUI/Filament UI pattern the boilerplate ships, for keeping the two aligned. Delete this folder + its two composer.json entries to remove it entirely.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Concise\\ThemeDemo\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Concise\\ThemeDemo\\ThemeDemoServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
