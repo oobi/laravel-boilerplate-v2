@@ -44,4 +44,25 @@ class DemoRows
     {
         return self::all()->take($count)->values();
     }
+
+    /** Fixed fake "trashed" rows for the trash-toggle demo — just for the look, not a real soft-delete. */
+    public static function trashed(): Collection
+    {
+        return collect([
+            ['name' => 'Deleted Placeholder One', 'days' => 40],
+            ['name' => 'Deleted Placeholder Two', 'days' => 55],
+            ['name' => 'Deleted Placeholder Three', 'days' => 70],
+        ])->values()->map(function (array $row, int $index): DemoRow {
+            $slug = str_replace(' ', '.', mb_strtolower($row['name']));
+
+            return new DemoRow(
+                id: 900 + $index + 1,
+                name: $row['name'],
+                email: "{$slug}@example.com",
+                status: DemoStatus::ARCHIVED,
+                joinedAt: now()->subDays($row['days'])->format('Y-m-d'),
+                detail: 'Trashed demo row — restore/force-delete are cosmetic only here.',
+            );
+        });
+    }
 }

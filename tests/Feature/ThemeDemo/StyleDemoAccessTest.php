@@ -39,7 +39,12 @@ class StyleDemoAccessTest extends TestCase
             'empty table' => ['/style-demo/tables/empty'],
             'simple table' => ['/style-demo/tables/simple'],
             'maximalist table' => ['/style-demo/tables/maximalist'],
+            'filament table empty' => ['/style-demo/tables/filament/empty'],
+            'filament table simple' => ['/style-demo/tables/filament/simple'],
+            'filament table maximalist' => ['/style-demo/tables/filament/maximalist'],
+            'filament table custom header' => ['/style-demo/tables/filament/custom-header'],
             'daisy form' => ['/style-demo/forms/daisy'],
+            'filament form' => ['/style-demo/forms/filament'],
             'components' => ['/style-demo/components'],
         ];
     }

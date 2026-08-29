@@ -10,7 +10,9 @@
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         @foreach ([
             ['route' => 'style-demo.tables-empty', 'label' => __('theme-demo::messages.nav_tables'), 'description' => __('theme-demo::messages.tables_description')],
+            ['route' => 'style-demo.tables-filament-empty', 'label' => __('theme-demo::messages.nav_filament_table'), 'description' => __('theme-demo::messages.filament_table_description')],
             ['route' => 'style-demo.forms-daisy', 'label' => __('theme-demo::messages.nav_forms_daisy'), 'description' => __('theme-demo::messages.forms_daisy_description')],
+            ['route' => 'style-demo.forms-filament', 'label' => __('theme-demo::messages.nav_filament_form'), 'description' => __('theme-demo::messages.filament_form_description')],
             ['route' => 'style-demo.components', 'label' => __('theme-demo::messages.nav_components'), 'description' => __('theme-demo::messages.components_description')],
         ] as $link)
             <a href="{{ route($link['route']) }}" class="card bg-base-100 border border-base-300 transition hover:border-primary">

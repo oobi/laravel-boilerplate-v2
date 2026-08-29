@@ -40,7 +40,8 @@
 */
 .fi-ta-header-cell,
 .fi-ta-actions-header-cell,
-.fi-ta-empty-header-cell {
+.fi-ta-empty-header-cell,
+th.fi-ta-selection-cell {
     background-color: color-mix(
         in oklab,
         var(--color-primary) 6%,
