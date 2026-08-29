@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Support;
+
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+
+/**
+ * Derives a breadcrumb trail from the current route name, following the
+ * `{resource}.{action}` convention every resource route group already uses
+ * (users.index / users.create / users.show / users.edit, etc). A resource
+ * gets a linked parent crumb automatically the moment it registers a
+ * sibling `{resource}.index` route — no per-page configuration needed, so
+ * new resources get working breadcrumbs for free as long as they follow
+ * the same route-naming convention.
+ */
+class Breadcrumbs
+{
+    /** @return list<array{label: string, url: ?string}> */
+    public static function trail(): array
+    {
+        $crumbs = [
+            ['label' => __('admin.breadcrumb_root'), 'url' => null],
+        ];
+
+        $resource = static::resource();
+
+        if ($resource && Route::has("{$resource}.index")) {
+            $crumbs[] = [
+                'label' => static::resourceLabel($resource),
+                'url' => route("{$resource}.index"),
+            ];
+        }
+
+        $crumbs[] = ['label' => static::pageTitle(), 'url' => null];
+
+        return $crumbs;
+    }
+
+    protected static function resource(): ?string
+    {
+        $routeName = Route::currentRouteName();
+
+        if (! $routeName || ! str_contains($routeName, '.')) {
+            return null;
+        }
+
+        return Str::beforeLast($routeName, '.');
+    }
+
+    protected static function resourceLabel(string $resource): string
+    {
+        $key = "admin.{$resource}";
+
+        return Lang::has($key) ? __($key) : Str::headline(str_replace('.', ' ', $resource));
+    }
+
+    protected static function pageTitle(): string
+    {
+        return (string) app('view')->yieldContent('page-title', __('Dashboard'));
+    }
+}
