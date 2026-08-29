@@ -84,8 +84,11 @@
                 </div>
             </aside>
 
-            {{-- Pinned sidebar — persistent column for desktop while pinned --}}
-            <aside class="hidden flex-shrink-0 w-64" :class="sidebarPinned ? 'md:flex' : ''">
+            {{-- Pinned sidebar — persistent column for desktop while pinned.
+                 Base classes assume the default (pinned) state so it renders visible
+                 immediately on page load; x-show only hides it once Alpine confirms
+                 the user has actually unpinned it, avoiding a flash for pinned users. --}}
+            <aside class="hidden md:flex flex-shrink-0 w-64" x-show="sidebarPinned">
                 <div class="flex h-full w-64 flex-col border-r border-base-300 bg-base-100">
                     <div class="flex h-16 flex-shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
