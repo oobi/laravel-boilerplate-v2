@@ -1,5 +1,5 @@
 <div>
-    @section('page-title', __('admin.edit_user'))
+    @section('page-title', __('admin.edit'))
 
     <div class="ui-page-header">
         <h1 class="ui-page-title flex items-center gap-2">

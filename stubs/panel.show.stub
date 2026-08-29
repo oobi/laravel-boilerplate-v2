@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Panels\Users;
+
+use App\Support\Panels\Concerns\HasPanelMetadata;
+use App\Support\Panels\PanelRegion;
+use App\Support\Panels\ShowPanel;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
+
+class {{ class }} implements ShowPanel
+{
+    use HasPanelMetadata;
+
+    public function region(): PanelRegion
+    {
+        return PanelRegion::{{ region }};
+    }
+
+    public function render(Model $subject): Htmlable
+    {
+        // TODO: replace with your own markup, e.g. return view('panels.your-view', ['subject' => $subject]);
+        return new HtmlString('<div class="card bg-base-100"><div class="card-body">{{ class }}</div></div>');
+    }
+}

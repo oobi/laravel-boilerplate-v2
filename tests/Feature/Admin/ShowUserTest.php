@@ -41,4 +41,49 @@ class ShowUserTest extends TestCase
             ->test(ShowUser::class, ['user' => $target])
             ->assertOk();
     }
+
+    public function test_it_shows_two_factor_disabled_by_default(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.disabled'));
+    }
+
+    public function test_it_shows_two_factor_enabled_when_confirmed(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->twoFactorEnabled()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.enabled'));
+    }
+
+    public function test_admins_can_force_disable_a_users_two_factor_authentication(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->twoFactorEnabled()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->call('callPanelAction', 'security', 'force-disable-2fa');
+
+        $target->refresh();
+        $this->assertNull($target->two_factor_secret);
+        $this->assertNull($target->two_factor_recovery_codes);
+        $this->assertNull($target->two_factor_confirmed_at);
+    }
+
+    public function test_the_demo_team_memberships_panel_renders(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.team_memberships'));
+    }
 }

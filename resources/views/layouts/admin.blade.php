@@ -128,11 +128,7 @@
                         <x-heroicon-o-bars-3 class="h-5 w-5" />
                     </button>
 
-                    <div class="min-w-0 flex-1 text-sm text-base-content/60">
-                        <span>{{ __('admin.breadcrumb_root') }}</span>
-                        <span class="mx-2">/</span>
-                        <span>@yield('page-title', __('Dashboard'))</span>
-                    </div>
+                    <x-breadcrumbs />
 
                     <x-header-menu />
                 </header>

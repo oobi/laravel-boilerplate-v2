@@ -7,6 +7,9 @@ return [
 
     'users' => 'Users',
     'users_description' => 'Manage system users and their roles.',
+    'list' => 'List',
+    'create' => 'Create',
+    'edit' => 'Edit',
     'add_user' => 'Add User',
     'edit_user' => 'Edit User',
     'back_to_users' => 'Back to Users',
@@ -82,4 +85,14 @@ return [
     'two_factor_regenerate_recovery_codes' => 'Regenerate Recovery Codes',
     'two_factor_show_recovery_codes' => 'Show Recovery Codes',
     'two_factor_disable' => 'Disable',
+
+    'account_age' => 'Account Age',
+    'security' => 'Security',
+    'enabled' => 'Enabled',
+    'disabled' => 'Disabled',
+    'force_disable_2fa' => 'Force Disable 2FA',
+    'force_disable_2fa_confirm' => "Are you sure you want to disable this user's two factor authentication?",
+    'two_factor_force_disabled' => 'Two factor authentication disabled for this user.',
+    'team_memberships' => 'Team Memberships',
+    'team_memberships_coming_soon' => 'Coming with the Teams tier.',
 ];

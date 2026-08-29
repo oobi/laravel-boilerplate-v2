@@ -59,4 +59,13 @@ class UserFactory extends Factory
             'system_role' => SystemRole::SUPER_ADMIN,
         ]);
     }
+
+    public function twoFactorEnabled(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_secret' => encrypt('test-secret'),
+            'two_factor_recovery_codes' => encrypt(json_encode(['test-recovery-code'])),
+            'two_factor_confirmed_at' => now(),
+        ]);
+    }
 }

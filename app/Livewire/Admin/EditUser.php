@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Livewire\Admin;
 
 use App\Enums\SystemPermission;
-use App\Enums\SystemRole;
 use App\Models\User;
+use App\Support\Panels\PanelRegistry;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -48,36 +47,12 @@ class EditUser extends Component implements HasActions, HasSchemas
 
     public function form(Schema $schema): Schema
     {
-        $isSelf = $this->user->id === Auth::id();
+        $components = PanelRegistry::formSections('users.edit', $this->user, Auth::user())
+            ->flatMap(fn ($section): array => $section->components($this->user))
+            ->all();
 
         return $schema
-            ->components([
-                Section::make(__('admin.user_information'))
-                    ->columns(2)
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label(__('admin.name'))
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('email')
-                            ->label(__('admin.email'))
-                            ->email()
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\Select::make('system_role')
-                            ->label(__('admin.system_role'))
-                            ->options(SystemRole::options())
-                            ->placeholder(__('admin.no_system_role'))
-                            ->native(false)
-                            ->disabled($isSelf),
-
-                        Forms\Components\Toggle::make('active')
-                            ->label(__('admin.active'))
-                            ->disabled($isSelf),
-                    ]),
-            ])
+            ->components($components)
             ->statePath('data');
     }
 
@@ -85,21 +60,9 @@ class EditUser extends Component implements HasActions, HasSchemas
     {
         Gate::authorize(SystemPermission::MANAGE_USERS->value);
 
-        $data = $this->form->getState();
-        $isSelf = $this->user->id === Auth::id();
-
-        $update = [
-            'name' => $data['name'],
-            'email' => $data['email'],
-        ];
-
-        // Nobody can change their own role/active state from this form, even a super admin.
-        if (! $isSelf) {
-            $update['system_role'] = $data['system_role'] ?: null;
-            $update['active'] = $data['active'];
-        }
-
-        $this->user->update($update);
+        // Disabled fields (e.g. a self-edit's role/active toggle) are excluded from
+        // getState() by Filament, so this trusts whatever the registered panels expose.
+        $this->user->update($this->form->getState());
 
         Notification::make()
             ->title(__('admin.user_updated'))

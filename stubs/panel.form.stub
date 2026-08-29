@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Panels\Users;
+
+use App\Support\Panels\Concerns\HasPanelMetadata;
+use App\Support\Panels\FormSection;
+use Filament\Schemas\Components\Section;
+use Illuminate\Database\Eloquent\Model;
+
+class {{ class }} implements FormSection
+{
+    use HasPanelMetadata;
+
+    /** @return array<int, \Filament\Schemas\Components\Component> */
+    public function components(Model $subject): array
+    {
+        return [
+            Section::make(__('{{ class }}'))
+                ->schema([
+                    // TODO: add form fields here.
+                ]),
+        ];
+    }
+}

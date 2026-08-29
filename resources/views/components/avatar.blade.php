@@ -20,6 +20,7 @@
     'name' => '',
     'src' => null,
     'size' => 'md',
+    'title' => null,
     'variant' => 'soft',
     'color' => 'neutral',
     'square' => false,
@@ -28,6 +29,7 @@
 @php
     $name = $name ?: ($user->name ?? '');
     $src = $src ?: ($user->profile_photo_url ?? null);
+    $title = $title ?: $name;
 
     $initials = collect(preg_split('/\s+/', trim($name)))
         ->filter()
@@ -43,7 +45,7 @@
 @endphp
 
 <div {{ $attributes->merge(['class' => $outerClasses]) }}>
-    <div class="avatar-{{ $color }} avatar-{{ $variant }}" title="{{ $name }}">
+    <div class="avatar-{{ $color }} avatar-{{ $variant }}" title="{{ $title }}">
         @if ($src)
             <img
                 src="{{ $src }}"
