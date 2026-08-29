@@ -17,8 +17,12 @@ A `NavGroup` implementation contributes:
 - `label()` — the section heading shown above its links.
 - `icon()` — a heroicon component name (e.g. `heroicon-o-swatch`), rendered
   next to the label on the section's collapse toggle.
-- `items()` — a `list<NavItem>`, each a plain `label` / `route` (route name)
-  / `icon` (heroicon component name) triple.
+- `items()` — a `list<NavItem>`, each a `label` / `route` (the route name its
+  link points at) / `icon` (heroicon component name), plus an optional 4th
+  `activeRoutes` (`list<string>`, `routeIs()` wildcards allowed) for items
+  that should stay highlighted across several routes — e.g. one "DaisyUI
+  Tables" item linking to the first of three tabbed routes, matched active
+  via `['style-demo.tables-*']`. Defaults to just `[$route]`.
 - `order()` / `visible($viewer)` — sorting and conditional display, same
   shape as `ShowPanel`/`FormSection` (see `docs/panels.md`).
 

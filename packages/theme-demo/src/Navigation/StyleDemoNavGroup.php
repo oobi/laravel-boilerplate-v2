@@ -30,9 +30,7 @@ class StyleDemoNavGroup implements NavGroup
     {
         return [
             new NavItem(__('theme-demo::messages.nav_overview'), 'style-demo.index', 'heroicon-o-home'),
-            new NavItem(__('theme-demo::messages.nav_tables_empty'), 'style-demo.tables-empty', 'heroicon-o-table-cells'),
-            new NavItem(__('theme-demo::messages.nav_tables_simple'), 'style-demo.tables-simple', 'heroicon-o-table-cells'),
-            new NavItem(__('theme-demo::messages.nav_tables_maximalist'), 'style-demo.tables-maximalist', 'heroicon-o-table-cells'),
+            new NavItem(__('theme-demo::messages.nav_tables'), 'style-demo.tables-empty', 'heroicon-o-table-cells', ['style-demo.tables-*']),
             new NavItem(__('theme-demo::messages.nav_forms_daisy'), 'style-demo.forms-daisy', 'heroicon-o-pencil-square'),
             new NavItem(__('theme-demo::messages.nav_components'), 'style-demo.components', 'heroicon-o-squares-plus'),
         ];

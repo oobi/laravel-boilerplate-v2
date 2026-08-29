@@ -2,6 +2,7 @@
     'value' => null,
     'color' => null,
     'variant' => 'soft',
+    'size' => null,
 ])
 
 @php
@@ -21,8 +22,12 @@
         'gray' => 'neutral',
         default => $color,
     };
+
+    // No explicit size keeps the original fixed text-xs look (default: xs,
+    // sm, md, lg, xl); a size lets daisyUI's own badge-{size} control it instead.
+    $sizeClass = $size ? "badge-{$size}" : 'text-xs';
 @endphp
 
-<span {{ $attributes->merge(['class' => "badge badge-{$daisyColor} badge-{$variant} text-xs"]) }}>
+<span {{ $attributes->merge(['class' => "badge badge-{$daisyColor} badge-{$variant} {$sizeClass}"]) }}>
     {{ $slot->isNotEmpty() ? $slot : (($value instanceof HasLabel) ? $value->getLabel() : $value) }}
 </span>

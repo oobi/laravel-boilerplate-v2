@@ -9,9 +9,7 @@
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         @foreach ([
-            ['route' => 'style-demo.tables-empty', 'label' => __('theme-demo::messages.nav_tables_empty'), 'description' => __('theme-demo::messages.tables_empty_description')],
-            ['route' => 'style-demo.tables-simple', 'label' => __('theme-demo::messages.nav_tables_simple'), 'description' => __('theme-demo::messages.tables_simple_description')],
-            ['route' => 'style-demo.tables-maximalist', 'label' => __('theme-demo::messages.nav_tables_maximalist'), 'description' => __('theme-demo::messages.tables_maximalist_description')],
+            ['route' => 'style-demo.tables-empty', 'label' => __('theme-demo::messages.nav_tables'), 'description' => __('theme-demo::messages.tables_description')],
             ['route' => 'style-demo.forms-daisy', 'label' => __('theme-demo::messages.nav_forms_daisy'), 'description' => __('theme-demo::messages.forms_daisy_description')],
             ['route' => 'style-demo.components', 'label' => __('theme-demo::messages.nav_components'), 'description' => __('theme-demo::messages.components_description')],
         ] as $link)

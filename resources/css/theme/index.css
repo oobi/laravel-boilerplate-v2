@@ -71,6 +71,7 @@
 @import "./components/daisyui-overrides/avatar.css";
 @import "./components/daisyui-overrides/forms.css";
 @import "./components/daisyui-overrides/menu.css";
+@import "./components/daisyui-overrides/tabs.css";
 
 /* ── Theme + design tokens — must come after daisyUI is initialised ─── */
 @import "./tokens.css";
@@ -81,7 +82,9 @@
   interpolates them. Force-generate the full set here.
 */
 @source inline("btn-{primary,secondary,accent,neutral,info,success,warning,error,soft,outline,dash,ghost}");
+@source inline("btn-{xs,sm,md,lg,xl}");
 @source inline("badge-{primary,secondary,accent,neutral,info,success,warning,error,soft}");
+@source inline("badge-{xs,sm,md,lg,xl}");
 @source inline("bg-{primary,secondary,accent,neutral,info,success,warning,error,base-100,base-200,base-300}");
 @source inline("text-{primary,secondary,accent,neutral,info,success,warning,error}");
 @source inline("text-{primary,secondary,accent,neutral,info,success,warning,error}-content");

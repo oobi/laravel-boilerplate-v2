@@ -5,25 +5,23 @@ declare(strict_types=1);
 return [
     'nav_group' => 'Style Demo',
     'nav_overview' => 'Overview',
-    'nav_tables_empty' => 'Empty Table',
-    'nav_tables_simple' => 'Simple Table',
-    'nav_tables_maximalist' => 'Maximalist Table',
+    'nav_tables' => 'DaisyUI Tables',
     'nav_forms_daisy' => 'Daisy Form',
     'nav_components' => 'Components',
 
     'overview_title' => 'Style Demo',
     'overview_description' => 'A reference gallery of every daisyUI UI pattern this boilerplate ships — used to keep future Filament equivalents visually aligned. Local/super-admin only; safe to delete wholesale (see packages/theme-demo).',
 
-    'tables_empty_title' => 'Empty Table',
-    'tables_empty_description' => 'What a list looks like with zero rows.',
+    'tables_title' => 'DaisyUI Tables',
+    'tables_description' => 'The same list, from an empty state through to a fully-featured one — as tabs.',
+
+    'tables_tab_empty' => 'Empty',
     'tables_empty_message' => 'No records yet',
     'tables_empty_hint' => 'Once something is created, it will show up here.',
 
-    'tables_simple_title' => 'Simple Table',
-    'tables_simple_description' => 'A minimal list — search only, no bulk actions.',
+    'tables_tab_simple' => 'Simple',
 
-    'tables_maximalist_title' => 'Maximalist Table',
-    'tables_maximalist_description' => 'Bulk select, expandable rows, status filter, sorting and pagination.',
+    'tables_tab_maximalist' => 'Maximalist',
 
     'forms_daisy_title' => 'Daisy Form',
     'forms_daisy_description' => 'Every native daisyUI field type in one form, including an error state.',

@@ -26,7 +26,7 @@
 
     {{-- Add-on nav sections (e.g. the style-demo dev package) register here via NavRegistry::extend() --}}
     @foreach (\App\Support\Navigation\NavRegistry::groups(auth()->user()) as $group)
-        @php $groupRoutes = collect($group->items())->pluck('route')->all(); @endphp
+        @php $groupRoutes = collect($group->items())->flatMap(fn ($item) => $item->activeRoutes())->all(); @endphp
         <div x-data="{ open: {{ request()->routeIs($groupRoutes) ? 'true' : '$persist(true).as(\'nav-'.\Illuminate\Support\Str::slug($group->label()).'\')' }} }">
             <button type="button" @click="open = !open" class="nav-section-label flex w-full items-center justify-between">
                 <span class="flex items-center gap-2">
@@ -37,7 +37,7 @@
             </button>
             <div x-show="open" x-collapse>
                 @foreach ($group->items() as $item)
-                    <a href="{{ route($item->route) }}" class="nav-item {{ request()->routeIs($item->route) ? 'nav-item-active' : '' }}">
+                    <a href="{{ route($item->route) }}" class="nav-item {{ request()->routeIs($item->activeRoutes()) ? 'nav-item-active' : '' }}">
                         <x-dynamic-component :component="$item->icon" class="h-4 w-4 flex-shrink-0" />
                         <span>{{ $item->label }}</span>
                     </a>

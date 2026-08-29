@@ -51,6 +51,15 @@
                     <button type="button" class="join-item btn btn-sm">{{ __('Archived') }}</button>
                 </div>
             </div>
+
+            <div>
+                <div class="ui-subtle mb-1">{{ __('Sizes') }}</div>
+                <div class="flex flex-wrap items-center gap-2">
+                    @foreach ($sizes as $size)
+                        <button type="button" class="btn btn-primary btn-{{ $size }}">{{ strtoupper($size) }}</button>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </div>
 
@@ -68,6 +77,15 @@
                     </div>
                 </div>
             @endforeach
+
+            <div>
+                <div class="ui-subtle mb-1">{{ __('Sizes') }}</div>
+                <div class="flex flex-wrap items-center gap-2">
+                    @foreach ($sizes as $size)
+                        <x-badge color="primary" :size="$size">{{ strtoupper($size) }}</x-badge>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </div>
 

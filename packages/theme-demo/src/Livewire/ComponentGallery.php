@@ -17,6 +17,9 @@ class ComponentGallery extends Component
     /** @var list<string> */
     public array $buttonVariants = ['solid', 'soft', 'outline', 'dash', 'ghost'];
 
+    /** @var list<string> */
+    public array $sizes = ['xs', 'sm', 'md', 'lg', 'xl'];
+
     public function mount(): void
     {
         Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);

@@ -1,0 +1,26 @@
+/*
+|--------------------------------------------------------------------------
+| daisyUI override — tabs (tabs-border)
+|--------------------------------------------------------------------------
+| daisyUI's tabs-border underline hardcodes both its thickness (3px) and its
+| active color (currentColor, i.e. whatever text color the tab already has)
+| — neither is exposed as a CSS variable to tune. This app wants a thinner,
+| brand-colored (primary) underline instead, so both are pinned here.
+|
+| UNLAYERED on purpose: daisyUI's own rules live inside its named layer, and
+| unlayered rules always win over ANY layered rule regardless of source
+| order or specificity — see avatar.css for the same technique.
+*/
+.tabs-border > .tab {
+    &:before {
+        height: 2px;
+    }
+
+    &:is(.tab-active, [aria-selected="true"], [aria-current="true"], [aria-current="page"]):not(.tab-disabled, [disabled]) {
+        color: var(--color-primary);
+
+        &:before {
+            border-top: none;
+        }
+    }
+}
