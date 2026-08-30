@@ -16,9 +16,14 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Tables\Columns\ColorColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\Layout\Panel;
 use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
@@ -27,6 +32,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 /**
@@ -55,10 +61,29 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
     use InteractsWithSchemas;
     use InteractsWithTable;
 
-    private const VARIANTS = ['empty', 'simple', 'maximalist', 'custom-header'];
+    private const VARIANTS = ['empty', 'simple', 'maximalist', 'custom-header', 'wide'];
 
-    /** Variants with the full DemoRows set + search/sort/filter/bulk/action-menu — everything but "empty" and "simple". */
+    /** Variants with the full DemoRows set + search/sort/filter/bulk/action-menu — everything but "empty", "simple" and "wide". */
     private const FULL_FEATURED_VARIANTS = ['maximalist', 'custom-header'];
+
+    /** Deterministic option lists for the "wide" variant's ~20 columns — look, not real data. */
+    private const WIDE_COLUMN_OPTIONS = [
+        'department' => ['Engineering', 'Sales', 'Support', 'Marketing', 'Finance'],
+        'region' => ['APAC', 'EMEA', 'AMER'],
+        'manager' => ['J. Rivera', 'A. Chen', 'K. Novak', 'S. Patel'],
+        'city' => ['Sydney', 'Austin', 'Berlin', 'Toronto', 'Osaka'],
+        'country' => ['Australia', 'USA', 'Germany', 'Canada', 'Japan'],
+        'timezone' => ['UTC+10', 'UTC-6', 'UTC+1', 'UTC-5', 'UTC+9'],
+        'currency' => ['AUD', 'USD', 'EUR', 'CAD', 'JPY'],
+        'plan' => ['Starter', 'Pro', 'Enterprise'],
+        'source' => ['Referral', 'Organic', 'Ad campaign', 'Partner'],
+        'billing_cycle' => ['Monthly', 'Annual'],
+        'account_type' => ['Individual', 'Team', 'Enterprise'],
+        'industry' => ['Retail', 'Healthcare', 'Education', 'Technology'],
+        'referral_code' => ['SPRING24', 'SUMMER24', 'WINTER24', 'AUTUMN24'],
+        'support_tier' => ['Standard', 'Priority', 'White-glove'],
+        'language' => ['English', 'German', 'Japanese', 'French'],
+    ];
 
     public string $variant;
 
@@ -110,15 +135,17 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
     public function table(Table $table): Table
     {
         $isFullFeatured = in_array($this->variant, self::FULL_FEATURED_VARIANTS, true);
+        $isWide = $this->variant === 'wide';
 
         $table = $table
-            ->records(function (?string $search, ?string $sortColumn, ?string $sortDirection, ?array $filters, int|string $page, int|string $recordsPerPage) use ($isFullFeatured): LengthAwarePaginator {
+            ->records(function (?string $search, ?string $sortColumn, ?string $sortDirection, ?array $filters, int|string $page, int|string $recordsPerPage) use ($isFullFeatured, $isWide): LengthAwarePaginator {
                 if ($this->variant === 'empty') {
                     return new LengthAwarePaginator(collect(), 0, (int) $recordsPerPage, (int) $page);
                 }
 
                 $rows = match (true) {
                     $this->variant === 'simple' => DemoRows::take(8)->keyBy('id'),
+                    $isWide => DemoRows::take(10)->keyBy('id'),
                     $this->variant === 'custom-header' && $this->trashedFilter === '0' => DemoRows::trashed()->keyBy('id'),
                     default => DemoRows::all()->keyBy('id'),
                 };
@@ -141,14 +168,26 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                     }
                 }
 
-                $records = $rows->map(fn (DemoRow $row): array => [
-                    'id' => $row->id,
-                    'name' => $row->name,
-                    'email' => $row->email,
-                    'status' => $row->status,
-                    'joined_at' => $row->joinedAt,
-                    'detail' => $row->detail,
-                ]);
+                $records = $rows->map(function (DemoRow $row) use ($isFullFeatured, $isWide): array {
+                    $record = [
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'email' => $row->email,
+                        'status' => $row->status,
+                        'joined_at' => $row->joinedAt,
+                        'detail' => $row->detail,
+                    ];
+
+                    if ($isFullFeatured) {
+                        $record += $this->extraColumnValues($row);
+                    }
+
+                    if ($isWide) {
+                        $record += $this->wideColumnValues($row);
+                    }
+
+                    return $record;
+                });
 
                 return new LengthAwarePaginator(
                     $records->forPage((int) $page, (int) $recordsPerPage)->values(),
@@ -157,33 +196,18 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                     (int) $page,
                 );
             })
-            ->columns([
-                Split::make([
-                    TextColumn::make('name')
-                        ->label(__('Name'))
-                        ->description(fn (array $record): string => $record['email'])
-                        ->searchable()
-                        ->sortable($isFullFeatured),
-
-                    TextColumn::make('status')
-                        ->label(__('Status'))
-                        ->badge()
-                        ->sortable($isFullFeatured),
-
-                    TextColumn::make('joined_at')
-                        ->label(__('Joined'))
-                        ->date()
-                        ->sortable($isFullFeatured),
-                ])->from('lg'),
+            ->columns($isWide ? $this->wideColumns() : [
+                ...($this->variant === 'maximalist'
+                    ? [Split::make($this->primaryColumns($isFullFeatured))->from('lg')]
+                    : $this->primaryColumns($isFullFeatured)),
 
                 // A Layout\Component (Split here, Panel below) among the columns makes
                 // Filament render every row through its own generic layout renderer
                 // instead of plain <table>/<tr>/<td> — confirmed at 1600px wide, so it's
-                // not a responsive/mobile fallback. Split still lays out each row as one
-                // aligned line (verified), but the header row is always replaced by a
-                // "Sort by" dropdown, no real sortable <th> cells — kept to "maximalist"
-                // only; "custom-header" drops both Split and Panel for the classic table
-                // with real header cells instead (see FULL_FEATURED_VARIANTS docblock).
+                // not a responsive/mobile fallback. "custom-header" never uses Split or
+                // Panel, precisely so its classic table with real header cells survives
+                // (see FULL_FEATURED_VARIANTS docblock); "maximalist" accepts the
+                // trade-off for row-alignment + the collapsible detail panel below.
                 ...($this->variant === 'maximalist' ? [
                     Panel::make([
                         TextColumn::make('detail')
@@ -262,6 +286,104 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                             ->send();
                     }),
             ]);
+    }
+
+    /** @return array<int, TextColumn> */
+    private function primaryColumns(bool $isFullFeatured): array
+    {
+        return [
+            TextColumn::make('name')
+                ->label(__('Name'))
+                ->description(fn (array $record): string => $record['email'])
+                ->searchable()
+                ->sortable($isFullFeatured),
+
+            TextColumn::make('status')
+                ->label(__('Status'))
+                ->badge()
+                ->sortable($isFullFeatured),
+
+            TextColumn::make('joined_at')
+                ->label(__('Joined'))
+                ->date()
+                ->sortable($isFullFeatured),
+
+            ...($isFullFeatured ? $this->extraColumns() : []),
+        ];
+    }
+
+    /** More column TYPES from the Filament docs, beyond TextColumn — demo-only values, see extraColumnValues(). */
+    private function extraColumns(): array
+    {
+        $demoOnly = fn ($state) => Notification::make()->title(__('Demo only — nothing saved.'))->send();
+
+        return [
+            ImageColumn::make('avatar_url')
+                ->label(__('Avatar'))
+                ->circular(),
+
+            IconColumn::make('verified')
+                ->label(__('Verified'))
+                ->boolean(),
+
+            ColorColumn::make('color')
+                ->label(__('Color')),
+
+            SelectColumn::make('priority')
+                ->label(__('Priority'))
+                ->options(['low' => __('Low'), 'medium' => __('Medium'), 'high' => __('High')])
+                ->updateStateUsing($demoOnly),
+
+            ToggleColumn::make('featured')
+                ->label(__('Featured'))
+                ->updateStateUsing($demoOnly),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function extraColumnValues(DemoRow $row): array
+    {
+        return [
+            'avatar_url' => 'https://ui-avatars.com/api/?name='.urlencode($row->name).'&background=random',
+            'verified' => $row->status === DemoStatus::ACTIVE,
+            'color' => sprintf('#%06x', crc32($row->name) & 0xFFFFFF),
+            'priority' => ['low', 'medium', 'high'][$row->id % 3],
+            'featured' => $row->id % 4 === 0,
+        ];
+    }
+
+    /** @return list<TextColumn> */
+    private function wideColumns(): array
+    {
+        $columns = [
+            TextColumn::make('name')->label(__('Name'))->searchable(),
+            TextColumn::make('status')->label(__('Status'))->badge(),
+            TextColumn::make('joined_at')->label(__('Joined'))->date(),
+        ];
+
+        foreach (array_keys(self::WIDE_COLUMN_OPTIONS) as $key) {
+            $columns[] = TextColumn::make($key)->label(Str::headline($key));
+        }
+
+        $columns[] = TextColumn::make('seats')->label(__('Seats'));
+        $columns[] = TextColumn::make('renewal_date')->label(__('Renewal'))->date();
+
+        return $columns;
+    }
+
+    /** @return array<string, mixed> ~20 columns total once combined with the 3 base columns \u2014 look, not real data. */
+    private function wideColumnValues(DemoRow $row): array
+    {
+        $values = [];
+
+        foreach (self::WIDE_COLUMN_OPTIONS as $key => $options) {
+            $values[$key] = $options[$row->id % count($options)];
+        }
+
+        $values['seats'] = ($row->id * 3) % 50 + 1;
+        $values['renewal_date'] = now()->addDays($row->id * 17)->format('Y-m-d');
+
+        return $values;
     }
 
     public function render(): View
