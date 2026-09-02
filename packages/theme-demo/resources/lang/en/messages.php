@@ -10,6 +10,7 @@ return [
     'nav_forms_daisy' => 'DaisyUI Form',
     'nav_filament_form' => 'Filament Form',
     'nav_components' => 'DaisyUI Components',
+    'nav_filament_components' => 'Filament Components',
     'nav_tab_content' => 'Tab Content',
 
     'overview_title' => 'Style Demo',
@@ -40,6 +41,9 @@ return [
 
     'components_title' => 'DaisyUI Components',
     'components_description' => 'Avatars, badges, banners, alerts, buttons and the color matrix at full breadth.',
+
+    'filament_components_title' => 'Filament Components',
+    'filament_components_description' => 'The same buttons, badges and icon-buttons as the daisyUI gallery, built with Filament\'s own components.',
 
     'tab_content_title' => 'Tab Content',
     'tab_content_description' => 'The same connected tabs around a table, form, dashboard-style panels and plain text for responsive spacing comparisons.',

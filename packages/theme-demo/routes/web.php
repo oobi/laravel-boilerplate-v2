@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Concise\ThemeDemo\Livewire\ComponentGallery;
+use Concise\ThemeDemo\Livewire\FilamentComponentGallery;
 use Concise\ThemeDemo\Livewire\Forms\DaisyForm;
 use Concise\ThemeDemo\Livewire\Forms\FilamentForm;
 use Concise\ThemeDemo\Livewire\Overview;
@@ -32,6 +33,7 @@ Route::middleware(['web', 'auth', 'verified'])
         Route::get('/forms/daisy', DaisyForm::class)->name('forms-daisy');
         Route::get('/forms/filament', FilamentForm::class)->name('forms-filament');
         Route::get('/components', ComponentGallery::class)->name('components');
+        Route::get('/components/filament', FilamentComponentGallery::class)->name('components-filament');
         Route::get('/tab-content/table', TabContent::class)->name('tab-content-table')->defaults('variant', 'table');
         Route::get('/tab-content/form', TabContent::class)->name('tab-content-form')->defaults('variant', 'form');
         Route::get('/tab-content/panels', TabContent::class)->name('tab-content-panels')->defaults('variant', 'panels');

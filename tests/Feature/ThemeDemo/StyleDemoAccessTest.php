@@ -102,6 +102,7 @@ class StyleDemoAccessTest extends TestCase
             'daisy form' => ['/style-demo/forms/daisy'],
             'filament form' => ['/style-demo/forms/filament'],
             'components' => ['/style-demo/components'],
+            'filament components' => ['/style-demo/components/filament'],
             'tab content table' => ['/style-demo/tab-content/table'],
             'tab content form' => ['/style-demo/tab-content/form'],
             'tab content panels' => ['/style-demo/tab-content/panels'],
