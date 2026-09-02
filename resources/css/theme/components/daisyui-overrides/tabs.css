@@ -47,3 +47,7 @@
     border-radius: 0;
     box-shadow: none;
 }
+
+.tabs-connected__divider {
+    border-color: color-mix(in oklab, var(--color-base-300) 86%, var(--color-base-content));
+}

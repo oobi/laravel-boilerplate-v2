@@ -1,0 +1,105 @@
+/* Tab Navigation Styles */
+@layer components {
+    /* Scrollable tabs modifier */
+    .tabs-connected__scroll-viewport--scrollable {
+        @apply min-w-0 max-w-full overflow-x-auto;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
+        /* Hide scrollbar but allow scrolling on mobile */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        /* Smooth scrolling and snap on mobile */
+        scroll-behavior: smooth;
+    }
+
+    .tabs-connected__scroll-viewport--scrollable::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tabs--scrollable {
+        min-width: max-content;
+    }
+
+    /* Tab scroll indicators (left/right arrow buttons) */
+    .tab-scroll-indicator {
+        @apply absolute top-1/2 transform -translate-y-1/2 z-10;
+        @apply px-1 py-2 flex items-center justify-center cursor-pointer;
+        @apply opacity-75 hover:opacity-100 transition-opacity duration-200;
+        @apply active:scale-95 select-none;
+        display: none;
+        backdrop-filter: blur(4px);
+        touch-action: manipulation;
+        /* Light mode gradient */
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.75) 70%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        color: rgb(107, 114, 128); /* gray-600 */
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .tab-scroll-indicator {
+            /* Dark mode gradient */
+            background: linear-gradient(
+                to right,
+                rgba(17, 24, 39, 0.95) 0%,
+                rgba(17, 24, 39, 0.75) 70%,
+                rgba(17, 24, 39, 0) 100%
+            );
+            color: rgb(209, 213, 219); /* gray-300 */
+        }
+    }
+
+    .tab-scroll-left {
+        left: 0;
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.75) 70%,
+            rgba(255, 255, 255, 0) 100%
+        );
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .tab-scroll-left {
+            background: linear-gradient(
+                to right,
+                rgba(17, 24, 39, 0.95) 0%,
+                rgba(17, 24, 39, 0.75) 70%,
+                rgba(17, 24, 39, 0) 100%
+            );
+        }
+    }
+
+    .tab-scroll-right {
+        right: 0;
+        background: linear-gradient(
+            to left,
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(255, 255, 255, 0.75) 70%,
+            rgba(255, 255, 255, 0) 100%
+        );
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .tab-scroll-right {
+            background: linear-gradient(
+                to left,
+                rgba(17, 24, 39, 0.95) 0%,
+                rgba(17, 24, 39, 0.75) 70%,
+                rgba(17, 24, 39, 0) 100%
+            );
+        }
+    }
+
+    /* Container for scrollable tabs */
+    .tabs-connected__header--scrollable {
+        @apply relative;
+    }
+
+    .tabs-connected__scroll-shell--scrollable {
+        @apply relative min-w-0 max-w-full;
+    }
+}
