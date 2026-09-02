@@ -27,10 +27,15 @@
     {{-- Add-on nav sections (e.g. the style-demo dev package) register here via NavRegistry::extend() --}}
     @foreach (\App\Support\Navigation\NavRegistry::groups(auth()->user()) as $group)
         @php $groupRoutes = collect($group->items())->flatMap(fn ($item) => $item->activeRoutes())->all(); @endphp
+        <div class="pt-2 pb-1">
+            <div class="border-t border-base-300"></div>
+        </div>
         <div x-data="{ open: {{ request()->routeIs($groupRoutes) ? 'true' : '$persist(true).as(\'nav-'.\Illuminate\Support\Str::slug($group->label()).'\')' }} }">
             <button type="button" @click="open = !open" class="nav-section-label flex w-full items-center justify-between">
                 <span class="flex items-center gap-2">
-                    <x-dynamic-component :component="$group->icon()" class="h-4 w-4 flex-shrink-0" />
+                    @if ($group->icon())
+                        <x-dynamic-component :component="$group->icon()" class="h-4 w-4 flex-shrink-0" />
+                    @endif
                     {{ $group->label() }}
                 </span>
                 <x-heroicon-o-chevron-down class="h-4 w-4 transition-transform" ::class="{ 'rotate-180': !open }" />

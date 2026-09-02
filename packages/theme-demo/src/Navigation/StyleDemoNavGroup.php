@@ -20,9 +20,9 @@ class StyleDemoNavGroup implements NavGroup
         return __('theme-demo::messages.nav_group');
     }
 
-    public function icon(): string
+    public function icon(): ?string
     {
-        return 'heroicon-o-swatch';
+        return null;
     }
 
     /** @return list<NavItem> */

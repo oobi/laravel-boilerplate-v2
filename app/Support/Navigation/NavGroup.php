@@ -16,7 +16,7 @@ interface NavGroup
 {
     public function label(): string;
 
-    public function icon(): string;
+    public function icon(): ?string;
 
     /** @return list<NavItem> */
     public function items(): array;
