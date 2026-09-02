@@ -38,8 +38,8 @@ class ListUsersTest extends TestCase
     public function test_the_table_can_search_users_by_name(): void
     {
         $admin = User::factory()->superAdmin()->create();
-        $match = User::factory()->create(['name' => 'Findable Person']);
-        $other = User::factory()->create(['name' => 'Someone Else']);
+        $match = User::factory()->create(['first_name' => 'Findable', 'last_name' => 'Person']);
+        $other = User::factory()->create(['first_name' => 'Someone', 'last_name' => 'Else']);
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)

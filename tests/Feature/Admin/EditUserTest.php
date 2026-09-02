@@ -29,7 +29,8 @@ class EditUserTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(EditUser::class, ['user' => $target])
-            ->set('data.name', 'Updated Name')
+            ->set('data.first_name', 'Updated')
+            ->set('data.last_name', 'Name')
             ->set('data.system_role', SystemRole::SUPPORT->value)
             ->call('save');
 

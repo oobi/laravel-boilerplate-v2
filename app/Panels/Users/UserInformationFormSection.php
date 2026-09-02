@@ -27,8 +27,13 @@ class UserInformationFormSection implements FormSection
             Section::make(__('admin.user_information'))
                 ->columns(2)
                 ->schema([
-                    Forms\Components\TextInput::make('name')
-                        ->label(__('admin.name'))
+                    Forms\Components\TextInput::make('first_name')
+                        ->label(__('admin.first_name'))
+                        ->required()
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('last_name')
+                        ->label(__('admin.last_name'))
                         ->required()
                         ->maxLength(255),
 

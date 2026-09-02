@@ -38,7 +38,8 @@ class EditUser extends Component implements HasActions, HasSchemas
         $this->user = $user;
 
         $this->form->fill([
-            'name' => $this->user->name,
+            'first_name' => $this->user->first_name,
+            'last_name' => $this->user->last_name,
             'email' => $this->user->email,
             'system_role' => $this->user->system_role?->value,
             'active' => $this->user->active,

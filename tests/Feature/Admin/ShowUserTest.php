@@ -23,7 +23,7 @@ class ShowUserTest extends TestCase
     public function test_admins_can_view_a_user(): void
     {
         $admin = User::factory()->superAdmin()->create();
-        $target = User::factory()->create(['name' => 'Jane Doe']);
+        $target = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
 
         $response = $this->actingAs($admin)->get("/users/{$target->id}");
 

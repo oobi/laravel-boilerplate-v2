@@ -25,14 +25,16 @@ class CreateUserTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(CreateUser::class)
-            ->set('data.name', 'Brand New User')
+            ->set('data.first_name', 'Brand')
+            ->set('data.last_name', 'New User')
             ->set('data.email', 'brand-new@example.com')
             ->set('data.password', 'password')
             ->set('data.password_confirmation', 'password')
             ->call('create');
 
         $this->assertDatabaseHas('users', [
-            'name' => 'Brand New User',
+            'first_name' => 'Brand',
+            'last_name' => 'New User',
             'email' => 'brand-new@example.com',
             'active' => true,
         ]);

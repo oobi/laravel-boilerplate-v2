@@ -39,8 +39,13 @@ class CreateUser extends Component implements HasSchemas
                 Section::make(__('admin.user_information'))
                     ->columns(2)
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label(__('admin.name'))
+                        Forms\Components\TextInput::make('first_name')
+                            ->label(__('admin.first_name'))
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('last_name')
+                            ->label(__('admin.last_name'))
                             ->required()
                             ->maxLength(255),
 
@@ -85,7 +90,8 @@ class CreateUser extends Component implements HasSchemas
 
         $user = new User;
         $user->forceFill([
-            'name' => $data['name'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'system_role' => $data['system_role'] ?: null,
