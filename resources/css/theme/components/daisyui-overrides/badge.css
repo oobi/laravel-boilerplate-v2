@@ -34,3 +34,19 @@
         transparent
     );
 }
+
+/*
+|--------------------------------------------------------------------------
+| `.badge-ghost` — respect the color modifier
+|--------------------------------------------------------------------------
+| daisyUI's own `.badge-ghost` hardcodes a flat neutral (bg/border/text all
+| `--color-base-*`), ignoring any `.badge-{color}` also applied — unlike
+| `.btn-ghost`, which reads `--btn-color` so it stays colored. Mirror the
+| button behaviour: transparent bg/border, text takes the color modifier's
+| `--badge-color` (falls back to neutral when used alone, same as before).
+*/
+.badge-ghost {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--badge-color, var(--color-base-content));
+}

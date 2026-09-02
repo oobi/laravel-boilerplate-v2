@@ -86,8 +86,9 @@
 */
 @source inline("btn-{primary,secondary,accent,neutral,info,success,warning,error,soft,outline,dash,ghost}");
 @source inline("btn-{xs,sm,md,lg,xl}");
-@source inline("badge-{primary,secondary,accent,neutral,info,success,warning,error,soft}");
+@source inline("badge-{primary,secondary,accent,neutral,info,success,warning,error,soft,outline,ghost}");
 @source inline("badge-{xs,sm,md,lg,xl}");
+@source inline("alert-{primary,secondary,accent,neutral,info,success,warning,error,soft,outline,dash}");
 @source inline("bg-{primary,secondary,accent,neutral,info,success,warning,error,base-100,base-200,base-300}");
 @source inline("text-{primary,secondary,accent,neutral,info,success,warning,error}");
 @source inline("text-{primary,secondary,accent,neutral,info,success,warning,error}-content");

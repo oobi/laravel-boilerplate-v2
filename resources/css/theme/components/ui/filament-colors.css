@@ -19,11 +19,12 @@
 | 50-500, shades run toward black for 700-950.
 |
 | `secondary`/`accent` have no Filament built-in (only gray/danger/info/
-| primary/success/warning), so they're registered as custom colors
-| (AppServiceProvider::registerFilamentColors()) and also need their own
-| `.fi-color-{name}` wrapper rule below — Filament's compiled CSS only ships
-| that wrapper for its 6 built-in names, so without it `fi-bg-color-*`/
-| `fi-text-color-*` classes would have no `--color-*` scale to read from.
+| primary/success/warning). Filament's own PHP-side `FilamentColor::register()`
+| is unused here (confirmed unnecessary — the CSS ramp is sufficient without
+| a panel); `secondary`/`accent` instead get a `.fi-color-{name}` wrapper
+| rule below — Filament's compiled CSS only ships that wrapper for its 6
+| built-in names, so without it `fi-bg-color-*`/`fi-text-color-*` classes
+| would have no `--color-*` scale to read from.
 */
 :root {
     --gray-50: color-mix(in oklab, var(--color-neutral) 6%, white);

@@ -7,10 +7,10 @@
     <div class="card bg-base-100 border border-base-300">
         <div class="card-body gap-3">
             <h2 class="card-title">{{ __('Alerts') }}</h2>
-            <div class="alert alert-success">{{ __('Success message.') }}</div>
-            <div class="alert alert-error">{{ __('Error message.') }}</div>
-            <div class="alert alert-warning">{{ __('Warning message.') }}</div>
-            <div class="alert alert-info">{{ __('Info message.') }}</div>
+            <x-alert color="success">{{ __('Success message.') }}</x-alert>
+            <x-alert color="error">{{ __('Error message.') }}</x-alert>
+            <x-alert color="warning">{{ __('Warning message.') }}</x-alert>
+            <x-alert color="info">{{ __('Info message.') }}</x-alert>
         </div>
     </div>
 
@@ -35,9 +35,7 @@
                     <div class="ui-subtle mb-1">{{ ucfirst($variant) }}</div>
                     <div class="flex flex-wrap gap-2">
                         @foreach ($colors as $color)
-                            <button type="button" class="btn btn-sm {{ $variant === 'solid' ? "btn-{$color}" : "btn-{$variant} btn-{$color}" }}">
-                                {{ ucfirst($color) }}
-                            </button>
+                            <x-button :color="$color" :variant="$variant" size="sm">{{ ucfirst($color) }}</x-button>
                         @endforeach
                     </div>
                 </div>
@@ -56,7 +54,7 @@
                 <div class="ui-subtle mb-1">{{ __('Sizes') }}</div>
                 <div class="flex flex-wrap items-center gap-2">
                     @foreach ($sizes as $size)
-                        <button type="button" class="btn btn-primary btn-{{ $size }}">{{ strtoupper($size) }}</button>
+                        <x-button color="primary" :size="$size">{{ strtoupper($size) }}</x-button>
                     @endforeach
                 </div>
             </div>

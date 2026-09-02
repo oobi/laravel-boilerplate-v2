@@ -6,6 +6,7 @@
 ])
 
 @php
+    use App\Support\Theme\DaisyColor;
     use Filament\Support\Contracts\HasColor;
     use Filament\Support\Contracts\HasLabel;
 
@@ -17,11 +18,7 @@
     // Enums typically expose Filament's palette names (danger/gray) via
     // getColor() so they "just work" in Filament tables too — map those onto
     // daisyUI's equivalent color names here rather than at every call site.
-    $daisyColor = match ($color) {
-        'danger' => 'error',
-        'gray' => 'neutral',
-        default => $color,
-    };
+    $daisyColor = DaisyColor::map($color);
 
     // No explicit size keeps the original fixed text-xs look (default: xs,
     // sm, md, lg, xl); a size lets daisyUI's own badge-{size} control it instead.
