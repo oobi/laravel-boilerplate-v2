@@ -1,5 +1,5 @@
 {{--
-    <x-tabs.item> — a single tab link. Pass `badge` (e.g. a record count) to
+    <x-tabs-item> — a single tab link. Pass `badge` (e.g. a record count) to
     show a small <x-badge> after the label — tabs can carry a count just
     like a sidebar nav item can.
 

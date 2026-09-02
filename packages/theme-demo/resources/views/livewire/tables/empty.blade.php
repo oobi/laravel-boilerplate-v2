@@ -3,7 +3,7 @@
 <div class="flex flex-col gap-4">
     <x-page-header :title="__('theme-demo::messages.tables_title')" :description="__('theme-demo::messages.tables_description')" />
 
-    <x-tabs.nav>
+    <x-tabs-nav>
         @include('theme-demo::livewire.tables._tabs')
 
         <x-slot:content>
@@ -31,5 +31,5 @@
                 </table>
             </div>
         </x-slot:content>
-    </x-tabs.nav>
+    </x-tabs-nav>
 </div>

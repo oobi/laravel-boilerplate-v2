@@ -3,7 +3,7 @@
 <div class="flex flex-col gap-4">
     <x-page-header :title="__('theme-demo::messages.filament_table_title')" :description="__('theme-demo::messages.filament_table_description')" />
 
-    <x-tabs.nav>
+    <x-tabs-nav>
         @include('theme-demo::livewire.tables._filament-tabs', ['variant' => $variant])
 
         <x-slot:content>
@@ -57,7 +57,7 @@
                 </div>
             @endif
         </x-slot:content>
-    </x-tabs.nav>
+    </x-tabs-nav>
 
     <x-filament-actions::modals />
 </div>

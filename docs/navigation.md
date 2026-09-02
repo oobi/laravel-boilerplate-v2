@@ -130,7 +130,7 @@ needs to know about.
 `admin-sidebar-nav.blade.php` resolves the current list once per request via
 `NavRegistry::resolve(auth()->user())` (already filtered by `can()` and
 sorted by `order()`) and renders each node through one of two dumb Blade
-components: `<x-nav.item>` for a link, `<x-nav.group>` for a collapsible
+components: `<x-nav-item>` for a link, `<x-nav-group>` for a collapsible
 section (Alpine `x-collapse` + `$persist` open/closed state, keyed per
 group so each section remembers its own state independently). All the
 padding/border/chevron/Alpine markup lives in those two components — no
@@ -140,5 +140,5 @@ hand-written markup is duplicated per section.
 
 Nothing here is hidden in a package. `NavRegistry`, `AdminNav`, and the
 Blade components are plain app files — if a section ever needs bespoke
-markup that doesn't fit `<x-nav.item>`/`<x-nav.group>`, edit
+markup that doesn't fit `<x-nav-item>`/`<x-nav-group>`, edit
 `admin-sidebar-nav.blade.php` directly.
