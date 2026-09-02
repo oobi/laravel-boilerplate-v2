@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Concise\ThemeDemo;
 
-use App\Support\Navigation\NavRegistry;
-use Concise\ThemeDemo\Navigation\StyleDemoNavGroup;
+use App\Enums\SystemPermission;
+use App\Support\Navigation\Registry\NavItem;
+use App\Support\Navigation\Registry\NavRegistry;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -27,6 +28,42 @@ class ThemeDemoServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
-        NavRegistry::extend(StyleDemoNavGroup::class);
+        NavRegistry::group('style-demo')
+            ->label(__('theme-demo::messages.nav_group'))
+            ->can(SystemPermission::ACCESS_ADMIN_PANEL->value)
+            ->order(1000) // intentionally last, so it doesn't clutter the nav for normal users
+            ->add(
+                NavItem::make('style-demo-overview')
+                    ->label(__('theme-demo::messages.nav_overview'))
+                    ->route('style-demo.index')
+                    ->icon('heroicon-o-home'),
+                NavItem::make('style-demo-tables')
+                    ->label(__('theme-demo::messages.nav_tables'))
+                    ->route('style-demo.tables-empty')
+                    ->icon('heroicon-o-table-cells')
+                    ->active('style-demo.tables-empty', 'style-demo.tables-simple', 'style-demo.tables-maximalist', 'style-demo.tables-wide'),
+                NavItem::make('style-demo-filament-table')
+                    ->label(__('theme-demo::messages.nav_filament_table'))
+                    ->route('style-demo.tables-filament-empty')
+                    ->icon('heroicon-o-table-cells')
+                    ->active('style-demo.tables-filament-empty', 'style-demo.tables-filament-simple', 'style-demo.tables-filament-maximalist', 'style-demo.tables-filament-custom-header', 'style-demo.tables-filament-wide'),
+                NavItem::make('style-demo-forms-daisy')
+                    ->label(__('theme-demo::messages.nav_forms_daisy'))
+                    ->route('style-demo.forms-daisy')
+                    ->icon('heroicon-o-pencil-square'),
+                NavItem::make('style-demo-filament-form')
+                    ->label(__('theme-demo::messages.nav_filament_form'))
+                    ->route('style-demo.forms-filament')
+                    ->icon('heroicon-o-pencil-square'),
+                NavItem::make('style-demo-components')
+                    ->label(__('theme-demo::messages.nav_components'))
+                    ->route('style-demo.components')
+                    ->icon('heroicon-o-squares-plus'),
+                NavItem::make('style-demo-tab-content')
+                    ->label(__('theme-demo::messages.nav_tab_content'))
+                    ->route('style-demo.tab-content-table')
+                    ->icon('heroicon-o-window')
+                    ->active('style-demo.tab-content-table', 'style-demo.tab-content-form', 'style-demo.tab-content-panels', 'style-demo.tab-content-text'),
+            );
     }
 }

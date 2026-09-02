@@ -39,9 +39,10 @@ these choices.
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own
   cards/fields later without patching core files. See `docs/panels.md`.
-- **Sidebar navigation** — add-ons contribute a collapsible sidebar section
-  via `NavRegistry::extend()` rather than editing
-  `admin-sidebar-nav.blade.php` directly. See `docs/navigation.md`.
+- **Sidebar navigation** — the app curates its menu declaratively in
+  `App\Support\Navigation\AdminNav`; add-ons contribute via
+  `NavRegistry::item()`/`group()` rather than editing
+  `admin-sidebar-nav.blade.php`. See `docs/navigation.md`.
 
 ## Testing & dev tooling
 
