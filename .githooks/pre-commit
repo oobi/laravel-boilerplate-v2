@@ -1,0 +1,13 @@
+#!/bin/sh
+# Runs the test suite before allowing a commit. Bypass with `git commit --no-verify`.
+
+echo "Running tests before commit..."
+composer test
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "Commit aborted: tests failed. Fix the failures or use --no-verify to skip this check."
+    exit 1
+fi
+
+exit 0
