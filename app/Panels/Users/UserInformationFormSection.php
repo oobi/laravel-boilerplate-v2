@@ -6,7 +6,7 @@ namespace App\Panels\Users;
 
 use App\Enums\SystemRole;
 use App\Support\Panels\Concerns\HasPanelMetadata;
-use App\Support\Panels\FormSection;
+use App\Support\Panels\Contracts\FormSection;
 use Filament\Forms;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;

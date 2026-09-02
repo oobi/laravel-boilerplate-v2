@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Panels\Concerns;
 
-use App\Support\Panels\PanelRegion;
+use App\Support\Panels\Contracts\PanelRegion;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;

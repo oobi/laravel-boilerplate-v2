@@ -2,33 +2,35 @@
 
 declare(strict_types=1);
 
-namespace App\Support\Panels;
+namespace App\Support\Panels\Registry;
 
+use App\Support\Panels\Contracts\FormSection;
+use App\Support\Panels\Contracts\ShowPanel;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
  * Resolves the ShowPanel/FormSection classes registered for a page key
- * (e.g. "users.show") from config/panels.php, plus any runtime additions
- * from extend() — the mechanism add-ons (like a future Teams tier) use to
- * contribute a panel from their own service provider without editing
- * config/panels.php or the host Livewire component.
+ * (e.g. "users.show") via for($key)->add(...) — the app (App\Support\Panels\AdminPanels)
+ * and add-ons (like a future Teams tier, from their own service provider) both
+ * call the same method, without editing the host Livewire component.
  */
 class PanelRegistry
 {
-    /** @var array<string, list<class-string>> */
-    protected static array $extensions = [];
+    /** @var array<string, PanelSet> */
+    protected static array $sets = [];
 
-    public static function extend(string $key, string $panelClass): void
+    /** Fetch-or-create the ordered panel list for a page key. */
+    public static function for(string $key): PanelSet
     {
-        static::$extensions[$key][] = $panelClass;
+        return static::$sets[$key] ??= new PanelSet($key);
     }
 
-    /** Test/console helper — clears runtime extend() registrations. */
+    /** Test/console helper — clears runtime registrations. */
     public static function flush(): void
     {
-        static::$extensions = [];
+        static::$sets = [];
     }
 
     /** @return Collection<int, ShowPanel> */
@@ -56,10 +58,7 @@ class PanelRegistry
     /** @return Collection<int, ShowPanel|FormSection> */
     protected static function resolve(string $key, Model $subject, ?Authenticatable $viewer): Collection
     {
-        $classes = [
-            ...config("panels.{$key}", []),
-            ...(static::$extensions[$key] ?? []),
-        ];
+        $classes = static::$sets[$key]?->classes ?? [];
 
         return collect($classes)
             ->map(fn (string $class): object => app($class))

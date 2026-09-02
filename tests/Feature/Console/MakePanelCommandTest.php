@@ -4,8 +4,8 @@ namespace Tests\Feature\Console;
 
 use App\Panels\Users\TestDemoFormSection;
 use App\Panels\Users\TestDemoShowPanel;
-use App\Support\Panels\FormSection;
-use App\Support\Panels\ShowPanel;
+use App\Support\Panels\Contracts\FormSection;
+use App\Support\Panels\Contracts\ShowPanel;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 

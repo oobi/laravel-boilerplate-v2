@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Support\Panels;
+namespace App\Support\Panels\Contracts;
 
 use Filament\Schemas\Components\Component;
 use Illuminate\Contracts\Auth\Authenticatable;

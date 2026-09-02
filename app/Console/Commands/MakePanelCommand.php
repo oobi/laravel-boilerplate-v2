@@ -62,7 +62,7 @@ class MakePanelCommand extends Command
         File::put($path, $contents);
 
         $this->components->info("Created App\\Panels\\Users\\{$name}.");
-        $this->components->warn('Register it in config/panels.php, or call PanelRegistry::extend() from a service provider if this is an add-on.');
+        $this->components->warn('Register it in App\Support\Panels\AdminPanels, or call PanelRegistry::for(...)->add(...) from a service provider if this is an add-on.');
 
         return self::SUCCESS;
     }

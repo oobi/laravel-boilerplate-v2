@@ -6,7 +6,7 @@ namespace App\Livewire\Admin;
 
 use App\Enums\SystemPermission;
 use App\Models\User;
-use App\Support\Panels\PanelRegistry;
+use App\Support\Panels\Registry\PanelRegistry;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;

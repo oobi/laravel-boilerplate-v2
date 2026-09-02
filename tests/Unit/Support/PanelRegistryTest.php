@@ -3,9 +3,9 @@
 namespace Tests\Unit\Support;
 
 use App\Support\Panels\Concerns\HasPanelMetadata;
-use App\Support\Panels\PanelRegion;
-use App\Support\Panels\PanelRegistry;
-use App\Support\Panels\ShowPanel;
+use App\Support\Panels\Contracts\PanelRegion;
+use App\Support\Panels\Contracts\ShowPanel;
+use App\Support\Panels\Registry\PanelRegistry;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
@@ -21,9 +21,9 @@ class PanelRegistryTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_it_resolves_and_sorts_panels_from_config(): void
+    public function test_it_resolves_and_sorts_panels(): void
     {
-        config(['panels.test.show' => [SecondPanelStub::class, FirstPanelStub::class]]);
+        PanelRegistry::for('test.show')->add(SecondPanelStub::class, FirstPanelStub::class);
 
         $panels = PanelRegistry::showPanels('test.show', new PanelTestSubject);
 
@@ -32,7 +32,7 @@ class PanelRegistryTest extends TestCase
 
     public function test_it_filters_out_non_visible_panels(): void
     {
-        config(['panels.test.show' => [FirstPanelStub::class, HiddenPanelStub::class]]);
+        PanelRegistry::for('test.show')->add(FirstPanelStub::class, HiddenPanelStub::class);
 
         $panels = PanelRegistry::showPanels('test.show', new PanelTestSubject);
 
@@ -41,7 +41,7 @@ class PanelRegistryTest extends TestCase
 
     public function test_panels_report_their_region(): void
     {
-        config(['panels.test.show' => [FirstPanelStub::class, SidebarPanelStub::class]]);
+        PanelRegistry::for('test.show')->add(FirstPanelStub::class, SidebarPanelStub::class);
 
         $panels = PanelRegistry::showPanels('test.show', new PanelTestSubject);
 
@@ -49,11 +49,10 @@ class PanelRegistryTest extends TestCase
         $this->assertSame(PanelRegion::Sidebar, $panels->first(fn (ShowPanel $panel): bool => $panel->key() === 'sidebar')->region());
     }
 
-    public function test_extend_appends_a_panel_without_touching_config(): void
+    public function test_for_appends_across_multiple_calls(): void
     {
-        config(['panels.test.show' => [FirstPanelStub::class]]);
-
-        PanelRegistry::extend('test.show', SecondPanelStub::class);
+        PanelRegistry::for('test.show')->add(FirstPanelStub::class);
+        PanelRegistry::for('test.show')->add(SecondPanelStub::class);
 
         $panels = PanelRegistry::showPanels('test.show', new PanelTestSubject);
 
@@ -62,7 +61,7 @@ class PanelRegistryTest extends TestCase
 
     public function test_find_resolves_a_single_panel_by_key(): void
     {
-        config(['panels.test.show' => [FirstPanelStub::class, SecondPanelStub::class]]);
+        PanelRegistry::for('test.show')->add(FirstPanelStub::class, SecondPanelStub::class);
 
         $panel = PanelRegistry::find('test.show', 'second', new PanelTestSubject);
 

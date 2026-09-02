@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Panels\Users;
 
 use App\Support\Panels\Concerns\HasPanelMetadata;
-use App\Support\Panels\FormSection;
+use App\Support\Panels\Contracts\FormSection;
 use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
 

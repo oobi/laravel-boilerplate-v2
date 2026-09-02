@@ -6,10 +6,10 @@ namespace App\Livewire\Admin;
 
 use App\Enums\SystemPermission;
 use App\Models\User;
-use App\Support\Panels\HasPanelActions;
-use App\Support\Panels\PanelRegion;
-use App\Support\Panels\PanelRegistry;
-use App\Support\Panels\ShowPanel;
+use App\Support\Panels\Contracts\HasPanelActions;
+use App\Support\Panels\Contracts\PanelRegion;
+use App\Support\Panels\Contracts\ShowPanel;
+use App\Support\Panels\Registry\PanelRegistry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;

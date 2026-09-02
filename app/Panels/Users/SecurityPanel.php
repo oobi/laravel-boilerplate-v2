@@ -6,9 +6,9 @@ namespace App\Panels\Users;
 
 use App\Enums\SystemPermission;
 use App\Support\Panels\Concerns\HasPanelMetadata;
-use App\Support\Panels\HasPanelActions;
-use App\Support\Panels\PanelRegion;
-use App\Support\Panels\ShowPanel;
+use App\Support\Panels\Contracts\HasPanelActions;
+use App\Support\Panels\Contracts\PanelRegion;
+use App\Support\Panels\Contracts\ShowPanel;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;

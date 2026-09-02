@@ -19,26 +19,38 @@ itself; you always add an entry somewhere explicit (see below).
 
 ## Where panels are registered — how to find out what's active
 
-Two places, and only two:
+One mechanism: `PanelRegistry::for(string $key)->add(string $panelClass, ...)`
+— fetch-or-create the ordered panel list for a page key (e.g. `users.show`),
+then append one or more classes.
 
-1. **`config/panels.php`** — the default set, grouped by resource + page:
+1. **`App\Support\Panels\AdminPanels::define()`** — the app's own curated
+   defaults, grouped by resource + page:
    ```php
-   return [
-       'users' => [
-           'show' => [StatisticsPanel::class, SecurityPanel::class],
-           'edit' => [UserInformationFormSection::class],
-       ],
-   ];
-   ```
-   This is the first place to look — it's a plain array, so you can see
-   exactly what ships by default, comment out a line to disable a panel, or
-   reorder lines to reorder cards.
+   class AdminPanels
+   {
+       public static function define(): void
+       {
+           PanelRegistry::for('users.show')->add(
+               StatisticsPanel::class,
+               SecurityPanel::class,
+           );
 
-2. **`PanelRegistry::extend(string $key, string $panelClass)`** — the
-   mechanism an add-on (like a future Teams tier) uses to contribute a panel
-   from its **own** service provider, without editing `config/panels.php` or
-   the host Livewire component. To find every runtime addition, grep the
-   codebase for `PanelRegistry::extend(`.
+           PanelRegistry::for('users.edit')->add(
+               UserInformationFormSection::class,
+           );
+       }
+   }
+   ```
+   This is the first place to look — it's a plain method, so you can see
+   exactly what ships by default, comment out a line to disable a panel, or
+   reorder lines to reorder cards. `AdminPanels::define()` runs once per
+   request from `PanelsServiceProvider::boot()`.
+
+2. **The same `PanelRegistry::for($key)->add(...)` call**, made from an
+   add-on's **own** service provider, is how something like a future Teams
+   tier contributes a panel without editing `AdminPanels` or the host
+   Livewire component. To find every registration, grep the codebase for
+   `PanelRegistry::for(`.
 
    Example (see `app/Providers/PanelExtensionDemoServiceProvider.php` for a
    real, working one):
@@ -47,14 +59,15 @@ Two places, and only two:
    {
        public function boot(): void
        {
-           PanelRegistry::extend('users.show', TeamMembershipsPanel::class);
+           PanelRegistry::for('users.show')->add(TeamMembershipsPanel::class);
        }
    }
    ```
    Registered in `bootstrap/providers.php` like any other provider.
 
-So: **`config/panels.php` + `grep -rn "PanelRegistry::extend("`** always tells
-you the complete, current picture.
+So: **`grep -rn "PanelRegistry::for("`** always tells you the complete,
+current picture.
+
 
 ## Metadata every panel gets for free
 
@@ -74,8 +87,8 @@ you only override what differs:
 namespace App\Panels\Users;
 
 use App\Support\Panels\Concerns\HasPanelMetadata;
-use App\Support\Panels\PanelRegion;
-use App\Support\Panels\ShowPanel;
+use App\Support\Panels\Contracts\PanelRegion;
+use App\Support\Panels\Contracts\ShowPanel;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 
@@ -100,8 +113,9 @@ class ArticlesAuthoredPanel implements ShowPanel
 }
 ```
 
-Then register it — core panel: add the class to `config/panels.php['users']['show']`.
-Add-on panel: call `PanelRegistry::extend('users.show', ArticlesAuthoredPanel::class)`
+Then register it — core panel: add the class to `AdminPanels::define()`
+under `PanelRegistry::for('users.show')`. Add-on panel: call
+`PanelRegistry::for('users.show')->add(ArticlesAuthoredPanel::class)`
 from your own provider's `boot()`.
 
 Generate the boilerplate for this with `php artisan bp:make:panel` — see
@@ -132,7 +146,7 @@ need to know anything about the host component.
 namespace App\Panels\Users;
 
 use App\Support\Panels\Concerns\HasPanelMetadata;
-use App\Support\Panels\FormSection;
+use App\Support\Panels\Contracts\FormSection;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
@@ -153,9 +167,9 @@ class NotificationPreferencesFormSection implements FormSection
     }
 }
 ```
-
-Register the same way, under `config/panels.php['users']['edit']` or via
-`PanelRegistry::extend('users.edit', ...)`. `EditUser::save()` persists
+Register the same way, via `AdminPanels::define()` under
+`PanelRegistry::for('users.edit')->add(...)`, or from an add-on's own
+provider. `EditUser::save()` persists
 `$this->form->getState()` as-is, so a new field just needs a matching column
 on `User` — no changes needed in `EditUser.php` itself. (Filament excludes
 `disabled()` fields from that state automatically, which is how the existing
@@ -174,6 +188,6 @@ doesn't limit extensibility: new panels never need to touch it.
 ## Ejecting / hand-tooling a layout
 
 Nothing here is hidden in a package. If a page ever needs a one-off layout
-that doesn't fit the panel model, `config/panels.php` and the
+that doesn't fit the panel model, `App\Support\Panels\AdminPanels` and the
 `resources/views/livewire/admin/*.blade.php` region loops are plain app
 files — edit them directly.
