@@ -31,3 +31,21 @@ currently registered.
   daisyUI semantic colors (`bg-primary`, `text-primary-content`, ...) plus
   `bg-soft-{color}` / `avatar-{color}` / `ui-banner-{color}` from
   `resources/css/theme/components/ui/colors.css`.
+
+## Coding standards
+
+Full source of truth: [_documentation/CODING_STANDARDS.md](../../_documentation/CODING_STANDARDS.md).
+Salient points:
+
+- Controllers validate (Form Requests) → delegate → respond. Extract to an
+  **Action** once logic is >~10 lines, multi-step, or reusable; promote to a
+  **Service** only when Actions share state/a third-party client.
+- Fixed-value fields are **string-backed PHP enums** + a `string` migration
+  column — never a MySQL native `ENUM` column (breaks SQLite tests, needs
+  `ALTER TABLE` to change) and never a bare int/magic string.
+- Never `$request->all()` into mass assignment — validate via Form Requests.
+  Authorisation via Policies/Gates, not ad-hoc `if` checks or "logged in" alone.
+- Admin/maintenance one-off tasks are Artisan commands, never a hidden
+  GET route. Destructive commands need a confirmation prompt + `--dry-run`.
+- One PR = one concern, aim under ~400 lines diff; log bugs as GitHub issues
+  before fixing, reference them in the commit.
