@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Enums;
 
 use App\Enums\Concerns\HasOptions;
+use App\Support\Theme\DaisyColor;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
@@ -39,8 +40,8 @@ enum SystemRole: string implements HasColor, HasLabel
     public function getColor(): string
     {
         return match ($this) {
-            self::SUPER_ADMIN => 'danger',
-            self::SUPPORT => 'warning',
+            self::SUPER_ADMIN => DaisyColor::ERROR->toFilamentColor(),
+            self::SUPPORT => DaisyColor::WARNING->toFilamentColor(),
         };
     }
 

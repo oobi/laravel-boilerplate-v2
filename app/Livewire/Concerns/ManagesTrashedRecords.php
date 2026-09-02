@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Concerns;
 
+use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
@@ -54,7 +55,7 @@ trait ManagesTrashedRecords
     public function emptyTrashAction(): Action
     {
         return Action::make('emptyTrash')
-            ->color('danger')
+            ->color(DaisyColor::ERROR->toFilamentColor())
             ->requiresConfirmation()
             ->modalHeading(__('admin.empty_trash'))
             ->modalDescription(__('admin.empty_trash_confirm'))

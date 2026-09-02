@@ -25,7 +25,7 @@
 @php
     use App\Support\Theme\DaisyColor;
 
-    $daisyColor = DaisyColor::map($color);
+    $daisyColor = DaisyColor::fromFilamentColor($color)->value;
 
     $classes = collect(['btn', "btn-{$daisyColor}"])
         ->when($variant !== 'solid', fn ($classes) => $classes->push("btn-{$variant}"))

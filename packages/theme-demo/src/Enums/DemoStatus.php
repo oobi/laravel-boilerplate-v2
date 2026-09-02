@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\ThemeDemo\Enums;
 
+use App\Support\Theme\DaisyColor;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
@@ -26,9 +27,9 @@ enum DemoStatus: string implements HasColor, HasLabel
     public function getColor(): string
     {
         return match ($this) {
-            self::ACTIVE => 'success',
-            self::PENDING => 'info',
-            self::ARCHIVED => 'warning',
+            self::ACTIVE => DaisyColor::SUCCESS->toFilamentColor(),
+            self::PENDING => DaisyColor::INFO->toFilamentColor(),
+            self::ARCHIVED => DaisyColor::WARNING->toFilamentColor(),
         };
     }
 

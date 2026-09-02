@@ -18,7 +18,7 @@
     // Enums typically expose Filament's palette names (danger/gray) via
     // getColor() so they "just work" in Filament tables too — map those onto
     // daisyUI's equivalent color names here rather than at every call site.
-    $daisyColor = DaisyColor::map($color);
+    $daisyColor = DaisyColor::fromFilamentColor($color)->value;
 
     // No explicit size keeps the original fixed text-xs look (default: xs,
     // sm, md, lg, xl); a size lets daisyUI's own badge-{size} control it instead.

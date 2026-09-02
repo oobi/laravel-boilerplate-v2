@@ -16,7 +16,7 @@
 @php
     use App\Support\Theme\DaisyColor;
 
-    $daisyColor = DaisyColor::map($color);
+    $daisyColor = DaisyColor::fromFilamentColor($color)->value;
 
     $classes = collect(['alert', "alert-{$daisyColor}"])
         ->when($variant !== 'solid', fn ($classes) => $classes->push("alert-{$variant}"))

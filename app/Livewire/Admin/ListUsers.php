@@ -9,6 +9,7 @@ use App\Enums\SystemRole;
 use App\Enums\UserStatus;
 use App\Livewire\Concerns\ManagesTrashedRecords;
 use App\Models\User;
+use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -124,7 +125,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     Action::make('impersonate')
                         ->label(__('admin.impersonate'))
                         ->icon('heroicon-o-finger-print')
-                        ->color('warning')
+                        ->color(DaisyColor::WARNING->toFilamentColor())
                         ->url(fn (User $record): string => route('users.impersonate', $record->id))
                         ->hidden(fn (User $record): bool => $record->trashed()
                             || ! Auth::user()->canImpersonate()
@@ -135,7 +136,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                             ? __('admin.deactivate')
                             : __('admin.activate'))
                         ->icon(fn (User $record): string => $record->active ? 'heroicon-o-pause-circle' : 'heroicon-o-check-circle')
-                        ->color(fn (User $record): string => $record->active ? 'warning' : 'success')
+                        ->color(fn (User $record): string => $record->active ? DaisyColor::WARNING->toFilamentColor() : DaisyColor::SUCCESS->toFilamentColor())
                         ->requiresConfirmation()
                         ->action(function (User $record): void {
                             Gate::authorize(SystemPermission::SUSPEND_USERS->value);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Enums;
 
 use App\Enums\Concerns\HasOptions;
+use App\Support\Theme\DaisyColor;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
@@ -38,9 +39,9 @@ enum UserStatus: string implements HasColor, HasLabel
     public function getColor(): string
     {
         return match ($this) {
-            self::ACTIVE => 'success',
-            self::PENDING => 'info',
-            self::INACTIVE => 'warning',
+            self::ACTIVE => DaisyColor::SUCCESS->toFilamentColor(),
+            self::PENDING => DaisyColor::INFO->toFilamentColor(),
+            self::INACTIVE => DaisyColor::WARNING->toFilamentColor(),
         };
     }
 }
