@@ -43,9 +43,21 @@ class StyleDemoAccessTest extends TestCase
             ->assertOk()
             ->assertSee('tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100', false)
             ->assertSee('tabs-connected__header', false)
-            ->assertSee('tabs tabs-border gap-2 sm:gap-8', false)
+            ->assertSee('tabs tabs-border gap-2 sm:gap-6', false)
             ->assertSee('tabs-connected__divider', false)
             ->assertSee('tab-content tabs-connected__content bg-base-100 p-6', false);
+    }
+
+    #[DataProvider('tabContentProvider')]
+    public function test_tab_content_variants_render_their_comparison_sample(string $uri, string $expectedContent): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)
+            ->get($uri)
+            ->assertOk()
+            ->assertSee('tabs-connected__content', false)
+            ->assertSee($expectedContent);
     }
 
     public function test_admins_can_sort_filament_table_by_joined_at(): void
@@ -90,6 +102,21 @@ class StyleDemoAccessTest extends TestCase
             'daisy form' => ['/style-demo/forms/daisy'],
             'filament form' => ['/style-demo/forms/filament'],
             'components' => ['/style-demo/components'],
+            'tab content table' => ['/style-demo/tab-content/table'],
+            'tab content form' => ['/style-demo/tab-content/form'],
+            'tab content panels' => ['/style-demo/tab-content/panels'],
+            'tab content text' => ['/style-demo/tab-content/text'],
+        ];
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function tabContentProvider(): array
+    {
+        return [
+            'table' => ['/style-demo/tab-content/table', 'Ava Thompson'],
+            'form' => ['/style-demo/tab-content/form', 'Save changes'],
+            'panels' => ['/style-demo/tab-content/panels', 'Recent activity'],
+            'plain text' => ['/style-demo/tab-content/text', 'Keeping a shared workspace clear'],
         ];
     }
 }

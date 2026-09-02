@@ -14,6 +14,7 @@
             ['route' => 'style-demo.forms-daisy', 'label' => __('theme-demo::messages.nav_forms_daisy'), 'description' => __('theme-demo::messages.forms_daisy_description')],
             ['route' => 'style-demo.forms-filament', 'label' => __('theme-demo::messages.nav_filament_form'), 'description' => __('theme-demo::messages.filament_form_description')],
             ['route' => 'style-demo.components', 'label' => __('theme-demo::messages.nav_components'), 'description' => __('theme-demo::messages.components_description')],
+            ['route' => 'style-demo.tab-content-table', 'label' => __('theme-demo::messages.nav_tab_content'), 'description' => __('theme-demo::messages.tab_content_description')],
         ] as $link)
             <a href="{{ route($link['route']) }}" class="card bg-base-100 border border-base-300 transition hover:border-primary">
                 <div class="card-body">

@@ -6,6 +6,7 @@ use Concise\ThemeDemo\Livewire\ComponentGallery;
 use Concise\ThemeDemo\Livewire\Forms\DaisyForm;
 use Concise\ThemeDemo\Livewire\Forms\FilamentForm;
 use Concise\ThemeDemo\Livewire\Overview;
+use Concise\ThemeDemo\Livewire\TabContent\TabContent;
 use Concise\ThemeDemo\Livewire\Tables\EmptyTable;
 use Concise\ThemeDemo\Livewire\Tables\FilamentTable;
 use Concise\ThemeDemo\Livewire\Tables\MaximalistTable;
@@ -31,4 +32,8 @@ Route::middleware(['web', 'auth', 'verified'])
         Route::get('/forms/daisy', DaisyForm::class)->name('forms-daisy');
         Route::get('/forms/filament', FilamentForm::class)->name('forms-filament');
         Route::get('/components', ComponentGallery::class)->name('components');
+        Route::get('/tab-content/table', TabContent::class)->name('tab-content-table')->defaults('variant', 'table');
+        Route::get('/tab-content/form', TabContent::class)->name('tab-content-form')->defaults('variant', 'form');
+        Route::get('/tab-content/panels', TabContent::class)->name('tab-content-panels')->defaults('variant', 'panels');
+        Route::get('/tab-content/text', TabContent::class)->name('tab-content-text')->defaults('variant', 'text');
     });

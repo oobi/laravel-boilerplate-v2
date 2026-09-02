@@ -39,6 +39,9 @@ class StyleDemoNavGroup implements NavGroup
             new NavItem(__('theme-demo::messages.nav_forms_daisy'), 'style-demo.forms-daisy', 'heroicon-o-pencil-square'),
             new NavItem(__('theme-demo::messages.nav_filament_form'), 'style-demo.forms-filament', 'heroicon-o-pencil-square'),
             new NavItem(__('theme-demo::messages.nav_components'), 'style-demo.components', 'heroicon-o-squares-plus'),
+            new NavItem(__('theme-demo::messages.nav_tab_content'), 'style-demo.tab-content-table', 'heroicon-o-window', [
+                'style-demo.tab-content-table', 'style-demo.tab-content-form', 'style-demo.tab-content-panels', 'style-demo.tab-content-text',
+            ]),
         ];
     }
 
