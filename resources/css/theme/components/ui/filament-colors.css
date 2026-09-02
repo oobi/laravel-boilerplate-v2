@@ -17,6 +17,13 @@
 | together. The 600 step *is* the daisyUI color (Tailwind's own palettes put
 | the "base" swatch at 600 — see tokens.css), tints run toward white for
 | 50-500, shades run toward black for 700-950.
+|
+| `secondary`/`accent` have no Filament built-in (only gray/danger/info/
+| primary/success/warning), so they're registered as custom colors
+| (AppServiceProvider::registerFilamentColors()) and also need their own
+| `.fi-color-{name}` wrapper rule below — Filament's compiled CSS only ships
+| that wrapper for its 6 built-in names, so without it `fi-bg-color-*`/
+| `fi-text-color-*` classes would have no `--color-*` scale to read from.
 */
 :root {
     --gray-50: color-mix(in oklab, var(--color-neutral) 6%, white);
@@ -90,4 +97,57 @@
     --warning-800: color-mix(in oklab, var(--color-warning) 69%, black);
     --warning-900: color-mix(in oklab, var(--color-warning) 56%, black);
     --warning-950: color-mix(in oklab, var(--color-warning) 41%, black);
+
+    --secondary-50: color-mix(in oklab, var(--color-secondary) 6%, white);
+    --secondary-100: color-mix(in oklab, var(--color-secondary) 12%, white);
+    --secondary-200: color-mix(in oklab, var(--color-secondary) 24%, white);
+    --secondary-300: color-mix(in oklab, var(--color-secondary) 42%, white);
+    --secondary-400: color-mix(in oklab, var(--color-secondary) 65%, white);
+    --secondary-500: color-mix(in oklab, var(--color-secondary) 85%, white);
+    --secondary-600: var(--color-secondary);
+    --secondary-700: color-mix(in oklab, var(--color-secondary) 83%, black);
+    --secondary-800: color-mix(in oklab, var(--color-secondary) 69%, black);
+    --secondary-900: color-mix(in oklab, var(--color-secondary) 56%, black);
+    --secondary-950: color-mix(in oklab, var(--color-secondary) 41%, black);
+
+    --accent-50: color-mix(in oklab, var(--color-accent) 6%, white);
+    --accent-100: color-mix(in oklab, var(--color-accent) 12%, white);
+    --accent-200: color-mix(in oklab, var(--color-accent) 24%, white);
+    --accent-300: color-mix(in oklab, var(--color-accent) 42%, white);
+    --accent-400: color-mix(in oklab, var(--color-accent) 65%, white);
+    --accent-500: color-mix(in oklab, var(--color-accent) 85%, white);
+    --accent-600: var(--color-accent);
+    --accent-700: color-mix(in oklab, var(--color-accent) 83%, black);
+    --accent-800: color-mix(in oklab, var(--color-accent) 69%, black);
+    --accent-900: color-mix(in oklab, var(--color-accent) 56%, black);
+    --accent-950: color-mix(in oklab, var(--color-accent) 41%, black);
+}
+
+/* Filament ships this wrapper rule for its 6 built-in colors only (vendor/filament/support/resources/css/utilities.css) — replicated here for our 2 custom ones. */
+.fi-color-secondary {
+    --color-50: var(--secondary-50);
+    --color-100: var(--secondary-100);
+    --color-200: var(--secondary-200);
+    --color-300: var(--secondary-300);
+    --color-400: var(--secondary-400);
+    --color-500: var(--secondary-500);
+    --color-600: var(--secondary-600);
+    --color-700: var(--secondary-700);
+    --color-800: var(--secondary-800);
+    --color-900: var(--secondary-900);
+    --color-950: var(--secondary-950);
+}
+
+.fi-color-accent {
+    --color-50: var(--accent-50);
+    --color-100: var(--accent-100);
+    --color-200: var(--accent-200);
+    --color-300: var(--accent-300);
+    --color-400: var(--accent-400);
+    --color-500: var(--accent-500);
+    --color-600: var(--accent-600);
+    --color-700: var(--accent-700);
+    --color-800: var(--accent-800);
+    --color-900: var(--accent-900);
+    --color-950: var(--accent-950);
 }

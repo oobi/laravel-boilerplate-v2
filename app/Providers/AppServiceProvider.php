@@ -65,7 +65,8 @@ class AppServiceProvider extends ServiceProvider
      * *selection*; the actual rendered color always comes from the CSS var override in
      * filament-colors.css, so it stays reactive to the light/dark theme toggle. `gray` is
      * registered for completeness, but Filament's button/badge/icon-button components treat
-     * gray as "no color" and never apply it regardless.
+     * gray as "no color" and never emit a `.fi-color-gray` class for it (HasDefaultGrayColor)
+     * — filament-buttons.css targets the resulting `:not(.fi-color)` state directly instead.
      */
     private function registerFilamentColors(): void
     {

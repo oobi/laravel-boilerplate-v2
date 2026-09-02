@@ -1,0 +1,143 @@
+/*
+|--------------------------------------------------------------------------
+| Filament button overrides (standalone tables/actions, no panel)
+|--------------------------------------------------------------------------
+| Two daisyUI-alignment fixes for `<x-filament::button>`, kept separate from
+| filament-colors.css (that file is about *what a color's shades are*; this
+| one is about *how the button component uses them*).
+*/
+
+/*
+| Filament's non-outlined button picks its background/text shade via a
+| WCAG contrast calculation (ButtonComponentColorMap) that can land on a
+| lighter shade + dark text instead of the base color + white text,
+| depending on how much contrast headroom the brand color has against pure
+| white. daisyUI's `.btn-{color}` never does this calculation — it's always
+| the base color with its `-content` pair. Force the same fixed pairing here
+| so solid Filament buttons visually match solid daisyUI buttons. `gray` is
+| handled separately below — Filament treats it as "no color" and never
+| applies a `.fi-color-*` class for it (HasDefaultGrayColor), so it can't be
+| targeted the same way as the other 7.
+*/
+.fi-btn.fi-color-primary:not(.fi-outlined),
+.fi-btn.fi-color-secondary:not(.fi-outlined),
+.fi-btn.fi-color-accent:not(.fi-outlined),
+.fi-btn.fi-color-info:not(.fi-outlined),
+.fi-btn.fi-color-success:not(.fi-outlined),
+.fi-btn.fi-color-warning:not(.fi-outlined),
+.fi-btn.fi-color-danger:not(.fi-outlined) {
+    --bg: var(--color-600);
+    --dark-bg: var(--color-600);
+    --hover-bg: var(--color-600);
+    --dark-hover-bg: var(--color-600);
+}
+
+.fi-btn.fi-color-primary:not(.fi-outlined) {
+    --text: var(--color-primary-content);
+    --dark-text: var(--color-primary-content);
+    --hover-text: var(--color-primary-content);
+    --dark-hover-text: var(--color-primary-content);
+}
+
+.fi-btn.fi-color-secondary:not(.fi-outlined) {
+    --text: var(--color-secondary-content);
+    --dark-text: var(--color-secondary-content);
+    --hover-text: var(--color-secondary-content);
+    --dark-hover-text: var(--color-secondary-content);
+}
+
+.fi-btn.fi-color-accent:not(.fi-outlined) {
+    --text: var(--color-accent-content);
+    --dark-text: var(--color-accent-content);
+    --hover-text: var(--color-accent-content);
+    --dark-hover-text: var(--color-accent-content);
+}
+
+.fi-btn.fi-color-info:not(.fi-outlined) {
+    --text: var(--color-info-content);
+    --dark-text: var(--color-info-content);
+    --hover-text: var(--color-info-content);
+    --dark-hover-text: var(--color-info-content);
+}
+
+.fi-btn.fi-color-success:not(.fi-outlined) {
+    --text: var(--color-success-content);
+    --dark-text: var(--color-success-content);
+    --hover-text: var(--color-success-content);
+    --dark-hover-text: var(--color-success-content);
+}
+
+.fi-btn.fi-color-warning:not(.fi-outlined) {
+    --text: var(--color-warning-content);
+    --dark-text: var(--color-warning-content);
+    --hover-text: var(--color-warning-content);
+    --dark-hover-text: var(--color-warning-content);
+}
+
+.fi-btn.fi-color-danger:not(.fi-outlined) {
+    --text: var(--color-error-content);
+    --dark-text: var(--color-error-content);
+    --hover-text: var(--color-error-content);
+    --dark-hover-text: var(--color-error-content);
+}
+
+/*
+| `gray` (see comment above) renders with no `.fi-color-*` class at all, so
+| `:not(.fi-color)` is the only way to target it — daisyUI's `.btn-neutral`
+| is still a solid filled button though, so give it the same filled/outlined
+| treatment as the other 7 colors instead of Filament's plain white default.
+*/
+.fi-btn:not(.fi-outlined):not(.fi-color) {
+    background-color: var(--color-neutral);
+    color: var(--color-neutral-content);
+}
+
+.fi-btn:not(.fi-outlined):not(.fi-color):hover {
+    background-color: color-mix(in oklab, var(--color-neutral) 85%, white);
+}
+
+.fi-btn.fi-outlined:not(.fi-color) {
+    color: var(--color-neutral);
+    --tw-ring-color: var(--color-neutral);
+}
+
+/*
+| Filament sizes buttons by padding+font-size alone (Tailwind spacing scale),
+| daisyUI sizes them to fixed heights (`--size` steps). Pin both properties
+| straight to daisyUI's measured `.btn-{size}` box model so the two scales
+| line up exactly instead of drifting apart at the extremes (Filament's xs
+| through xl only spans 28px→44px; daisyUI's spans 24px→56px).
+*/
+.fi-btn {
+    border-radius: var(--radius-field);
+}
+
+.fi-btn.fi-size-xs {
+    height: 1.5rem;
+    padding-inline: 0.5rem;
+    font-size: 0.6875rem;
+}
+
+.fi-btn.fi-size-sm {
+    height: 2rem;
+    padding-inline: 0.75rem;
+    font-size: 0.75rem;
+}
+
+.fi-btn.fi-size-md {
+    height: 2.5rem;
+    padding-inline: 1rem;
+    font-size: 0.875rem;
+}
+
+.fi-btn.fi-size-lg {
+    height: 3rem;
+    padding-inline: 1.25rem;
+    font-size: 1.125rem;
+}
+
+.fi-btn.fi-size-xl {
+    height: 3.5rem;
+    padding-inline: 1.5rem;
+    font-size: 1.375rem;
+}
