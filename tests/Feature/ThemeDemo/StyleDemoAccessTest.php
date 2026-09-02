@@ -34,6 +34,20 @@ class StyleDemoAccessTest extends TestCase
         $this->actingAs($admin)->get($uri)->assertStatus(200);
     }
 
+    public function test_table_tabs_are_connected_to_their_content_panel(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)
+            ->get('/style-demo/tables/empty')
+            ->assertOk()
+            ->assertSee('tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100', false)
+            ->assertSee('tabs-connected__header', false)
+            ->assertSee('tabs tabs-border gap-2 sm:gap-8', false)
+            ->assertSee('tabs-connected__divider', false)
+            ->assertSee('tab-content tabs-connected__content bg-base-100 p-6', false);
+    }
+
     public function test_admins_can_sort_filament_table_by_joined_at(): void
     {
         $admin = User::factory()->superAdmin()->create();

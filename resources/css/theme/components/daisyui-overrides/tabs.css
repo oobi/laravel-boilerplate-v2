@@ -24,3 +24,26 @@
         }
     }
 }
+
+.tabs-connected {
+    position: relative;
+    z-index: 0;
+
+    > .tabs-connected__header > .tabs {
+        > .tab {
+            position: relative;
+            z-index: 1;
+            color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+        }
+
+        > .tab:is(.tab-active, [aria-selected="true"], [aria-current="true"], [aria-current="page"]):not(.tab-disabled, [disabled]) {
+            color: var(--color-primary);
+        }
+    }
+}
+
+.tabs-connected__content {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
