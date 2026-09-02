@@ -49,3 +49,4 @@ Salient points:
   GET route. Destructive commands need a confirmation prompt + `--dry-run`.
 - One PR = one concern, aim under ~400 lines diff; log bugs as GitHub issues
   before fixing, reference them in the commit.
+- Run tests after every change, and before pushing. Use `php artisan test`
