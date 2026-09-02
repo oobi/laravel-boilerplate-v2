@@ -1,0 +1,110 @@
+/*
+|--------------------------------------------------------------------------
+| .table — align daisyUI tables with the Filament table island
+|--------------------------------------------------------------------------
+| daisyUI ships a neutral, borderless table. Give its header and footer the
+| same primary tint, compact uppercase labels, and token-driven elevation as
+| the standalone Filament table so both table implementations share one
+| visual language.
+*/
+.daisy-table {
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-box, 0.5rem);
+    box-shadow: var(--ui-island-shadow);
+    overflow: hidden;
+}
+
+.daisy-table__scroll {
+    overflow-x: auto;
+}
+
+.daisy-table__pagination {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--color-base-300);
+    background-color: color-mix(
+        in oklab,
+        var(--color-primary) 6%,
+        var(--color-base-100)
+    );
+    container-type: inline-size;
+}
+
+.daisy-table__pagination-overview {
+    display: none;
+    color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.daisy-table__pagination-per-page {
+    display: flex;
+    grid-column: 2;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.daisy-table__pagination-per-page > span {
+    display: none;
+    color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.daisy-table__pagination-actions {
+    display: flex;
+    grid-column: 3;
+    justify-self: end;
+}
+
+.daisy-table__pagination-actions > .btn {
+    border-color: var(--color-base-300);
+    background-color: var(--color-base-100);
+    box-shadow: none;
+}
+
+.daisy-table__pagination-pages {
+    display: none;
+}
+
+@container (min-width: 48rem) {
+    .daisy-table__pagination-overview {
+        display: block;
+    }
+
+    .daisy-table__pagination-per-page > span {
+        display: block;
+    }
+
+    .daisy-table__pagination-action-label {
+        display: none;
+    }
+
+    .daisy-table__pagination-pages {
+        display: flex;
+    }
+}
+
+.daisy-table .table {
+    border: 0;
+    box-shadow: none;
+}
+
+.table :where(thead, tfoot) tr {
+    background-color: color-mix(
+        in oklab,
+        var(--color-primary) 6%,
+        var(--color-base-100)
+    );
+}
+
+.table :where(thead, tfoot) th {
+    color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}

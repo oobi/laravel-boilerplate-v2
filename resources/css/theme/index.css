@@ -72,6 +72,7 @@
 @import "./components/daisyui-overrides/forms.css";
 @import "./components/daisyui-overrides/menu.css";
 @import "./components/daisyui-overrides/tabs.css";
+@import "./components/daisyui-overrides/table.css";
 
 /* ── Theme + design tokens — must come after daisyUI is initialised ─── */
 @import "./tokens.css";

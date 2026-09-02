@@ -38,8 +38,9 @@
                 </div>
             @endif
 
-            <div class="mt-4 overflow-x-auto">
-                <table class="table">
+            <div class="daisy-table mt-4">
+                <div class="daisy-table__scroll">
+                    <table class="table">
                     <thead>
                         <tr>
                             <th class="w-10">
@@ -88,18 +89,40 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
-
-            @if ($this->rows->lastPage() > 1)
-                <div class="join mt-4 flex justify-center">
-                    <button type="button" class="join-item btn btn-sm" wire:click="previousPage" @disabled($this->rows->onFirstPage())>«</button>
-                    @for ($p = 1; $p <= $this->rows->lastPage(); $p++)
-                        <button type="button" class="join-item btn btn-sm {{ $p === $this->rows->currentPage() ? 'btn-active' : '' }}" wire:click="gotoPage({{ $p }})">{{ $p }}</button>
-                    @endfor
-                    <button type="button" class="join-item btn btn-sm" wire:click="nextPage" @disabled(! $this->rows->hasMorePages())>»</button>
+                    </table>
                 </div>
-            @endif
+
+                <footer class="daisy-table__pagination" aria-label="{{ __('filament::components/pagination.label') }}">
+                    <span class="daisy-table__pagination-overview">{{ $this->paginationOverview() }}</span>
+
+                    <label class="daisy-table__pagination-per-page">
+                        <span>{{ __('filament::components/pagination.fields.records_per_page.label') }}</span>
+                        <select class="select select-sm" wire:model.live="perPage">
+                            @foreach ([10, 25] as $pageSize)
+                                <option value="{{ $pageSize }}">{{ $pageSize }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <nav class="daisy-table__pagination-actions" aria-label="{{ __('filament::components/pagination.label') }}">
+                        <button type="button" class="btn btn-sm" wire:click="previousPage" @disabled($this->rows->onFirstPage())>
+                            <x-heroicon-o-chevron-left class="h-4 w-4" />
+                            <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.previous.label') }}</span>
+                        </button>
+
+                        <div class="daisy-table__pagination-pages join">
+                            @for ($p = 1; $p <= $this->rows->lastPage(); $p++)
+                                <button type="button" class="join-item btn btn-sm {{ $p === $this->rows->currentPage() ? 'btn-active' : '' }}" wire:click="gotoPage({{ $p }})">{{ $p }}</button>
+                            @endfor
+                        </div>
+
+                        <button type="button" class="btn btn-sm" wire:click="nextPage" @disabled(! $this->rows->hasMorePages())>
+                            <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.next.label') }}</span>
+                            <x-heroicon-o-chevron-right class="h-4 w-4" />
+                        </button>
+                    </nav>
+                </footer>
+            </div>
         </x-slot:content>
     </x-tabs.nav>
 </div>

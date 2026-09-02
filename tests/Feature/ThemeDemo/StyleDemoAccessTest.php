@@ -3,7 +3,10 @@
 namespace Tests\Feature\ThemeDemo;
 
 use App\Models\User;
+use Concise\ThemeDemo\Livewire\Tables\FilamentTable;
+use Concise\ThemeDemo\Livewire\Tables\MaximalistTable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -31,6 +34,31 @@ class StyleDemoAccessTest extends TestCase
         $this->actingAs($admin)->get($uri)->assertStatus(200);
     }
 
+    public function test_admins_can_sort_filament_table_by_joined_at(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin);
+
+        Livewire::test(FilamentTable::class, ['variant' => 'maximalist'])
+            ->call('sortTable', 'joined_at')
+            ->assertSet('tableSort', 'joined_at:asc');
+    }
+
+    public function test_maximalist_daisy_table_uses_filament_pagination_content(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin);
+
+        Livewire::test(MaximalistTable::class)
+            ->assertSee('Showing 1 to 10 of 25 results')
+            ->assertSee('Per page')
+            ->assertSeeHtml('wire:model.live="perPage"')
+            ->set('perPage', 25)
+            ->assertSee('Showing 1 to 25 of 25 results');
+    }
+
     /** @return array<string, array{string}> */
     public static function stylePageProvider(): array
     {
@@ -39,10 +67,12 @@ class StyleDemoAccessTest extends TestCase
             'empty table' => ['/style-demo/tables/empty'],
             'simple table' => ['/style-demo/tables/simple'],
             'maximalist table' => ['/style-demo/tables/maximalist'],
+            'wide table' => ['/style-demo/tables/wide'],
             'filament table empty' => ['/style-demo/tables/filament/empty'],
             'filament table simple' => ['/style-demo/tables/filament/simple'],
             'filament table maximalist' => ['/style-demo/tables/filament/maximalist'],
             'filament table custom header' => ['/style-demo/tables/filament/custom-header'],
+            'filament table wide' => ['/style-demo/tables/filament/wide'],
             'daisy form' => ['/style-demo/forms/daisy'],
             'filament form' => ['/style-demo/forms/filament'],
             'components' => ['/style-demo/components'],

@@ -41,7 +41,8 @@
 .fi-ta-header-cell,
 .fi-ta-actions-header-cell,
 .fi-ta-empty-header-cell,
-th.fi-ta-selection-cell {
+th.fi-ta-selection-cell,
+.fi-ta-content-header {
     background-color: color-mix(
         in oklab,
         var(--color-primary) 6%,
@@ -55,16 +56,13 @@ th.fi-ta-selection-cell {
     letter-spacing: 0.05em;
     text-transform: uppercase;
     padding-top: 0.75rem;
-
-    &:first-of-type {
-        padding-left: 1.5rem;
-    }
 }
 
 .fi-ta-actions-header-cell {
     position: relative;
     padding-right: 1.5rem;
 
+    /* icon in actions header */
     &::after {
         content: "";
         display: block;
@@ -101,16 +99,6 @@ th.fi-ta-selection-cell {
 
 .fi-ta-header-cell-sorted .fi-icon {
     color: var(--color-primary);
-}
-
-/*
-|--------------------------------------------------------------------------
-| Column body cells — theme it instead of leaving Filament's bare defaults
-|--------------------------------------------------------------------------
-*/
-.fi-ta-cell {
-    /* padding-bottom: 0.75rem; */
-    /* padding: 1rem 1.5rem; */
 }
 
 /* Footer (pagination bar) — same tint as the column header row above it. */

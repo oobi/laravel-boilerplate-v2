@@ -42,13 +42,13 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentIcons();
     }
 
-    /** Swaps the table header sort icon for the "bars-arrow" style used throughout the admin UI. */
+    /** Sortable-but-unsorted columns get a double chevron; once sorted, a single chevron shows the direction (daisyUI style). */
     private function registerFilamentIcons(): void
     {
         FilamentIcon::register([
-            TablesIconAlias::HEADER_CELL_SORT_BUTTON => Heroicon::BarsArrowUp,
-            TablesIconAlias::HEADER_CELL_SORT_ASC_BUTTON => Heroicon::BarsArrowUp,
-            TablesIconAlias::HEADER_CELL_SORT_DESC_BUTTON => Heroicon::BarsArrowDown,
+            TablesIconAlias::HEADER_CELL_SORT_BUTTON => Heroicon::ChevronUpDown,
+            TablesIconAlias::HEADER_CELL_SORT_ASC_BUTTON => Heroicon::ChevronUp,
+            TablesIconAlias::HEADER_CELL_SORT_DESC_BUTTON => Heroicon::ChevronDown,
         ]);
     }
 

@@ -31,3 +31,11 @@
 >
     {{ __('theme-demo::messages.tables_tab_custom_header') }}
 </x-tabs.item>
+
+<x-tabs.item
+    :active="$variant === 'wide'"
+    href="{{ route('style-demo.tables-filament-wide') }}"
+    icon="heroicon-o-arrows-right-left"
+>
+    {{ __('theme-demo::messages.tables_tab_wide') }}
+</x-tabs.item>

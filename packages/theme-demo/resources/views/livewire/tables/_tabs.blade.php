@@ -23,3 +23,11 @@
 >
     {{ __('theme-demo::messages.tables_tab_maximalist') }}
 </x-tabs.item>
+
+<x-tabs.item
+    :active="request()->routeIs('style-demo.tables-wide')"
+    href="{{ route('style-demo.tables-wide') }}"
+    icon="heroicon-o-arrows-right-left"
+>
+    {{ __('theme-demo::messages.tables_tab_wide') }}
+</x-tabs.item>

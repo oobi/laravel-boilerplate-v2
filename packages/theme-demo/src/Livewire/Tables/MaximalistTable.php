@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Number;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -48,6 +49,11 @@ class MaximalistTable extends Component
     }
 
     public function updatedStatusFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPerPage(): void
     {
         $this->resetPage();
     }
@@ -130,6 +136,22 @@ class MaximalistTable extends Component
             $filtered->count(),
             $this->perPage,
             $page,
+        );
+    }
+
+    /** Return the same range summary used by Filament's pagination component. */
+    public function paginationOverview(): string
+    {
+        $paginator = $this->rows;
+
+        return trans_choice(
+            'filament::components/pagination.overview',
+            $paginator->total(),
+            [
+                'first' => Number::format($paginator->firstItem() ?? 0),
+                'last' => Number::format($paginator->lastItem() ?? 0),
+                'total' => Number::format($paginator->total()),
+            ],
         );
     }
 

@@ -10,6 +10,7 @@ use Concise\ThemeDemo\Livewire\Tables\EmptyTable;
 use Concise\ThemeDemo\Livewire\Tables\FilamentTable;
 use Concise\ThemeDemo\Livewire\Tables\MaximalistTable;
 use Concise\ThemeDemo\Livewire\Tables\SimpleTable;
+use Concise\ThemeDemo\Livewire\Tables\WideTable;
 use Illuminate\Support\Facades\Route;
 
 // Not part of routes/web.php, so the 'web' middleware group isn't applied automatically.
@@ -21,10 +22,12 @@ Route::middleware(['web', 'auth', 'verified'])
         Route::get('/tables/empty', EmptyTable::class)->name('tables-empty');
         Route::get('/tables/simple', SimpleTable::class)->name('tables-simple');
         Route::get('/tables/maximalist', MaximalistTable::class)->name('tables-maximalist');
+        Route::get('/tables/wide', WideTable::class)->name('tables-wide');
         Route::get('/tables/filament/empty', FilamentTable::class)->name('tables-filament-empty')->defaults('variant', 'empty');
         Route::get('/tables/filament/simple', FilamentTable::class)->name('tables-filament-simple')->defaults('variant', 'simple');
         Route::get('/tables/filament/maximalist', FilamentTable::class)->name('tables-filament-maximalist')->defaults('variant', 'maximalist');
         Route::get('/tables/filament/custom-header', FilamentTable::class)->name('tables-filament-custom-header')->defaults('variant', 'custom-header');
+        Route::get('/tables/filament/wide', FilamentTable::class)->name('tables-filament-wide')->defaults('variant', 'wide');
         Route::get('/forms/daisy', DaisyForm::class)->name('forms-daisy');
         Route::get('/forms/filament', FilamentForm::class)->name('forms-filament');
         Route::get('/components', ComponentGallery::class)->name('components');

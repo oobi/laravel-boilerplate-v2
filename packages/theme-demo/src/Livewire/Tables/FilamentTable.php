@@ -8,6 +8,7 @@ use App\Enums\SystemPermission;
 use Concise\ThemeDemo\Enums\DemoStatus;
 use Concise\ThemeDemo\Support\DemoRow;
 use Concise\ThemeDemo\Support\DemoRows;
+use Concise\ThemeDemo\Support\WideDemoColumns;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -32,7 +33,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 /**
@@ -65,25 +65,6 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
 
     /** Variants with the full DemoRows set + search/sort/filter/bulk/action-menu — everything but "empty", "simple" and "wide". */
     private const FULL_FEATURED_VARIANTS = ['maximalist', 'custom-header'];
-
-    /** Deterministic option lists for the "wide" variant's ~20 columns — look, not real data. */
-    private const WIDE_COLUMN_OPTIONS = [
-        'department' => ['Engineering', 'Sales', 'Support', 'Marketing', 'Finance'],
-        'region' => ['APAC', 'EMEA', 'AMER'],
-        'manager' => ['J. Rivera', 'A. Chen', 'K. Novak', 'S. Patel'],
-        'city' => ['Sydney', 'Austin', 'Berlin', 'Toronto', 'Osaka'],
-        'country' => ['Australia', 'USA', 'Germany', 'Canada', 'Japan'],
-        'timezone' => ['UTC+10', 'UTC-6', 'UTC+1', 'UTC-5', 'UTC+9'],
-        'currency' => ['AUD', 'USD', 'EUR', 'CAD', 'JPY'],
-        'plan' => ['Starter', 'Pro', 'Enterprise'],
-        'source' => ['Referral', 'Organic', 'Ad campaign', 'Partner'],
-        'billing_cycle' => ['Monthly', 'Annual'],
-        'account_type' => ['Individual', 'Team', 'Enterprise'],
-        'industry' => ['Retail', 'Healthcare', 'Education', 'Technology'],
-        'referral_code' => ['SPRING24', 'SUMMER24', 'WINTER24', 'AUTUMN24'],
-        'support_tier' => ['Standard', 'Priority', 'White-glove'],
-        'language' => ['English', 'German', 'Japanese', 'French'],
-    ];
 
     public string $variant;
 
@@ -161,7 +142,10 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
 
                     if (filled($sortColumn)) {
                         $rows = $rows->sortBy(
-                            fn (DemoRow $row): string => $row->{$sortColumn} instanceof DemoStatus ? $row->{$sortColumn}->value : (string) $row->{$sortColumn},
+                            fn (DemoRow $row): string => match ($sortColumn) {
+                                'joined_at' => $row->joinedAt,
+                                default => $row->{$sortColumn} instanceof DemoStatus ? $row->{$sortColumn}->value : (string) $row->{$sortColumn},
+                            },
                             SORT_REGULAR,
                             $sortDirection === 'desc',
                         );
@@ -361,29 +345,17 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
             TextColumn::make('joined_at')->label(__('Joined'))->date(),
         ];
 
-        foreach (array_keys(self::WIDE_COLUMN_OPTIONS) as $key) {
-            $columns[] = TextColumn::make($key)->label(Str::headline($key));
+        foreach (WideDemoColumns::keys() as $key) {
+            $columns[] = TextColumn::make($key)->label(WideDemoColumns::label($key));
         }
-
-        $columns[] = TextColumn::make('seats')->label(__('Seats'));
-        $columns[] = TextColumn::make('renewal_date')->label(__('Renewal'))->date();
 
         return $columns;
     }
 
-    /** @return array<string, mixed> ~20 columns total once combined with the 3 base columns \u2014 look, not real data. */
+    /** @return array<string, mixed> */
     private function wideColumnValues(DemoRow $row): array
     {
-        $values = [];
-
-        foreach (self::WIDE_COLUMN_OPTIONS as $key => $options) {
-            $values[$key] = $options[$row->id % count($options)];
-        }
-
-        $values['seats'] = ($row->id * 3) % 50 + 1;
-        $values['renewal_date'] = now()->addDays($row->id * 17)->format('Y-m-d');
-
-        return $values;
+        return WideDemoColumns::valuesFor($row);
     }
 
     public function render(): View
