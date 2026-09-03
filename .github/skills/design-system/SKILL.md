@@ -53,15 +53,18 @@ mix strength in dark mode rather than hardcoding a second color).
 
 Check this table before writing raw daisyUI/Filament markup in a Blade view.
 Every component lives in `resources/views/components/*` and is globally
-available as `<x-name>` — only hand-write the equivalent markup when nothing
-here covers the need (and consider adding a component if the same markup
-would repeat more than twice, per the Blade instructions).
+available as `<x-name>` — this applies whether you're writing a new view or
+editing an existing one: if a view you're touching has raw markup matching a
+row below, convert it to the component rather than leaving it as-is. Only
+hand-write the equivalent markup when nothing here covers the need (and
+consider adding a component if the same markup would repeat more than twice,
+per the Blade instructions).
 
 ### Content
 
 | Component | Use instead of | Key props |
 |---|---|---|
-| `<x-card>` | `<div class="card bg-base-100 border border-base-300">…` section wrapper | `title`, `bodyClass` (default `gap-3`) |
+| `<x-card>` | `<div class="card bg-base-100 border border-base-300">…` section wrapper | `title`, `type` (`default` bold title / `panel` smaller muted heading — Users Show page panel cards; picks `titleClass` for you, don't guess a heading class), `bordered` (default true — every card should have a border; only false when nesting a card inside another card), `bodyClass` (default `gap-3`); slot: `actions` (e.g. a "View all" link, rendered inline with the title) |
 | `<x-alert>` | `<div class="alert ...">` — short-lived flash/inline message | `color` (default `info`), `variant` (default `soft`) |
 | `<x-banner>` | persistent contextual banner (announcements, "trial ending") — not for flash messages, use `<x-alert>` for those | `variant` (default `info`), `dismissible`; slots: default (body), `actions` |
 | `<x-badge>` | `<span class="badge ...">`; pass a Filament enum (`HasColor`/`HasLabel`) as `value` to skip color/label | `value`, `color`, `variant` (default `soft`), `size` |

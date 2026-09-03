@@ -17,7 +17,7 @@
     'footerColor' => 'neutral',
 ])
 
-<div {{ $attributes->merge(['class' => 'card bg-base-100']) }}>
+<div {{ $attributes->merge(['class' => 'card bg-base-100 border border-base-300']) }}>
     <div class="card-body">
         <div class="flex items-center justify-between">
             <div>

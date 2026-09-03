@@ -37,84 +37,73 @@
     {{-- A few different card styles, mirroring the variety on Buzz's dashboard (disposable placeholder data beyond the first). --}}
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {{-- Avatar-list card — real data --}}
-        <div class="card bg-base-100">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <h3 class="card-title">{{ __('Recent Users') }}</h3>
-                    <a href="{{ route('users.index') }}" class="ui-link text-sm">{{ __('View all') }}</a>
-                </div>
-                <div class="mt-2 flex flex-col gap-3">
-                    @forelse ($recentUsers as $user)
-                        <div class="flex items-center gap-3">
-                            <x-avatar :user="$user" size="sm" color="info"/>
-                            <div class="min-w-0 flex-1">
-                                <div class="truncate text-sm font-medium">{{ $user->name }}</div>
-                                <div class="truncate text-xs text-base-content/60">{{ $user->email }}</div>
-                            </div>
-                            @if ($user->system_role)
-                                <x-badge :value="$user->system_role" />
-                            @endif
+        <x-card :title="__('Recent Users')">
+            <x-slot:actions>
+                <a href="{{ route('users.index') }}" class="ui-link text-sm">{{ __('View all') }}</a>
+            </x-slot:actions>
+
+            <div class="flex flex-col gap-3">
+                @forelse ($recentUsers as $user)
+                    <div class="flex items-center gap-3">
+                        <x-avatar :user="$user" size="sm" color="info"/>
+                        <div class="min-w-0 flex-1">
+                            <div class="truncate text-sm font-medium">{{ $user->name }}</div>
+                            <div class="truncate text-xs text-base-content/60">{{ $user->email }}</div>
                         </div>
-                    @empty
-                        <div class="text-sm text-base-content/60">{{ __('No recent users') }}</div>
-                    @endforelse
-                </div>
+                        @if ($user->system_role)
+                            <x-badge :value="$user->system_role" />
+                        @endif
+                    </div>
+                @empty
+                    <div class="text-sm text-base-content/60">{{ __('No recent users') }}</div>
+                @endforelse
             </div>
-        </div>
+        </x-card>
 
         {{-- Plain list card — placeholder --}}
-        <div class="card bg-base-100">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <h3 class="card-title">{{ __('Card Title') }}</h3>
-                    <a href="#" class="ui-link text-sm">{{ __('View all') }}</a>
-                </div>
-                <div class="mt-2 flex flex-col gap-3">
-                    @foreach (range(1, 4) as $i)
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-sm">{{ __('Card content here') }} {{ $i }}</span>
-                            <x-badge>{{ __('Item') }}</x-badge>
-                        </div>
-                    @endforeach
-                </div>
+        <x-card :title="__('Card Title')">
+            <x-slot:actions>
+                <a href="#" class="ui-link text-sm">{{ __('View all') }}</a>
+            </x-slot:actions>
+
+            <div class="flex flex-col gap-3">
+                @foreach (range(1, 4) as $i)
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-sm">{{ __('Card content here') }} {{ $i }}</span>
+                        <x-badge>{{ __('Item') }}</x-badge>
+                    </div>
+                @endforeach
             </div>
-        </div>
+        </x-card>
 
         {{-- Number stat card — placeholder --}}
-        <div class="card bg-base-100">
-            <div class="card-body">
-                <h3 class="card-title">{{ __('Card Title') }}</h3>
-                <div class="mt-2 flex flex-col gap-3">
-                    @foreach (['Metric A' => '12', 'Metric B' => '87%', 'Metric C' => '3.4k'] as $metricLabel => $metricValue)
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-base-content/60">{{ $metricLabel }}</span>
-                            <span class="font-semibold">{{ $metricValue }}</span>
-                        </div>
-                    @endforeach
-                </div>
+        <x-card :title="__('Card Title')">
+            <div class="flex flex-col gap-3">
+                @foreach (['Metric A' => '12', 'Metric B' => '87%', 'Metric C' => '3.4k'] as $metricLabel => $metricValue)
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-base-content/60">{{ $metricLabel }}</span>
+                        <span class="font-semibold">{{ $metricValue }}</span>
+                    </div>
+                @endforeach
             </div>
-        </div>
+        </x-card>
     </div>
 
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div class="card bg-base-100 lg:col-span-2">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <h3 class="card-title">{{ __('System Activity') }}</h3>
-                    <a href="#" class="ui-link text-sm">{{ __('View all') }}</a>
-                </div>
-                <p class="ui-subtle mt-2">{{ __('Recent changes will appear here.') }}</p>
-            </div>
-        </div>
+        <x-card :title="__('System Activity')"  class="lg:col-span-2">
+            <x-slot:actions>
+                <a href="#" class="ui-link text-sm">{{ __('View all') }}</a>
+            </x-slot:actions>
 
-        <div class="card bg-base-100">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <h3 class="card-title">{{ __('Content Calendar') }}</h3>
-                    <a href="#" class="ui-link text-sm">{{ __('View all') }}</a>
-                </div>
-                <p class="ui-subtle mt-2">{{ __('Upcoming dates will appear here.') }}</p>
-            </div>
-        </div>
+            <p class="ui-subtle">{{ __('Recent changes will appear here.') }}</p>
+        </x-card>
+
+        <x-card :title="__('Content Calendar')">
+            <x-slot:actions>
+                <a href="#" class="ui-link text-sm">{{ __('View all') }}</a>
+            </x-slot:actions>
+
+            <p class="ui-subtle">{{ __('Upcoming dates will appear here.') }}</p>
+        </x-card>
     </div>
 </div>

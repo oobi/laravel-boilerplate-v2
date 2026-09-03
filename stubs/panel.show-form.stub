@@ -25,7 +25,7 @@ class {{ class }} implements FormSection, ShowPanel
     public function render(Model $subject): Htmlable
     {
         // TODO: replace with your own markup, e.g. return view('panels.your-view', ['subject' => $subject]);
-        return new HtmlString('<div class="card bg-base-100"><div class="card-body">{{ class }}</div></div>');
+        return new HtmlString('<div class="card bg-base-100 border border-base-300"><div class="card-body">{{ class }}</div></div>');
     }
 
     /** @return array<int, \Filament\Schemas\Components\Component> */
