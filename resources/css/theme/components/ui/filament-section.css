@@ -1,0 +1,14 @@
+/*
+|--------------------------------------------------------------------------
+| Schema/infolist sections — same island shadow as every other card
+|--------------------------------------------------------------------------
+| Filament ships `.fi-section` with its own `ring-1 ring-gray-950/5` +
+| `shadow-sm` (see vendor/filament/support/resources/css/components/
+| section.css) — much subtler than our `--ui-island-shadow`, so the Show
+| page infolist and Edit page form sections read as flatter than the
+| `.card`/`.fi-ta-ctn` islands around them. Same fix as filament-table.css:
+| replace both with our own token so every card-like block matches.
+*/
+.fi-section:not(.fi-aside) {
+    box-shadow: var(--ui-island-shadow);
+}
