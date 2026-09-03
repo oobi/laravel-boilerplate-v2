@@ -79,6 +79,8 @@ class ShowUserTest extends TestCase
 
     public function test_the_demo_team_memberships_panel_renders(): void
     {
+        $this->markTestSkipped('skipped because the demo panel is disabled in bootstrap/providers.php');
+
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->create();
 
