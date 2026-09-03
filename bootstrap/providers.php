@@ -9,5 +9,7 @@ return [
     AppServiceProvider::class,
     NavigationServiceProvider::class,
     PanelsServiceProvider::class,
-    PanelExtensionDemoServiceProvider::class,
+
+    // demo panel extension provider — delete once the real Teams tier ships its own Team Memberships panel
+    // PanelExtensionDemoServiceProvider::class,
 ];
