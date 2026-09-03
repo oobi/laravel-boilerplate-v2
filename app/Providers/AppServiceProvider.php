@@ -9,6 +9,9 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Enums\SystemPermission;
 use App\Http\Responses\PasswordResetLinkResponse;
+use Filament\Notifications\Livewire\Notifications;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\View\TablesIconAlias;
@@ -40,6 +43,14 @@ class AppServiceProvider extends ServiceProvider
         $this->registerGates();
         $this->registerFortify();
         $this->registerFilamentIcons();
+        $this->registerNotifications();
+    }
+
+    /** Top-center toasts instead of Filament's default top-right. */
+    private function registerNotifications(): void
+    {
+        Notifications::alignment(Alignment::Center);
+        Notifications::verticalAlignment(VerticalAlignment::Start);
     }
 
     /** Sortable-but-unsorted columns get a double chevron; once sorted, a single chevron shows the direction (daisyUI style). */

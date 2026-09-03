@@ -13,9 +13,9 @@
                 {{ __('admin.add_user') }}
             </x-filament::button>
 
-            <x-filament::button color="gray" tag="a" href="{{ route('users.index') }}">
+            <x-button color="gray" variant="ghost" href="{{ route('users.index') }}">
                 {{ __('admin.cancel') }}
-            </x-filament::button>
+            </x-button>
         </div>
     </form>
 </div>

@@ -3,9 +3,9 @@
 
     <x-page-header :title="__('admin.users')" :description="__('admin.users_description')">
         <x-slot:actions>
-            <a href="{{ route('users.create') }}" class="btn btn-primary">
+            <x-button href="{{ route('users.create') }}">
                 {{ __('admin.add_user') }}
-            </a>
+            </x-button>
         </x-slot:actions>
     </x-page-header>
 

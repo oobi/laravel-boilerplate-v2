@@ -6,20 +6,20 @@
 
         <div class="ui-page-actions">
             @if ($this->canImpersonateUser())
-                <a href="{{ route('users.impersonate', $user->id) }}" class="btn btn-ghost">
+                <x-button color="neutral" variant="ghost" href="{{ route('users.impersonate', $user->id) }}">
                     {{ __('admin.impersonate_user') }}
-                </a>
+                </x-button>
             @endif
 
             @if ($this->canEditUser())
-                <a href="{{ route('users.edit', $user) }}" class="btn btn-primary">
+                <x-button href="{{ route('users.edit', $user) }}">
                     {{ __('admin.edit_user') }}
-                </a>
+                </x-button>
             @endif
 
-            <a href="{{ route('users.index') }}" class="btn btn-ghost">
+            <x-button color="neutral" variant="ghost" href="{{ route('users.index') }}">
                 {{ __('admin.back_to_users') }}
-            </a>
+            </x-button>
         </div>
     </div>
 

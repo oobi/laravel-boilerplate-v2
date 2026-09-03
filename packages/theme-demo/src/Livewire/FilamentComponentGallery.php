@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Concise\ThemeDemo\Livewire;
 
 use App\Enums\SystemPermission;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -29,6 +30,19 @@ class FilamentComponentGallery extends Component
     public function mount(): void
     {
         Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);
+    }
+
+    public function sendNotification(string $status): void
+    {
+        Notification::make()
+            ->title(match ($status) {
+                'success' => __('Success! Everything worked.'),
+                'danger' => __('Something went wrong.'),
+                'warning' => __('Careful — check this.'),
+                default => __('Just so you know…'),
+            })
+            ->status($status)
+            ->send();
     }
 
     public function render(): View

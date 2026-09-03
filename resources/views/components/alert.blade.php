@@ -10,7 +10,7 @@
 --}}
 @props([
     'color' => 'info',
-    'variant' => 'solid',
+    'variant' => 'soft',
 ])
 
 @php

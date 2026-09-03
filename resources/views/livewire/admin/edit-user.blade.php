@@ -22,9 +22,9 @@
                 {{ __('admin.save_changes') }}
             </x-filament::button>
 
-            <x-filament::button color="gray" tag="a" href="{{ route('users.index') }}">
+            <x-button color="gray" variant="ghost" href="{{ route('users.show', $user) }}">
                 {{ __('admin.cancel') }}
-            </x-filament::button>
+            </x-button>
         </div>
     </form>
 

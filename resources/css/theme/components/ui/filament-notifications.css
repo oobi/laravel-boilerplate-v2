@@ -1,0 +1,44 @@
+/*
+|--------------------------------------------------------------------------
+| Filament notification overrides (standalone, no panel)
+|--------------------------------------------------------------------------
+| Restyles the floating toast to the same "soft" recipe as daisyUI's
+| `.alert-soft` / `.ui-banner` — tinted background, colored text/icon,
+| left accent border — instead of Filament's default white ring/shadow
+| card with plain gray text.
+|
+| Keyed off `.fi-status-{status}` (always present for ->success()/->danger()
+| /->warning()/->info()), NOT Filament's `.fi-color-*` ramp classes — those
+| only appear once `->color()` is called explicitly, so `->success()` alone
+| leaves getColor() null (silently falls back to 'gray', which Filament
+| skips entirely) and `--color-600` is never defined.
+*/
+.fi-no-notification.fi-status-success { --fi-notification-color: var(--color-success); }
+.fi-no-notification.fi-status-warning { --fi-notification-color: var(--color-warning); }
+.fi-no-notification.fi-status-danger { --fi-notification-color: var(--color-error); }
+.fi-no-notification.fi-status-info { --fi-notification-color: var(--color-info); }
+
+.fi-no-notification:not(.fi-inline) {
+    align-items: center;
+    /* border-inline-start: 4px solid var(--fi-notification-color, var(--color-neutral)); */
+    border-radius: var(--radius-box, 0.5rem);
+    background-color: color-mix(in oklab, var(--fi-notification-color, var(--color-neutral)) 8%, var(--color-base-100));
+}
+
+.fi-no-notification-title,
+.fi-no-notification-body {
+    color: var(--fi-notification-color, var(--color-neutral));
+}
+
+.fi-no-notification-icon {
+    display: inline-flex;
+    height: 1.75rem;
+    width: 1.75rem;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: var(--radius-field, 0.375rem);
+    background-color: color-mix(in oklab, var(--fi-notification-color, var(--color-neutral)) 15%, var(--color-base-100));
+    color: var(--fi-notification-color, var(--color-neutral));
+}

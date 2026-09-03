@@ -35,7 +35,7 @@
   screens: support (badges, dropdowns, buttons, pagination, modals), tables
   (users list), actions (row/page action buttons + modals), schemas (Section/
   Grid layout on Show/Edit), forms (Edit page inputs), infolists (Show page
-  read-only fields).
+  read-only fields), notifications (save/update success toasts).
 */
 @import "../../../vendor/filament/support/resources/css/index.css";
 @import "../../../vendor/filament/tables/resources/css/index.css";
@@ -43,8 +43,10 @@
 @import "../../../vendor/filament/schemas/resources/css/index.css";
 @import "../../../vendor/filament/forms/resources/css/index.css";
 @import "../../../vendor/filament/infolists/resources/css/index.css";
+@import "../../../vendor/filament/notifications/resources/css/index.css";
 @import "./components/ui/filament-colors.css";
 @import "./components/ui/filament-buttons.css";
+@import "./components/ui/filament-notifications.css";
 
 /* ── App shell / chrome (ours — daisyUI has no opinion on this) ─────── */
 @import "./components/ui/typography.css";

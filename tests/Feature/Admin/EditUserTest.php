@@ -32,7 +32,8 @@ class EditUserTest extends TestCase
             ->set('data.first_name', 'Updated')
             ->set('data.last_name', 'Name')
             ->set('data.system_role', SystemRole::SUPPORT->value)
-            ->call('save');
+            ->call('save')
+            ->assertRedirect(route('users.show', $target));
 
         $target->refresh();
         $this->assertSame('Updated Name', $target->name);

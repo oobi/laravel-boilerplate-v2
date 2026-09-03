@@ -69,6 +69,8 @@ class EditUser extends Component implements HasActions, HasSchemas
             ->title(__('admin.user_updated'))
             ->success()
             ->send();
+
+        $this->redirect(route('users.show', $this->user));
     }
 
     public function resetPasswordAction(): Action

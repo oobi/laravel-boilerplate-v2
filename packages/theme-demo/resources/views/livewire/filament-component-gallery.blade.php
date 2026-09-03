@@ -63,4 +63,17 @@
             </div>
         </div>
     </div>
+
+    {{-- Notifications --}}
+    <div class="card bg-base-100 border border-base-300">
+        <div class="card-body gap-3">
+            <h2 class="card-title">{{ __('Notifications') }}</h2>
+            <div class="flex flex-wrap gap-2">
+                <x-filament::button color="success" wire:click="sendNotification('success')">{{ __('Success') }}</x-filament::button>
+                <x-filament::button color="danger" wire:click="sendNotification('danger')">{{ __('Danger') }}</x-filament::button>
+                <x-filament::button color="warning" wire:click="sendNotification('warning')">{{ __('Warning') }}</x-filament::button>
+                <x-filament::button color="info" wire:click="sendNotification('info')">{{ __('Info') }}</x-filament::button>
+            </div>
+        </div>
+    </div>
 </div>
