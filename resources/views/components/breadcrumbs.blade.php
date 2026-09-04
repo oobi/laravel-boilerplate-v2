@@ -3,12 +3,17 @@
     crumb is derived automatically from the current route name.
 --}}
 @php $crumbs = \App\Support\Breadcrumbs::trail(); @endphp
-<div class="min-w-0 flex-1 text-sm text-base-content/60">
+<div class="min-w-0 flex-1 truncate text-sm text-base-content/60">
     @foreach ($crumbs as $index => $crumb)
-        @if ($index > 0)
+        {{-- Root crumb and its separator are dropped on mobile to save space --}}
+        @if ($index === 1)
+            <span class="mx-2 hidden sm:inline">/</span>
+        @elseif ($index > 1)
             <span class="mx-2">/</span>
         @endif
-        @if ($crumb['url'])
+        @if ($index === 0)
+            <span class="hidden sm:inline">{{ $crumb['label'] }}</span>
+        @elseif ($crumb['url'])
             <a href="{{ $crumb['url'] }}" class="hover:text-base-content">{{ $crumb['label'] }}</a>
         @else
             <span>{{ $crumb['label'] }}</span>

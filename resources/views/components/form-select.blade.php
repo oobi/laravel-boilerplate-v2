@@ -10,7 +10,7 @@
 
 @php
     $id = $attributes->get('id', $name);
-    $selectClass = 'select w-full' . ($errors->has($name) ? ' select-error' : '');
+    $selectClass = 'select w-full' . ($floating ? '' : ' ui-form-input') . ($errors->has($name) ? ' select-error' : '');
     $selectAttributes = $attributes->except(['class', 'id'])->merge(['class' => $selectClass]);
 @endphp
 
@@ -21,7 +21,7 @@
             <label for="{{ $id }}" class="ui-floating-label-text">{{ $label }}</label>
         </div>
     @else
-        <label for="{{ $id }}" class="label mb-1">{{ $label }}</label>
+        <label for="{{ $id }}" class="ui-form-label mb-1">{{ $label }}</label>
         <select id="{{ $id }}" {{ $selectAttributes }}>{{ $slot }}</select>
     @endif
 

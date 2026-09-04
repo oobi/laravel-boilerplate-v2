@@ -10,7 +10,7 @@
 
 @php
     $id = $attributes->get('id', $name);
-    $textareaClass = 'textarea w-full' . ($errors->has($name) ? ' textarea-error' : '');
+    $textareaClass = 'textarea w-full' . ($floating ? '' : ' ui-form-input') . ($errors->has($name) ? ' textarea-error' : '');
     $textareaAttributes = $attributes->except(['class', 'id'])->merge(['class' => $textareaClass]);
 @endphp
 
@@ -21,7 +21,7 @@
             <label for="{{ $id }}" class="ui-floating-label-text">{{ $label }}</label>
         </div>
     @else
-        <label for="{{ $id }}" class="label mb-1">{{ $label }}</label>
+        <label for="{{ $id }}" class="ui-form-label mb-1">{{ $label }}</label>
         <textarea id="{{ $id }}" {{ $textareaAttributes }}>{{ $slot }}</textarea>
     @endif
 

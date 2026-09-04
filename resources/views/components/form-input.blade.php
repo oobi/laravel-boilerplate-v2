@@ -4,7 +4,8 @@
     Props:
     - name: field name — used for id/for and to look up @error messages.
     - label: label text.
-    - floating: bool (default true) — floating-label style vs a plain label above the field.
+    - floating: bool (default true) — floating-label style vs a plain label above the field, styled
+      to match Filament's own form fields (see `.ui-form-label`/`.ui-form-input` in daisyui-overrides/forms.css).
 
     Everything else (type, wire:model, placeholder override, ...) is passed straight through to
     the <input>. Pass a `class` to size/place the OUTER wrapper (e.g. "md:col-span-2"), not the input.
@@ -17,7 +18,7 @@
 
 @php
     $id = $attributes->get('id', $name);
-    $inputClass = 'input w-full' . ($errors->has($name) ? ' input-error' : '');
+    $inputClass = 'input w-full' . ($floating ? '' : ' ui-form-input') . ($errors->has($name) ? ' input-error' : '');
     $inputAttributes = $attributes->except(['class', 'id'])->merge(['class' => $inputClass]);
 @endphp
 
@@ -28,7 +29,7 @@
             <label for="{{ $id }}" class="ui-floating-label-text">{{ $label }}</label>
         </div>
     @else
-        <label for="{{ $id }}" class="label mb-1">{{ $label }}</label>
+        <label for="{{ $id }}" class="ui-form-label mb-1">{{ $label }}</label>
         <input id="{{ $id }}" {{ $inputAttributes }}>
     @endif
 

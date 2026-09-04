@@ -121,6 +121,13 @@
                         class="hidden flex-shrink-0 items-center md:flex"
                     />
 
+                    {{-- Mobile logo — always visible; drawer/pinned asides cover this on desktop --}}
+                    <x-application-logo
+                        variant="icon"
+                        href="{{ route('dashboard') }}"
+                        class="flex flex-shrink-0 items-center md:hidden"
+                    />
+
                     {{-- Mobile menu button --}}
                     <button type="button" class="btn btn-ghost btn-square btn-sm md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
                         <x-heroicon-o-bars-3 class="h-5 w-5" />
