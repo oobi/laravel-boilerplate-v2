@@ -20,7 +20,7 @@
 <div class="tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100">
     @if ($scrollable)
         {{-- Mobile swipe hint --}}
-        <div class="block sm:hidden text-center text-xs text-base-content/50 pb-3 px-4">
+        <div class="block sm:hidden text-center text-xs text-base-content/50 pt-3 px-4">
             <div class="inline-flex items-center justify-center gap-1 bg-base-200/50 rounded-full py-1 px-3">
                 <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -33,12 +33,20 @@
         </div>
     @endif
 
-    <div class="tabs-connected__header @if ($scrollable) tabs-connected__header--scrollable @endif px-3 pt-4 sm:px-6 sm:pt-6">
-        <div
-            role="tablist"
-            class="tabs tabs-border gap-2 sm:gap-6 @if ($scrollable) tabs--scrollable @endif"
-            @if ($scrollable) data-tab-scroll @endif
-        >
+    <div class="tabs-connected__header @if ($scrollable) tabs-connected__header--scrollable @endif px-3 pt-3 sm:px-6 sm:pt-3">
+        <div class="tabs-connected__scroll-shell @if ($scrollable) tabs-connected__scroll-shell--scrollable @endif">
+            {{-- data-tab-scroll must sit on the overflow container, one level
+                 above [role="tablist"], so tab-scroll.js can query it as a
+                 descendant rather than querying the element itself. --}}
+            <div
+                class="tabs-connected__scroll-viewport @if ($scrollable) tabs-connected__scroll-viewport--scrollable @endif"
+                @if ($scrollable) data-tab-scroll @endif
+            >
+                <div role="tablist" class="tabs tabs-border gap-2 sm:gap-6 @if ($scrollable) tabs--scrollable @endif">
+                    {{ $slot }}
+                </div>
+            </div>
+
             @if ($scrollable)
                 <div class="tab-scroll-indicator tab-scroll-left" style="display:none;">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +59,6 @@
                     </svg>
                 </div>
             @endif
-            {{ $slot }}
         </div>
 
         <div class="tabs-connected__divider border-b border-base-300"></div>
