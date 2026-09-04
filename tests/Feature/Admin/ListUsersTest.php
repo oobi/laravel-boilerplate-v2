@@ -15,14 +15,14 @@ class ListUsersTest extends TestCase
 
     public function test_guests_cannot_view_the_users_list(): void
     {
-        $this->get('/users')->assertRedirect('/login');
+        $this->get('/admin/users')->assertRedirect('/login');
     }
 
     public function test_users_without_admin_access_are_forbidden(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/users')->assertForbidden();
+        $this->actingAs($user)->get('/admin/users')->assertForbidden();
     }
 
     public function test_admins_can_view_the_users_list(): void
@@ -30,7 +30,7 @@ class ListUsersTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         User::factory()->count(3)->create();
 
-        $response = $this->actingAs($admin)->get('/users');
+        $response = $this->actingAs($admin)->get('/admin/users');
 
         $response->assertStatus(200);
     }

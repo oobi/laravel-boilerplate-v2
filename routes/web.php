@@ -10,10 +10,11 @@ use App\Livewire\TwoFactorAuthentication;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect(auth()->check() ? '/dashboard' : '/login');
+    return redirect(auth()->check() ? '/admin/dashboard' : '/login');
 });
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
+// Everything requiring login lives under /admin (e.g. /admin/dashboard, /admin/users) — route names keep their existing flat prefixes.
+Route::middleware(['auth', 'verified'])->prefix('admin')->group(function (): void {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
     Route::get('/profile', EditProfile::class)->name('profile.edit');

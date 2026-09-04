@@ -18,7 +18,7 @@ class UserImpersonationTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('users.impersonate', $target->id))
-            ->assertRedirect('/dashboard');
+            ->assertRedirect('/admin/dashboard');
 
         $this->assertAuthenticatedAs($target);
         $this->assertEquals($admin->id, session('impersonated_by'));
@@ -102,7 +102,7 @@ class UserImpersonationTest extends TestCase
         $this->assertAuthenticatedAs($target);
 
         $this->get(route('users.impersonate.leave'))
-            ->assertRedirect('/users');
+            ->assertRedirect('/admin/users');
 
         $this->assertAuthenticatedAs($admin);
         $this->assertNull(session('impersonated_by'));

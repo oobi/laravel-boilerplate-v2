@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 // Not part of routes/web.php, so the 'web' middleware group isn't applied automatically.
 Route::middleware(['web', 'auth', 'verified'])
-    ->prefix('style-demo')
+    ->prefix('admin/style-demo')
     ->name('style-demo.')
     ->group(function (): void {
         Route::get('/', Overview::class)->name('index');

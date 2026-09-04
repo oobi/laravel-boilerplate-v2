@@ -14,7 +14,7 @@ class BreadcrumbsTest extends TestCase
     {
         $admin = User::factory()->superAdmin()->create();
 
-        $response = $this->actingAs($admin)->get('/users');
+        $response = $this->actingAs($admin)->get('/admin/users');
 
         $response->assertSee(
             '<a href="'.route('users.index').'" class="hover:text-base-content">Users</a>',
@@ -28,7 +28,7 @@ class BreadcrumbsTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->create();
 
-        $response = $this->actingAs($admin)->get("/users/{$target->id}/edit");
+        $response = $this->actingAs($admin)->get("/admin/users/{$target->id}/edit");
 
         $response->assertSee(
             '<a href="'.route('users.index').'" class="hover:text-base-content">Users</a>',
@@ -41,7 +41,7 @@ class BreadcrumbsTest extends TestCase
     {
         $admin = User::factory()->superAdmin()->create();
 
-        $response = $this->actingAs($admin)->get('/users/create');
+        $response = $this->actingAs($admin)->get('/admin/users/create');
 
         $response->assertSee(
             '<a href="'.route('users.index').'" class="hover:text-base-content">Users</a>',
@@ -54,7 +54,7 @@ class BreadcrumbsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/dashboard');
+        $response = $this->actingAs($user)->get('/admin/dashboard');
 
         $response->assertDontSee(
             '<a href="'.route('users.index').'" class="hover:text-base-content">',

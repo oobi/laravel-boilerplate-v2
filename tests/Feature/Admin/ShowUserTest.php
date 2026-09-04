@@ -17,7 +17,7 @@ class ShowUserTest extends TestCase
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        $this->actingAs($user)->get("/users/{$other->id}")->assertForbidden();
+        $this->actingAs($user)->get("/admin/users/{$other->id}")->assertForbidden();
     }
 
     public function test_admins_can_view_a_user(): void
@@ -25,7 +25,7 @@ class ShowUserTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
 
-        $response = $this->actingAs($admin)->get("/users/{$target->id}");
+        $response = $this->actingAs($admin)->get("/admin/users/{$target->id}");
 
         $response->assertStatus(200);
         $response->assertSee('Jane Doe');

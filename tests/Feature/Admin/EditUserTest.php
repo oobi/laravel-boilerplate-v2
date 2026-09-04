@@ -19,7 +19,7 @@ class EditUserTest extends TestCase
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        $this->actingAs($user)->get("/users/{$other->id}/edit")->assertForbidden();
+        $this->actingAs($user)->get("/admin/users/{$other->id}/edit")->assertForbidden();
     }
 
     public function test_admins_can_update_a_user(): void

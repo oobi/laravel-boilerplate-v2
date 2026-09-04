@@ -16,14 +16,14 @@ class StyleDemoAccessTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/style-demo')->assertRedirect('/login');
+        $this->get('/admin/style-demo')->assertRedirect('/login');
     }
 
     public function test_users_without_admin_access_are_forbidden(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/style-demo')->assertForbidden();
+        $this->actingAs($user)->get('/admin/style-demo')->assertForbidden();
     }
 
     #[DataProvider('stylePageProvider')]
@@ -39,7 +39,7 @@ class StyleDemoAccessTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)
-            ->get('/style-demo/tables/empty')
+            ->get('/admin/style-demo/tables/empty')
             ->assertOk()
             ->assertSee('tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100', false)
             ->assertSee('tabs-connected__header', false)
@@ -89,24 +89,24 @@ class StyleDemoAccessTest extends TestCase
     public static function stylePageProvider(): array
     {
         return [
-            'overview' => ['/style-demo'],
-            'empty table' => ['/style-demo/tables/empty'],
-            'simple table' => ['/style-demo/tables/simple'],
-            'maximalist table' => ['/style-demo/tables/maximalist'],
-            'wide table' => ['/style-demo/tables/wide'],
-            'filament table empty' => ['/style-demo/tables/filament/empty'],
-            'filament table simple' => ['/style-demo/tables/filament/simple'],
-            'filament table maximalist' => ['/style-demo/tables/filament/maximalist'],
-            'filament table custom header' => ['/style-demo/tables/filament/custom-header'],
-            'filament table wide' => ['/style-demo/tables/filament/wide'],
-            'daisy form' => ['/style-demo/forms/daisy'],
-            'filament form' => ['/style-demo/forms/filament'],
-            'components' => ['/style-demo/components'],
-            'filament components' => ['/style-demo/components/filament'],
-            'tab content table' => ['/style-demo/tab-content/table'],
-            'tab content form' => ['/style-demo/tab-content/form'],
-            'tab content panels' => ['/style-demo/tab-content/panels'],
-            'tab content text' => ['/style-demo/tab-content/text'],
+            'overview' => ['/admin/style-demo'],
+            'empty table' => ['/admin/style-demo/tables/empty'],
+            'simple table' => ['/admin/style-demo/tables/simple'],
+            'maximalist table' => ['/admin/style-demo/tables/maximalist'],
+            'wide table' => ['/admin/style-demo/tables/wide'],
+            'filament table empty' => ['/admin/style-demo/tables/filament/empty'],
+            'filament table simple' => ['/admin/style-demo/tables/filament/simple'],
+            'filament table maximalist' => ['/admin/style-demo/tables/filament/maximalist'],
+            'filament table custom header' => ['/admin/style-demo/tables/filament/custom-header'],
+            'filament table wide' => ['/admin/style-demo/tables/filament/wide'],
+            'daisy form' => ['/admin/style-demo/forms/daisy'],
+            'filament form' => ['/admin/style-demo/forms/filament'],
+            'components' => ['/admin/style-demo/components'],
+            'filament components' => ['/admin/style-demo/components/filament'],
+            'tab content table' => ['/admin/style-demo/tab-content/table'],
+            'tab content form' => ['/admin/style-demo/tab-content/form'],
+            'tab content panels' => ['/admin/style-demo/tab-content/panels'],
+            'tab content text' => ['/admin/style-demo/tab-content/text'],
         ];
     }
 
@@ -114,10 +114,10 @@ class StyleDemoAccessTest extends TestCase
     public static function tabContentProvider(): array
     {
         return [
-            'table' => ['/style-demo/tab-content/table', 'Ava Thompson'],
-            'form' => ['/style-demo/tab-content/form', 'Save changes'],
-            'panels' => ['/style-demo/tab-content/panels', 'Recent activity'],
-            'plain text' => ['/style-demo/tab-content/text', 'Keeping a shared workspace clear'],
+            'table' => ['/admin/style-demo/tab-content/table', 'Ava Thompson'],
+            'form' => ['/admin/style-demo/tab-content/form', 'Save changes'],
+            'panels' => ['/admin/style-demo/tab-content/panels', 'Recent activity'],
+            'plain text' => ['/admin/style-demo/tab-content/text', 'Keeping a shared workspace clear'],
         ];
     }
 }

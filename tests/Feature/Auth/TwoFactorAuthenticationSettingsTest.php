@@ -18,7 +18,7 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/profile/two-factor-authentication')->assertRedirect('/login');
+        $this->get('/admin/profile/two-factor-authentication')->assertRedirect('/login');
     }
 
     public function test_visiting_the_page_without_a_confirmed_password_redirects_to_confirm_password(): void
@@ -26,7 +26,7 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get('/profile/two-factor-authentication')
+            ->get('/admin/profile/two-factor-authentication')
             ->assertRedirect('/user/confirm-password');
     }
 
