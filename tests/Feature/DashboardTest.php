@@ -15,9 +15,16 @@ class DashboardTest extends TestCase
         $this->get('/admin/dashboard')->assertRedirect('/login');
     }
 
-    public function test_authenticated_users_can_view_the_dashboard(): void
+    public function test_users_without_a_system_role_cannot_view_the_dashboard(): void
     {
         $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/admin/dashboard')->assertForbidden();
+    }
+
+    public function test_users_with_a_system_role_can_view_the_dashboard(): void
+    {
+        $user = User::factory()->superAdmin()->create();
 
         $response = $this->actingAs($user)->get('/admin/dashboard');
 

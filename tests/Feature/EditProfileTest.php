@@ -19,14 +19,14 @@ class EditProfileTest extends TestCase
 
     public function test_guests_cannot_view_the_profile_screen(): void
     {
-        $this->get('/admin/profile')->assertRedirect('/login');
+        $this->get('/profile')->assertRedirect('/login');
     }
 
     public function test_users_can_view_their_profile(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/admin/profile')->assertStatus(200);
+        $this->actingAs($user)->get('/profile')->assertStatus(200);
     }
 
     public function test_users_can_update_their_profile_information(): void

@@ -90,6 +90,6 @@ class EditProfile extends Component
     public function render(): View
     {
         return view('livewire.edit-profile')
-            ->layout('layouts.admin');
+            ->layout('layouts.public');
     }
 }

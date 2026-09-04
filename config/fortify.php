@@ -16,7 +16,7 @@ return [
 
     'lowercase_usernames' => true,
 
-    'home' => '/admin/dashboard',
+    'home' => '/',
 
     'prefix' => '',
 

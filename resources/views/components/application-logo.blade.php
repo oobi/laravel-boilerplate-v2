@@ -1,5 +1,5 @@
 {{--
-    Canonical logo, shared by the admin shell and the auth guest layout.
+    Canonical logo, shared by the admin shell and the login/public layouts.
     Renders resources/images/app-logo-wide.svg (or app-logo.svg for the icon
     -only mark) — to rebrand, just replace those two files with your own,
     keeping their aspect ratios; no Blade changes needed.

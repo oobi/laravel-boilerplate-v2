@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.login')
 
 @section('content')
     <h1 class="text-xl font-semibold">{{ __('Forgot your password?') }}</h1>
