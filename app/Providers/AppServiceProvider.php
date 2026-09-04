@@ -9,6 +9,8 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Enums\SystemPermission;
 use App\Http\Responses\PasswordResetLinkResponse;
+use App\Models\User;
+use App\Observers\UserObserver;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
@@ -44,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFortify();
         $this->registerFilamentIcons();
         $this->registerNotifications();
+
+        User::observe(UserObserver::class);
     }
 
     /** Top-center toasts instead of Filament's default top-right. */
