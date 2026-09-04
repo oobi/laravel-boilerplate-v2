@@ -26,9 +26,9 @@
                 </x-form-select>
 
                 <fieldset class="fieldset">
-                    <legend class="fieldset-legend">{{ __('theme-demo::messages.field_checkbox_group') }}</legend>
+                    <legend class="fieldset-legend ui-form-label">{{ __('theme-demo::messages.field_checkbox_group') }}</legend>
                     @foreach (['a' => 'Option A', 'b' => 'Option B', 'c' => 'Option C'] as $value => $label)
-                        <label class="label gap-2">
+                        <label class="label gap-2 ui-form-label">
                             <input type="checkbox" class="checkbox checkbox-sm" wire:model="checkboxGroup" value="{{ $value }}">
                             {{ $label }}
                         </label>
@@ -36,22 +36,22 @@
                 </fieldset>
 
                 <fieldset class="fieldset">
-                    <legend class="fieldset-legend">{{ __('theme-demo::messages.field_radio_group') }}</legend>
+                    <legend class="fieldset-legend ui-form-label">{{ __('theme-demo::messages.field_radio_group') }}</legend>
                     @foreach (['x' => 'Option X', 'y' => 'Option Y', 'z' => 'Option Z'] as $value => $label)
-                        <label class="label gap-2">
+                        <label class="label gap-2 ui-form-label">
                             <input type="radio" class="radio radio-sm" wire:model="radioGroup" value="{{ $value }}">
                             {{ $label }}
                         </label>
                     @endforeach
                 </fieldset>
 
-                <label class="label gap-2">
+                <label class="label gap-2 ui-form-label">
                     <input type="checkbox" class="toggle" wire:model="toggle">
                     {{ __('theme-demo::messages.field_toggle') }}
                 </label>
 
                 <div>
-                    <label class="label mb-1">{{ __('theme-demo::messages.field_range') }}</label>
+                    <label class="ui-form-label mb-1">{{ __('theme-demo::messages.field_range') }}</label>
                     <input type="range" min="0" max="100" wire:model.live="range" class="range">
                     <div class="mt-1 text-xs text-base-content/60">{{ $range }}</div>
                 </div>
@@ -59,12 +59,12 @@
                 <x-form-input name="date" type="date" label="{{ __('theme-demo::messages.field_date') }}" wire:model="date" :floating="$variant === 'floating'" />
 
                 <div>
-                    <label class="label mb-1">{{ __('theme-demo::messages.field_file') }}</label>
+                    <label class="ui-form-label mb-1">{{ __('theme-demo::messages.field_file') }}</label>
                     <input type="file" wire:model="file" class="file-input w-full">
                 </div>
 
                 <div>
-                    <label class="label me-2 mb-1">{{ __('theme-demo::messages.field_color') }}</label>
+                    <label class="ui-form-label me-2 mb-1">{{ __('theme-demo::messages.field_color') }}</label>
                     <input type="color" wire:model="color" class="input h-10 w-20 p-1">
                 </div>
 

@@ -30,3 +30,35 @@
     --input-color: var(--color-primary);
     outline: none;
 }
+
+/*
+|--------------------------------------------------------------------------
+| Non-floating field label/legend + field chrome — match Filament
+|--------------------------------------------------------------------------
+| `.ui-form-label` replaces bare daisyUI `.label` (16px, 60%-opacity text)
+| and `.fieldset-legend` (12px, bold, negative margin) — neither matches the
+| other, and neither matches Filament's own `.fi-fo-field-label-content`/
+| `.fi-fo-checkbox-list-option-label` (14px, font-medium, full-opacity
+| `text-gray-950` text), which every non-floating field's label — plus any
+| checkbox/radio/toggle option text — is meant to read like.
+|
+| `.ui-form-input` nudges daisyUI's `.input`/`.select`/`.textarea` corners and
+| border toward Filament's own field chrome (see `.fi-input-wrp` in
+| vendor/filament/forms) — only ever added to non-floating fields; floating
+| fields keep daisyUI's own look (the shadow rule above still applies to both).
+*/
+.ui-form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-base-content);
+}
+
+legend.ui-form-label {
+    margin-bottom: 0.25rem;
+    padding-bottom: 0;
+}
+
+.ui-form-input {
+    border-radius: 0.5rem;
+    border-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+}
