@@ -24,4 +24,20 @@
             </a>
         @endforeach
     </div>
+
+    <div class="divider"></div>
+
+    <div class="flex flex-col gap-2">
+        <h2 class="text-lg font-semibold">{{ __('theme-demo::messages.error_pages_title') }}</h2>
+        <p class="text-sm text-base-content/70">{{ __('theme-demo::messages.error_pages_description') }}</p>
+
+        <div class="flex flex-wrap gap-2">
+            @foreach (['403', '404', '500', '503'] as $status)
+                {{-- Opens in a new tab: the target view has no admin chrome, so this avoids losing the demo page. --}}
+                <a href="{{ route('style-demo.errors-'.$status) }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
+                    {{ $status }}
+                </a>
+            @endforeach
+        </div>
+    </div>
 </div>

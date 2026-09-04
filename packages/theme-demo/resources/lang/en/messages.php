@@ -16,6 +16,9 @@ return [
     'overview_title' => 'Style Demo',
     'overview_description' => 'A reference gallery of every daisyUI UI pattern this boilerplate ships — used to keep future Filament equivalents visually aligned. Local/super-admin only; safe to delete wholesale (see packages/theme-demo).',
 
+    'error_pages_title' => 'Error Pages',
+    'error_pages_description' => 'Triggers the real HTTP error response, so it renders resources/views/errors/{status}.blade.php exactly as it would in production.',
+
     'tables_title' => 'DaisyUI Tables',
     'tables_description' => 'The same list, from an empty state through to a fully-featured one — as tabs.',
 
