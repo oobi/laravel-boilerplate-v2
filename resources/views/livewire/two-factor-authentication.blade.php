@@ -59,14 +59,14 @@
 
         <div class="flex flex-wrap gap-3">
             @if (! $this->enabled)
-                <button type="button" wire:click="enableTwoFactorAuthentication" class="btn btn-primary">
+                <x-button type="button" wire:click="enableTwoFactorAuthentication">
                     {{ __('admin.two_factor_enable') }}
-                </button>
+                </x-button>
             @else
                 @if ($showingConfirmation)
-                    <button type="button" wire:click="confirmTwoFactorAuthentication" class="btn btn-primary">
+                    <x-button type="button" wire:click="confirmTwoFactorAuthentication">
                         {{ __('admin.two_factor_confirm') }}
-                    </button>
+                    </x-button>
                 @elseif ($showingRecoveryCodes)
                     <button type="button" wire:click="regenerateRecoveryCodes" class="btn btn-outline">
                         {{ __('admin.two_factor_regenerate_recovery_codes') }}
@@ -77,9 +77,9 @@
                     </button>
                 @endif
 
-                <button type="button" wire:click="disableTwoFactorAuthentication" class="btn btn-outline btn-error">
+                <x-button type="button" wire:click="disableTwoFactorAuthentication" color="error" variant="outline">
                     {{ $showingConfirmation ? __('admin.cancel') : __('admin.two_factor_disable') }}
-                </button>
+                </x-button>
             @endif
         </div>
     </x-card>

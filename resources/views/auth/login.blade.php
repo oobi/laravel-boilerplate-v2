@@ -4,17 +4,17 @@
     <h1 class="text-xl font-semibold">{{ __('Log in') }}</h1>
 
     @session('status')
-        <div class="alert alert-success">{{ $value }}</div>
+        <x-alert color="success">{{ $value }}</x-alert>
     @endsession
 
     @if ($errors->any())
-        <div class="alert alert-error">
+        <x-alert color="error">
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-4">
@@ -46,7 +46,7 @@
                 <a class="link link-hover text-sm" href="{{ route('register') }}">{{ __('Need an account?') }}</a>
             @endif
 
-            <button type="submit" class="btn btn-primary ml-auto">{{ __('Log in') }}</button>
+            <x-button type="submit" class="ml-auto">{{ __('Log in') }}</x-button>
         </div>
     </form>
 @endsection

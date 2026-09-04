@@ -33,9 +33,9 @@
                     </label>
 
                     @if (Auth::user()->profile_photo_path)
-                        <button type="button" wire:click="removeProfilePhoto" class="btn btn-sm btn-outline btn-error">
+                        <x-button type="button" wire:click="removeProfilePhoto" color="error" variant="outline" size="sm">
                             {{ __('admin.remove_photo') }}
-                        </button>
+                        </x-button>
                     @endif
 
                     @error('photo') <p class="text-error text-sm">{{ $message }}</p> @enderror
@@ -61,9 +61,9 @@
             </fieldset>
 
             <div>
-                <button type="submit" class="btn btn-primary">
+                <x-button type="submit">
                     {{ __('admin.save_changes') }}
-                </button>
+                </x-button>
             </div>
         </form>
     </x-card>
@@ -88,9 +88,9 @@
             </fieldset>
 
             <div>
-                <button type="submit" class="btn btn-primary">
+                <x-button type="submit">
                     {{ __('admin.update_password') }}
-                </button>
+                </x-button>
             </div>
         </form>
     </x-card>

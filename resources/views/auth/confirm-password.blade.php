@@ -8,13 +8,13 @@
     </p>
 
     @if ($errors->any())
-        <div class="alert alert-error">
+        <x-alert color="error">
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     <form method="POST" action="{{ route('password.confirm') }}" class="flex flex-col gap-4">
@@ -26,7 +26,7 @@
         </fieldset>
 
         <div class="flex justify-end">
-            <button type="submit" class="btn btn-primary">{{ __('Confirm') }}</button>
+            <x-button type="submit">{{ __('Confirm') }}</x-button>
         </div>
     </form>
 @endsection

@@ -8,15 +8,15 @@
     </p>
 
     @if (session('status') === 'verification-link-sent')
-        <div class="alert alert-success">
+        <x-alert color="success">
             {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-        </div>
+        </x-alert>
     @endif
 
     <div class="flex items-center justify-between">
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf
-            <button type="submit" class="btn btn-primary">{{ __('Resend Verification Email') }}</button>
+            <x-button type="submit">{{ __('Resend Verification Email') }}</x-button>
         </form>
 
         <form method="POST" action="{{ route('logout') }}">

@@ -4,13 +4,13 @@
     <h1 class="text-xl font-semibold">{{ __('Reset Password') }}</h1>
 
     @if ($errors->any())
-        <div class="alert alert-error">
+        <x-alert color="error">
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     <form method="POST" action="{{ route('password.update') }}" class="flex flex-col gap-4">
@@ -34,7 +34,7 @@
         </fieldset>
 
         <div class="flex justify-end">
-            <button type="submit" class="btn btn-primary">{{ __('Reset Password') }}</button>
+            <x-button type="submit">{{ __('Reset Password') }}</x-button>
         </div>
     </form>
 @endsection

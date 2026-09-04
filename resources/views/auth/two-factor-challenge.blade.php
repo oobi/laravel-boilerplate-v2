@@ -12,13 +12,13 @@
     </p>
 
     @if ($errors->any())
-        <div class="alert alert-error">
+        <x-alert color="error">
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     <form method="POST" action="{{ route('two-factor.login') }}" class="flex flex-col gap-4">
@@ -42,7 +42,7 @@
                 document.getElementById('recovery-code-text').classList.toggle('hidden');
             ">{{ __('Use a recovery code') }}</button>
 
-            <button type="submit" class="btn btn-primary">{{ __('Log in') }}</button>
+            <x-button type="submit">{{ __('Log in') }}</x-button>
         </div>
     </form>
 @endsection

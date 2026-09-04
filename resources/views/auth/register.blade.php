@@ -4,13 +4,13 @@
     <h1 class="text-xl font-semibold">{{ __('Register') }}</h1>
 
     @if ($errors->any())
-        <div class="alert alert-error">
+        <x-alert color="error">
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     <form method="POST" action="{{ route('register') }}" class="flex flex-col gap-4">
@@ -44,7 +44,7 @@
         <div class="flex items-center justify-between">
             <a class="link link-hover text-sm" href="{{ route('login') }}">{{ __('Already registered?') }}</a>
 
-            <button type="submit" class="btn btn-primary">{{ __('Register') }}</button>
+            <x-button type="submit">{{ __('Register') }}</x-button>
         </div>
     </form>
 @endsection

@@ -11,12 +11,12 @@
             <span class="font-semibold">{{ auth()->user()->name }}</span>
 
             @if (! auth()->user()->active)
-                <span class="badge badge-error badge-sm">{{ __('admin.inactive') }}</span>
+                <x-badge color="error" size="sm">{{ __('admin.inactive') }}</x-badge>
             @endif
         </div>
 
-        <a href="{{ route('users.impersonate.leave') }}" class="btn btn-neutral btn-xs">
+        <x-button href="{{ route('users.impersonate.leave') }}" color="neutral" size="xs" variant="outline">
             {{ __('admin.stop_impersonating') }}
-        </a>
+        </x-button>
     </div>
 @endImpersonating

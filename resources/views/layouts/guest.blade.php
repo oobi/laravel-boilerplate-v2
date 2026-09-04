@@ -18,10 +18,8 @@
 <body class="min-h-screen bg-base-200 flex flex-col items-center justify-center gap-6 p-4">
     <x-application-logo size="h-16" />
 
-    <div class="card w-full max-w-md bg-base-100 shadow-xl">
-        <div class="card-body gap-4">
-            @yield('content')
-        </div>
-    </div>
+    <x-card bordered="false" class="w-full max-w-md shadow-xl">
+        @yield('content')
+    </x-card>
 </body>
 </html>
