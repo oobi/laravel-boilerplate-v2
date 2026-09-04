@@ -4,8 +4,8 @@
     <p class="ui-error-code">503</p>
 
     <div class="space-y-2">
-        <h1 class="text-4xl font-bold">{{ __('Be right back') }}</h1>
-        <p class="max-w-sm text-lg text-base-content/60">{{ __("We're down for maintenance. Give it a moment.") }}</p>
+        <h1 class="ui-error-title">{{ __('Be right back') }}</h1>
+        <p class="ui-error-message">{{ __("We're doing a bit of maintenance to make things even better. Please check back soon.") }}</p>
     </div>
 
     <x-button href="/" color="primary" size="lg" class="w-fit rounded-full">
@@ -14,6 +14,4 @@
     </x-button>
 @endsection
 
-@section('illustration')
-    <img src="{{ asset('images/errors/error-503.webp') }}" alt="">
-@endsection
+@section('illustration-src', asset('images/errors/error-503.webp'))

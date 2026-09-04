@@ -139,7 +139,7 @@ class StyleDemoAccessTest extends TestCase
         return [
             '403' => [403, 'Not on the list'],
             '404' => [404, 'Page not found'],
-            '500' => [500, 'Something caught fire'],
+            '500' => [500, 'Oops!'],
             '503' => [503, 'Be right back'],
         ];
     }

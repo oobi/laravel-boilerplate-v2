@@ -4,8 +4,8 @@
     <p class="ui-error-code">404</p>
 
     <div class="space-y-2">
-        <h1 class="text-4xl font-bold">{{ __('Page not found') }}</h1>
-        <p class="max-w-sm text-lg text-base-content/60">{{ __('Looks like this page has wandered off.') }}</p>
+        <h1 class="ui-error-title">{{ __('Page not found') }}</h1>
+        <p class="ui-error-message">{{ __('Looks like this page has gone walkabout.') }}</p>
     </div>
 
     <x-button href="/" color="primary" size="lg" class="w-fit rounded-full">
@@ -14,6 +14,4 @@
     </x-button>
 @endsection
 
-@section('illustration')
-    <img src="{{ asset('images/errors/error-404.webp') }}" alt="">
-@endsection
+@section('illustration-src', asset('images/errors/error-404.webp'))

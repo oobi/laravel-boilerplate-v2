@@ -1,20 +1,20 @@
 /*
 |--------------------------------------------------------------------------
-| ui-error-* — the two-column error page layout (404/403/500/503)
+| ui-error-* — the error page hero (404/403/500/503)
 |--------------------------------------------------------------------------
-| Tuned to match a supplied reference design pixel-for-pixel (specific
-| minmax/clamp values, non-standard 760px breakpoint) — not expressible
-| cleanly as Tailwind utilities, so it's a one-off hand-written component.
+| Single narrow column (see max-w-[760px] on the layout) with the
+| illustration as an absolutely-positioned background layer bleeding behind
+| the top-right of the copy, instead of a separate image column.
 */
 
 @layer components {
-    .ui-error-layout {
-        display: grid;
-        grid-template-columns:
-            minmax(0, 0.9fr)
-            minmax(320px, 1.1fr);
-        align-items: center;
-        gap: clamp(32px, 7vw, 88px);
+    .ui-error-hero {
+        position: relative;
+    }
+
+    .ui-error-copy {
+        position: relative;
+        z-index: 1;
     }
 
     .ui-error-code {
@@ -25,28 +25,40 @@
         font-weight: 800;
     }
 
-    .ui-error-art img {
-        display: block;
-        width: min(100%, 520px);
-        height: auto;
+    .ui-error-title {
+        @apply text-4xl font-bold;
     }
 
-    @media (max-width: 760px) {
-        .ui-error-layout {
-            grid-template-columns: 1fr;
-            gap: 24px;
-        }
+    .ui-error-message {
+        @apply text-base-content/60;
+        max-width: 18rem;
+        font-size: 1.125rem;
+    }
 
+    .ui-error-art {
+        position: absolute;
+        top: -2rem;
+        right: 0%;
+        z-index: 0;
+        width: min(70%, 480px);
+        aspect-ratio: 1;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        pointer-events: none;
+    }
+
+    /* Below md (768px): drop the overlap, stack the art under the copy, center everything */
+    @media (max-width: 767px) {
         .ui-error-copy {
+            align-items: center;
             text-align: center;
         }
 
         .ui-error-art {
-            order: -1;
-        }
-
-        .ui-error-art img {
-            width: min(82vw, 390px);
+            position: static;
+            width: min(70%, 320px);
+            margin: 2rem auto 0;
         }
     }
 }
