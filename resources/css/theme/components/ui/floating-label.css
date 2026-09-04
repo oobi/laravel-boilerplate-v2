@@ -19,6 +19,10 @@
 | `--ui-floating-label-inset` lets a call site (e.g. a search box with a
 | leading icon) shift where the label sits while inline/unfocused, without
 | affecting its floated position (which always sits at the standard inset).
+|
+| The label's `top: 50%` centers against `.ui-floating-label`'s own box, so
+| keep an `@error` message OUTSIDE this div (as a sibling), not inside it —
+| otherwise the extra height pushes the "center" down and misaligns the label.
 */
 
 @layer components {
@@ -41,7 +45,15 @@
         transition: top 150ms ease, left 150ms ease, transform 150ms ease, background-color 150ms ease, color 150ms ease, opacity 150ms ease;
     }
 
+    /* A <textarea> is tall, so its inline/empty label sits near the top like
+       a real placeholder instead of vertically centered in the whole field. */
+    .ui-floating-label:has(textarea) .ui-floating-label-text {
+        top: 0.75rem;
+        transform: translateY(0) scale(1);
+    }
+
     .ui-floating-label:has(input:not(:placeholder-shown)) .ui-floating-label-text,
+    .ui-floating-label:has(textarea:not(:placeholder-shown)) .ui-floating-label-text,
     .ui-floating-label:has(select) .ui-floating-label-text,
     .ui-floating-label:has(:focus) .ui-floating-label-text {
         top: 0;

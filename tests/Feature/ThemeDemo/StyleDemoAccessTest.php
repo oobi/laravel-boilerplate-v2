@@ -100,6 +100,7 @@ class StyleDemoAccessTest extends TestCase
             'filament table custom header' => ['/admin/style-demo/tables/filament/custom-header'],
             'filament table wide' => ['/admin/style-demo/tables/filament/wide'],
             'daisy form' => ['/admin/style-demo/forms/daisy'],
+            'daisy form standard' => ['/admin/style-demo/forms/daisy/standard'],
             'filament form' => ['/admin/style-demo/forms/filament'],
             'components' => ['/admin/style-demo/components'],
             'filament components' => ['/admin/style-demo/components/filament'],

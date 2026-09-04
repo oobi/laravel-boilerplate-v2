@@ -50,7 +50,8 @@ class ThemeDemoServiceProvider extends ServiceProvider
                 NavItem::make('style-demo-forms-daisy')
                     ->label(__('theme-demo::messages.nav_forms_daisy'))
                     ->route('style-demo.forms-daisy')
-                    ->icon('heroicon-o-pencil-square'),
+                    ->icon('heroicon-o-pencil-square')
+                    ->active('style-demo.forms-daisy', 'style-demo.forms-daisy-standard'),
                 NavItem::make('style-demo-filament-form')
                     ->label(__('theme-demo::messages.nav_filament_form'))
                     ->route('style-demo.forms-filament')

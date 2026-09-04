@@ -49,9 +49,13 @@ class DaisyForm extends Component
     /** Deliberately left blank and pre-flagged so the error state is visible without any interaction. */
     public string $errorExample = '';
 
-    public function mount(): void
+    public string $variant = 'floating';
+
+    public function mount(string $variant = 'floating'): void
     {
         Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);
+
+        $this->variant = $variant;
 
         $this->addError('errorExample', __('theme-demo::messages.field_error_message'));
     }
