@@ -1,0 +1,52 @@
+/*
+|--------------------------------------------------------------------------
+| ui-error-* — the two-column error page layout (404/403/500/503)
+|--------------------------------------------------------------------------
+| Tuned to match a supplied reference design pixel-for-pixel (specific
+| minmax/clamp values, non-standard 760px breakpoint) — not expressible
+| cleanly as Tailwind utilities, so it's a one-off hand-written component.
+*/
+
+@layer components {
+    .ui-error-layout {
+        display: grid;
+        grid-template-columns:
+            minmax(0, 0.9fr)
+            minmax(320px, 1.1fr);
+        align-items: center;
+        gap: clamp(32px, 7vw, 88px);
+    }
+
+    .ui-error-code {
+        margin: 0;
+        font-size: clamp(5.5rem, 14vw, 10rem);
+        line-height: 0.82;
+        letter-spacing: -0.06em;
+        font-weight: 800;
+    }
+
+    .ui-error-art img {
+        display: block;
+        width: min(100%, 520px);
+        height: auto;
+    }
+
+    @media (max-width: 760px) {
+        .ui-error-layout {
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .ui-error-copy {
+            text-align: center;
+        }
+
+        .ui-error-art {
+            order: -1;
+        }
+
+        .ui-error-art img {
+            width: min(82vw, 390px);
+        }
+    }
+}

@@ -60,6 +60,17 @@ class StyleDemoAccessTest extends TestCase
             ->assertSee($expectedContent);
     }
 
+    #[DataProvider('errorPageProvider')]
+    public function test_error_page_links_render_the_matching_error_view(int $status, string $heading): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)
+            ->get("/admin/style-demo/errors/{$status}")
+            ->assertStatus($status)
+            ->assertSee($heading);
+    }
+
     public function test_admins_can_sort_filament_table_by_joined_at(): void
     {
         $admin = User::factory()->superAdmin()->create();
@@ -119,6 +130,17 @@ class StyleDemoAccessTest extends TestCase
             'form' => ['/admin/style-demo/tab-content/form', 'Save changes'],
             'panels' => ['/admin/style-demo/tab-content/panels', 'Recent activity'],
             'plain text' => ['/admin/style-demo/tab-content/text', 'Keeping a shared workspace clear'],
+        ];
+    }
+
+    /** @return array<string, array{int, string}> */
+    public static function errorPageProvider(): array
+    {
+        return [
+            '403' => [403, 'Not on the list'],
+            '404' => [404, 'Page not found'],
+            '500' => [500, 'Something caught fire'],
+            '503' => [503, 'Be right back'],
         ];
     }
 }
