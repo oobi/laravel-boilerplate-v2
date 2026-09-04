@@ -72,6 +72,9 @@ per the Blade instructions).
 | `<x-button>` | `<button class="btn ...">` / `<a class="btn ...">` | `color` (default `primary`), `variant` (default `solid`), `size`, `href`, `disabled`, `type` |
 | `<x-stats-card>` | dashboard label/value block | `label`, `value`, `color`, `footerColor`; slots: `icon`, `footer` |
 | `<x-page-header>` | title + description + right-aligned actions row at the top of a page | `title`, `description`; slot: `actions` |
+| `<x-form-input>` | labelled `<input>` (text/email/password/number/date/...) | `name` (id/for/@error key), `label`, `floating` (default true — floating label vs plain label above); rest of attrs (`type`, `wire:model`, ...) pass through to the `<input>`; `class` sizes the wrapper (e.g. `md:col-span-2`), not the input |
+| `<x-form-textarea>` | labelled `<textarea>` | same props as `<x-form-input>`; slot is initial content |
+| `<x-form-select>` | labelled `<select>` | same props as `<x-form-input>`; slot is the `<option>` list |
 
 ### Tables (pairs with a Filament resource table)
 
