@@ -170,11 +170,16 @@ class NotificationPreferencesFormSection implements FormSection
 Register the same way, via `AdminPanels::define()` under
 `PanelRegistry::for('users.edit')->add(...)`, or from an add-on's own
 provider. `EditUser::save()` persists
-`$this->form->getState()` as-is, so a new field just needs a matching column
-on `User` — no changes needed in `EditUser.php` itself. (Filament excludes
-`disabled()` fields from that state automatically, which is how the existing
-"can't change your own role" rule works without any special-casing in
-`EditUser`.)
+`$this->form->getState()` as-is, so a new *ordinary* field just needs a
+matching column on `User` — no changes needed in `EditUser.php` itself.
+(Filament excludes `disabled()` fields from that state automatically, which
+is how the existing "can't change your own active status" rule works
+without any special-casing in `EditUser`.) A **sensitive** field (one with
+its own distinct ability, e.g. role/super-admin assignment) should not go
+through this generic path at all — see `EditUser::manageRolesAction()`/
+`toggleSuperAdminAction()` for the pattern: its own Filament Action,
+independently authorized both for visibility and again inside the action
+closure at the write boundary.
 
 ## What's deliberately NOT a panel
 

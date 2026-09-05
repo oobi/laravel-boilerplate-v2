@@ -112,10 +112,12 @@ working example above (registered only in `local`/`testing` environments).
 ## Permissions
 
 `can()` takes a plain gate-ability-name **string**, resolved via
-`Gate::forUser($viewer)->allows($ability)` — the same gates registered in
-`AppServiceProvider` for each `SystemPermission`. No closures: a group or an
-item is either always visible (`can()` never called) or gated by one named
-ability. A group with a `can()` gate that fails is hidden entirely; a group
+`Gate::forUser($viewer)->allows($ability)` — either a `SystemPermission`
+value (checked via spatie/laravel-permission's own `Gate::before`, granted
+per-role on the Roles admin screen) or an explicit `Gate::define()` for a
+one-off ability like `manage roles` (see `AppServiceProvider`). No closures: a
+group or an item is either always visible (`can()` never called) or gated by
+one named ability. A group with a `can()` gate that fails is hidden entirely; a group
 that passes but ends up with zero *visible* items (all its items' own
 `can()` checks failed) is also dropped from render — nothing to expand into
 an empty section.

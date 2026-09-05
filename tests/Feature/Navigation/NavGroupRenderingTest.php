@@ -49,9 +49,10 @@ class NavGroupRenderingTest extends TestCase
                 NavItem::make('gated-item')->label('Gated Item')->route('dashboard')->icon('heroicon-o-home')->can('non-existent permission'),
             );
 
-        $admin = User::factory()->superAdmin()->create();
+        // A super admin bypasses every ability by design, so gating-denial needs a non-super-admin actor here.
+        $support = User::factory()->support()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($support)
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Visible Item')
@@ -65,9 +66,10 @@ class NavGroupRenderingTest extends TestCase
             ->can('non-existent permission')
             ->add(NavItem::make('test-item')->label('Test Item')->route('dashboard')->icon('heroicon-o-home'));
 
-        $admin = User::factory()->superAdmin()->create();
+        // A super admin bypasses every ability by design, so gating-denial needs a non-super-admin actor here.
+        $support = User::factory()->support()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($support)
             ->get(route('dashboard'))
             ->assertOk()
             ->assertDontSee('Gated Group');

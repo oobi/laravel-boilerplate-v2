@@ -62,10 +62,12 @@ class ShowUser extends Component implements HasSchemas
                                     ->label(__('admin.email'))
                                     ->icon('heroicon-o-envelope'),
 
-                                TextEntry::make('system_role')
-                                    ->label(__('admin.system_role'))
-                                    ->badge()
-                                    ->placeholder(__('admin.no_system_role')),
+                                TextEntry::make('role_summary')
+                                    ->label(__('admin.roles'))
+                                    ->state(fn (User $record): string => $record->is_super_admin
+                                        ? __('admin.super_admin')
+                                        : ($record->roles->pluck('name')->join(', ') ?: __('admin.no_roles')))
+                                    ->badge(),
 
                                 TextEntry::make('status')
                                     ->label(__('admin.status'))

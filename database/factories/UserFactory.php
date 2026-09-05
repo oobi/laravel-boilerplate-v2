@@ -2,11 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Enums\SystemRole;
+use App\Enums\SystemPermission;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -56,15 +58,35 @@ class UserFactory extends Factory
     public function superAdmin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'system_role' => SystemRole::SUPER_ADMIN,
+            'is_super_admin' => true,
         ]);
     }
 
+    /** Grants the given SystemPermission(s) directly, creating the Permission rows on demand. */
+    public function withPermission(SystemPermission ...$permissions): static
+    {
+        return $this->afterCreating(function (User $user) use ($permissions): void {
+            $user->givePermissionTo(array_map(
+                fn (SystemPermission $permission) => Permission::findOrCreate($permission->value),
+                $permissions,
+            ));
+        });
+    }
+
+    /** A non-super-admin actor with a typical "manage users" role, for exercising the coarse permission checks in tests. */
     public function support(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'system_role' => SystemRole::SUPPORT,
-        ]);
+        return $this->afterCreating(function (User $user): void {
+            $role = Role::findOrCreate('Support');
+            $role->givePermissionTo([
+                Permission::findOrCreate(SystemPermission::ACCESS_ADMIN_PANEL->value),
+                Permission::findOrCreate(SystemPermission::MANAGE_USERS->value),
+                Permission::findOrCreate(SystemPermission::SUSPEND_USERS->value),
+                Permission::findOrCreate(SystemPermission::IMPERSONATE_USERS->value),
+            ]);
+
+            $user->assignRole($role);
+        });
     }
 
     public function twoFactorEnabled(): static

@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\SystemRole;
+use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
 use App\Models\Concerns\HasProfilePhoto;
-use App\Models\Concerns\HasSystemRole;
+use App\Models\Concerns\HasSuperAdminFlag;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,11 +15,12 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasProfilePhoto, HasSystemRole, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -31,7 +32,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_name',
         'email',
         'password',
-        'system_role',
         'active',
     ];
 
@@ -67,7 +67,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'active' => 'boolean',
-            'system_role' => SystemRole::class,
+            'is_super_admin' => 'boolean',
             'last_login_at' => 'datetime',
         ];
     }
@@ -125,8 +125,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * lab404/laravel-impersonate's own controller/Blade directives (called
      * directly, not via our Gate/Policy layer) — see UserPolicy::impersonate()
      * for the app-facing wrapper used elsewhere in the Users admin area.
-     * Only super admins and support staff can impersonate, and nested
-     * impersonation is disallowed (hides controls while already impersonating).
+     * Nested impersonation is disallowed (hides controls while already impersonating).
      */
     public function canImpersonate(): bool
     {
@@ -134,32 +133,27 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return $this->isSuperAdmin() || $this->isSupport();
+        return $this->isSuperAdmin() || $this->checkPermissionTo(SystemPermission::IMPERSONATE_USERS->value);
     }
 
     /**
-     * Determine if this user can be impersonated by the currently authenticated user.
-     * Rules: must be logged in, can't impersonate yourself, super admins can
-     * never be impersonated, and support staff can't impersonate other support staff.
+     * Determine if this user can be impersonated by the given actor (the
+     * currently authenticated user if omitted — required for the vendor
+     * package's own no-argument calls). Rules: must be logged in, can't
+     * impersonate yourself, super admins can never be impersonated.
      */
-    public function canBeImpersonated(): bool
+    public function canBeImpersonated(?self $actor = null): bool
     {
-        if (! Auth::check()) {
+        $actor ??= Auth::user();
+
+        if (! $actor) {
             return false;
         }
 
-        if (Auth::id() === $this->id) {
+        if ($actor->id === $this->id) {
             return false;
         }
 
-        if ($this->isSuperAdmin()) {
-            return false;
-        }
-
-        if (Auth::user()->isSupport() && $this->isSupport()) {
-            return false;
-        }
-
-        return true;
+        return ! $this->isSuperAdmin();
     }
 }

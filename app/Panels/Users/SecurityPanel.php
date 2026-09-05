@@ -43,7 +43,7 @@ class SecurityPanel implements HasPanelActions, ShowPanel
     {
         return [
             'force-disable-2fa' => function (Model $subject): void {
-                Gate::authorize('update', $subject);
+                Gate::authorize('resetTwoFactorAuthentication', $subject);
 
                 $subject->forceFill([
                     'two_factor_secret' => null,

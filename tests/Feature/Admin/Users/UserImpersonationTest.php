@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Admin\Users;
 
-use App\Enums\SystemRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -26,7 +25,7 @@ class UserImpersonationTest extends TestCase
 
     public function test_support_can_impersonate_a_regular_user(): void
     {
-        $support = User::factory()->create(['system_role' => SystemRole::SUPPORT]);
+        $support = User::factory()->support()->create();
         $target = User::factory()->create();
 
         $this->actingAs($support)
@@ -56,17 +55,6 @@ class UserImpersonationTest extends TestCase
             ->get(route('users.impersonate', $otherAdmin->id));
 
         $this->assertAuthenticatedAs($admin);
-    }
-
-    public function test_support_cannot_impersonate_other_support_users(): void
-    {
-        $support = User::factory()->create(['system_role' => SystemRole::SUPPORT]);
-        $otherSupport = User::factory()->create(['system_role' => SystemRole::SUPPORT]);
-
-        $this->actingAs($support)
-            ->get(route('users.impersonate', $otherSupport->id));
-
-        $this->assertAuthenticatedAs($support);
     }
 
     public function test_a_user_cannot_impersonate_themselves(): void

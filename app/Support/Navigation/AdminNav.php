@@ -28,6 +28,12 @@ class AdminNav
                     ->route('users.index')
                     ->icon('heroicon-o-user')
                     ->active('users.*'),
+                NavItem::make('roles')
+                    ->label(__('Roles'))
+                    ->route('roles.index')
+                    ->icon('heroicon-o-shield-check')
+                    ->active('roles.*')
+                    ->can('manage roles'),
             );
     }
 }

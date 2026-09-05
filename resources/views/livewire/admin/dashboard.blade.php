@@ -50,8 +50,8 @@
                             <div class="truncate text-sm font-medium">{{ $user->name }}</div>
                             <div class="truncate text-xs text-base-content/60">{{ $user->email }}</div>
                         </div>
-                        @if ($user->system_role)
-                            <x-badge :value="$user->system_role" />
+                        @if ($user->is_super_admin)
+                            <x-badge value="{{ __('admin.super_admin') }}" />
                         @endif
                     </div>
                 @empty

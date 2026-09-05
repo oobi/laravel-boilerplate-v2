@@ -2,6 +2,9 @@
 
 use App\Enums\SystemPermission;
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\Roles\CreateRole;
+use App\Livewire\Admin\Roles\EditRole;
+use App\Livewire\Admin\Roles\ListRoles;
 use App\Livewire\Admin\Users\CreateUser;
 use App\Livewire\Admin\Users\EditUser;
 use App\Livewire\Admin\Users\ListUsers;
@@ -34,6 +37,12 @@ Route::prefix('admin')->group(function (): void {
             Route::get('/create', CreateUser::class)->name('create');
             Route::get('/{user}', ShowUser::class)->name('show');
             Route::get('/{user}/edit', EditUser::class)->name('edit');
+        });
+
+        Route::prefix('roles')->name('roles.')->group(function (): void {
+            Route::get('/', ListRoles::class)->name('index');
+            Route::get('/create', CreateRole::class)->name('create');
+            Route::get('/{role}/edit', EditRole::class)->name('edit');
         });
     });
 

@@ -2,14 +2,15 @@
 
 namespace Tests\Feature\Admin\Users;
 
-use App\Enums\SystemRole;
 use App\Livewire\Admin\Users\EditUser;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class EditUserTest extends TestCase
@@ -33,13 +34,65 @@ class EditUserTest extends TestCase
             ->test(EditUser::class, ['user' => $target])
             ->set('data.first_name', 'Updated')
             ->set('data.last_name', 'Name')
-            ->set('data.system_role', SystemRole::SUPPORT->value)
             ->call('save')
             ->assertRedirect(route('users.show', $target));
 
         $target->refresh();
         $this->assertSame('Updated Name', $target->name);
-        $this->assertTrue($target->hasSystemRole(SystemRole::SUPPORT));
+    }
+
+    public function test_super_admins_can_assign_roles(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        Role::findOrCreate('Editor');
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $target])
+            ->callAction('manageRoles', data: ['roles' => ['Editor']]);
+
+        $this->assertTrue($target->fresh()->hasRole('Editor'));
+    }
+
+    public function test_super_admins_can_grant_super_admin_but_not_to_themselves(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $target])
+            ->callAction('toggleSuperAdmin');
+
+        $this->assertTrue($target->fresh()->is_super_admin);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $admin])
+            ->assertActionHidden('toggleSuperAdmin');
+    }
+
+    /**
+     * Regression for a reviewed vulnerability: the edit form's role selector
+     * used to let a support-level actor persist an arbitrary elevated role
+     * (including super admin) through the generic `update` ability. Role/
+     * super-admin assignment are now their own abilities, re-checked at the
+     * write boundary — hidden from the UI *and* rejected if called directly.
+     */
+    public function test_support_cannot_assign_roles_or_grant_super_admin_even_via_a_direct_action_call(): void
+    {
+        $support = User::factory()->support()->create();
+        $target = User::factory()->create();
+        Role::findOrCreate('Editor');
+
+        Livewire::actingAs($support)
+            ->test(EditUser::class, ['user' => $target])
+            ->assertActionHidden('manageRoles')
+            ->assertActionHidden('toggleSuperAdmin');
+
+        $this->actingAs($support);
+
+        $this->assertFalse(Gate::allows('assignRole', $target));
+        $this->assertFalse(Gate::allows('grantSuperAdmin', $target));
+        $this->assertFalse($target->fresh()->is_super_admin);
     }
 
     public function test_support_can_update_a_regular_user(): void

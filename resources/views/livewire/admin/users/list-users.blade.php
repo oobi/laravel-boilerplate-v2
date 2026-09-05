@@ -18,15 +18,6 @@
 
         <x-slot:filters>
             <x-table-filter-select
-                id="users-system-role-filter"
-                model="tableFilters.system_role.value"
-                :label="__('admin.system_role')"
-                :placeholder="__('admin.all_roles')"
-                :options="\App\Enums\SystemRole::options()"
-                class="min-w-44"
-            />
-
-            <x-table-filter-select
                 id="users-status-filter"
                 model="tableFilters.status.value"
                 :label="__('admin.status')"

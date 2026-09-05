@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Admin\Users;
 
-use App\Enums\SystemRole;
 use App\Livewire\Admin\Users\ListUsers;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -87,7 +86,7 @@ class ListUsersTest extends TestCase
 
     public function test_a_non_privileged_admin_cannot_empty_the_trash(): void
     {
-        $support = User::factory()->create(['system_role' => SystemRole::SUPPORT]);
+        $support = User::factory()->support()->create();
         User::factory()->create()->delete();
 
         Livewire::actingAs($support)

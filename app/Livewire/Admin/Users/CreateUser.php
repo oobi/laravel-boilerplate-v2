@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
-use App\Enums\SystemRole;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -69,13 +68,6 @@ class CreateUser extends Component implements HasSchemas
                             ->revealable()
                             ->required()
                             ->dehydrated(false),
-
-                        Forms\Components\Select::make('system_role')
-                            ->label(__('admin.system_role'))
-                            ->options(SystemRole::options())
-                            ->placeholder(__('admin.no_system_role'))
-                            ->native(false)
-                            ->columnSpanFull(),
                     ]),
             ])
             ->statePath('data');
@@ -93,7 +85,6 @@ class CreateUser extends Component implements HasSchemas
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'system_role' => $data['system_role'] ?: null,
             'active' => true,
             'email_verified_at' => now(),
         ])->save();

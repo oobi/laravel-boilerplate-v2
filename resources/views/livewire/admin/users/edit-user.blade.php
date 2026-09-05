@@ -12,6 +12,8 @@
         </x-slot:title>
 
         <x-slot:actions>
+            {{ $this->manageRolesAction }}
+            {{ $this->toggleSuperAdminAction }}
             {{ $this->resetPasswordAction }}
         </x-slot:actions>
     </x-page-header>

@@ -5,32 +5,42 @@ declare(strict_types=1);
 namespace App\Enums;
 
 /**
- * Application-wide (non-team) permissions, granted via a SystemRole.
- * Per-instance User abilities (edit, activate/deactivate, delete, ...) live
- * in App\Policies\UserPolicy instead — see .ai/rules/providers.md.
+ * The fixed, code-checked vocabulary of application-wide capabilities. Each
+ * case corresponds to a real Gate/Policy check somewhere in the app and is
+ * seeded as a spatie/laravel-permission Permission row (see PermissionSeeder)
+ * — role -> permission *assignment* is admin-configurable via the Roles
+ * screen, never a hardcoded match(). See .ai/rules/providers.md.
  */
 enum SystemPermission: string
 {
-    /** Only remaining consumer: ListUsers::emptyTrashPermission() (a bulk, non-instance action). */
-    case MANAGE_USERS = 'manage users';
+    case ACCESS_ADMIN_PANEL = 'access admin panel';
     case MANAGE_SYSTEM_SETTINGS = 'manage system settings';
     case VIEW_SYSTEM_ANALYTICS = 'view system analytics';
-    case ACCESS_ADMIN_PANEL = 'access admin panel';
+    case MANAGE_USERS = 'manage users';
+    case SUSPEND_USERS = 'suspend users';
+    case DELETE_USERS = 'delete users';
+    case IMPERSONATE_USERS = 'impersonate users';
 
     public function label(): string
     {
         return match ($this) {
-            self::MANAGE_USERS => 'Manage Users',
+            self::ACCESS_ADMIN_PANEL => 'Access Admin Panel',
             self::MANAGE_SYSTEM_SETTINGS => 'Manage System Settings',
             self::VIEW_SYSTEM_ANALYTICS => 'View System Analytics',
-            self::ACCESS_ADMIN_PANEL => 'Access Admin Panel',
+            self::MANAGE_USERS => 'Manage Users',
+            self::SUSPEND_USERS => 'Suspend Users',
+            self::DELETE_USERS => 'Delete Users',
+            self::IMPERSONATE_USERS => 'Impersonate Users',
         };
     }
 
     public function category(): string
     {
         return match ($this) {
-            self::MANAGE_USERS => 'User Management',
+            self::MANAGE_USERS,
+            self::SUSPEND_USERS,
+            self::DELETE_USERS,
+            self::IMPERSONATE_USERS => 'User Management',
 
             self::MANAGE_SYSTEM_SETTINGS,
             self::VIEW_SYSTEM_ANALYTICS,

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Users;
 
 use App\Enums\SystemPermission;
-use App\Enums\SystemRole;
 use App\Enums\UserStatus;
 use App\Livewire\Concerns\ManagesTrashedRecords;
 use App\Models\User;
@@ -52,7 +51,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(User::query())
+            ->query(User::query()->with('roles'))
             ->defaultSort('last_name')
             ->columns([
                 Tables\Columns\ViewColumn::make('user_composite')
@@ -69,11 +68,12 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         });
                     }),
 
-                Tables\Columns\TextColumn::make('system_role')
-                    ->label(__('admin.system_role'))
-                    ->badge()
-                    ->placeholder(__('admin.no_system_role'))
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('role_summary')
+                    ->label(__('admin.roles'))
+                    ->getStateUsing(fn (User $record): string => $record->is_super_admin
+                        ? __('admin.super_admin')
+                        : ($record->roles->pluck('name')->join(', ') ?: __('admin.no_roles')))
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
@@ -87,11 +87,6 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('system_role')
-                    ->label(__('admin.system_role'))
-                    ->options(SystemRole::options())
-                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms')),
-
                 Tables\Filters\SelectFilter::make('status')
                     ->label(__('admin.status'))
                     ->options(UserStatus::options())
@@ -178,7 +173,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 
     protected function emptyTrashPermission(): ?string
     {
-        return SystemPermission::MANAGE_USERS->value;
+        return SystemPermission::DELETE_USERS->value;
     }
 
     public function render(): View

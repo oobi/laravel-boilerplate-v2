@@ -2,9 +2,10 @@
 
 namespace Database\Seeders\Demo;
 
-use App\Enums\SystemRole;
+use App\Enums\SystemPermission;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
@@ -16,17 +17,25 @@ class UserSeeder extends Seeder
             'last_name' => 'Admin',
             'email' => 'admin@email.com',
             'password' => bcrypt('password'),
-            'system_role' => SystemRole::SUPER_ADMIN->value,
+            'is_super_admin' => true,
         ]);
 
-        // Seed support user
-        User::factory()->create([
+        // Demo non-super-admin role, showing what an admin-configured role looks like
+        $support = Role::findOrCreate('Support');
+        $support->givePermissionTo([
+            SystemPermission::ACCESS_ADMIN_PANEL->value,
+            SystemPermission::MANAGE_USERS->value,
+            SystemPermission::SUSPEND_USERS->value,
+            SystemPermission::IMPERSONATE_USERS->value,
+        ]);
+
+        $supportUser = User::factory()->create([
             'first_name' => 'Support',
             'last_name' => 'User',
             'email' => 'support@email.com',
             'password' => bcrypt('password'),
-            'system_role' => SystemRole::SUPPORT->value,
         ]);
+        $supportUser->assignRole($support);
 
         // seed 100 additional demo users
         User::factory(100)->create();

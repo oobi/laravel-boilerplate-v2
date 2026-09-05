@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Enums\SystemRole;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -50,7 +49,7 @@ class MakeAdminCommand extends Command
             'name' => $name,
             'email' => $email,
             'password' => Hash::make($plainPassword),
-            'system_role' => SystemRole::SUPER_ADMIN,
+            'is_super_admin' => true,
             'active' => true,
             'email_verified_at' => now(),
         ])->save();

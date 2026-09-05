@@ -16,6 +16,7 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            PermissionSeeder::class,
             // system users
             UserSeeder::class,
         ]);

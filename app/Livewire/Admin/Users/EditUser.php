@@ -6,6 +6,7 @@ namespace App\Livewire\Admin\Users;
 
 use App\Models\User;
 use App\Support\Panels\Registry\PanelRegistry;
+use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Livewire\Component;
+use Spatie\Permission\Models\Role;
 
 class EditUser extends Component implements HasActions, HasSchemas
 {
@@ -41,7 +43,6 @@ class EditUser extends Component implements HasActions, HasSchemas
             'first_name' => $this->user->first_name,
             'last_name' => $this->user->last_name,
             'email' => $this->user->email,
-            'system_role' => $this->user->system_role?->value,
             'active' => $this->user->active,
         ]);
     }
@@ -61,9 +62,18 @@ class EditUser extends Component implements HasActions, HasSchemas
     {
         Gate::authorize('update', $this->user);
 
-        // Disabled fields (e.g. a self-edit's role/active toggle) are excluded from
+        // Disabled fields (e.g. a self-edit's active toggle) are excluded from
         // getState() by Filament, so this trusts whatever the registered panels expose.
-        $this->user->update($this->form->getState());
+        $data = $this->form->getState();
+
+        // Sensitive fields are re-checked at the write boundary against their own
+        // ability, independent of whatever the form schema disables/excludes —
+        // a generic "update" grant must never silently authorize a status change.
+        if (array_key_exists('active', $data) && $data['active'] !== $this->user->active) {
+            Gate::authorize('toggleActive', $this->user);
+        }
+
+        $this->user->update($data);
 
         Notification::make()
             ->title(__('admin.user_updated'))
@@ -71,6 +81,61 @@ class EditUser extends Component implements HasActions, HasSchemas
             ->send();
 
         $this->redirect(route('users.show', $this->user));
+    }
+
+    /**
+     * Deliberately separate from save()'s generic form state — role
+     * assignment is its own ability (assignRole), never implied by a
+     * "manage users" grant. See UserPolicy::assignRole() docblock.
+     */
+    public function manageRolesAction(): Action
+    {
+        return Action::make('manageRoles')
+            ->label(__('admin.manage_roles'))
+            ->icon('heroicon-o-shield-check')
+            ->visible(fn (): bool => Gate::allows('assignRole', $this->user))
+            ->fillForm(fn (): array => ['roles' => $this->user->roles->pluck('name')->all()])
+            ->schema([
+                Forms\Components\CheckboxList::make('roles')
+                    ->label(__('admin.roles'))
+                    ->options(fn (): array => Role::query()->pluck('name', 'name')->all())
+                    ->columns(2),
+            ])
+            ->action(function (array $data): void {
+                Gate::authorize('assignRole', $this->user);
+
+                $this->user->syncRoles($data['roles'] ?? []);
+
+                Notification::make()
+                    ->title(__('admin.roles_updated'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /** The super-admin flag is never part of the generic form state — see UserPolicy::grantSuperAdmin() docblock. */
+    public function toggleSuperAdminAction(): Action
+    {
+        return Action::make('toggleSuperAdmin')
+            ->label(fn (): string => $this->user->is_super_admin
+                ? __('admin.revoke_super_admin')
+                : __('admin.grant_super_admin'))
+            ->icon('heroicon-o-shield-exclamation')
+            ->color(DaisyColor::ERROR->toFilamentColor())
+            ->requiresConfirmation()
+            ->visible(fn (): bool => Gate::allows('grantSuperAdmin', $this->user))
+            ->action(function (): void {
+                Gate::authorize('grantSuperAdmin', $this->user);
+
+                $this->user->forceFill(['is_super_admin' => ! $this->user->is_super_admin])->save();
+
+                Notification::make()
+                    ->title($this->user->is_super_admin
+                        ? __('admin.super_admin_granted')
+                        : __('admin.super_admin_revoked'))
+                    ->success()
+                    ->send();
+            });
     }
 
     /**
@@ -115,7 +180,7 @@ class EditUser extends Component implements HasActions, HasSchemas
             ->icon('heroicon-o-key')
             ->requiresConfirmation()
             ->action(function (): void {
-                Gate::authorize('update', $this->user);
+                Gate::authorize('sendPasswordResetLink', $this->user);
 
                 Password::sendResetLink(['email' => $this->user->email]);
 
