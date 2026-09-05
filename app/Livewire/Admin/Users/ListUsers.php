@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
+use Spatie\Permission\Models\Role;
 
 /**
  * Standalone Filament table for managing users, rendered inside the admin
@@ -42,6 +43,10 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     use InteractsWithSchemas;
     use InteractsWithTable;
     use ManagesTrashedRecords;
+
+    private const SUPER_ADMIN_FILTER_VALUE = '__super_admin__';
+
+    private const NO_ROLE_FILTER_VALUE = '__no_role__';
 
     public function mount(): void
     {
@@ -98,6 +103,19 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                             UserStatus::PENDING->value => $query->where('active', true)->whereNull('email_verified_at'),
                             UserStatus::INACTIVE->value => $query->where('active', false),
                             default => $query,
+                        };
+                    }),
+
+                Tables\Filters\SelectFilter::make('role')
+                    ->label(__('admin.roles'))
+                    ->options(fn (): array => $this->roleFilterOptions())
+                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
+                    ->query(function (Builder $query, array $data): Builder {
+                        return match ($data['value'] ?? null) {
+                            null => $query,
+                            self::SUPER_ADMIN_FILTER_VALUE => $query->where('is_super_admin', true),
+                            self::NO_ROLE_FILTER_VALUE => $query->where('is_super_admin', false)->doesntHave('roles'),
+                            default => $query->whereRelation('roles', 'name', $data['value']),
                         };
                     }),
 
@@ -170,6 +188,16 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     protected function emptyTrashQuery(): Builder
     {
         return User::onlyTrashed()->where('id', '!=', Auth::id());
+    }
+
+    /** Options for the Blade view's role <x-table-filter-select>, mirroring the table filter above. */
+    public function roleFilterOptions(): array
+    {
+        return [
+            self::SUPER_ADMIN_FILTER_VALUE => __('admin.super_admin'),
+            self::NO_ROLE_FILTER_VALUE => __('admin.no_roles'),
+            ...Role::query()->pluck('name', 'name')->all(),
+        ];
     }
 
     protected function emptyTrashPermission(): ?string
