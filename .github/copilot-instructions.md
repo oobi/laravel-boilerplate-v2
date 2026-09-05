@@ -4,6 +4,14 @@ Laravel 12 admin boilerplate. Everything lives in this app directly — no
 first-party Composer packages for core features (see [docs/architecture.md](../docs/architecture.md)
 for the full stack rationale).
 
+This project uses [Laravel Boost](https://laravel.com/docs/boost) — see
+[AGENTS.md](../AGENTS.md) for its generic Laravel/Livewire/testing guidelines
+and tool usage (`search-docs`, `tinker`, `database-query`, etc.), and
+[.ai/rules/index.md](../.ai/rules/index.md) for inferred, path-scoped
+conventions (read the rule file matching whatever path you're editing before
+you start). This file stays the source of truth for anything specific to
+*this* app's architecture.
+
 ## Where things live
 
 | You're adding... | Goes in | Docs |
@@ -39,7 +47,7 @@ currently registered.
 ## Conventions
 
 - Tests are PHPUnit classes only (not Pest) — `php artisan make:test --phpunit`.
-- Run `vendor/bin/pint --dirty` before finalizing PHP changes.
+- Run `vendor/bin/pint --dirty --format agent` before finalizing PHP changes.
 - Route names for panel/nav-linked pages must be flat (`resource.action`, not
   `resource.sub.action`) — `App\Support\Breadcrumbs` derives the parent
   crumb from `Str::beforeLast($routeName, '.')`.
@@ -51,16 +59,21 @@ currently registered.
 ## Coding standards
 
 Full source of truth: [_documentation/CODING_STANDARDS.md](../../_documentation/CODING_STANDARDS.md).
-Salient points:
+That doc is generic across projects and assumes a controller+Form
+Request+Policy stack — this app has none of those (no `app/Http/Requests`,
+no `app/Policies`). Here, validation lives in Filament Schema field rules on
+Livewire components and authorization is `Gate::define()`-only; see
+[.ai/rules/livewire.md](../.ai/rules/livewire.md) and
+[.ai/rules/providers.md](../.ai/rules/providers.md). Salient points that
+still apply:
 
-- Controllers validate (Form Requests) → delegate → respond. Extract to an
-  **Action** once logic is >~10 lines, multi-step, or reusable; promote to a
-  **Service** only when Actions share state/a third-party client.
+- Extract to an **Action** once logic is >~10 lines, multi-step, or
+  reusable; promote to a **Service** only when Actions share state/a
+  third-party client.
 - Fixed-value fields are **string-backed PHP enums** + a `string` migration
   column — never a MySQL native `ENUM` column (breaks SQLite tests, needs
   `ALTER TABLE` to change) and never a bare int/magic string.
-- Never `$request->all()` into mass assignment — validate via Form Requests.
-  Authorisation via Policies/Gates, not ad-hoc `if` checks or "logged in" alone.
+- Never mass-assign unvalidated request input.
 - Admin/maintenance one-off tasks are Artisan commands, never a hidden
   GET route. Destructive commands need a confirmation prompt + `--dry-run`.
 - One PR = one concern, aim under ~400 lines diff; log bugs as GitHub issues
