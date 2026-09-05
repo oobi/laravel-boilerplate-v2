@@ -114,12 +114,14 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->label(__('admin.view'))
                         ->icon('heroicon-o-eye')
                         ->url(fn (User $record): string => route('users.show', $record))
+                        ->authorize('view')
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     Action::make('edit')
                         ->label(__('admin.edit'))
                         ->icon('heroicon-o-pencil-square')
                         ->url(fn (User $record): string => route('users.edit', $record))
+                        ->authorize('update')
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     Action::make('impersonate')
@@ -127,9 +129,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->icon('heroicon-o-finger-print')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->url(fn (User $record): string => route('users.impersonate', $record->id))
-                        ->hidden(fn (User $record): bool => $record->trashed()
-                            || ! Auth::user()->canImpersonate()
-                            || ! $record->canBeImpersonated()),
+                        ->authorize('impersonate')
+                        ->hidden(fn (User $record): bool => $record->trashed()),
 
                     Action::make('toggleActive')
                         ->label(fn (User $record): string => $record->active
@@ -138,10 +139,9 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->icon(fn (User $record): string => $record->active ? 'heroicon-o-pause-circle' : 'heroicon-o-check-circle')
                         ->color(fn (User $record): string => $record->active ? DaisyColor::WARNING->toFilamentColor() : DaisyColor::SUCCESS->toFilamentColor())
                         ->requiresConfirmation()
+                        ->authorize('toggleActive')
                         ->action(function (User $record): void {
-                            Gate::authorize(SystemPermission::SUSPEND_USERS->value);
-
-                            abort_if($record->id === Auth::id(), 403);
+                            Gate::authorize('toggleActive', $record);
 
                             $record->update(['active' => ! $record->active]);
 
@@ -152,17 +152,16 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                                 ->success()
                                 ->send();
                         })
-                        ->hidden(fn (User $record): bool => $record->trashed() || $record->id === Auth::id()),
+                        ->hidden(fn (User $record): bool => $record->trashed()),
 
                     DeleteAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_USERS->value))
-                        ->hidden(fn (User $record): bool => $record->id === Auth::id()),
+                        ->authorize('delete'),
 
                     RestoreAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_USERS->value)),
+                        ->authorize('restore'),
 
                     ForceDeleteAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_USERS->value)),
+                        ->authorize('forceDelete'),
                 ]),
             ])
             ->searchPlaceholder(__('admin.search_placeholder'))

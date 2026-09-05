@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
-use App\Enums\SystemPermission;
 use App\Models\User;
 use App\Support\Panels\Registry\PanelRegistry;
 use Filament\Actions\Action;
@@ -19,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Livewire\Component;
 
 class EditUser extends Component implements HasActions, HasSchemas
@@ -33,9 +33,9 @@ class EditUser extends Component implements HasActions, HasSchemas
 
     public function mount(User $user): void
     {
-        Gate::authorize(SystemPermission::MANAGE_USERS->value);
-
         $this->user = $user;
+
+        Gate::authorize('update', $this->user);
 
         $this->form->fill([
             'first_name' => $this->user->first_name,
@@ -59,7 +59,7 @@ class EditUser extends Component implements HasActions, HasSchemas
 
     public function save(): void
     {
-        Gate::authorize(SystemPermission::MANAGE_USERS->value);
+        Gate::authorize('update', $this->user);
 
         // Disabled fields (e.g. a self-edit's role/active toggle) are excluded from
         // getState() by Filament, so this trusts whatever the registered panels expose.
@@ -73,33 +73,54 @@ class EditUser extends Component implements HasActions, HasSchemas
         $this->redirect(route('users.show', $this->user));
     }
 
+    /**
+     * Super admins set a new password directly; everyone else authorized to
+     * manage users can only trigger the standard password reset link email.
+     */
     public function resetPasswordAction(): Action
     {
-        return Action::make('resetPassword')
-            ->label(__('admin.reset_password'))
-            ->icon('heroicon-o-key')
-            ->schema([
-                Forms\Components\TextInput::make('password')
-                    ->label(__('admin.new_password'))
-                    ->password()
-                    ->revealable()
-                    ->required()
-                    ->minLength(8)
-                    ->confirmed(),
-                Forms\Components\TextInput::make('password_confirmation')
-                    ->label(__('admin.confirm_password'))
-                    ->password()
-                    ->revealable()
-                    ->required()
-                    ->dehydrated(false),
-            ])
-            ->action(function (array $data): void {
-                Gate::authorize(SystemPermission::MANAGE_USERS->value);
+        if (Gate::allows('updatePasswordDirectly', $this->user)) {
+            return Action::make('resetPassword')
+                ->label(__('admin.reset_password'))
+                ->icon('heroicon-o-key')
+                ->schema([
+                    Forms\Components\TextInput::make('password')
+                        ->label(__('admin.new_password'))
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->minLength(8)
+                        ->confirmed(),
+                    Forms\Components\TextInput::make('password_confirmation')
+                        ->label(__('admin.confirm_password'))
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->dehydrated(false),
+                ])
+                ->action(function (array $data): void {
+                    Gate::authorize('updatePasswordDirectly', $this->user);
 
-                $this->user->update(['password' => Hash::make($data['password'])]);
+                    $this->user->update(['password' => Hash::make($data['password'])]);
+
+                    Notification::make()
+                        ->title(__('admin.password_reset_success'))
+                        ->success()
+                        ->send();
+                });
+        }
+
+        return Action::make('resetPassword')
+            ->label(__('admin.send_password_reset_link'))
+            ->icon('heroicon-o-key')
+            ->requiresConfirmation()
+            ->action(function (): void {
+                Gate::authorize('update', $this->user);
+
+                Password::sendResetLink(['email' => $this->user->email]);
 
                 Notification::make()
-                    ->title(__('admin.password_reset_success'))
+                    ->title(__('admin.password_reset_link_sent'))
                     ->success()
                     ->send();
             });

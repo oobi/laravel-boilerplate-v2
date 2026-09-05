@@ -94,4 +94,36 @@ class ListUsersTest extends TestCase
             ->test(ListUsers::class)
             ->assertActionHidden('emptyTrash');
     }
+
+    public function test_support_can_edit_and_toggle_active_for_a_regular_user(): void
+    {
+        $support = User::factory()->support()->create();
+        $target = User::factory()->create();
+
+        Livewire::actingAs($support)
+            ->test(ListUsers::class)
+            ->assertTableActionVisible('edit', $target)
+            ->assertTableActionVisible('toggleActive', $target);
+    }
+
+    public function test_support_cannot_edit_or_toggle_active_for_a_super_admin(): void
+    {
+        $support = User::factory()->support()->create();
+        $target = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($support)
+            ->test(ListUsers::class)
+            ->assertTableActionHidden('edit', $target)
+            ->assertTableActionHidden('toggleActive', $target);
+    }
+
+    public function test_support_cannot_delete_restore_or_force_delete_users(): void
+    {
+        $support = User::factory()->support()->create();
+        $target = User::factory()->create();
+
+        Livewire::actingAs($support)
+            ->test(ListUsers::class)
+            ->assertTableActionHidden('delete', $target);
+    }
 }

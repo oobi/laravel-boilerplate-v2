@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Panels\Users;
 
-use App\Enums\SystemPermission;
 use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
@@ -44,7 +43,7 @@ class SecurityPanel implements HasPanelActions, ShowPanel
     {
         return [
             'force-disable-2fa' => function (Model $subject): void {
-                Gate::authorize(SystemPermission::MANAGE_USERS->value);
+                Gate::authorize('update', $subject);
 
                 $subject->forceFill([
                     'two_factor_secret' => null,

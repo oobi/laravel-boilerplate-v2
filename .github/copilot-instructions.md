@@ -20,7 +20,7 @@ you start). This file stays the source of truth for anything specific to
 | A card/field on a Users Show/Edit page | `app/Panels/Users/*` registered in `App\Support\Panels\AdminPanels` | [docs/panels.md](../docs/panels.md) |
 | A new `bp:` artisan command | `app/Console/Commands/*`, document it | [docs/commands.md](../docs/commands.md) |
 | A Livewire full-page component | `app/Livewire/{Area}/{Domain}/*` (e.g. `app/Livewire/Admin/Users/*`) | — |
-| RBAC checks | `App\Enums\SystemRole` / `SystemPermission` + `Gate::authorize()` in the component's `mount()` | `~/memories/repo/impersonation.md` has impersonation-specific notes |
+| RBAC checks | Global abilities: `App\Enums\SystemRole` / `SystemPermission` + `Gate::authorize()` in the component's `mount()`. Per-instance User abilities (edit/activate/delete a specific user): `App\Policies\UserPolicy` via `Gate::authorize('ability', $target)` | [.ai/rules/policies.md](../.ai/rules/policies.md), `~/memories/repo/impersonation.md` has impersonation-specific notes |
 
 ## Group by domain, not by type
 

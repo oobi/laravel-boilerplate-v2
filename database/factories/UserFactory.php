@@ -60,6 +60,13 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function support(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'system_role' => SystemRole::SUPPORT,
+        ]);
+    }
+
     public function twoFactorEnabled(): static
     {
         return $this->state(fn (array $attributes) => [

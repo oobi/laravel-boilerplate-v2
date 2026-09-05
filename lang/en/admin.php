@@ -52,6 +52,8 @@ return [
 
     'reset_password' => 'Reset Password',
     'password_reset_success' => 'Password reset successfully.',
+    'send_password_reset_link' => 'Send Password Reset Link',
+    'password_reset_link_sent' => 'Password reset link sent.',
     'user_updated' => 'User updated successfully.',
     'user_created' => 'User :name created successfully.',
     'user_activated' => 'User activated.',

@@ -121,7 +121,10 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Determine if the user can impersonate other users.
+     * Determine if the user can impersonate other users. Required by
+     * lab404/laravel-impersonate's own controller/Blade directives (called
+     * directly, not via our Gate/Policy layer) — see UserPolicy::impersonate()
+     * for the app-facing wrapper used elsewhere in the Users admin area.
      * Only super admins and support staff can impersonate, and nested
      * impersonation is disallowed (hides controls while already impersonating).
      */

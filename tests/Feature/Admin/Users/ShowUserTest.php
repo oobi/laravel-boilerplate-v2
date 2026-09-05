@@ -31,6 +31,21 @@ class ShowUserTest extends TestCase
         $response->assertSee('Jane Doe');
     }
 
+    public function test_support_sees_edit_button_for_a_regular_user_but_not_a_super_admin(): void
+    {
+        $support = User::factory()->support()->create();
+        $regular = User::factory()->create();
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($support)
+            ->test(ShowUser::class, ['user' => $regular])
+            ->assertSee(__('admin.edit_user'));
+
+        Livewire::actingAs($support)
+            ->test(ShowUser::class, ['user' => $admin])
+            ->assertDontSee(__('admin.edit_user'));
+    }
+
     public function test_a_soft_deleted_user_can_still_be_viewed(): void
     {
         $admin = User::factory()->superAdmin()->create();

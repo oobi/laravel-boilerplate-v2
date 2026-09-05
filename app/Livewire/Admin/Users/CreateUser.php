@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
-use App\Enums\SystemPermission;
 use App\Enums\SystemRole;
 use App\Models\User;
 use Filament\Forms;
@@ -27,7 +26,7 @@ class CreateUser extends Component implements HasSchemas
 
     public function mount(): void
     {
-        Gate::authorize(SystemPermission::MANAGE_USERS->value);
+        Gate::authorize('create', User::class);
 
         $this->form->fill();
     }
@@ -84,7 +83,7 @@ class CreateUser extends Component implements HasSchemas
 
     public function create(): void
     {
-        Gate::authorize(SystemPermission::MANAGE_USERS->value);
+        Gate::authorize('create', User::class);
 
         $data = $this->form->getState();
 

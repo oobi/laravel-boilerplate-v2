@@ -8,5 +8,5 @@ paths:
 ## Named rate limiters in AppServiceProvider
 Define rate limiters via `RateLimiter::for('name', ...)` in `AppServiceProvider::boot()`, referenced by name — not inline `throttle:60,1`.
 
-## No Policy classes — Gate::define only
-All authorization is `Gate::define()` in `AppServiceProvider` (one gate per `SystemPermission`) — no `app/Policies` classes. Use `Gate::authorize()` to enforce, `Gate::allows()` for boolean/conditional checks.
+## Authorization: Gate::define for global abilities, Policies for per-instance ones
+`Gate::define()` in `AppServiceProvider` (one gate per `SystemPermission`) covers global, non-instance abilities (`access admin panel`, `manage system settings`, `view system analytics`, and a narrow `manage users` used only by the users "empty trash" bulk action). Anything scoped to a specific model instance (edit/activate/delete a specific user, etc.) is a real Policy — see `app/Policies/UserPolicy.php` — invoked via `Gate::authorize('ability', $target)` / `Gate::allows('ability', $target)` or Filament's `->authorize('ability')` on Actions.

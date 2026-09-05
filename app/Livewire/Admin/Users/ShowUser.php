@@ -38,12 +38,12 @@ class ShowUser extends Component implements HasSchemas
     /** The one place a viewer can edit this user from — see docs/panels.md "UX flow". */
     public function canEditUser(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_USERS->value);
+        return Gate::allows('update', $this->user);
     }
 
     public function canImpersonateUser(): bool
     {
-        return Auth::user()->canImpersonate() && $this->user->canBeImpersonated();
+        return Gate::allows('impersonate', $this->user);
     }
 
     public function userInfolist(Schema $schema): Schema

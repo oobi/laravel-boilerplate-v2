@@ -19,6 +19,13 @@ class CreateUserTest extends TestCase
         $this->actingAs($user)->get('/admin/users/create')->assertForbidden();
     }
 
+    public function test_support_is_forbidden_from_creating_a_user(): void
+    {
+        $support = User::factory()->support()->create();
+
+        $this->actingAs($support)->get('/admin/users/create')->assertForbidden();
+    }
+
     public function test_admins_can_create_a_user(): void
     {
         $admin = User::factory()->superAdmin()->create();
