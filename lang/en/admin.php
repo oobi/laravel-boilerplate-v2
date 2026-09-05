@@ -16,6 +16,7 @@ return [
     'you' => 'You',
     'cancel' => 'Cancel',
     'save_changes' => 'Save Changes',
+    'delete' => 'Delete',
 
     'name' => 'Name',
     'user' => 'User',
@@ -69,6 +70,7 @@ return [
     'role_information' => 'Role Information',
     'permissions' => 'Permissions',
     'select_all' => 'Select All',
+    'select_role' => 'Select Role',
     'manage_roles' => 'Manage Roles',
     'roles_updated' => 'Roles updated successfully.',
     'role_created' => 'Role created successfully.',

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Roles;
 
-use App\Enums\SystemPermission;
+use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
@@ -19,6 +19,7 @@ use Spatie\Permission\Models\Role;
 
 class CreateRole extends Component implements HasSchemas
 {
+    use HasPermissionsSchema;
     use InteractsWithSchemas;
 
     /** @var array<string, mixed> */
@@ -28,7 +29,7 @@ class CreateRole extends Component implements HasSchemas
     {
         Gate::authorize('manage roles');
 
-        $this->form->fill();
+        $this->form->fill($this->permissionsStateForRole(null));
     }
 
     public function form(Schema $schema): Schema
@@ -42,13 +43,11 @@ class CreateRole extends Component implements HasSchemas
                             ->required()
                             ->maxLength(255)
                             ->unique('roles', 'name'),
+                    ]),
 
-                        Forms\Components\CheckboxList::make('permissions')
-                            ->label(__('admin.permissions'))
-                            ->options(fn (): array => collect(SystemPermission::cases())
-                                ->mapWithKeys(fn (SystemPermission $permission): array => [$permission->value => $permission->label()])
-                                ->all())
-                            ->columns(2),
+                Section::make(__('admin.permissions'))
+                    ->schema([
+                        $this->permissionsTabs(),
                     ]),
             ])
             ->statePath('data');
@@ -62,7 +61,7 @@ class CreateRole extends Component implements HasSchemas
 
         $role = Role::create(['name' => $data['name']]);
 
-        $role->givePermissionTo(collect($data['permissions'] ?? [])
+        $role->givePermissionTo(collect($this->resolvePermissionsFromState($data))
             ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
             ->all());
 
@@ -71,7 +70,7 @@ class CreateRole extends Component implements HasSchemas
             ->success()
             ->send();
 
-        $this->redirect(route('roles.index'));
+        $this->redirect(route('roles.edit', $role));
     }
 
     public function render(): View

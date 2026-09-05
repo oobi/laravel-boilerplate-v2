@@ -7,6 +7,7 @@ use App\Livewire\Admin\Roles\CreateRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class CreateRoleTest extends TestCase
@@ -24,13 +25,18 @@ class CreateRoleTest extends TestCase
     {
         $admin = User::factory()->superAdmin()->create();
 
-        Livewire::actingAs($admin)
+        $component = Livewire::actingAs($admin)
             ->test(CreateRole::class)
             ->set('data.name', 'Editor')
-            ->set('data.permissions', [SystemPermission::MANAGE_USERS->value])
-            ->call('create')
-            ->assertRedirect(route('roles.index'));
+            ->set('data.permissions_user_management', [SystemPermission::MANAGE_USERS->value])
+            ->call('create');
 
         $this->assertDatabaseHas('roles', ['name' => 'Editor']);
+
+        $role = Role::findByName('Editor');
+
+        $component->assertRedirect(route('roles.edit', $role));
+
+        $this->assertTrue($role->fresh()->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
     }
 }
