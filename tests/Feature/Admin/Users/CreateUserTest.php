@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Feature\Admin;
+namespace Tests\Feature\Admin\Users;
 
-use App\Livewire\Admin\CreateUser;
+use App\Livewire\Admin\Users\CreateUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

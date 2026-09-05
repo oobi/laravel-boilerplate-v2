@@ -1,10 +1,8 @@
 <div>
     @section('page-title', $user->name)
 
-    <div class="ui-page-header">
-        <h1 class="ui-page-title">{{ $user->name }}</h1>
-
-        <div class="ui-page-actions">
+    <x-page-header :title="$user->name">
+        <x-slot:actions>
             @if ($this->canImpersonateUser())
                 <x-button color="neutral" variant="ghost" href="{{ route('users.impersonate', $user->id) }}">
                     {{ __('admin.impersonate_user') }}
@@ -20,8 +18,8 @@
             <x-button color="neutral" variant="ghost" href="{{ route('users.index') }}">
                 {{ __('admin.back_to_users') }}
             </x-button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 flex flex-col gap-6">

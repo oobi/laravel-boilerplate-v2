@@ -1,11 +1,11 @@
 <?php
 
 use App\Enums\SystemPermission;
-use App\Livewire\Admin\CreateUser;
-use App\Livewire\Admin\EditUser;
-use App\Livewire\Admin\ListUsers;
-use App\Livewire\Admin\ShowUser;
-use App\Livewire\Dashboard;
+use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\Users\CreateUser;
+use App\Livewire\Admin\Users\EditUser;
+use App\Livewire\Admin\Users\ListUsers;
+use App\Livewire\Admin\Users\ShowUser;
 use App\Livewire\EditProfile;
 use App\Livewire\Home;
 use App\Livewire\TwoFactorAuthentication;

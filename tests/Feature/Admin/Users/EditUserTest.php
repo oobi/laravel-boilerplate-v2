@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Feature\Admin;
+namespace Tests\Feature\Admin\Users;
 
 use App\Enums\SystemRole;
-use App\Livewire\Admin\EditUser;
+use App\Livewire\Admin\Users\EditUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;

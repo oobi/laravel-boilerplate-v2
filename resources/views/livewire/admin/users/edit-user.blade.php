@@ -1,18 +1,20 @@
 <div>
     @section('page-title', __('admin.edit'))
 
-    <div class="ui-page-header">
-        <h1 class="ui-page-title flex items-center gap-2">
-            {{ __('admin.edit_user') }}
-            @if ($user->id === auth()->id())
-                <x-badge color="success">{{ __('admin.you') }}</x-badge>
-            @endif
-        </h1>
+    <x-page-header>
+        <x-slot:title>
+            <span class="flex items-center gap-2">
+                {{ __('admin.edit_user') }}
+                @if ($user->id === auth()->id())
+                    <x-badge color="success">{{ __('admin.you') }}</x-badge>
+                @endif
+            </span>
+        </x-slot:title>
 
-        <div class="ui-page-actions">
+        <x-slot:actions>
             {{ $this->resetPasswordAction }}
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     <form wire:submit="save">
         {{ $this->form }}

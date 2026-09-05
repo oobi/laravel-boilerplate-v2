@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire\Admin;
+namespace App\Livewire\Admin\Users;
 
 use App\Enums\SystemPermission;
 use App\Models\User;
@@ -86,8 +86,7 @@ class ShowUser extends Component implements HasSchemas
 
     public function render(): View
     {
-        return view('livewire.admin.show-user')
-            ->layout('layouts.admin');
+        return view('livewire.admin.users.show-user');
     }
 
     /** @return Collection<int, ShowPanel> */

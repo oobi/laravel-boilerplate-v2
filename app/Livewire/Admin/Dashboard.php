@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire;
+namespace App\Livewire\Admin;
 
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -15,9 +15,9 @@ class Dashboard extends Component
 {
     public function render(): View
     {
-        return view('livewire.dashboard', [
+        return view('livewire.admin.dashboard', [
             'totalUsers' => User::count(),
             'recentUsers' => User::latest()->take(5)->get(),
-        ])->layout('layouts.admin');
+        ]);
     }
 }

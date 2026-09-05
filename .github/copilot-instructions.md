@@ -11,8 +11,24 @@ for the full stack rationale).
 | A sidebar link/section | `App\Support\Navigation\AdminNav` via `NavRegistry` | [docs/navigation.md](../docs/navigation.md) |
 | A card/field on a Users Show/Edit page | `app/Panels/Users/*` registered in `App\Support\Panels\AdminPanels` | [docs/panels.md](../docs/panels.md) |
 | A new `bp:` artisan command | `app/Console/Commands/*`, document it | [docs/commands.md](../docs/commands.md) |
-| A Livewire full-page component | `app/Livewire/*` | — |
+| A Livewire full-page component | `app/Livewire/{Area}/{Domain}/*` (e.g. `app/Livewire/Admin/Users/*`) | — |
 | RBAC checks | `App\Enums\SystemRole` / `SystemPermission` + `Gate::authorize()` in the component's `mount()` | `~/memories/repo/impersonation.md` has impersonation-specific notes |
+
+## Group by domain, not by type
+
+This boilerplate is the *start* of a bigger app, not the whole app — pick an
+organisation scheme now that still makes sense once a domain has 5+ files.
+Once a feature area (e.g. "Users") has more than one Livewire component,
+create a `{Domain}` subfolder and mirror it across every layer:
+
+- `app/Livewire/Admin/Users/{CreateUser,EditUser,ListUsers,ShowUser}.php`
+- `app/Panels/Users/*` (already established)
+- `resources/views/livewire/admin/users/*.blade.php`
+- `tests/Feature/Admin/Users/*Test.php`
+
+Single-file areas stay flat at their parent level (`app/Livewire/Home.php`,
+`app/Livewire/Admin/Dashboard.php`) — don't create a one-file subfolder
+pre-emptively. Split it out once a second related file shows up.
 
 Add-ons (local dev packages like `packages/theme-demo`, a future Teams tier)
 extend core via the same registries from their own service provider's

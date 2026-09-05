@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire\Admin;
+namespace App\Livewire\Admin\Users;
 
 use App\Enums\SystemPermission;
 use App\Enums\SystemRole;
@@ -109,7 +109,6 @@ class CreateUser extends Component implements HasSchemas
 
     public function render(): View
     {
-        return view('livewire.admin.create-user')
-            ->layout('layouts.admin');
+        return view('livewire.admin.users.create-user');
     }
 }

@@ -1,9 +1,7 @@
 <div>
     @section('page-title', __('admin.create'))
 
-    <div class="ui-page-header">
-        <h1 class="ui-page-title">{{ __('admin.add_user') }}</h1>
-    </div>
+    <x-page-header :title="__('admin.add_user')" />
 
     <form wire:submit="create">
         {{ $this->form }}

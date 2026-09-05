@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire\Admin;
+namespace App\Livewire\Admin\Users;
 
 use App\Enums\SystemPermission;
 use App\Enums\SystemRole;
@@ -184,7 +184,6 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 
     public function render(): View
     {
-        return view('livewire.admin.list-users')
-            ->layout('layouts.admin');
+        return view('livewire.admin.users.list-users');
     }
 }

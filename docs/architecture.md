@@ -12,7 +12,11 @@ these choices.
   reset, email verification, two-factor auth). It ships no UI; all views under
   `resources/views/auth/*` are our own daisyUI-styled Blade, not Jetstream's.
 - **Livewire 4** — powers the interactive screens (admin CRUD, auth forms).
-  Full-page components live in `app/Livewire/*`.
+  Full-page components live in `app/Livewire/*`, grouped by domain once an
+  area has more than one component (e.g. `app/Livewire/Admin/Users/*`,
+  mirrored by `resources/views/livewire/admin/users/*` and
+  `tests/Feature/Admin/Users/*`) — see "Group by domain, not by type" in
+  `.github/copilot-instructions.md`.
 - **Filament** (`filament/tables` + the forms/infolists/schemas/actions that
   come with it) — used *standalone*, not as a full Filament admin panel.
   Tables power list screens (e.g. `ListUsers`); forms/infolists/schemas power

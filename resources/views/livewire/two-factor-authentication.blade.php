@@ -1,7 +1,7 @@
 <div class="mx-auto flex max-w-2xl flex-col gap-6">
     @section('page-title', __('admin.two_factor_authentication'))
 
-    <h1 class="ui-page-title">{{ __('admin.two_factor_authentication') }}</h1>
+    <x-page-header :title="__('admin.two_factor_authentication')" />
 
     @php
         $twoFactorTitle = match (true) {
