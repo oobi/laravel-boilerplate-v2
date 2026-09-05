@@ -1,13 +1,13 @@
 <?php
+
 namespace Database\Seeders\Demo;
 
-use App\Models\User;
 use App\Enums\SystemRole;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
-class UserSeeder extends Seeder {
-
+class UserSeeder extends Seeder
+{
     public function run(): void
     {
         // Seed super admin user

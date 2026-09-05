@@ -1,5 +1,21 @@
 #!/bin/sh
-# Runs the test suite before allowing a commit. Bypass with `git commit --no-verify`.
+# Runs Pint + the test suite before allowing a commit. Bypass with `git commit --no-verify`.
+
+STAGED_PHP_FILES=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
+
+if [ -n "$STAGED_PHP_FILES" ]; then
+    echo "Running Pint on staged PHP files..."
+    echo "$STAGED_PHP_FILES" | xargs vendor/bin/pint
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "Commit aborted: Pint failed. Fix the errors above."
+        exit 1
+    fi
+
+    # Re-stage any files Pint reformatted so the fixes are included in the commit.
+    echo "$STAGED_PHP_FILES" | xargs git add
+fi
 
 echo "Running tests before commit..."
 composer test
