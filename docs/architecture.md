@@ -24,6 +24,10 @@ these choices.
   to those same Livewire components.
 - **lab404/laravel-impersonate** — lets an authorized admin log in as another
   user ("impersonate"), with a banner shown while active.
+- **spatie/laravel-permission** — admin-configurable roles and permissions.
+  Super admin is the one exception: a hardcoded `is_super_admin` boolean, not
+  a package role, so it can never be edited via the Roles admin screen. See
+  `.ai/rules/policies.md`.
 - **Tailwind CSS 4 + daisyUI 5** — the entire visual design system
   (`resources/css/theme/*`), scaffolded into the app rather than a package so
   it can be freely restyled per project.
@@ -31,14 +35,17 @@ these choices.
 
 ## In-house (not packages)
 
-- **RBAC** — `SystemRole` / `SystemPermission` enums (`app/Enums/*`) +
-  `HasSystemRole` trait on `User`, backing Gate checks throughout the admin
-  area. Independent of teams; this is what a single-client project needs on
-  its own.
+- **RBAC** — the `is_super_admin` flag + `HasSystemRole`-equivalent trait on
+  `User`, plus `App\Policies\UserPolicy` for per-instance abilities
+  (edit/activate/delete a specific user). Role and permission storage itself
+  is spatie/laravel-permission (above); this in-house layer is only the
+  super-admin bypass and the relationship-aware Policy rules (self-checks,
+  "can't touch a super admin") that a permission table alone can't express.
 - **Teams** — not built yet. Planned as an opt-in, install-time-only
   additive layer (see `~BOILERPLATE_v2.md` Phase 5): its own models,
-  migrations, enums, and screens, authored so core (`User`, RBAC, admin)
-  never has to be patched to support it.
+  migrations, and screens, authored so core (`User`, RBAC, admin) never has
+  to be patched to support it. Team-scoped roles reuse spatie/laravel-permission's
+  own teams feature rather than a second bespoke role system.
 - **Admin page composition (panels)** — Show/Edit admin pages are built
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own
