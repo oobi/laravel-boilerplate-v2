@@ -64,10 +64,10 @@ class ShowUser extends Component implements HasSchemas
 
                                 TextEntry::make('role_summary')
                                     ->label(__('admin.roles'))
-                                    ->state(fn (User $record): string => $record->is_super_admin
-                                        ? __('admin.super_admin')
-                                        : ($record->roles->pluck('name')->join(', ') ?: __('admin.no_roles')))
-                                    ->badge(),
+                                    ->state(fn (User $record): array => $record->is_super_admin
+                                        ? [__('admin.super_admin')]
+                                        : ($record->roles->pluck('name')->all() ?: [__('admin.no_roles')]))
+                                    ->badge(fn (User $record): bool => $record->is_super_admin || $record->roles->isNotEmpty()),
 
                                 TextEntry::make('status')
                                     ->label(__('admin.status'))

@@ -70,9 +70,10 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 
                 Tables\Columns\TextColumn::make('role_summary')
                     ->label(__('admin.roles'))
-                    ->getStateUsing(fn (User $record): string => $record->is_super_admin
-                        ? __('admin.super_admin')
-                        : ($record->roles->pluck('name')->join(', ') ?: __('admin.no_roles')))
+                    ->getStateUsing(fn (User $record): array => $record->is_super_admin
+                        ? [__('admin.super_admin')]
+                        : $record->roles->pluck('name')->all())
+                    ->placeholder(__('admin.no_roles'))
                     ->badge(),
 
                 Tables\Columns\TextColumn::make('status')
