@@ -24,15 +24,21 @@
         @apply relative flex h-screen overflow-hidden;
     }
 
-    /* When impersonating, reserve space at the top for the fixed banner */
+    /* Single source of truth: reserve space for the fixed banner on the body,
+       works unmodified for non-sidebar layouts (e.g. the public layout). */
+    body.is-impersonating {
+        padding-top: var(--ui-impersonation-banner-height);
+    }
+
+    /* Admin's app shell is viewport-locked (h-screen flex), so shrink it by
+       the offset body padding already reserved instead of overflowing it. */
     body.is-impersonating .ui-app {
         min-height: 0;
-        height: 100vh;
+        height: calc(100vh - var(--ui-impersonation-banner-height));
     }
 
     body.is-impersonating .ui-app > .ui-app-inner {
         height: 100%;
-        padding-top: var(--ui-impersonation-banner-height);
     }
 
     /* Impersonation banner */

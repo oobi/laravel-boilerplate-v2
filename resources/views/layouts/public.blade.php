@@ -16,7 +16,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="min-h-screen bg-base-100 font-sans antialiased">
+<body class="min-h-screen bg-base-100 font-sans antialiased {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }}">
+    <x-impersonation-banner />
+
     @include('layouts.partials.public-nav')
 
     <main class="ui-page py-10">
