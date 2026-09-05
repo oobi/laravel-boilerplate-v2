@@ -25,6 +25,15 @@
                 :options="\App\Enums\UserStatus::options()"
                 class="min-w-36"
             />
+
+            <x-table-filter-select
+                id="users-role-filter"
+                model="tableFilters.role.value"
+                :label="__('admin.roles')"
+                :placeholder="__('admin.all_roles')"
+                :options="$this->roleFilterOptions()"
+                class="min-w-36"
+            />
         </x-slot:filters>
 
         <x-slot:counts>

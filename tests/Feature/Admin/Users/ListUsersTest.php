@@ -125,4 +125,43 @@ class ListUsersTest extends TestCase
             ->test(ListUsers::class)
             ->assertTableActionHidden('delete', $target);
     }
+
+    public function test_the_role_filter_can_show_only_super_admins(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $support = User::factory()->support()->create();
+        $noRole = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->filterTable('role', '__super_admin__')
+            ->assertCanSeeTableRecords([$admin])
+            ->assertCanNotSeeTableRecords([$support, $noRole]);
+    }
+
+    public function test_the_role_filter_can_show_users_with_no_role(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $support = User::factory()->support()->create();
+        $noRole = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->filterTable('role', '__no_role__')
+            ->assertCanSeeTableRecords([$noRole])
+            ->assertCanNotSeeTableRecords([$admin, $support]);
+    }
+
+    public function test_the_role_filter_can_show_users_with_a_specific_role(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $support = User::factory()->support()->create();
+        $noRole = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->filterTable('role', 'Support')
+            ->assertCanSeeTableRecords([$support])
+            ->assertCanNotSeeTableRecords([$admin, $noRole]);
+    }
 }
