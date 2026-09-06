@@ -46,7 +46,7 @@ trait HasPermissionsSchema
         $selectAllField = "{$field}_select_all";
         $values = collect($permissions)->map(fn (SystemPermission $permission): string => $permission->value)->all();
 
-        return Grid::make(['default' => 4])
+        return Grid::make(['default' => 1, 'md' => 4])
             ->extraAttributes([
                 'class' => 'pb-6 mb-6'.($isLast ? '' : ' border-b border-base-300'),
             ])
@@ -59,7 +59,9 @@ trait HasPermissionsSchema
                         ->dehydrated(false)
                         ->live()
                         ->afterStateUpdated(fn (bool $state, Set $set) => $set($field, $state ? $values : [])),
-                ])->columnSpan(1),
+                ])
+                    ->extraAttributes(['class' => 'mb-3 md:mb-0'])
+                    ->columnSpan(['default' => 1, 'md' => 1]),
 
                 CheckboxList::make($field)
                     ->hiddenLabel()
@@ -68,8 +70,8 @@ trait HasPermissionsSchema
                     ->options(collect($permissions)
                         ->mapWithKeys(fn (SystemPermission $permission): array => [$permission->value => $permission->label()])
                         ->all())
-                    ->columns(2)
-                    ->columnSpan(3),
+                    ->columns(['default' => 1, 'sm' => 2])
+                    ->columnSpan(['default' => 1, 'md' => 3]),
             ]);
     }
 
