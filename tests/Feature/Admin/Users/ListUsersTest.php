@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin\Users;
 
 use App\Livewire\Admin\Users\ListUsers;
 use App\Models\User;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -124,6 +125,18 @@ class ListUsersTest extends TestCase
         Livewire::actingAs($support)
             ->test(ListUsers::class)
             ->assertTableActionHidden('delete', $target);
+    }
+
+    public function test_the_status_column_is_not_sortable(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->assertTableColumnExists(
+                'status',
+                fn (TextColumn $column): bool => ! $column->isSortable(),
+            );
     }
 
     public function test_the_role_filter_can_show_only_super_admins(): void

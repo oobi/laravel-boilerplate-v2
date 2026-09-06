@@ -86,8 +86,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
-                    ->badge()
-                    ->sortable(),
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('last_login_at')
                     ->label(__('admin.last_login'))
