@@ -3,6 +3,7 @@
 namespace Tests\Feature\ThemeDemo;
 
 use App\Models\User;
+use Concise\ThemeDemo\Livewire\ModalGallery;
 use Concise\ThemeDemo\Livewire\Tables\FilamentTable;
 use Concise\ThemeDemo\Livewire\Tables\MaximalistTable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,6 +97,26 @@ class StyleDemoAccessTest extends TestCase
             ->assertSee('Showing 1 to 25 of 25 results');
     }
 
+    public function test_daisy_modal_password_prompt_guards_the_demo_action(): void
+    {
+        $admin = User::factory()->superAdmin()->create(['password' => bcrypt('secret-password')]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(ModalGallery::class)
+            ->call('confirmDemo', 'custom')
+            ->assertSet('confirmingPassword', true)
+            ->assertSet('confirmingAction', 'custom')
+            ->set('confirmablePassword', 'wrong-password')
+            ->call('confirmPassword')
+            ->assertHasErrors('confirmablePassword')
+            ->assertSet('confirmingPassword', true)
+            ->set('confirmablePassword', 'secret-password')
+            ->call('confirmPassword')
+            ->assertSet('confirmingPassword', false)
+            ->assertNotified();
+    }
+
     /** @return array<string, array{string}> */
     public static function stylePageProvider(): array
     {
@@ -115,6 +136,8 @@ class StyleDemoAccessTest extends TestCase
             'filament form' => ['/admin/style-demo/forms/filament'],
             'components' => ['/admin/style-demo/components'],
             'filament components' => ['/admin/style-demo/components/filament'],
+            'daisy modals' => ['/admin/style-demo/modals/daisy'],
+            'filament modals' => ['/admin/style-demo/modals/filament'],
             'tab content table' => ['/admin/style-demo/tab-content/table'],
             'tab content form' => ['/admin/style-demo/tab-content/form'],
             'tab content panels' => ['/admin/style-demo/tab-content/panels'],
