@@ -2,14 +2,24 @@
 |--------------------------------------------------------------------------
 | Warning contrast fix
 |--------------------------------------------------------------------------
-| daisyUI's soft/outline/dash/ghost variants render TEXT in the raw accent
-| color, which fails contrast for warning (an inherently light/yellow hue) —
-| solid variants are unaffected (they use --color-warning-content already).
+| daisyUI's soft/outline/dash/ghost variants (badges, buttons, alerts,
+| avatars) and the bare `.text-warning` utility all render TEXT in the raw
+| accent color, which fails contrast for warning (an inherently light/yellow
+| hue) — solid variants are unaffected (they use --color-warning-content
+| already). Filament's own badge/outlined-button text has the same problem
+| via a different mechanism — see the `--warning-700` override at the bottom.
 |
 | --color-warning-soft (tokens.css) is a separate, theme-aware, darker amber
-| tone used only for text on these light/tinted backgrounds. Buttons expose
-| a --btn-rest-fg hook for exactly this override; badges/alerts don't, so
-| those get a direct color override instead. Only the TEXT changes.
+| tone used for text (and, on `-soft`, the border too) on these light/tinted
+| backgrounds. Buttons expose a --btn-rest-fg hook for exactly this override;
+| badges/alerts/avatars/bare text don't, so those get a direct color override
+| instead.
+|
+| `-soft`'s border is a faint tint of the raw (light) accent — color-mixed at
+| --soft-ring-strength same as every other color (badge.css/buttons.css/
+| alerts.css) — so it also needs recomputing from --color-warning-soft or it
+| stays washed out even with the text darkened. `-outline`'s border is
+| already `currentColor`, so the text override alone covers it.
 |
 | Unlayered on purpose — see daisyui-overrides/alerts.css for why.
 */
@@ -17,11 +27,59 @@
     --btn-rest-fg: var(--color-warning-soft);
 }
 
+.btn-warning.btn-soft {
+    --btn-border: color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
+}
+
 .badge-warning.badge-soft,
-.badge-warning.badge-outline {
+.badge-warning.badge-outline,
+.badge-warning.badge-ghost {
     color: var(--color-warning-soft);
+}
+
+.badge-warning.badge-soft {
+    border-color: color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
 }
 
 .alert-warning.alert-soft {
     color: var(--color-warning-soft);
+    border-color: color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
+}
+
+/* Bare text utility (e.g. component-gallery's swatches, <x-stats-card>) — same raw-yellow problem, no bg/border involved. */
+.text-warning {
+    color: var(--color-warning-soft);
+}
+
+/* Avatars (components/ui/colors.css) never darken their light-mode text at all, unlike badge/btn/alert's ~17%-black soft mix — hits the same wall for warning. */
+.avatar-warning.avatar-soft,
+.avatar-warning.avatar-ghost,
+.avatar-warning.avatar-outline {
+    color: var(--color-warning-soft);
+}
+
+.avatar-warning.avatar-ghost {
+    border-color: color-mix(in oklab, var(--color-warning-soft) 40%, transparent);
+}
+
+.avatar-warning.avatar-outline {
+    border-color: var(--color-warning-soft);
+}
+
+/*
+| Filament's `.fi-badge`/outlined `.fi-btn` read a `--text: var(--color-700)`
+| custom property (vendor/filament/support/utilities.css) — `--color-700` for
+| warning resolves to `--warning-700` (filament-colors.css), the same generic
+| "83% + black" mix used for every color. That's the exact formula daisyUI's
+| own `.badge-soft`/`.alert-soft` use before this file's overrides, and fails
+| contrast for the same reason (warning's base hue is too light to darken
+| enough with a shared 17% mix). Repointing `--warning-700` here (rather than
+| hand-picking a warning special-case inside filament-colors.css, which is
+| deliberately generic) keeps every Filament element reading it — badge,
+| outlined button, table/infolist badge columns — in sync with daisyUI's fix
+| in one place. Dark mode is untouched: Filament uses `--warning-400` there
+| (a lighter tint against dark backgrounds), a different variable entirely.
+*/
+:root {
+    --warning-700: var(--color-warning-soft);
 }
