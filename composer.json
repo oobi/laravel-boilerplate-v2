@@ -26,6 +26,7 @@
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^4.4",
         "concise-dot-digital/theme-demo": "@dev",
         "fakerphp/faker": "^1.23",
         "laravel/boost": "^2.7",

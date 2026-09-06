@@ -4,6 +4,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
+| .env, .env.example | .ai/rules/env.md |
 | app/** | .ai/rules/app.md |
 | resources/views/components/** | .ai/rules/components.md |
 | tests/Feature/** | .ai/rules/feature.md |

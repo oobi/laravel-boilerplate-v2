@@ -30,6 +30,7 @@ Thumbs.db
 # --- Config files (sensitive) ---
 .env
 .env.*
+!.env.example
 /auth.json
 
 # --- Dependencies ---
