@@ -170,4 +170,14 @@ class UserPolicyTest extends TestCase
 
         $this->assertTrue(Gate::allows('impersonate', $regular));
     }
+
+    public function test_neither_super_admin_nor_support_can_impersonate_an_inactive_user(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $support = User::factory()->support()->create();
+        $target = User::factory()->inactive()->create();
+
+        $this->assertFalse(Gate::forUser($admin)->allows('impersonate', $target));
+        $this->assertFalse(Gate::forUser($support)->allows('impersonate', $target));
+    }
 }

@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin\Users;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class UserImpersonationTest extends TestCase
@@ -55,6 +56,30 @@ class UserImpersonationTest extends TestCase
             ->get(route('users.impersonate', $otherAdmin->id));
 
         $this->assertAuthenticatedAs($admin);
+    }
+
+    #[DataProvider('inactiveUserBlockingSettings')]
+    public function test_inactive_users_cannot_be_impersonated(bool $blockInactiveUsers): void
+    {
+        config()->set('auth.block_inactive_users', $blockInactiveUsers);
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->inactive()->create();
+
+        $this->actingAs($admin)->from(route('users.index'))
+            ->get(route('users.impersonate', $target))
+            ->assertRedirect(route('users.index'))
+            ->assertSessionMissing('impersonated_by');
+
+        $this->assertAuthenticatedAs($admin);
+    }
+
+    /** @return array<string, array{bool}> */
+    public static function inactiveUserBlockingSettings(): array
+    {
+        return [
+            'suspension enforced' => [true],
+            'suspension disabled' => [false],
+        ];
     }
 
     public function test_a_user_cannot_impersonate_themselves(): void

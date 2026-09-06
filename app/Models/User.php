@@ -168,13 +168,13 @@ class User extends Authenticatable implements MustVerifyEmail
      * Determine if this user can be impersonated by the given actor (the
      * currently authenticated user if omitted — required for the vendor
      * package's own no-argument calls). Rules: must be logged in, can't
-     * impersonate yourself, super admins can never be impersonated.
+     * impersonate yourself, inactive users and super admins cannot be impersonated.
      */
     public function canBeImpersonated(?self $actor = null): bool
     {
         $actor ??= Auth::user();
 
-        if (! $actor) {
+        if (! $actor || ! $this->active) {
             return false;
         }
 
