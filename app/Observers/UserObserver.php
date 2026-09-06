@@ -21,8 +21,24 @@ class UserObserver
             return;
         }
 
-        DB::table('sessions')->where('user_id', $user->id)->delete();
+        $this->purgeDatabaseSessions($user);
 
         $user->forceFill(['remember_token' => null])->saveQuietly();
+    }
+
+    /**
+     * Only the database session driver keeps sessions somewhere we can sweep;
+     * file/redis/array installs rely on request-time middleware instead.
+     */
+    private function purgeDatabaseSessions(User $user): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        DB::connection(config('session.connection'))
+            ->table(config('session.table', 'sessions'))
+            ->where('user_id', $user->id)
+            ->delete();
     }
 }
