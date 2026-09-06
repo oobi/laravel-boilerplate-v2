@@ -5,57 +5,71 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Roles\Concerns;
 
 use App\Enums\SystemPermission;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Support\Enums\FontWeight;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 /**
- * Builds a Shield-style permissions form: one tab per SystemPermission
- * category, each with a "select all" toggle and a checkbox list. State is
- * split into one `permissions_{category}` field per tab (rather than a
- * single flat `permissions` field) so that toggling one tab's checkboxes
- * can't clobber another tab's selections; resolvePermissionsFromState()
- * flattens the per-tab fields back into one list for saving.
+ * Builds a scrolling-list permissions form: one bordered row per
+ * SystemPermission category (label + "select all" checkbox on the left,
+ * individual permission checkboxes on the right), stacked inside a single
+ * card. State is split into one `permissions_{category}` field per category
+ * (rather than a single flat `permissions` field) so ticking one category's
+ * checkboxes can't clobber another's selections; resolvePermissionsFromState()
+ * flattens the per-category fields back into one list for saving.
  */
 trait HasPermissionsSchema
 {
-    protected function permissionsTabs(): Tabs
+    /** @return list<Component> */
+    protected function permissionsSchema(): array
     {
-        return Tabs::make('permissions')
-            ->columnSpanFull()
-            ->tabs(collect(SystemPermission::byCategory())
-                ->map(fn (array $permissions, string $category): Tab => $this->permissionsTab($category, $permissions))
-                ->values()
-                ->all());
+        $categories = SystemPermission::byCategory();
+        $lastCategory = array_key_last($categories);
+
+        return collect($categories)
+            ->map(fn (array $permissions, string $category): Grid => $this->permissionsRow($category, $permissions, $category === $lastCategory))
+            ->values()
+            ->all();
     }
 
     /** @param list<SystemPermission> $permissions */
-    protected function permissionsTab(string $category, array $permissions): Tab
+    protected function permissionsRow(string $category, array $permissions, bool $isLast): Grid
     {
         $field = $this->permissionsFieldName($category);
+        $selectAllField = "{$field}_select_all";
         $values = collect($permissions)->map(fn (SystemPermission $permission): string => $permission->value)->all();
 
-        return Tab::make($category)
-            ->badge(fn (Get $get): string => count($get($field) ?? []).'/'.count($values))
+        return Grid::make(['default' => 4])
+            ->extraAttributes([
+                'class' => 'pb-6 mb-6'.($isLast ? '' : ' border-b border-base-300'),
+            ])
             ->schema([
-                Toggle::make("{$field}_select_all")
-                    ->label(__('admin.select_all'))
-                    ->dehydrated(false)
-                    ->live()
-                    ->afterStateUpdated(fn (bool $state, Set $set) => $set($field, $state ? $values : [])),
+                Group::make([
+                    Text::make($category)->weight(FontWeight::SemiBold),
+
+                    Checkbox::make($selectAllField)
+                        ->label(__('admin.select_all'))
+                        ->dehydrated(false)
+                        ->live()
+                        ->afterStateUpdated(fn (bool $state, Set $set) => $set($field, $state ? $values : [])),
+                ])->columnSpan(1),
 
                 CheckboxList::make($field)
                     ->hiddenLabel()
                     ->live()
+                    ->afterStateUpdated(fn (?array $state, Set $set) => $set($selectAllField, count($state ?? []) === count($values)))
                     ->options(collect($permissions)
                         ->mapWithKeys(fn (SystemPermission $permission): array => [$permission->value => $permission->label()])
                         ->all())
-                    ->columns(2),
+                    ->columns(2)
+                    ->columnSpan(3),
             ]);
     }
 
@@ -64,16 +78,21 @@ trait HasPermissionsSchema
         return 'permissions_'.Str::slug($category, '_');
     }
 
-    /** @return array<string, list<string>> */
+    /** @return array<string, list<string>|bool> */
     protected function permissionsStateForRole(?Role $role): array
     {
         $assigned = $role?->permissions->pluck('name')->all() ?? [];
 
         return collect(SystemPermission::byCategory())
             ->mapWithKeys(function (array $permissions, string $category) use ($assigned): array {
+                $field = $this->permissionsFieldName($category);
                 $values = collect($permissions)->map(fn (SystemPermission $permission): string => $permission->value)->all();
+                $selected = array_values(array_intersect($values, $assigned));
 
-                return [$this->permissionsFieldName($category) => array_values(array_intersect($values, $assigned))];
+                return [
+                    $field => $selected,
+                    "{$field}_select_all" => count($selected) === count($values),
+                ];
             })
             ->all();
     }

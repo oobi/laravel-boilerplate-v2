@@ -51,7 +51,7 @@
                             <div class="truncate text-xs text-base-content/60">{{ $user->email }}</div>
                         </div>
                         @if ($user->is_super_admin)
-                            <x-badge value="{{ __('admin.super_admin') }}" />
+                            <x-badge value="{{ __('admin.super_admin') }}" color="error" />
                         @endif
                     </div>
                 @empty

@@ -79,7 +79,10 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ? [__('admin.super_admin')]
                         : $record->roles->pluck('name')->all())
                     ->placeholder(__('admin.no_roles'))
-                    ->badge(),
+                    ->badge()
+                    ->color(fn (string $state): ?string => $state === __('admin.super_admin')
+                        ? DaisyColor::ERROR->toFilamentColor()
+                        : null),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))

@@ -46,9 +46,7 @@ class CreateRole extends Component implements HasSchemas
                     ]),
 
                 Section::make(__('admin.permissions'))
-                    ->schema([
-                        $this->permissionsTabs(),
-                    ]),
+                    ->schema($this->permissionsSchema()),
             ])
             ->statePath('data');
     }

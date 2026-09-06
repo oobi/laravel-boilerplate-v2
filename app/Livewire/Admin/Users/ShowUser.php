@@ -10,6 +10,7 @@ use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
 use App\Support\Panels\Contracts\ShowPanel;
 use App\Support\Panels\Registry\PanelRegistry;
+use App\Support\Theme\DaisyColor;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -67,7 +68,10 @@ class ShowUser extends Component implements HasSchemas
                                     ->state(fn (User $record): array => $record->is_super_admin
                                         ? [__('admin.super_admin')]
                                         : ($record->roles->pluck('name')->all() ?: [__('admin.no_roles')]))
-                                    ->badge(fn (User $record): bool => $record->is_super_admin || $record->roles->isNotEmpty()),
+                                    ->badge(fn (User $record): bool => $record->is_super_admin || $record->roles->isNotEmpty())
+                                    ->color(fn (string $state): ?string => $state === __('admin.super_admin')
+                                        ? DaisyColor::ERROR->toFilamentColor()
+                                        : null),
 
                                 TextEntry::make('status')
                                     ->label(__('admin.status'))

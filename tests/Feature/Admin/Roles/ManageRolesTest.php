@@ -93,6 +93,36 @@ class ManageRolesTest extends TestCase
             ]);
     }
 
+    public function test_select_all_is_prefilled_true_when_a_role_already_has_every_permission_in_a_category(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+        $role->givePermissionTo([
+            Permission::findOrCreate(SystemPermission::MANAGE_USERS->value),
+            Permission::findOrCreate(SystemPermission::SUSPEND_USERS->value),
+            Permission::findOrCreate(SystemPermission::DELETE_USERS->value),
+            Permission::findOrCreate(SystemPermission::IMPERSONATE_USERS->value),
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSet('data.permissions_user_management_select_all', true)
+            ->assertSet('data.permissions_system_administration_select_all', false);
+    }
+
+    public function test_deselecting_a_permission_unchecks_select_all(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->set('data.permissions_user_management_select_all', true)
+            ->assertSet('data.permissions_user_management_select_all', true)
+            ->set('data.permissions_user_management', [SystemPermission::MANAGE_USERS->value])
+            ->assertSet('data.permissions_user_management_select_all', false);
+    }
+
     public function test_saving_merges_permissions_selected_across_category_tabs(): void
     {
         $admin = User::factory()->superAdmin()->create();
