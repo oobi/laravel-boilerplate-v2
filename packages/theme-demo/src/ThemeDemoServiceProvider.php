@@ -64,6 +64,14 @@ class ThemeDemoServiceProvider extends ServiceProvider
                     ->label(__('theme-demo::messages.nav_filament_components'))
                     ->route('style-demo.components-filament')
                     ->icon('heroicon-o-squares-plus'),
+                NavItem::make('style-demo-modals-daisy')
+                    ->label(__('theme-demo::messages.nav_modals_daisy'))
+                    ->route('style-demo.modals-daisy')
+                    ->icon('heroicon-o-window'),
+                NavItem::make('style-demo-modals-filament')
+                    ->label(__('theme-demo::messages.nav_modals_filament'))
+                    ->route('style-demo.modals-filament')
+                    ->icon('heroicon-o-window'),
                 NavItem::make('style-demo-tab-content')
                     ->label(__('theme-demo::messages.nav_tab_content'))
                     ->route('style-demo.tab-content-table')
