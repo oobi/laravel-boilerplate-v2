@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Roles\Concerns;
 
 use App\Enums\SystemPermission;
+use App\Models\Role;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Schemas\Components\Component;
@@ -14,7 +15,6 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\FontWeight;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 /**
  * Builds a scrolling-list permissions form: one bordered row per

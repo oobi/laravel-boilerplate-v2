@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Users;
 
 use App\Livewire\Admin\Users\EditUser;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,7 +11,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class EditUserTest extends TestCase

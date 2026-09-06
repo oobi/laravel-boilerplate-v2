@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Roles;
 
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
+use App\Models\Role;
+use App\Support\Theme\DaisyColor;
 use Filament\Forms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -15,7 +18,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class CreateRole extends Component implements HasSchemas
 {
@@ -29,7 +31,10 @@ class CreateRole extends Component implements HasSchemas
     {
         Gate::authorize('manage roles');
 
-        $this->form->fill($this->permissionsStateForRole(null));
+        $this->form->fill([
+            'color' => DaisyColor::NEUTRAL->value,
+            ...$this->permissionsStateForRole(null),
+        ]);
     }
 
     public function form(Schema $schema): Schema
@@ -38,11 +43,19 @@ class CreateRole extends Component implements HasSchemas
             ->components([
                 Section::make(__('admin.role_information'))
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label(__('admin.role_name'))
-                            ->required()
-                            ->maxLength(255)
-                            ->unique('roles', 'name'),
+                        Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label(__('admin.role_name'))
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->unique('roles', 'name'),
+
+                                Forms\Components\ViewField::make('color')
+                                    ->label(__('admin.badge_color'))
+                                    ->view('filament.forms.components.role-color-swatches')
+                                    ->required(),
+                            ]),
                     ]),
 
                 Section::make(__('admin.permissions'))
@@ -57,7 +70,10 @@ class CreateRole extends Component implements HasSchemas
 
         $data = $this->form->getState();
 
-        $role = Role::create(['name' => $data['name']]);
+        $role = Role::create([
+            'name' => $data['name'],
+            'color' => $data['color'],
+        ]);
 
         $role->givePermissionTo(collect($this->resolvePermissionsFromState($data))
             ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))

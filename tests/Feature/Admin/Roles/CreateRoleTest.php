@@ -4,10 +4,11 @@ namespace Tests\Feature\Admin\Roles;
 
 use App\Enums\SystemPermission;
 use App\Livewire\Admin\Roles\CreateRole;
+use App\Models\Role;
 use App\Models\User;
+use App\Support\Theme\DaisyColor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class CreateRoleTest extends TestCase
@@ -38,5 +39,19 @@ class CreateRoleTest extends TestCase
         $component->assertRedirect(route('roles.edit', $role));
 
         $this->assertTrue($role->fresh()->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
+    }
+
+    public function test_super_admins_can_create_a_role_with_a_custom_badge_color(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(CreateRole::class)
+            ->set('data.name', 'Editor')
+            ->set('data.color', DaisyColor::WARNING->value)
+            ->call('create')
+            ->assertHasNoErrors();
+
+        $this->assertSame(DaisyColor::WARNING, Role::findByName('Editor')->color);
     }
 }

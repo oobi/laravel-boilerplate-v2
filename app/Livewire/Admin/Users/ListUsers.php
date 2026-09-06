@@ -7,6 +7,7 @@ namespace App\Livewire\Admin\Users;
 use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
 use App\Livewire\Concerns\ManagesTrashedRecords;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
@@ -29,7 +30,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
-use Spatie\Permission\Models\Role;
 
 /**
  * Standalone Filament table for managing users, rendered inside the admin
@@ -80,9 +80,9 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         : $record->roles->pluck('name')->all())
                     ->placeholder(__('admin.no_roles'))
                     ->badge()
-                    ->color(fn (string $state): ?string => $state === __('admin.super_admin')
+                    ->color(fn (string $state, User $record): string => $state === __('admin.super_admin')
                         ? DaisyColor::ERROR->toFilamentColor()
-                        : null),
+                        : $record->roles->firstWhere('name', $state)?->badgeColor()->toFilamentColor() ?? DaisyColor::NEUTRAL->toFilamentColor()),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))

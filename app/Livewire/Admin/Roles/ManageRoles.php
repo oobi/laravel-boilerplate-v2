@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Roles;
 
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
+use App\Models\Role;
 use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -19,7 +21,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 /**
  * The single "manage roles" screen: no separate list page, the dropdown
@@ -55,6 +56,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
 
         $this->form->fill([
             'name' => $this->role->name,
+            'color' => $this->role->badgeColor()->value,
             ...$this->permissionsStateForRole($this->role),
         ]);
     }
@@ -71,11 +73,19 @@ class ManageRoles extends Component implements HasActions, HasSchemas
             ->components([
                 Section::make(__('admin.role_information'))
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label(__('admin.role_name'))
-                            ->required()
-                            ->maxLength(255)
-                            ->unique('roles', 'name', ignoreRecord: true),
+                        Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label(__('admin.role_name'))
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->unique('roles', 'name', ignoreRecord: true),
+
+                                Forms\Components\ViewField::make('color')
+                                    ->label(__('admin.badge_color'))
+                                    ->view('filament.forms.components.role-color-swatches')
+                                    ->required(),
+                            ]),
                     ]),
 
                 Section::make(__('admin.permissions'))
@@ -92,7 +102,10 @@ class ManageRoles extends Component implements HasActions, HasSchemas
 
         $data = $this->form->getState();
 
-        $this->role->update(['name' => $data['name']]);
+        $this->role->update([
+            'name' => $data['name'],
+            'color' => $data['color'],
+        ]);
 
         $this->role->syncPermissions(collect($this->resolvePermissionsFromState($data))
             ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))

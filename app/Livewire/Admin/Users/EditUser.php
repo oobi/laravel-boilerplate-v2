@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Theme\DaisyColor;
@@ -21,7 +22,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Livewire\Component;
-use Spatie\Permission\Models\Role;
 
 class EditUser extends Component implements HasActions, HasSchemas
 {

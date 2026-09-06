@@ -4,11 +4,12 @@ namespace Tests\Feature\Admin\Roles;
 
 use App\Enums\SystemPermission;
 use App\Livewire\Admin\Roles\ManageRoles;
+use App\Models\Role;
 use App\Models\User;
+use App\Support\Theme\DaisyColor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ManageRolesTest extends TestCase
@@ -60,6 +61,30 @@ class ManageRolesTest extends TestCase
 
         $this->assertTrue($role->fresh()->checkPermissionTo(SystemPermission::SUSPEND_USERS->value));
         $this->assertFalse($role->fresh()->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
+    }
+
+    public function test_form_is_prefilled_with_neutral_color_when_a_role_has_none_set(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSet('data.color', DaisyColor::NEUTRAL->value);
+    }
+
+    public function test_super_admins_can_update_a_roles_badge_color(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->set('data.color', DaisyColor::ERROR->value)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(DaisyColor::ERROR, $role->fresh()->color);
     }
 
     public function test_form_is_prefilled_with_permissions_split_by_category(): void

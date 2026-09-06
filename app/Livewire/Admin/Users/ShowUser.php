@@ -69,9 +69,9 @@ class ShowUser extends Component implements HasSchemas
                                         ? [__('admin.super_admin')]
                                         : ($record->roles->pluck('name')->all() ?: [__('admin.no_roles')]))
                                     ->badge(fn (User $record): bool => $record->is_super_admin || $record->roles->isNotEmpty())
-                                    ->color(fn (string $state): ?string => $state === __('admin.super_admin')
+                                    ->color(fn (string $state, User $record): ?string => $state === __('admin.super_admin')
                                         ? DaisyColor::ERROR->toFilamentColor()
-                                        : null),
+                                        : $record->roles->firstWhere('name', $state)?->badgeColor()->toFilamentColor()),
 
                                 TextEntry::make('status')
                                     ->label(__('admin.status'))
