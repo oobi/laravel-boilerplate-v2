@@ -8,11 +8,13 @@ use App\Models\Concerns\HasProfilePhoto;
 use App\Models\Concerns\HasSuperAdminFlag;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
@@ -70,6 +72,32 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_super_admin' => 'boolean',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Emails are always stored trimmed and lowercased. Fortify canonicalizes the
+     * login/reset identifier the same way (`fortify.lowercase_usernames`), so any
+     * write path that preserved casing would create an account that can never log
+     * in on a case-sensitive connection. Normalizing at the model makes that
+     * impossible to get wrong from a form, a console command, a seeder or a factory.
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::set(fn (?string $value): ?string => self::normalizeEmail($value));
+    }
+
+    /**
+     * The canonical form of an email address. Use this before validating
+     * uniqueness so the check runs against the value that will actually be
+     * stored — see the `unique` rules on the user forms and Fortify actions.
+     */
+    public static function normalizeEmail(?string $email): ?string
+    {
+        if ($email === null) {
+            return null;
+        }
+
+        return Str::lower(trim($email));
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -33,5 +34,34 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'active' => true,
         ]);
+    }
+
+    public function test_registering_with_a_taken_email_fails_validation_regardless_of_casing(): void
+    {
+        User::factory()->create(['email' => 'taken@example.com']);
+
+        $this->post('/register', [
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'email' => 'TAKEN@Example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+        $this->assertSame(1, User::count());
+    }
+
+    public function test_a_mixed_case_email_is_stored_lowercased(): void
+    {
+        $this->post('/register', [
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'email' => 'Mixed.Case@Example.TEST',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $this->assertDatabaseHas('users', ['email' => 'mixed.case@example.test']);
     }
 }

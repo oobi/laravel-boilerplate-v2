@@ -24,16 +24,20 @@ class MakeAdminCommand extends Command
 
     public function handle(): int
     {
-        $name = text(label: 'Name', required: true);
+        $firstName = text(label: 'First name', required: true);
 
-        $email = text(
+        $lastName = text(label: 'Last name', required: true);
+
+        // Validated in its normalized form so the uniqueness check matches the
+        // stored value, whatever casing or padding the operator typed.
+        $email = User::normalizeEmail(text(
             label: 'Email',
             required: true,
             validate: fn (string $value): ?string => Validator::make(
-                ['email' => $value],
+                ['email' => User::normalizeEmail($value)],
                 ['email' => ['required', 'email', 'unique:users,email']]
             )->errors()->first('email'),
-        );
+        ));
 
         $plainPassword = password(
             label: 'Password',
@@ -46,7 +50,8 @@ class MakeAdminCommand extends Command
 
         $user = new User;
         $user->forceFill([
-            'name' => $name,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'email' => $email,
             'password' => Hash::make($plainPassword),
             'is_super_admin' => true,

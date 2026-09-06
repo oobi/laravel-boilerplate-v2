@@ -47,11 +47,16 @@ class CreateUser extends Component implements HasSchemas
                             ->required()
                             ->maxLength(255),
 
+                        // Normalized before validation so the uniqueness check runs against
+                        // the value User's mutator will actually store — otherwise a
+                        // case-variant of an existing address passes here and then hits
+                        // the DB unique index.
                         Forms\Components\TextInput::make('email')
                             ->label(__('admin.email'))
                             ->email()
                             ->required()
                             ->maxLength(255)
+                            ->mutateStateForValidationUsing(fn (?string $state): ?string => User::normalizeEmail($state))
                             ->unique('users', 'email'),
 
                         Forms\Components\TextInput::make('password')

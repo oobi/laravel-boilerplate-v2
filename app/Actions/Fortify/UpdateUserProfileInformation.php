@@ -15,6 +15,14 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     /** @param array<string, mixed> $input */
     public function update(User $user, array $input): void
     {
+        // EditProfile calls this action directly rather than going through
+        // Fortify's ProfileInformationController, so the controller's
+        // `lowercase_usernames` canonicalization never runs — do it here, before
+        // the uniqueness check, so a case-variant of a taken address is rejected.
+        if (is_string($input['email'] ?? null)) {
+            $input['email'] = User::normalizeEmail($input['email']);
+        }
+
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],

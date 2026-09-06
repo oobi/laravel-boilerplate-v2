@@ -46,4 +46,55 @@ class CreateUserTest extends TestCase
             'active' => true,
         ]);
     }
+
+    public function test_creating_a_user_with_a_taken_email_fails_validation_regardless_of_casing(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        User::factory()->create(['email' => 'taken@example.com']);
+
+        Livewire::actingAs($admin)
+            ->test(CreateUser::class)
+            ->set('data.first_name', 'Brand')
+            ->set('data.last_name', 'New User')
+            ->set('data.email', 'TAKEN@Example.com')
+            ->set('data.password', 'password')
+            ->set('data.password_confirmation', 'password')
+            ->call('create')
+            ->assertHasFormErrors(['email' => 'unique']);
+
+        $this->assertSame(2, User::count());
+    }
+
+    /** A soft-deleted user keeps their row, so their address stays reserved. */
+    public function test_creating_a_user_with_a_soft_deleted_users_email_fails_validation(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        User::factory()->create(['email' => 'gone@example.com'])->delete();
+
+        Livewire::actingAs($admin)
+            ->test(CreateUser::class)
+            ->set('data.first_name', 'Brand')
+            ->set('data.last_name', 'New User')
+            ->set('data.email', 'gone@example.com')
+            ->set('data.password', 'password')
+            ->set('data.password_confirmation', 'password')
+            ->call('create')
+            ->assertHasFormErrors(['email' => 'unique']);
+    }
+
+    public function test_a_mixed_case_email_is_stored_lowercased(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(CreateUser::class)
+            ->set('data.first_name', 'Brand')
+            ->set('data.last_name', 'New User')
+            ->set('data.email', 'Brand.New@Example.COM')
+            ->set('data.password', 'password')
+            ->set('data.password_confirmation', 'password')
+            ->call('create');
+
+        $this->assertDatabaseHas('users', ['email' => 'brand.new@example.com']);
+    }
 }

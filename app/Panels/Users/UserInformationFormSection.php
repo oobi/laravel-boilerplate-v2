@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Panels\Users;
 
+use App\Models\User;
 use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\FormSection;
 use Filament\Forms;
@@ -42,11 +43,18 @@ class UserInformationFormSection implements FormSection
                         ->required()
                         ->maxLength(255),
 
+                    // Normalized before validation so the uniqueness check runs against
+                    // the value User's mutator will actually store, and so a case-variant
+                    // of an existing address fails validation instead of the DB unique
+                    // index. Soft-deleted users keep their row, so `unique` (which is not
+                    // soft-delete aware) correctly treats their email as still reserved.
                     Forms\Components\TextInput::make('email')
                         ->label(__('admin.email'))
                         ->email()
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->mutateStateForValidationUsing(fn (?string $state): ?string => User::normalizeEmail($state))
+                        ->unique('users', 'email', ignorable: $subject),
 
                     Forms\Components\Toggle::make('active')
                         ->label(__('admin.active'))

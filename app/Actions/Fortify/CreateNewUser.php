@@ -21,6 +21,10 @@ class CreateNewUser implements CreatesNewUsers
     /** @param array<string, string> $input */
     public function create(array $input): User
     {
+        if (is_string($input['email'] ?? null)) {
+            $input['email'] = User::normalizeEmail($input['email']);
+        }
+
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
