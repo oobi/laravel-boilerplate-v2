@@ -1,6 +1,18 @@
 #!/bin/sh
 # Runs Pint + the test suite before allowing a commit. Bypass with `git commit --no-verify`.
 
+# GUI/IDE git clients launch with a minimal launchd PATH that omits the usual
+# PHP locations (Homebrew, Herd), so `php` — and thus `vendor/bin/pint` — is not
+# found and the commit aborts with a misleading "Pint failed". Prepend the common
+# install paths so the hook works regardless of how the commit was triggered.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/Library/Application Support/Herd/bin:$PATH"
+
+if ! command -v php >/dev/null 2>&1; then
+    echo "Commit aborted: php not found on PATH."
+    echo "Commit from a terminal where php is available, or add its location to this hook's PATH."
+    exit 1
+fi
+
 STAGED_PHP_FILES=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
 
 if [ -n "$STAGED_PHP_FILES" ]; then

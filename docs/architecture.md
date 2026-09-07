@@ -11,6 +11,8 @@ these choices.
 - **Laravel Fortify** — headless auth backend (login, registration, password
   reset, email verification, two-factor auth). It ships no UI; all views under
   `resources/views/auth/*` are our own daisyUI-styled Blade, not Jetstream's.
+  See `docs/authentication.md` for how the password-change paths and account
+  inactivation (session invalidation) work.
 - **Livewire 4** — powers the interactive screens (admin CRUD, auth forms).
   Full-page components live in `app/Livewire/*`, grouped by domain once an
   area has more than one component (e.g. `app/Livewire/Admin/Users/*`,

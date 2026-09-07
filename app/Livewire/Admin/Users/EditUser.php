@@ -166,6 +166,11 @@ class EditUser extends Component implements HasActions, HasSchemas
                 ->action(function (array $data): void {
                     Gate::authorize('updatePasswordDirectly', $this->user);
 
+                    // Changing the stored hash makes every live session the
+                    // target still has elsewhere fail AuthenticateSession's hash
+                    // check and log out on its next request — no explicit
+                    // logoutOtherDevices() is possible here (that acts on the
+                    // acting guard, and the admin is not the target).
                     $this->user->update(['password' => Hash::make($data['password'])]);
 
                     Notification::make()

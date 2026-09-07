@@ -31,6 +31,12 @@ class EditPassword extends Component
             'password_confirmation' => $this->password_confirmation,
         ]);
 
+        // Invalidate the user's sessions on every other device, keeping this
+        // one authenticated. Without this, AuthenticateSession would also log
+        // this device out on its next request, since the password hash it
+        // stamped into the session no longer matches the stored hash.
+        Auth::logoutOtherDevices($this->password);
+
         $this->reset('current_password', 'password', 'password_confirmation');
 
         Notification::make()

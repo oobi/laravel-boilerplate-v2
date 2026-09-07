@@ -6,7 +6,12 @@ namespace Tests\Feature\Profile;
 
 use App\Livewire\Profile\EditPassword;
 use App\Models\User;
+use Illuminate\Auth\Events\OtherDeviceLogout;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 use Livewire\Livewire;
@@ -62,5 +67,36 @@ class EditPasswordTest extends TestCase
             ->assertHasErrors('current_password');
 
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
+    }
+
+    public function test_updating_the_password_invalidates_other_devices_but_keeps_this_one(): void
+    {
+        Event::fake([OtherDeviceLogout::class]);
+
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(EditPassword::class)
+            ->set('current_password', 'password')
+            ->set('password', 'new-password')
+            ->set('password_confirmation', 'new-password')
+            ->call('updatePassword', app(UpdatesUserPasswords::class))
+            ->assertHasNoErrors();
+
+        // logoutOtherDevices() fires this once the other sessions are dropped.
+        Event::assertDispatched(OtherDeviceLogout::class);
+
+        // The device that made the change stays signed in.
+        $this->assertTrue(Auth::check());
+        $this->assertSame($user->id, Auth::id());
+    }
+
+    public function test_authenticate_session_middleware_guards_the_web_group(): void
+    {
+        $webGroup = app(Kernel::class)->getMiddlewareGroups()['web'];
+
+        // Without this middleware on the web group, a changed password hash
+        // would never invalidate the user's sessions on their other devices.
+        $this->assertContains(AuthenticateSession::class, $webGroup);
     }
 }
