@@ -3,38 +3,46 @@
 
     <x-page-header :title="__('admin.my_profile')" />
 
-    <x-tabs-nav :scrollable="false">
-        @include('livewire.profile.partials.tabs')
+    <div class="w-full max-w-3xl">
+        <x-tabs-nav :scrollable="false">
+            @include('livewire.profile.partials.tabs')
 
-        <x-slot:content>
-            <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
-                <x-card :title="__('admin.update_password')">
-                    <form wire:submit="updatePassword" class="flex flex-col gap-4">
-                        <fieldset class="fieldset">
-                            <label class="label" for="current_password">{{ __('admin.current_password') }}</label>
-                            <input id="current_password" type="password" wire:model="current_password" class="input w-full" autocomplete="current-password">
-                            @error('current_password') <p class="text-error text-sm">{{ $message }}</p> @enderror
-                        </fieldset>
+            <x-slot:content>
+                <form wire:submit="updatePassword" class="flex max-w-md flex-col gap-4">
+                    <x-form-input
+                        name="current_password"
+                        type="password"
+                        :label="__('admin.current_password')"
+                        :floating="false"
+                        autocomplete="current-password"
+                        wire:model="current_password"
+                    />
 
-                        <fieldset class="fieldset">
-                            <label class="label" for="password">{{ __('admin.new_password') }}</label>
-                            <input id="password" type="password" wire:model="password" class="input w-full" autocomplete="new-password">
-                            @error('password') <p class="text-error text-sm">{{ $message }}</p> @enderror
-                        </fieldset>
+                    <x-form-input
+                        name="password"
+                        type="password"
+                        :label="__('admin.new_password')"
+                        :floating="false"
+                        autocomplete="new-password"
+                        wire:model="password"
+                    />
 
-                        <fieldset class="fieldset">
-                            <label class="label" for="password_confirmation">{{ __('admin.confirm_password') }}</label>
-                            <input id="password_confirmation" type="password" wire:model="password_confirmation" class="input w-full" autocomplete="new-password">
-                        </fieldset>
+                    <x-form-input
+                        name="password_confirmation"
+                        type="password"
+                        :label="__('admin.confirm_password')"
+                        :floating="false"
+                        autocomplete="new-password"
+                        wire:model="password_confirmation"
+                    />
 
-                        <div>
-                            <x-button type="submit">
-                                {{ __('admin.update_password') }}
-                            </x-button>
-                        </div>
-                    </form>
-                </x-card>
-            </div>
-        </x-slot:content>
-    </x-tabs-nav>
+                    <div>
+                        <x-button.action type="submit">
+                            {{ __('admin.update_password') }}
+                        </x-button.action>
+                    </div>
+                </form>
+            </x-slot:content>
+        </x-tabs-nav>
+    </div>
 </div>

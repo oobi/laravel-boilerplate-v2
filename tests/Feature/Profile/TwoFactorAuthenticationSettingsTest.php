@@ -19,15 +19,22 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/profile/two-factor')->assertRedirect('/login');
+        $this->get('/admin/profile/two-factor')->assertRedirect('/login');
     }
 
-    public function test_users_can_view_the_two_factor_page_and_see_the_disabled_status(): void
+    public function test_users_without_admin_access_are_forbidden(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
-            ->get('/profile/two-factor')
+        $this->actingAs($user)->get('/admin/profile/two-factor')->assertForbidden();
+    }
+
+    public function test_admin_users_can_view_the_two_factor_page_and_see_the_disabled_status(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)
+            ->get('/admin/profile/two-factor')
             ->assertOk()
             ->assertSee(__('admin.two_factor_authentication'))
             ->assertSee(__('admin.disabled'));
@@ -35,9 +42,9 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
 
     public function test_an_enabled_users_status_reads_enabled(): void
     {
-        $user = User::factory()->twoFactorEnabled()->create();
+        $admin = User::factory()->superAdmin()->twoFactorEnabled()->create();
 
-        $this->actingAs($user)->get('/profile/two-factor')->assertSee(__('admin.enabled'));
+        $this->actingAs($admin)->get('/admin/profile/two-factor')->assertSee(__('admin.enabled'));
     }
 
     public function test_enabling_two_factor_requires_a_password_and_does_nothing_until_confirmed(): void

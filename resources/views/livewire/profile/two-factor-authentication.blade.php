@@ -3,21 +3,21 @@
 
     <x-page-header :title="__('admin.my_profile')" />
 
-    <x-tabs-nav :scrollable="false">
-        @include('livewire.profile.partials.tabs')
+    <div class="w-full max-w-3xl">
+        <x-tabs-nav :scrollable="false">
+            @include('livewire.profile.partials.tabs')
 
-        <x-slot:content>
-            <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
-                <x-card :title="__('admin.two_factor_authentication')">
-                    <x-slot:actions>
+            <x-slot:content>
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="ui-subtle">{{ __('admin.two_factor_info') }}</p>
+
                         @if (Auth::user()->two_factor_confirmed_at)
                             <x-badge color="success">{{ __('admin.enabled') }}</x-badge>
                         @else
                             <x-badge color="neutral">{{ __('admin.disabled') }}</x-badge>
                         @endif
-                    </x-slot:actions>
-
-                    <p class="ui-subtle">{{ __('admin.two_factor_info') }}</p>
+                    </div>
 
                     @if ($this->enabled)
                         @if ($showingQrCode)
@@ -91,10 +91,10 @@
                             @endif
                         @endif
                     </div>
-                </x-card>
-            </div>
-        </x-slot:content>
-    </x-tabs-nav>
+                </div>
+            </x-slot:content>
+        </x-tabs-nav>
+    </div>
 
     <x-confirm-password-modal />
 </div>

@@ -14,11 +14,12 @@
                     {{ __('Welcome, :name', ['name' => auth()->user()->first_name]) }}
                 </span>
 
-                <a href="{{ route('profile.edit') }}" class="btn btn-ghost btn-sm">
-                    {{ __('Profile') }}
-                </a>
-
+                {{-- Profile now lives inside the admin shell, so only panel users get these links. --}}
                 @if (auth()->user()->canAccessAdmin())
+                    <a href="{{ route('profile.edit') }}" class="btn btn-ghost btn-sm">
+                        {{ __('Profile') }}
+                    </a>
+
                     <a href="{{ route('dashboard') }}" class="btn btn-ghost btn-sm">
                         {{ __('Admin Dashboard') }}
                     </a>

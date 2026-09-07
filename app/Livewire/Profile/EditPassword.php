@@ -41,7 +41,6 @@ class EditPassword extends Component
 
     public function render(): View
     {
-        return view('livewire.profile.edit-password')
-            ->layout('layouts.public');
+        return view('livewire.profile.edit-password');
     }
 }

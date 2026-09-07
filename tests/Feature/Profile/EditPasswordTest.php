@@ -18,14 +18,21 @@ class EditPasswordTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/profile/password')->assertRedirect('/login');
+        $this->get('/admin/profile/password')->assertRedirect('/login');
     }
 
-    public function test_users_can_view_the_password_page(): void
+    public function test_users_without_admin_access_are_forbidden(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/profile/password')->assertOk();
+        $this->actingAs($user)->get('/admin/profile/password')->assertForbidden();
+    }
+
+    public function test_admin_users_can_view_the_password_page(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get('/admin/profile/password')->assertOk();
     }
 
     public function test_users_can_update_their_password(): void

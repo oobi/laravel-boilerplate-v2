@@ -55,6 +55,22 @@ these choices.
   `NavRegistry::item()`/`group()` rather than editing
   `admin-sidebar-nav.blade.php`. See `docs/navigation.md`.
 
+## Scope: staff back-office, not a customer frontend
+
+This is an **admin/back-office** boilerplate. The people who authenticate here
+are staff, so self-service account management (profile, password, two-factor)
+lives **inside the admin shell** (`layouts.admin`, under the `/admin` gate) — a
+user without `ACCESS_ADMIN_PANEL` gets a 403, not a half-styled public page.
+
+A **customer-facing frontend is deliberately out of scope**: a real app's public
+UI is unpredictable (Blade, Livewire, Inertia, or a headless Nuxt/SPA), so the
+boilerplate ships the reusable *capability* rather than a throwaway view. Account
+logic is already presentation-agnostic — the Fortify actions in
+`app/Actions/Fortify`, the `App\Livewire\Concerns\ConfirmsPassword` trait, and
+Fortify's headless endpoints. A team building customer account screens (in any
+stack) reuses those; whether "users without a system role" are customers or
+something else is their business logic to decide, not the boilerplate's.
+
 ## Testing & dev tooling
 
 - **PHPUnit 11** (`tests/Feature/*`, `tests/Unit/*`) — all tests are plain

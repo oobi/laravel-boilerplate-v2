@@ -91,8 +91,7 @@ class TwoFactorAuthentication extends Component
 
     public function render(): View
     {
-        return view('livewire.profile.two-factor-authentication')
-            ->layout('layouts.public');
+        return view('livewire.profile.two-factor-authentication');
     }
 
     protected function dispatchConfirmedAction(string $action, array $arguments): void

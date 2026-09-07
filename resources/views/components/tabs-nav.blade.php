@@ -17,7 +17,7 @@
     - Example: <x-tabs-nav scrollable="true">{{ $slot }}</x-tabs-nav>
 --}}
 @props(['scrollable' => true])
-<div class="tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100">
+<div class="tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100 ui-island-shadow">
     @if ($scrollable)
         {{-- Mobile swipe hint --}}
         <div class="block sm:hidden text-center text-xs text-base-content/50 pt-3 px-4">

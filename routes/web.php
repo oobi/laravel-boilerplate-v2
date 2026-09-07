@@ -17,21 +17,17 @@ use Illuminate\Support\Facades\Route;
 // Public landing page — reachable by guests and authenticated users alike (see layouts.public).
 Route::get('/', Home::class)->name('home');
 
-// Any authenticated user can manage their own profile/security, regardless of system role.
-// The profile area is tabbed: /profile (info) and /profile/security (password + 2FA), one route per tab.
-Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::get('/profile', EditProfile::class)->name('profile.edit');
-    Route::get('/profile/password', EditPassword::class)->name('profile.password');
-
-    // Two-Factor tab. Each sensitive action is guarded by its own inline password prompt
-    // (see App\Livewire\Profile\TwoFactorAuthentication), so no route-level password.confirm is needed.
-    Route::get('/profile/two-factor', TwoFactorAuthentication::class)->name('profile.two-factor');
-});
-
 // Everything under /admin requires an active system role (e.g. /admin/dashboard, /admin/users) — route names keep their existing flat prefixes.
 Route::prefix('admin')->group(function (): void {
     Route::middleware(['auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])->group(function (): void {
         Route::get('/dashboard', Dashboard::class)->name('dashboard');
+
+        // Self-service account management for admin-panel users — rendered in the admin shell, one route per tab.
+        // A user without panel access has no account area here (403); a customer-facing frontend is out of scope
+        // for this boilerplate (see docs/architecture.md). Each 2FA action is guarded by its own inline password prompt.
+        Route::get('/profile', EditProfile::class)->name('profile.edit');
+        Route::get('/profile/password', EditPassword::class)->name('profile.password');
+        Route::get('/profile/two-factor', TwoFactorAuthentication::class)->name('profile.two-factor');
 
         Route::prefix('users')->name('users.')->group(function (): void {
             Route::get('/', ListUsers::class)->name('index');

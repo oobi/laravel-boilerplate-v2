@@ -25,7 +25,7 @@ class InactiveUserAccessTest extends TestCase
         $this->actingAs($user);
         $user->update(['active' => false]);
 
-        $this->get('/profile')
+        $this->get('/')
             ->assertRedirect('/login')
             ->assertSessionHasErrors('email');
 
@@ -52,7 +52,7 @@ class InactiveUserAccessTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get('/profile')
+            ->get('/')
             ->assertOk();
     }
 
@@ -114,7 +114,7 @@ class InactiveUserAccessTest extends TestCase
         $this->actingAs($user);
         $user->update(['active' => false]);
 
-        $this->get('/profile')
+        $this->get('/')
             ->assertOk();
     }
 
@@ -126,7 +126,7 @@ class InactiveUserAccessTest extends TestCase
         $sessionId = $this->startImpersonation($driver, $admin, $target);
         $target->update(['active' => false]);
 
-        $this->resumeSession($sessionId)->get('/profile')
+        $this->resumeSession($sessionId)->get('/admin/profile')
             ->assertRedirect('/login')
             ->assertSessionMissing('impersonated_by')
             ->assertSessionMissing('impersonator_guard')
@@ -203,7 +203,7 @@ class InactiveUserAccessTest extends TestCase
         $sessionId = session()->getId();
         $target->update(['active' => false]);
 
-        $this->resumeSession($sessionId)->get('/profile')->assertRedirect('/login')
+        $this->resumeSession($sessionId)->get('/')->assertRedirect('/login')
             ->assertCookieExpired($cookieName)
             ->assertSessionMissing('remember_web')
             ->assertSessionMissing('impersonated_by');
@@ -213,8 +213,8 @@ class InactiveUserAccessTest extends TestCase
 
     public function test_livewire_http_update_is_blocked_after_deactivation(): void
     {
-        $user = User::factory()->create(['first_name' => 'OriginalName']);
-        $page = $this->actingAs($user)->get('/profile')->assertOk();
+        $user = User::factory()->withPermission(SystemPermission::ACCESS_ADMIN_PANEL)->create(['first_name' => 'OriginalName']);
+        $page = $this->actingAs($user)->get('/admin/profile')->assertOk();
         $snapshot = Utils::extractAttributeDataFromHtml($page->getContent(), 'wire:snapshot');
         $payload = ['components' => [[
             'snapshot' => json_encode($snapshot),

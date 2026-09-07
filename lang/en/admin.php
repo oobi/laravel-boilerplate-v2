@@ -25,7 +25,7 @@ return [
     'first_name' => 'First Name',
     'last_name' => 'Last Name',
     'email' => 'Email',
-    'password' => 'Password',
+    'password' => 'Reset Password',
     'confirm_password' => 'Confirm Password',
     'confirm_password_prompt' => 'For your security, please confirm your password to continue.',
     'new_password' => 'New Password',
@@ -104,7 +104,7 @@ return [
     'profile_updated' => 'Profile updated successfully.',
     'password_updated' => 'Password updated successfully.',
 
-    'two_factor' => 'Two-Factor',
+    'two_factor' => 'Authentication',
     'two_factor_authentication' => 'Two Factor Authentication',
     'two_factor_enabled' => 'You have enabled two factor authentication.',
     'two_factor_finish_enabling' => 'Finish enabling two factor authentication.',
