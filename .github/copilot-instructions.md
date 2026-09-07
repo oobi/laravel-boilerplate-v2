@@ -12,6 +12,20 @@ conventions (read the rule file matching whatever path you're editing before
 you start). This file stays the source of truth for anything specific to
 *this* app's architecture.
 
+## Guiding principle — this is a boilerplate, so hold it to the highest bar
+
+Every choice here is inherited by every project started from it, so a shortcut
+taken once is a compromise shipped everywhere. Default to best practice, not the
+quickest path: code and features should be **secure** (authorize and validate at
+the boundary, no bypassable guards), **standards-compliant** (framework-idiomatic,
+follow the conventions in this repo rather than working around them),
+**accessible** (semantic markup, labels, focus and keyboard support, sufficient
+contrast), **mobile-friendly** (responsive, no reliance on hover, reachable
+without excessive scrolling), and **beautiful, considered UX** (no dead-ends,
+clear state, sensible defaults). When a proper solution costs more than a hack,
+pay for the proper solution — or raise the trade-off explicitly rather than
+quietly baking a compromise into the foundation.
+
 ## Where things live
 
 | You're adding... | Goes in | Docs |

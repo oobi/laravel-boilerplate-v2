@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire;
+namespace App\Livewire\Profile;
 
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 /**
- * Self-service "my profile" screen — updates the logged-in user's own name/
- * email/password/photo by delegating to the app's registered Fortify actions
- * (same validation/rules a real Fortify update-profile request would run).
+ * "My profile" — the Profile tab of the self-service account area. Updates the
+ * logged-in user's own name/email/photo by delegating to the app's registered
+ * Fortify actions (same validation/rules a real Fortify update-profile request
+ * would run). Password and two-factor management live on their own sibling tabs
+ * ({@see EditPassword}, {@see TwoFactorAuthentication}).
  */
 class EditProfile extends Component
 {
@@ -28,12 +29,6 @@ class EditProfile extends Component
     public string $email = '';
 
     public $photo = null;
-
-    public string $current_password = '';
-
-    public string $password = '';
-
-    public string $password_confirmation = '';
 
     public function mount(): void
     {
@@ -71,25 +66,9 @@ class EditProfile extends Component
             ->send();
     }
 
-    public function updatePassword(UpdatesUserPasswords $updater): void
-    {
-        $updater->update(Auth::user(), [
-            'current_password' => $this->current_password,
-            'password' => $this->password,
-            'password_confirmation' => $this->password_confirmation,
-        ]);
-
-        $this->reset('current_password', 'password', 'password_confirmation');
-
-        Notification::make()
-            ->title(__('admin.password_updated'))
-            ->success()
-            ->send();
-    }
-
     public function render(): View
     {
-        return view('livewire.edit-profile')
+        return view('livewire.profile.edit-profile')
             ->layout('layouts.public');
     }
 }

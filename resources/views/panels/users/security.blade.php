@@ -14,7 +14,6 @@
         <button
             type="button"
             wire:click="callPanelAction('security', 'force-disable-2fa')"
-            wire:confirm="{{ __('admin.force_disable_2fa_confirm') }}"
             class="btn btn-ghost btn-sm mt-2"
         >
             {{ __('admin.force_disable_2fa') }}

@@ -77,19 +77,54 @@ class ShowUserTest extends TestCase
             ->assertSee(__('admin.enabled'));
     }
 
-    public function test_admins_can_force_disable_a_users_two_factor_authentication(): void
+    public function test_admins_can_force_disable_a_users_two_factor_authentication_after_confirming_their_password(): void
     {
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->twoFactorEnabled()->create();
 
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])
-            ->call('callPanelAction', 'security', 'force-disable-2fa');
+            ->call('callPanelAction', 'security', 'force-disable-2fa')
+            ->assertSet('confirmingPassword', true)
+            ->set('confirmablePassword', 'password')
+            ->call('confirmPassword');
 
         $target->refresh();
         $this->assertNull($target->two_factor_secret);
         $this->assertNull($target->two_factor_recovery_codes);
         $this->assertNull($target->two_factor_confirmed_at);
+    }
+
+    public function test_force_disabling_two_factor_does_nothing_until_the_password_is_confirmed(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->twoFactorEnabled()->create();
+
+        // Clicking the button only opens the password prompt — it must not touch the user yet.
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->call('callPanelAction', 'security', 'force-disable-2fa')
+            ->assertSet('confirmingPassword', true);
+
+        $target->refresh();
+        $this->assertNotNull($target->two_factor_secret);
+        $this->assertNotNull($target->two_factor_confirmed_at);
+    }
+
+    public function test_force_disabling_two_factor_is_rejected_with_the_wrong_password(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->twoFactorEnabled()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->call('callPanelAction', 'security', 'force-disable-2fa')
+            ->set('confirmablePassword', 'wrong-password')
+            ->call('confirmPassword')
+            ->assertHasErrors('confirmablePassword');
+
+        $target->refresh();
+        $this->assertNotNull($target->two_factor_secret);
     }
 
     public function test_the_demo_team_memberships_panel_renders(): void

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Users;
 
 use App\Enums\SystemPermission;
+use App\Livewire\Concerns\ConfirmsPassword;
 use App\Models\User;
+use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
 use App\Support\Panels\Contracts\ShowPanel;
@@ -25,6 +27,7 @@ use Livewire\Component;
 
 class ShowUser extends Component implements HasSchemas
 {
+    use ConfirmsPassword;
     use InteractsWithSchemas;
 
     public User $user;
@@ -102,8 +105,34 @@ class ShowUser extends Component implements HasSchemas
             ->filter(fn (ShowPanel $panel): bool => $panel->region() === PanelRegion::from($region));
     }
 
-    /** Generic glue between a panel's own view (e.g. "force disable 2FA") and its action closure. */
+    /**
+     * Generic glue between a panel's own view (e.g. "force disable 2FA") and its
+     * action closure. Actions the panel flags via HasGuardedActions run only
+     * after the admin re-enters their password in the inline prompt.
+     */
     public function callPanelAction(string $panelKey, string $action): void
+    {
+        $callback = $this->resolvePanelAction($panelKey, $action);
+
+        if ($this->panelActionRequiresPassword($panelKey, $action)) {
+            $this->startConfirmingPassword('panelAction', [$panelKey, $action]);
+
+            return;
+        }
+
+        $callback($this->user);
+    }
+
+    protected function dispatchConfirmedAction(string $action, array $arguments): void
+    {
+        match ($action) {
+            'panelAction' => $this->resolvePanelAction($arguments[0], $arguments[1])($this->user),
+            default => abort(403),
+        };
+    }
+
+    /** @return \Closure(User): void */
+    private function resolvePanelAction(string $panelKey, string $action): \Closure
     {
         $panel = PanelRegistry::find('users.show', $panelKey, $this->user, Auth::user());
 
@@ -113,6 +142,14 @@ class ShowUser extends Component implements HasSchemas
 
         abort_unless($callback !== null, 404);
 
-        $callback($this->user);
+        return $callback;
+    }
+
+    private function panelActionRequiresPassword(string $panelKey, string $action): bool
+    {
+        $panel = PanelRegistry::find('users.show', $panelKey, $this->user, Auth::user());
+
+        return $panel instanceof HasGuardedActions
+            && in_array($action, $panel->guardedActions(), true);
     }
 }

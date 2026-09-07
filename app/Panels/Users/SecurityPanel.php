@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panels\Users;
 
 use App\Support\Panels\Concerns\HasPanelMetadata;
+use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
 use App\Support\Panels\Contracts\ShowPanel;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 
 /** Two-factor authentication status, with an admin "force disable" escape hatch. */
-class SecurityPanel implements HasPanelActions, ShowPanel
+class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
 {
     use HasPanelMetadata;
 
@@ -57,5 +58,11 @@ class SecurityPanel implements HasPanelActions, ShowPanel
                     ->send();
             },
         ];
+    }
+
+    /** Wiping another user's second factor demands the admin re-enter their own password first. */
+    public function guardedActions(): array
+    {
+        return ['force-disable-2fa'];
     }
 }

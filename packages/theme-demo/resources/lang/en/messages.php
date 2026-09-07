@@ -52,8 +52,45 @@ return [
     'filament_components_title' => 'Filament Components',
     'filament_components_description' => 'The same buttons, badges and icon-buttons as the daisyUI gallery, built with Filament\'s own components.',
 
-    'modals_daisy_title' => 'DaisyUI Modals',
-    'modals_daisy_description' => 'The app\'s one hand-rolled daisyUI modal — the "sudo" password prompt (<x-confirm-password-modal> driven by the ConfirmsPassword trait).',
+    'modals_daisy_title' => 'Modals & buttons',
+    'modals_daisy_description' => 'The design-system modal shell (<x-modal> / <x-confirm-modal>, built on the native <dialog> element) and the four semantic buttons.',
+
+    // Semantic buttons
+    'modals_daisy_buttons_heading' => 'Semantic buttons',
+    'modals_daisy_buttons_hint' => 'Reach for intent, not colour: action (affirmative), cancel (dismiss), danger (destructive/irreversible), warning (sensitive but reversible, e.g. impersonate).',
+
+    // Confirmation modals
+    'modals_daisy_confirm_heading' => 'Confirmation modals',
+    'modals_daisy_confirm_hint' => 'The same shell in each flavour. The flavour sets the icon, tint and the affirmative button; buttons are always cancel-left, action-right.',
+    'modals_daisy_delete_trigger' => 'Delete record',
+    'modals_daisy_delete_title' => 'Delete this record?',
+    'modals_daisy_delete_description' => 'This can\'t be undone. The record and its history are removed permanently.',
+    'modals_daisy_delete_submit' => 'Yes, delete it',
+    'modals_daisy_delete_done' => 'Deleted — the record is gone.',
+    'modals_daisy_impersonate_trigger' => 'Impersonate user',
+    'modals_daisy_impersonate_title' => 'Impersonate this user?',
+    'modals_daisy_impersonate_description' => 'You\'ll act as them until you stop. Sensitive, but nothing is destroyed.',
+    'modals_daisy_impersonate_submit' => 'Impersonate',
+    'modals_daisy_impersonate_done' => 'Impersonating — reversible at any time.',
+    'modals_daisy_info_trigger' => 'Show info modal',
+    'modals_daisy_info_title' => 'Heads up',
+    'modals_daisy_info_description' => 'An informational confirmation — neutral, affirmative action.',
+    'modals_daisy_success_trigger' => 'Show success modal',
+    'modals_daisy_success_title' => 'All done',
+    'modals_daisy_success_description' => 'A success-flavoured confirmation.',
+    'modals_daisy_acknowledged' => 'Acknowledged.',
+
+    // Modal with a form
+    'modals_daisy_form_heading' => 'Modal with a form',
+    'modals_daisy_form_hint' => 'Pass a submit handler and the shell wraps the body in a <form>; the footer submit posts it.',
+    'modals_daisy_form_trigger' => 'Archive with a reason',
+    'modals_daisy_form_title' => 'Archive with a reason',
+    'modals_daisy_form_reason' => 'Reason',
+    'modals_daisy_form_submit' => 'Submit',
+    'modals_daisy_archive_done' => 'Archived — reason: :reason',
+
+    // Password (sudo) confirmation
+    'modals_daisy_sudo_heading' => 'Password confirmation',
     'modals_daisy_hint' => 'A guarded action opens a password prompt and only runs once you re-enter your own password. Enter your current password to see it complete.',
     'modals_daisy_trigger_default' => 'Confirm with password',
     'modals_daisy_trigger_custom' => 'Confirm with custom copy',

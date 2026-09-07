@@ -1,14 +1,12 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Profile;
 
-use App\Livewire\EditProfile;
+use App\Livewire\Profile\EditProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -44,20 +42,6 @@ class EditProfileTest extends TestCase
         $this->assertSame('Updated', $user->first_name);
         $this->assertSame('Name', $user->last_name);
         $this->assertSame('updated@example.com', $user->email);
-    }
-
-    public function test_users_can_update_their_password(): void
-    {
-        $user = User::factory()->create();
-
-        Livewire::actingAs($user)
-            ->test(EditProfile::class)
-            ->set('current_password', 'password')
-            ->set('password', 'new-password')
-            ->set('password_confirmation', 'new-password')
-            ->call('updatePassword', app(UpdatesUserPasswords::class));
-
-        $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
     }
 
     public function test_users_can_upload_a_profile_photo(): void

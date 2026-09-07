@@ -8,22 +8,24 @@ use App\Livewire\Admin\Users\CreateUser;
 use App\Livewire\Admin\Users\EditUser;
 use App\Livewire\Admin\Users\ListUsers;
 use App\Livewire\Admin\Users\ShowUser;
-use App\Livewire\EditProfile;
 use App\Livewire\Home;
-use App\Livewire\TwoFactorAuthentication;
+use App\Livewire\Profile\EditPassword;
+use App\Livewire\Profile\EditProfile;
+use App\Livewire\Profile\TwoFactorAuthentication;
 use Illuminate\Support\Facades\Route;
 
 // Public landing page — reachable by guests and authenticated users alike (see layouts.public).
 Route::get('/', Home::class)->name('home');
 
 // Any authenticated user can manage their own profile/security, regardless of system role.
+// The profile area is tabbed: /profile (info) and /profile/security (password + 2FA), one route per tab.
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/profile', EditProfile::class)->name('profile.edit');
+    Route::get('/profile/password', EditPassword::class)->name('profile.password');
 
-    // Re-confirming the password guards access to enabling/disabling 2FA and viewing recovery codes.
-    Route::get('/profile/two-factor-authentication', TwoFactorAuthentication::class)
-        ->middleware('password.confirm')
-        ->name('two-factor.show');
+    // Two-Factor tab. Each sensitive action is guarded by its own inline password prompt
+    // (see App\Livewire\Profile\TwoFactorAuthentication), so no route-level password.confirm is needed.
+    Route::get('/profile/two-factor', TwoFactorAuthentication::class)->name('profile.two-factor');
 });
 
 // Everything under /admin requires an active system role (e.g. /admin/dashboard, /admin/users) — route names keep their existing flat prefixes.

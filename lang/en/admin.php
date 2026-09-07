@@ -15,6 +15,8 @@ return [
     'back_to_users' => 'Back to Users',
     'you' => 'You',
     'cancel' => 'Cancel',
+    'confirm' => 'Confirm',
+    'close' => 'Close',
     'save_changes' => 'Save Changes',
     'delete' => 'Delete',
 
@@ -25,6 +27,7 @@ return [
     'email' => 'Email',
     'password' => 'Password',
     'confirm_password' => 'Confirm Password',
+    'confirm_password_prompt' => 'For your security, please confirm your password to continue.',
     'new_password' => 'New Password',
     'current_password' => 'Current Password',
     'status' => 'Status',
@@ -93,6 +96,7 @@ return [
     'super_admin_revoked' => 'Super admin access revoked.',
 
     'my_profile' => 'My Profile',
+    'profile' => 'Profile',
     'profile_information' => 'Profile Information',
     'select_new_photo' => 'Select New Photo',
     'remove_photo' => 'Remove Photo',
@@ -100,9 +104,8 @@ return [
     'profile_updated' => 'Profile updated successfully.',
     'password_updated' => 'Password updated successfully.',
 
+    'two_factor' => 'Two-Factor',
     'two_factor_authentication' => 'Two Factor Authentication',
-    'two_factor_authentication_description' => 'Add additional security to your account using two factor authentication.',
-    'two_factor_manage' => 'Manage Two Factor Authentication',
     'two_factor_enabled' => 'You have enabled two factor authentication.',
     'two_factor_finish_enabling' => 'Finish enabling two factor authentication.',
     'two_factor_not_enabled' => 'You have not enabled two factor authentication.',

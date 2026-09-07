@@ -36,4 +36,6 @@
             @endforeach
         </div>
     </div>
+
+    <x-confirm-password-modal />
 </div>
