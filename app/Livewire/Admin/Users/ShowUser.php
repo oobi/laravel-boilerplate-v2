@@ -8,6 +8,7 @@ use App\Enums\SystemPermission;
 use App\Livewire\Concerns\ConfirmsPassword;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Filament\AdminAction;
 use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
@@ -26,7 +27,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -113,11 +113,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
      */
     public function impersonateAction(): Action
     {
-        return Action::make('impersonate')
+        return AdminAction::make('impersonate')
             ->label(__('admin.impersonate_user'))
             ->icon('heroicon-o-finger-print')
-            ->outlined()
-            ->size(Size::Small)
             ->color(DaisyColor::WARNING->toFilamentColor())
             ->visible(fn (): bool => Gate::allows('impersonate', $this->user))
             ->url(fn (): string => route('users.impersonate', $this->user->id));
@@ -134,11 +132,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
      */
     public function manageRolesAction(): Action
     {
-        return Action::make('manageRoles')
+        return AdminAction::make('manageRoles')
             ->label(__('admin.manage_roles'))
             ->icon('heroicon-o-shield-check')
-            ->outlined()
-            ->size(Size::Small)
             // Filament defaults schema modals to 4xl; a role checklist doesn't
             // need that. A dev with a very long role list can widen it again.
             // (Sticky header/footer is applied globally in AppServiceProvider.)
@@ -196,11 +192,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
     public function resetPasswordAction(): Action
     {
         if (Gate::allows('updatePasswordDirectly', $this->user)) {
-            return Action::make('resetPassword')
+            return AdminAction::make('resetPassword')
                 ->label(__('admin.reset_password'))
                 ->icon('heroicon-o-key')
-                ->outlined()
-                ->size(Size::Small)
                 // Two stacked password fields don't need Filament's default 4xl.
                 ->modalWidth(Width::Medium)
                 ->visible(fn (): bool => Gate::allows('updatePasswordDirectly', $this->user))
@@ -236,11 +230,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
                 });
         }
 
-        return Action::make('resetPassword')
+        return AdminAction::make('resetPassword')
             ->label(__('admin.send_password_reset_link'))
             ->icon('heroicon-o-key')
-            ->outlined()
-            ->size(Size::Small)
             ->visible(fn (): bool => Gate::allows('sendPasswordResetLink', $this->user))
             ->requiresConfirmation()
             ->action(function (): void {

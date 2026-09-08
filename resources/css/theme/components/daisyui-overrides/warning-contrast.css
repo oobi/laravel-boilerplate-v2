@@ -31,6 +31,23 @@
     --btn-border: color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
 }
 
+/*
+| The gold warning fill/edge is only ~1.76:1 against the white page (below the
+| 3:1 UI-contrast bar), so a solid or outline warning control can float. Give
+| those a dark-amber (--color-warning-soft) BORDER for definition while keeping
+| the bright gold fill and its high-contrast dark label. Soft keeps its own faint
+| tinted ring (rule above wins by specificity); ghost stays borderless.
+*/
+.btn-warning:not(.btn-soft):not(.btn-ghost) {
+    --btn-border: var(--color-warning-soft);
+}
+
+/* Filament's outlined button rings on --warning-600 (= raw gold); repoint just
+   its ring to the dark amber so the impersonate-style outline button reads. */
+.fi-btn.fi-outlined.fi-color-warning {
+    --tw-ring-color: var(--color-warning-soft);
+}
+
 .badge-warning.badge-soft,
 .badge-warning.badge-outline,
 .badge-warning.badge-ghost {
@@ -39,6 +56,12 @@
 
 .badge-warning.badge-soft {
     border-color: color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
+}
+
+/* Solid & outline warning badges get the same defined edge (soft rule above
+   wins for soft; ghost is excluded so it stays borderless). */
+.badge-warning:not(.badge-soft):not(.badge-ghost) {
+    border-color: var(--color-warning-soft);
 }
 
 .alert-warning.alert-soft {

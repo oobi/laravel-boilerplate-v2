@@ -28,21 +28,15 @@
         </div>
     </x-card>
 
-    {{-- Badges --}}
+    {{-- Badges. No size row: unlike buttons, Filament badges ship no lg/xl
+         styles and this app normalises them to one box (see filament-badge.css,
+         which pins table-column badges to the <x-badge> size) — so a size scale
+         would misrepresent them. --}}
     <x-card :title="__('Badges')">
         <div class="flex flex-wrap gap-2">
             @foreach ($filamentColors as $label => $color)
                 <x-filament::badge :color="$color">{{ ucfirst($label) }}</x-filament::badge>
             @endforeach
-        </div>
-
-        <div>
-            <div class="ui-subtle mb-1">{{ __('Sizes') }}</div>
-            <div class="flex flex-wrap items-center gap-2">
-                @foreach ($sizes as $size)
-                    <x-filament::badge color="primary" :size="$size">{{ strtoupper($size) }}</x-filament::badge>
-                @endforeach
-            </div>
         </div>
     </x-card>
 

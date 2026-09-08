@@ -15,6 +15,9 @@
         display: flex;
         align-items: flex-start;
         gap: 0.75rem;
+        /* Soft border on all sides (shared --soft-ring-strength, like the
+           badges/buttons), with the signature 4px accent on the leading edge. */
+        border: 1px solid color-mix(in oklab, var(--ui-banner-color, var(--color-base-300)) var(--soft-ring-strength), transparent);
         border-inline-start: 4px solid var(--ui-banner-color, var(--color-base-300));
         border-radius: var(--radius-box, 0.5rem);
         padding: 1rem;

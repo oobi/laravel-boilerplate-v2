@@ -26,10 +26,17 @@
   --color-accent-content: oklch(100% 0 0);
   --color-neutral: #4a5565;
   --color-neutral-content: oklch(100% 0 0);
-  --color-info: #0284c7;
+  /* info/success darkened one step (sky-700 / green-700) so white text on the
+     solid variant and the raw-colour outline/ghost text both clear AA 4.5 on
+     white — the 600 shades only reached 4.10 / 3.30. Soft stays comfortable. */
+  --color-info: #0369a1;
   --color-info-content: oklch(100% 0 0);
-  --color-success: #16a34a;
+  --color-success: #15803d;
   --color-success-content: oklch(100% 0 0);
+  /* Kept as a bright gold for impact (dark label text on it is ~10:1). The gold
+     fill itself is only ~1.76:1 against the white page, so warning-contrast.css
+     gives solid/outline warning controls a dark-amber (--color-warning-soft)
+     BORDER for the 3:1 UI-contrast edge instead of muddying the fill. */
   --color-warning: #fcb700;
   --color-warning-content: oklch(20% 0.02 90);
   --color-warning-soft: #a16207;
@@ -48,7 +55,7 @@
   --soft-fg-mix: black;
   --soft-bg-mix: var(--color-base-100);
   --soft-fg-strength: 83%;
-  --soft-ring-strength: 8%;
+  --soft-ring-strength: 30%;
   --soft-lighten: 0%;
 }
 
@@ -66,7 +73,8 @@
   --color-primary-content: oklch(100% 0 0);
   --color-secondary: #4a5c96;
   --color-secondary-content: oklch(100% 0 0);
-  --color-accent: #a855f7;
+  /* purple-600, not 500: white text on solid accent needs 4.5 (500 gave 3.96). */
+  --color-accent: #9333ea;
   --color-accent-content: oklch(100% 0 0);
   --color-neutral: #6b7280;
   --color-neutral-content: oklch(100% 0 0);
@@ -77,7 +85,9 @@
   --color-warning: #eab308;
   --color-warning-content: oklch(20% 0.02 90);
   --color-warning-soft: #facc15;
-  --color-error: #ef4444;
+  /* red-600, not 500: white text on solid error/danger needs 4.5 (500 gave 3.76),
+     still clears 3:1 against the dark base. */
+  --color-error: #dc2626;
   --color-error-content: oklch(100% 0 0);
 
   --radius-selector: 0.5rem;
@@ -95,7 +105,7 @@
   --soft-fg-mix: white;
   --soft-bg-mix: transparent;
   --soft-fg-strength: 60%;
-  --soft-ring-strength: 35%;
+  --soft-ring-strength: 50%;
   --soft-lighten: 45%;
 }
 

@@ -18,3 +18,28 @@
     --btn-soft-bg: var(--soft-bg-mix);
     --btn-border: color-mix(in oklab, var(--soft-base) var(--soft-ring-strength), transparent);
 }
+
+/*
+|--------------------------------------------------------------------------
+| `.btn-outline` / `.btn-ghost` / `.btn-dash` text — dark-mode contrast
+|--------------------------------------------------------------------------
+| These read TEXT in the raw `--btn-color` (daisyUI default). Fine on the light
+| page, but too dark on the dark base for the darker hues — a neutral outline
+| cancel/back button lands ~3.6:1, a primary outline ~3.3:1 (below AA 4.5). In
+| DARK MODE ONLY, lighten their text toward white exactly as `.btn-soft` does
+| (via the shared `--soft-*` tokens, which already flip per theme), leaving
+| light mode's vivid brand-coloured outline text untouched. `.btn-warning` keeps
+| its own bespoke tone from warning-contrast.css, so it's excluded here.
+*/
+.btn-outline:not(.btn-warning),
+.btn-dash:not(.btn-warning),
+.btn-ghost:not(.btn-warning) {
+    @variant dark {
+        --soft-base: color-mix(
+            in oklab,
+            var(--btn-color, var(--color-base-content)) calc(100% - var(--soft-lighten)),
+            white
+        );
+        --btn-rest-fg: color-mix(in oklab, var(--soft-base) var(--soft-fg-strength), var(--soft-fg-mix));
+    }
+}

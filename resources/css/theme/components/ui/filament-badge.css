@@ -16,6 +16,38 @@
 
 /*
 |--------------------------------------------------------------------------
+| Match daisyUI's soft-badge text + border exactly
+|--------------------------------------------------------------------------
+| Two drifts from `<x-badge>`:
+| 1. TEXT — Filament's badge picks its text shade by a runtime contrast calc
+|    (BadgeComponent: slot('text', surface: color-50, fallback: 900)), which
+|    lands on different shades per colour (e.g. accent on 600, not 700). Pin it
+|    to the 700 shade (light) / 300 (dark) — the 83%-black / lightened tone
+|    daisyUI's `.badge-soft` uses — so both read identically.
+| 2. BORDER — Filament's default coloured ring is a faint 10%/30%; repoint it to
+|    the shared `--soft-ring-strength` so the edge matches too.
+*/
+.fi-badge.fi-color {
+    --text: var(--color-700);
+    --tw-ring-color: color-mix(in oklab, var(--color-600) var(--soft-ring-strength), transparent);
+
+    @variant dark {
+        --dark-text: var(--color-300);
+        --tw-ring-color: color-mix(in oklab, var(--color-400) var(--soft-ring-strength), transparent);
+    }
+}
+
+/* Warning is the exception the whole theme makes: its light/yellow hue needs
+   the bespoke dark-amber `--color-warning-soft` (flips per theme) for BOTH text
+   and border, matching daisyUI's warning soft badge, not the raw gold shades. */
+.fi-badge.fi-color-warning {
+    --text: var(--color-warning-soft);
+    --dark-text: var(--color-warning-soft);
+    --tw-ring-color: color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
+}
+
+/*
+|--------------------------------------------------------------------------
 | Table/infolist badge columns — same box as daisyUI's (unsized) `.badge`
 |--------------------------------------------------------------------------
 | `->badge()` table columns always render at Filament's "sm" size (see
