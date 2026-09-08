@@ -7,13 +7,11 @@
         {{ $this->form }}
 
         <div class="mt-6 flex items-center gap-4">
-            <x-filament::button type="submit">
+            <x-button.action type="submit">
                 {{ __('admin.add_role') }}
-            </x-filament::button>
+            </x-button.action>
 
-            <x-button color="gray" variant="ghost" href="{{ route('roles.index') }}">
-                {{ __('admin.cancel') }}
-            </x-button>
+            <x-button.cancel href="{{ route('roles.index') }}" />
         </div>
     </form>
 </div>

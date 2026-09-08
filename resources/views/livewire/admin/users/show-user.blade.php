@@ -4,20 +4,20 @@
     <x-page-header :title="$user->name">
         <x-slot:actions>
             @if ($this->canImpersonateUser())
-                <x-button color="neutral" variant="ghost" href="{{ route('users.impersonate', $user->id) }}">
+                <x-button.warning href="{{ route('users.impersonate', $user->id) }}">
                     {{ __('admin.impersonate_user') }}
-                </x-button>
+                </x-button.warning>
             @endif
 
             @if ($this->canEditUser())
-                <x-button href="{{ route('users.edit', $user) }}">
+                <x-button.action href="{{ route('users.edit', $user) }}">
                     {{ __('admin.edit_user') }}
-                </x-button>
+                </x-button.action>
             @endif
 
-            <x-button color="neutral" variant="ghost" href="{{ route('users.index') }}">
+            <x-button.back href="{{ route('users.index') }}">
                 {{ __('admin.back_to_users') }}
-            </x-button>
+            </x-button.back>
         </x-slot:actions>
     </x-page-header>
 

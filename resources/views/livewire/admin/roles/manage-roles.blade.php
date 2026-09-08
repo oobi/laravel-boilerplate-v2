@@ -3,7 +3,7 @@
 
     <x-page-header :title="__('admin.roles')" :description="__('admin.roles_description')">
         <x-slot:actions>
-            <x-button color="gray" variant="ghost" href="{{ route('roles.create') }}">
+            <x-button href="{{ route('roles.create') }}">
                 {{ __('admin.add_role') }}
             </x-button>
 
@@ -28,9 +28,9 @@
             {{ $this->form }}
 
             <div class="mt-6 flex items-center gap-4">
-                <x-filament::button type="submit">
+                <x-button.action type="submit">
                     {{ __('admin.save_changes') }}
-                </x-filament::button>
+                </x-button.action>
             </div>
         </form>
     @else

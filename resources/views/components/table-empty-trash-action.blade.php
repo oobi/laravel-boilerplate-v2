@@ -8,10 +8,11 @@
     'action' => 'emptyTrash',
 ])
 
-<button
+<x-button.danger
     type="button"
+    variant="outline"
     wire:click="mountAction('{{ $action }}')"
-    {{ $attributes->class(['btn btn-outline btn-error']) }}
+    {{ $attributes }}
 >
     {{ $slot }}
-</button>
+</x-button.danger>

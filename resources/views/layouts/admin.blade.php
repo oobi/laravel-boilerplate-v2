@@ -66,17 +66,16 @@
                         <x-application-logo class="min-w-0 flex-1" />
                         <div class="flex flex-shrink-0 items-center gap-1">
                             {{-- Pin button (desktop only) — pins the sidebar as a persistent column --}}
-                            <button
-                                type="button"
+                            <x-button.icon
                                 @click="togglePin(); sidebarDrawerOpen = false"
-                                class="btn btn-ghost btn-square btn-sm hidden md:inline-flex"
+                                class="hidden md:inline-flex"
                                 title="{{ __('Pin sidebar') }}"
                             >
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M81.3 47.1L64.3 30.1L30.4 64L47.4 81L559.4 593L576.4 610L610.3 576.1L593.3 559.1L450.2 416L512.2 416C512.2 399.8 510.2 383.7 506.4 368C495.7 323.6 470.7 282.7 436.8 253.4L427.4 112L480.2 112L480.2 64L166 64L213 111L208.8 174.6L81.3 47.1zM253.9 219.7L261.1 112L379.3 112L388.9 256.6L390.2 276.6L405.4 289.7C429 310.2 447 337.9 456.5 368L402.1 368L253.8 219.7zM314.3 416L266.3 368L183.7 368C189.9 348.5 199.6 330 212.1 313.8L178 279.7C157.1 305.2 141.7 335.7 133.9 368C130.1 383.7 128.1 399.8 128.1 416L314.3 416zM296.1 584L296.1 608L344.1 608L344.1 464L296.1 464L296.1 584z"/></svg>
-                            </button>
-                            <button type="button" class="btn btn-ghost btn-square btn-sm" @click="sidebarDrawerOpen = false" aria-label="{{ __('Close menu') }}">
+                            </x-button.icon>
+                            <x-button.icon @click="sidebarDrawerOpen = false" aria-label="{{ __('Close menu') }}">
                                 <x-heroicon-o-x-mark class="h-5 w-5" />
-                            </button>
+                            </x-button.icon>
                         </div>
                     </div>
 
@@ -93,16 +92,13 @@
                     <div class="flex h-16 flex-shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
                         {{-- Unpin button — switches the sidebar to drawer mode --}}
-                        <x-button
+                        <x-button.icon
                             @click="togglePin()"
-                            color="primary"
-                            variant="ghost"
-                            size="sm"
-                            class="btn-square flex-shrink-0"
+                            class="flex-shrink-0"
                             title="{{ __('Unpin sidebar') }}"
                         >
                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M184 64C170.7 64 160 74.7 160 88C160 101.3 170.7 112 184 112L214.2 112L204 250.2C186.7 262.6 169.8 279.3 156.5 298.2C140.5 320.7 128 348.5 128 377.7C128 398.8 145.2 416 166.3 416L473.6 416C494.8 416 511.9 398.8 511.9 377.7C511.9 348.5 499.4 320.7 483.4 298.2C470 279.3 453.2 262.7 435.9 250.2L425.8 112L456 112C469.3 112 480 101.3 480 88C480 74.7 469.3 64 456 64L184 64zM377.7 112L388.2 253.8L389.9 276.1L408.1 289.2C424.2 300.8 437.4 315.5 448.5 332C455.4 342.8 461.5 355.3 463.2 368.1L176.8 368C179.3 352.7 186.7 338.5 195.6 325.9C205.6 311.8 218.5 298.8 232 289.1L250.2 276L251.9 253.7L262.4 111.9L377.8 111.9zM296 584C296 597.3 306.7 608 320 608C333.3 608 344 597.3 344 584L344 464L296 464L296 584z"/></svg>
-                        </x-button>
+                        </x-button.icon>
                     </div>
 
                     @include('layouts.partials.admin-sidebar-nav')
@@ -129,13 +125,13 @@
                     />
 
                     {{-- Mobile menu button --}}
-                    <button type="button" class="btn btn-ghost btn-square btn-sm md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
+                    <x-button.icon class="md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
                         <x-heroicon-o-bars-3 class="h-5 w-5" />
-                    </button>
+                    </x-button.icon>
                     {{-- Desktop menu button — visible when the sidebar is unpinned --}}
-                    <button type="button" x-show="!sidebarPinned" x-cloak class="btn btn-ghost btn-square btn-sm hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
+                    <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
                         <x-heroicon-o-bars-3 class="h-5 w-5" />
-                    </button>
+                    </x-button.icon>
 
                     <x-breadcrumbs />
 

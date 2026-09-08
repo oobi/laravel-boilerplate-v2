@@ -67,14 +67,14 @@
 >
     <{{ $submit ? 'form' : 'div' }} @if ($submit) wire:submit="{{ $submit }}" @endif class="relative flex flex-col gap-4 p-6">
         @if ($closeable)
-            <button
-                type="button"
+            <x-button.icon
+                circle
                 x-on:click="open = false"
-                class="btn btn-ghost btn-sm btn-circle absolute end-2 top-2"
+                class="absolute end-2 top-2"
                 aria-label="{{ __('admin.close') }}"
             >
                 <x-dynamic-component component="heroicon-o-x-mark" class="h-5 w-5" />
-            </button>
+            </x-button.icon>
         @endif
 
         @if ($resolvedIcon)

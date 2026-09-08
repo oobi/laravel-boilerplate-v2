@@ -26,7 +26,7 @@
         </fieldset>
 
         <div class="flex justify-end">
-            <x-button type="submit">{{ __('Confirm') }}</x-button>
+            <x-button.action type="submit">{{ __('Confirm') }}</x-button.action>
         </div>
     </form>
 @endsection

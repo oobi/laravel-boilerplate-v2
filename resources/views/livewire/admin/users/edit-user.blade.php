@@ -22,13 +22,11 @@
         {{ $this->form }}
 
         <div class="mt-6 flex items-center gap-4">
-            <x-filament::button type="submit">
+            <x-button.action type="submit">
                 {{ __('admin.save_changes') }}
-            </x-filament::button>
+            </x-button.action>
 
-            <x-button color="gray" variant="ghost" href="{{ route('users.show', $user) }}">
-                {{ __('admin.cancel') }}
-            </x-button>
+            <x-button.cancel href="{{ route('users.show', $user) }}" />
         </div>
     </form>
 

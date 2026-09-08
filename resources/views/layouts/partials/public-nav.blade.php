@@ -27,9 +27,10 @@
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="btn btn-outline btn-sm">
+                    <x-button color="neutral" variant="ghost" size="sm" type="submit">
+                        <x-heroicon-o-arrow-right-on-rectangle class="size-4" />
                         {{ __('Log out') }}
-                    </button>
+                    </x-button>
                 </form>
             @else
                 <a href="{{ route('login') }}" class="btn btn-ghost btn-sm">

@@ -44,7 +44,7 @@
         <div class="flex items-center justify-between">
             <a class="link link-hover text-sm" href="{{ route('login') }}">{{ __('Already registered?') }}</a>
 
-            <x-button type="submit">{{ __('Register') }}</x-button>
+            <x-button.action type="submit">{{ __('Register') }}</x-button.action>
         </div>
     </form>
 @endsection

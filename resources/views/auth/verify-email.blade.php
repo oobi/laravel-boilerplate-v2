@@ -16,12 +16,15 @@
     <div class="flex items-center justify-between">
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf
-            <x-button type="submit">{{ __('Resend Verification Email') }}</x-button>
+            <x-button.action type="submit">{{ __('Resend Verification Email') }}</x-button.action>
         </form>
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="btn btn-ghost">{{ __('Log Out') }}</button>
+            <x-button color="neutral" variant="ghost" type="submit">
+                <x-heroicon-o-arrow-right-on-rectangle class="size-4" />
+                {{ __('Log Out') }}
+            </x-button>
         </form>
     </div>
 @endsection

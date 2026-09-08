@@ -42,7 +42,7 @@
                 document.getElementById('recovery-code-text').classList.toggle('hidden');
             ">{{ __('Use a recovery code') }}</button>
 
-            <x-button type="submit">{{ __('Log in') }}</x-button>
+            <x-button.action type="submit">{{ __('Log in') }}</x-button.action>
         </div>
     </form>
 @endsection

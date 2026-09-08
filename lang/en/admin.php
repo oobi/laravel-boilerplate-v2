@@ -14,6 +14,7 @@ return [
     'edit_user' => 'Edit User',
     'back_to_users' => 'Back to Users',
     'you' => 'You',
+    'back' => 'Back',
     'cancel' => 'Cancel',
     'confirm' => 'Confirm',
     'close' => 'Close',

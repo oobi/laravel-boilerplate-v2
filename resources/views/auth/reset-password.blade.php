@@ -34,7 +34,7 @@
         </fieldset>
 
         <div class="flex justify-end">
-            <x-button type="submit">{{ __('Reset Password') }}</x-button>
+            <x-button.action type="submit">{{ __('Reset Password') }}</x-button.action>
         </div>
     </form>
 @endsection

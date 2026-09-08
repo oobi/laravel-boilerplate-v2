@@ -76,13 +76,13 @@
                                 <x-button.cancel type="button" wire:click="cancelSetup" />
                             @else
                                 @if ($showingRecoveryCodes)
-                                    <x-button type="button" wire:click="regenerateRecoveryCodes" color="neutral" variant="outline">
+                                    <x-button.secondary type="button" wire:click="regenerateRecoveryCodes">
                                         {{ __('admin.two_factor_regenerate_recovery_codes') }}
-                                    </x-button>
+                                    </x-button.secondary>
                                 @else
-                                    <x-button type="button" wire:click="showRecoveryCodes" color="neutral" variant="outline">
+                                    <x-button.secondary type="button" wire:click="showRecoveryCodes">
                                         {{ __('admin.two_factor_show_recovery_codes') }}
-                                    </x-button>
+                                    </x-button.secondary>
                                 @endif
 
                                 <x-button.danger type="button" wire:click="disableTwoFactorAuthentication">

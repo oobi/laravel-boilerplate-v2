@@ -11,12 +11,14 @@
     </div>
 
     @if ($user->two_factor_confirmed_at)
-        <button
+        <x-button.danger
             type="button"
             wire:click="callPanelAction('security', 'force-disable-2fa')"
-            class="btn btn-ghost btn-sm mt-2"
+            variant="outline"
+            size="sm"
+            class="mt-2"
         >
             {{ __('admin.force_disable_2fa') }}
-        </button>
+        </x-button.danger>
     @endif
 </x-card>

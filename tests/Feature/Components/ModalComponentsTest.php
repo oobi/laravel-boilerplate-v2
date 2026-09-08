@@ -23,6 +23,35 @@ class ModalComponentsTest extends TestCase
             ->assertSee(__('admin.cancel'));
     }
 
+    public function test_back_button_is_a_neutral_ghost_link_defaulting_its_label(): void
+    {
+        $this->blade('<x-button.back href="/users" />')
+            ->assertSee('btn-neutral', false)
+            ->assertSee('btn-ghost', false)
+            ->assertSee('<a href="/users"', false)
+            ->assertSee(__('admin.back'));
+    }
+
+    public function test_secondary_button_is_a_neutral_outline(): void
+    {
+        $this->blade('<x-button.secondary>Show codes</x-button.secondary>')
+            ->assertSee('btn-neutral', false)
+            ->assertSee('btn-outline', false)
+            ->assertSee('Show codes');
+    }
+
+    public function test_icon_button_is_a_ghost_square_by_default_and_circle_on_request(): void
+    {
+        $this->blade('<x-button.icon aria-label="Close">x</x-button.icon>')
+            ->assertSee('btn-ghost', false)
+            ->assertSee('btn-square', false)
+            ->assertSee('aria-label="Close"', false);
+
+        $this->blade('<x-button.icon circle aria-label="Close">x</x-button.icon>')
+            ->assertSee('btn-circle', false)
+            ->assertDontSee('btn-square', false);
+    }
+
     public function test_modal_renders_a_native_dialog_with_its_title(): void
     {
         $this->blade('<x-modal wire:model="open" :title="$title" />', ['title' => 'Are you sure?'])

@@ -46,7 +46,7 @@
                 <a class="link link-hover text-sm" href="{{ route('register') }}">{{ __('Need an account?') }}</a>
             @endif
 
-            <x-button type="submit" class="ml-auto">{{ __('Log in') }}</x-button>
+            <x-button.action type="submit" class="ml-auto">{{ __('Log in') }}</x-button.action>
         </div>
     </form>
 @endsection
