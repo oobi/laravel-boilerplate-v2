@@ -12,7 +12,7 @@ UI components are anonymous Blade components using `@props` — do not add class
 Prefer the five intent components over `<x-button color="…">` in app markup — the intent, not the colour, is the API, and it keeps every instance identical. This includes **form submits** (`<x-button.action type="submit">`, never a bare `<x-button>` or `<x-filament::button>`). See [docs/design-system.md](../../docs/design-system.md).
 
 - `<x-button.action>` — affirmative do/add/save/submit/confirm (primary). The default.
-- `<x-button.secondary>` — a non-primary alternative next to an action (neutral outline): show/regenerate recovery codes, an alternate CTA.
+- `<x-button.secondary>` — a non-primary alternative next to an action (solid **secondary** colour — action→primary, secondary→secondary; distinct from `.cancel`'s neutral outline): show/regenerate recovery codes, an alternate CTA.
 - `<x-button.cancel>` — dismiss/abort a form or modal (neutral outline). Defaults its label to "Cancel".
 - `<x-button.back>` — navigate back to the previous screen (neutral ghost + leading arrow, one step below `.cancel`). Defaults its label to "Back"; usually given an `href`.
 - `<x-button.danger>` — destructive or irreversible: delete, force-delete, purge, force-disable 2FA, suspend, revoke. **Not just "delete".**

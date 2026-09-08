@@ -32,11 +32,11 @@ class ModalComponentsTest extends TestCase
             ->assertSee(__('admin.back'));
     }
 
-    public function test_secondary_button_is_a_neutral_outline(): void
+    public function test_secondary_button_is_a_solid_secondary_colour_distinct_from_cancel(): void
     {
         $this->blade('<x-button.secondary>Show codes</x-button.secondary>')
-            ->assertSee('btn-neutral', false)
-            ->assertSee('btn-outline', false)
+            ->assertSee('btn-secondary', false)
+            ->assertDontSee('btn-outline', false)
             ->assertSee('Show codes');
     }
 

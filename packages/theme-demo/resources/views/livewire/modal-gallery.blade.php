@@ -3,18 +3,6 @@
 <div class="flex flex-col gap-6">
     <x-page-header :title="__('theme-demo::messages.modals_daisy_title')" :description="__('theme-demo::messages.modals_daisy_description')" />
 
-    {{-- Semantic buttons --}}
-    <x-card :title="__('theme-demo::messages.modals_daisy_buttons_heading')" bodyClass="gap-4">
-        <p class="ui-subtle text-sm">{{ __('theme-demo::messages.modals_daisy_buttons_hint') }}</p>
-
-        <div class="flex flex-wrap items-center gap-3">
-            <x-button.action>{{ __('admin.save_changes') }}</x-button.action>
-            <x-button.warning>{{ __('admin.impersonate_user') }}</x-button.warning>
-            <x-button.danger>{{ __('admin.delete') }}</x-button.danger>
-            <x-button.cancel />
-        </div>
-    </x-card>
-
     {{-- Confirmation modals, one per flavour --}}
     <x-card :title="__('theme-demo::messages.modals_daisy_confirm_heading')" bodyClass="gap-4">
         <p class="ui-subtle text-sm">{{ __('theme-demo::messages.modals_daisy_confirm_hint') }}</p>

@@ -48,16 +48,13 @@ return [
 
     'components_title' => 'DaisyUI Components',
     'components_description' => 'Avatars, badges, banners, alerts, buttons and the color matrix at full breadth.',
+    'components_buttons_semantic_hint' => 'Reach for intent, not colour: action (affirmative), secondary (alternative), cancel (dismiss), back (return), warning (sensitive but reversible, e.g. impersonate), danger (destructive/irreversible), plus icon for icon-only chrome.',
 
     'filament_components_title' => 'Filament Components',
     'filament_components_description' => 'The same buttons, badges and icon-buttons as the daisyUI gallery, built with Filament\'s own components.',
 
-    'modals_daisy_title' => 'Modals & buttons',
-    'modals_daisy_description' => 'The design-system modal shell (<x-modal> / <x-confirm-modal>, built on the native <dialog> element) and the four semantic buttons.',
-
-    // Semantic buttons
-    'modals_daisy_buttons_heading' => 'Semantic buttons',
-    'modals_daisy_buttons_hint' => 'Reach for intent, not colour: action (affirmative), cancel (dismiss), danger (destructive/irreversible), warning (sensitive but reversible, e.g. impersonate).',
+    'modals_daisy_title' => 'Modals',
+    'modals_daisy_description' => 'The design-system modal shell — <x-modal> / <x-confirm-modal>, built on the native <dialog> element.',
 
     // Confirmation modals
     'modals_daisy_confirm_heading' => 'Confirmation modals',

@@ -22,6 +22,28 @@
 
     {{-- Buttons --}}
     <x-card :title="__('Buttons')" bodyClass="gap-4">
+        {{-- Semantic intent components — the preferred API in app markup (see .ai/rules/components.md) --}}
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Semantic') }}</div>
+            <p class="ui-subtle mb-2 text-sm">{{ __('theme-demo::messages.components_buttons_semantic_hint') }}</p>
+            <div class="flex flex-wrap items-center gap-2">
+                <x-button.action>{{ __('Action') }}</x-button.action>
+                <x-button.secondary>{{ __('Secondary') }}</x-button.secondary>
+                <x-button.cancel />
+                <x-button.back href="#" />
+                <x-button.warning>{{ __('Warning') }}</x-button.warning>
+                <x-button.danger>{{ __('Danger') }}</x-button.danger>
+                <x-button.icon aria-label="{{ __('Open menu') }}">
+                    <x-heroicon-o-bars-3 class="h-5 w-5" />
+                </x-button.icon>
+                <x-button.icon circle aria-label="{{ __('admin.close') }}">
+                    <x-heroicon-o-x-mark class="h-5 w-5" />
+                </x-button.icon>
+            </div>
+        </div>
+
+        {{-- Primitive: raw colour × variant matrix behind the semantic components --}}
+        <div class="ui-subtle mb-1 border-t border-base-300 pt-4">{{ __('Primitive') }} (&lt;x-button&gt;)</div>
         @foreach ($buttonVariants as $variant)
             <div>
                 <div class="ui-subtle mb-1">{{ ucfirst($variant) }}</div>
