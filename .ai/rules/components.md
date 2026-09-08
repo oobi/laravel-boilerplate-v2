@@ -21,6 +21,8 @@ Prefer the five intent components over `<x-button color="…">` in app markup �
 
 Rubric for danger vs warning: destroys/removes/cuts off access → `danger`; powerful but reversible → `warning`; otherwise → `action`. `<x-button>` stays the low-level primitive these wrap; use it directly only for a standalone navigation CTA where a deliberate primary/primary-outline emphasis (not one of the intents above) is the point — e.g. a landing-page "Go to dashboard" / "Register" pair. There are no `info`/`success` buttons by design — those colours are for status surfaces (alerts, badges), not actions.
 
+Group a set of sibling actions (a sidebar "Actions" card, a panel's action row) in **`<x-action-list>`** rather than hand-rolling a flex wrapper — it tiles the buttons horizontally, wraps them, and grows each to share the row width (a lone button on a row fills it). Works with both `<x-button.*>` and Filament `{{ $action }}` output.
+
 **Never use `<x-filament::button>` for a hand-placed button** — it exists only where Filament renders it. A Filament PHP `Action` is correct for table row/bulk/header actions and anything that opens a `->requiresConfirmation()` or `->schema()` modal; everything else is a `<x-button.*>`.
 
 ## Modals: use the shell, never hand-roll a `<dialog>` / daisyUI `.modal`

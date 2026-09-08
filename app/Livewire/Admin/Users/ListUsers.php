@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
+use App\Actions\Users\ToggleUserActive;
 use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
 use App\Livewire\Concerns\ManagesTrashedRecords;
@@ -17,7 +18,6 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
-use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables;
@@ -156,18 +156,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->color(fn (User $record): string => $record->active ? DaisyColor::WARNING->toFilamentColor() : DaisyColor::SUCCESS->toFilamentColor())
                         ->requiresConfirmation()
                         ->authorize('toggleActive')
-                        ->action(function (User $record): void {
-                            Gate::authorize('toggleActive', $record);
-
-                            $record->update(['active' => ! $record->active]);
-
-                            Notification::make()
-                                ->title($record->active
-                                    ? __('admin.user_activated')
-                                    : __('admin.user_deactivated'))
-                                ->success()
-                                ->send();
-                        })
+                        ->action(fn (User $record) => app(ToggleUserActive::class)($record))
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     DeleteAction::make()

@@ -42,4 +42,12 @@ class FilamentModalDefaultsTest extends TestCase
             Action::make('delete')->requiresConfirmation()->getModalFooterActionsAlignment(),
         );
     }
+
+    public function test_modals_stick_their_header_and_footer_so_long_content_scrolls_between_them(): void
+    {
+        $action = Action::make('edit');
+
+        $this->assertTrue($action->isModalHeaderSticky());
+        $this->assertTrue($action->isModalFooterSticky());
+    }
 }

@@ -10,12 +10,6 @@
                 @endif
             </span>
         </x-slot:title>
-
-        <x-slot:actions>
-            {{ $this->manageRolesAction }}
-            {{ $this->toggleSuperAdminAction }}
-            {{ $this->resetPasswordAction }}
-        </x-slot:actions>
     </x-page-header>
 
     <form wire:submit="save">
@@ -29,6 +23,4 @@
             <x-button.cancel href="{{ route('users.show', $user) }}" />
         </div>
     </form>
-
-    <x-filament-actions::modals />
 </div>

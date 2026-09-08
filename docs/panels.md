@@ -176,10 +176,12 @@ matching column on `User` — no changes needed in `EditUser.php` itself.
 is how the existing "can't change your own active status" rule works
 without any special-casing in `EditUser`.) A **sensitive** field (one with
 its own distinct ability, e.g. role/super-admin assignment) should not go
-through this generic path at all — see `EditUser::manageRolesAction()`/
+through this generic path at all — see `ShowUser::manageRolesAction()`/
 `toggleSuperAdminAction()` for the pattern: its own Filament Action,
 independently authorized both for visibility and again inside the action
-closure at the write boundary.
+closure at the write boundary. Those operations live on the **Show** page's
+Actions card (the single home for acting on a user), not the Edit form —
+Edit is only the attribute fields.
 
 ## What's deliberately NOT a panel
 

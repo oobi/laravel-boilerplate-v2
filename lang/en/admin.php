@@ -43,6 +43,7 @@ return [
     'never' => 'Never',
     'joined' => 'Joined',
     'user_information' => 'User Information',
+    'actions' => 'Actions',
     'view' => 'View',
     'edit' => 'Edit',
     'impersonate' => 'Impersonate',
@@ -93,6 +94,7 @@ return [
     'super_admin' => 'Super Admin',
     'grant_super_admin' => 'Grant Super Admin',
     'revoke_super_admin' => 'Revoke Super Admin',
+    'super_admin_toggle_warning' => 'Super admins bypass every permission check and can manage all users, roles and settings. Grant this only when absolutely necessary.',
     'super_admin_granted' => 'Super admin access granted.',
     'super_admin_revoked' => 'Super admin access revoked.',
 

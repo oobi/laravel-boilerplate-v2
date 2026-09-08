@@ -66,6 +66,9 @@ class AppServiceProvider extends ServiceProvider
      *   from Filament's default left alignment to End, which pairs with the
      *   `fi-align-end` flex-row-reverse footer to land cancel-left /
      *   action-right, matching <x-modal>'s right-aligned footer.
+     * - The header (title + close) and footer (buttons) stick, so on a long
+     *   modal they stay in view while only the content scrolls — matters most
+     *   on mobile. Harmless on short modals that never scroll.
      */
     private function registerFilamentModalDefaults(): void
     {
@@ -74,9 +77,12 @@ class AppServiceProvider extends ServiceProvider
                 $action->outlined();
             }
 
-            $action->modalFooterActionsAlignment(
-                fn (): Alignment => $action->isConfirmationRequired() ? Alignment::Center : Alignment::End,
-            );
+            $action
+                ->stickyModalHeader()
+                ->stickyModalFooter()
+                ->modalFooterActionsAlignment(
+                    fn (): Alignment => $action->isConfirmationRequired() ? Alignment::Center : Alignment::End,
+                );
         });
     }
 
