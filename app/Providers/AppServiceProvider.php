@@ -10,6 +10,7 @@ use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\PasswordResetLinkResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
+use Filament\Actions\Action;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
@@ -44,9 +45,39 @@ class AppServiceProvider extends ServiceProvider
         $this->registerAuthorization();
         $this->registerFortify();
         $this->registerFilamentIcons();
+        $this->registerFilamentModalDefaults();
         $this->registerNotifications();
 
         User::observe(UserObserver::class);
+    }
+
+    /**
+     * Keep every Filament modal footer consistent with the app's own
+     * <x-modal> / <x-button.cancel> conventions:
+     *
+     * - The cancel action renders as a neutral outline button (Filament's
+     *   default gray cancel is a solid fill), matching <x-button.cancel> so
+     *   every "cancel" looks identical whether the modal is Filament- or
+     *   Blade-rendered. The internal modal dismiss action is always named
+     *   `cancel` (Filament's makeModalAction('cancel')).
+     * - Footer buttons follow the house order — cancel on the left, the
+     *   affirmative action on the right. Confirmation modals keep Filament's
+     *   centered footer (already cancel-left / action-right); form modals move
+     *   from Filament's default left alignment to End, which pairs with the
+     *   `fi-align-end` flex-row-reverse footer to land cancel-left /
+     *   action-right, matching <x-modal>'s right-aligned footer.
+     */
+    private function registerFilamentModalDefaults(): void
+    {
+        Action::configureUsing(function (Action $action): void {
+            if ($action->getName() === 'cancel') {
+                $action->outlined();
+            }
+
+            $action->modalFooterActionsAlignment(
+                fn (): Alignment => $action->isConfirmationRequired() ? Alignment::Center : Alignment::End,
+            );
+        });
     }
 
     /** Top-center toasts instead of Filament's default top-right. */
