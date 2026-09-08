@@ -5,12 +5,19 @@
 
     {{-- Buttons --}}
     <x-card :title="__('Buttons')" bodyClass="gap-4">
-        @foreach (['solid' => false, 'outlined' => true] as $variant => $outlined)
+        {{-- Solid + Outlined are Filament's own; Soft is this app's addition
+             (fi-btn-soft, filament-buttons.css / AdminAction::soft()). --}}
+        @foreach (['Solid' => '', 'Soft' => 'fi-btn-soft', 'Outlined' => 'outlined'] as $variant => $mod)
             <div>
-                <div class="ui-subtle mb-1">{{ ucfirst($variant) }}</div>
+                <div class="ui-subtle mb-1">{{ $variant }}</div>
                 <div class="flex flex-wrap gap-2">
                     @foreach ($filamentColors as $label => $color)
-                        <x-filament::button :color="$color" :outlined="$outlined" size="sm">
+                        <x-filament::button
+                            :color="$color"
+                            :outlined="$mod === 'outlined'"
+                            size="sm"
+                            @class(['fi-btn-soft' => $mod === 'fi-btn-soft'])
+                        >
                             {{ ucfirst($label) }}
                         </x-filament::button>
                     @endforeach
