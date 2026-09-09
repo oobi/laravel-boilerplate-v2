@@ -19,14 +19,21 @@ use Illuminate\Support\Str;
  */
 class Breadcrumbs
 {
-    /** @return list<array{label: string, url: ?string}> */
-    public static function trail(): array
+    /**
+     * @param  array{label: string, url: ?string}|null  $root  Overrides the root
+     *                                                         crumb (defaults to the "Admin" home). Areas that aren't the system admin
+     *                                                         (e.g. a team area) pass their own root so the trail reads in their context.
+     * @param  bool  $withResource  Whether to auto-derive the `{resource}.index`
+     *                              parent crumb from the route name.
+     * @return list<array{label: string, url: ?string}>
+     */
+    public static function trail(?array $root = null, bool $withResource = true): array
     {
         $crumbs = [
-            ['label' => __('admin.breadcrumb_root'), 'url' => null],
+            $root ?? ['label' => __('admin.breadcrumb_root'), 'url' => null],
         ];
 
-        $resource = static::resource();
+        $resource = $withResource ? static::resource() : null;
 
         if ($resource && Route::has("{$resource}.index")) {
             $crumbs[] = [

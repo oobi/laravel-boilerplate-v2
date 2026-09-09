@@ -6,6 +6,8 @@
 <x-app-shell
     :home="$team ? route('team.dashboard', ['team' => $team->slug]) : url('/')"
     :title="$title ?? ($team?->name ? $team->name.' · '.config('app.name') : null)"
+    :breadcrumb-root="$team ? ['label' => $team->name, 'url' => null] : null"
+    :breadcrumb-resource="false"
 >
     <x-slot:navigation>
         @includeWhen($team !== null, 'teams::partials.team-sidebar-nav', ['team' => $team])

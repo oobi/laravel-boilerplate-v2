@@ -1,6 +1,8 @@
 @props([
     'home' => null,
     'title' => null,
+    'breadcrumbRoot' => null,
+    'breadcrumbResource' => true,
 ])
 
 @php
@@ -140,7 +142,7 @@
                         <x-heroicon-o-bars-3 class="h-5 w-5" />
                     </x-button.icon>
 
-                    <x-breadcrumbs />
+                    <x-breadcrumbs :root="$breadcrumbRoot" :with-resource="$breadcrumbResource" />
 
                     <x-header-menu />
                 </header>

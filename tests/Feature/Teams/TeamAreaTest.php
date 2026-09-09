@@ -38,6 +38,19 @@ class TeamAreaTest extends TestCase
             ->assertSee($team->name);
     }
 
+    public function test_the_breadcrumb_uses_the_team_context_not_the_admin_root(): void
+    {
+        $user = User::factory()->create();
+        $team = Team::factory()->create(['name' => 'Northwind', 'slug' => 'northwind']);
+        $team->users()->attach($user);
+
+        $this->actingAs($user)
+            ->get(route('team.dashboard', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee('Northwind')
+            ->assertDontSee(__('admin.breadcrumb_root'));
+    }
+
     public function test_a_non_member_is_forbidden_from_the_team_area(): void
     {
         $user = User::factory()->create();

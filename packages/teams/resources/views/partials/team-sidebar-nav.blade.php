@@ -10,17 +10,13 @@
         <x-teams::team-switcher :team="$team" />
     </div>
 
-    <a
-        href="{{ route('team.dashboard', ['team' => $team->slug]) }}"
-        @class([
-            'flex items-center gap-3 rounded-box px-3 py-2 text-sm font-semibold transition',
-            'bg-primary text-primary-content' => request()->routeIs('team.dashboard'),
-            'text-base-content hover:bg-base-200' => ! request()->routeIs('team.dashboard'),
-        ])
+    <x-nav-item
+        :href="route('team.dashboard', ['team' => $team->slug])"
+        icon="heroicon-o-squares-2x2"
+        :routes="['team.dashboard']"
     >
-        <x-heroicon-o-home class="h-5 w-5" />
         {{ __('Dashboard') }}
-    </a>
+    </x-nav-item>
 
     @foreach (\Concise\Teams\Support\Navigation\TeamNavRegistry::resolve($viewer, $team) as $node)
         @if ($node instanceof \App\Support\Navigation\Registry\NavGroup)

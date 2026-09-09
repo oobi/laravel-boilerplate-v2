@@ -2,7 +2,8 @@
     Breadcrumb trail — see App\Support\Breadcrumbs for how the resource
     crumb is derived automatically from the current route name.
 --}}
-@php $crumbs = \App\Support\Breadcrumbs::trail(); @endphp
+@props(['root' => null, 'withResource' => true])
+@php $crumbs = \App\Support\Breadcrumbs::trail($root, $withResource); @endphp
 <div class="min-w-0 flex-1 truncate text-sm text-base-content/60">
     @foreach ($crumbs as $index => $crumb)
         {{-- Root crumb and its separator are dropped on mobile to save space --}}
