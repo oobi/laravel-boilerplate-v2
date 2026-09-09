@@ -5,6 +5,11 @@
      current team, and routes carry its slug. --}}
 @php($viewer = auth()->user())
 <nav class="flex-1 space-y-1 overflow-y-auto p-4">
+    {{-- Team select — sits at the top of the left nav, above the links --}}
+    <div class="mb-3">
+        <x-teams::team-switcher :team="$team" />
+    </div>
+
     <a
         href="{{ route('team.dashboard', ['team' => $team->slug]) }}"
         @class([
