@@ -1,7 +1,17 @@
 {{-- Statistics panel (App\Panels\Users\StatisticsPanel) --}}
-<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-    <x-stats-card label="{{ __('admin.account_age') }}" value="{{ $user->created_at?->diffForHumans() }}" color="info" />
+<x-card :title="__('admin.statistics')" type="panel">
+    <x-stats-list>
+        <x-stat-row
+            icon="heroicon-o-calendar-days"
+            :label="__('admin.account_age')"
+            :value="$user->created_at?->diffForHumans()"
+        />
 
-    <x-stats-card label="{{ __('admin.last_login') }}"
-        value="{{ $user->last_login_at?->diffForHumans() ?? __('admin.never') }}" color="info" />
-</div>
+        <x-stat-row
+            icon="heroicon-o-clock"
+            :label="__('admin.last_login')"
+            :value="$user->last_login_at?->diffForHumans() ?? __('admin.never')"
+            :muted="! $user->last_login_at"
+        />
+    </x-stats-list>
+</x-card>

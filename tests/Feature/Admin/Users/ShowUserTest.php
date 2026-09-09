@@ -62,6 +62,29 @@ class ShowUserTest extends TestCase
             ->assertOk();
     }
 
+    public function test_it_shows_the_statistics_panel_with_account_age_and_last_login(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create(['last_login_at' => now()->subDay()]);
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.statistics'))
+            ->assertSee(__('admin.account_age'))
+            ->assertSee(__('admin.last_login'))
+            ->assertSee('1 day ago');
+    }
+
+    public function test_the_statistics_panel_shows_never_when_the_user_has_not_logged_in(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create(['last_login_at' => null]);
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.never'));
+    }
+
     public function test_it_shows_two_factor_disabled_by_default(): void
     {
         $admin = User::factory()->superAdmin()->create();

@@ -5,9 +5,10 @@
 
     Props:
     - title: optional heading, rendered inside an `<h2>`
-    - type: 'default' (bold `.card-title`) or 'panel' (smaller, muted
-      `.ui-subtle` heading — used for Users Show page panel cards). Picks
-      `titleClass` for you; use this instead of guessing a heading class.
+    - type: 'default' (bold `.card-title`) or 'panel' (smaller `text-sm
+      font-semibold` heading, one tier below the default — used for Users Show
+      page sidebar panel cards). Picks `titleClass` for you; use this instead
+      of guessing a heading class.
     - titleClass: explicit override for the `<h2>` class, escape hatch for a
       one-off heading style not covered by `type`
     - bordered: adds `border border-base-300` (default: true) — every card
@@ -31,7 +32,7 @@
 @php
     $titleClasses = [
         'default' => 'card-title',
-        'panel' => 'ui-subtle',
+        'panel' => 'text-sm font-semibold text-base-content',
     ];
 
     $titleClass ??= $titleClasses[$type] ?? 'card-title';

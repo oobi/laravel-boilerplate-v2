@@ -124,6 +124,7 @@ return [
     'two_factor_show_recovery_codes' => 'Show Recovery Codes',
     'two_factor_disable' => 'Disable',
 
+    'statistics' => 'Statistics',
     'account_age' => 'Account Age',
     'security' => 'Security',
     'enabled' => 'Enabled',
