@@ -411,10 +411,11 @@
             "dist": {
                 "type": "path",
                 "url": "packages/teams",
-                "reference": "3a2283e6b5334a29718c9004928629340bdfe4a9"
+                "reference": "357b70cb0c1f411de25a2f98e7eba9f650010b8f"
             },
             "require": {
                 "illuminate/support": "^12.0",
+                "league/flysystem-path-prefixing": "^3.0",
                 "php": "^8.4"
             },
             "type": "library",
@@ -430,7 +431,10 @@
                     "Concise\\Teams\\": "src/",
                     "Concise\\Teams\\Database\\Factories\\": "database/factories/",
                     "Concise\\Teams\\Database\\Seeders\\": "database/seeders/"
-                }
+                },
+                "files": [
+                    "src/helpers.php"
+                ]
             },
             "license": [
                 "proprietary"
@@ -3034,6 +3038,52 @@
                 "source": "https://github.com/thephpleague/flysystem-local/tree/3.35.3"
             },
             "time": "2026-08-12T13:29:21+00:00"
+        },
+        {
+            "name": "league/flysystem-path-prefixing",
+            "version": "3.31.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/flysystem-path-prefixing.git",
+                "reference": "d7f667c2d9d6684b74f30c6ad81ae7a0c23232f3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/flysystem-path-prefixing/zipball/d7f667c2d9d6684b74f30c6ad81ae7a0c23232f3",
+                "reference": "d7f667c2d9d6684b74f30c6ad81ae7a0c23232f3",
+                "shasum": ""
+            },
+            "require": {
+                "league/flysystem": "^3.10.0",
+                "php": "^8.0.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "League\\Flysystem\\PathPrefixing\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Frank de Jonge",
+                    "email": "info@frankdejonge.nl"
+                }
+            ],
+            "description": "Path prefixing filesystem adapter for Flysystem.",
+            "keywords": [
+                "Flysystem",
+                "filesystem",
+                "prefix",
+                "prefixing"
+            ],
+            "support": {
+                "source": "https://github.com/thephpleague/flysystem-path-prefixing/tree/3.31.0"
+            },
+            "time": "2026-01-23T15:30:45+00:00"
         },
         {
             "name": "league/mime-type-detection",

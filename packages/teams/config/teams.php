@@ -75,6 +75,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Isolation
+    |--------------------------------------------------------------------------
+    |
+    | Per-team filesystem and cache isolation (safety-critical — see
+    | ~dev/TEAMS_TIER_SCOPE.md §5.5). Team files are confined to
+    | `teams/{team_id}` on the base disk; cache keys are namespaced per team.
+    | Both are fail-loud: a scoped call without a resolved team throws.
+    |
+    */
+
+    'filesystem' => [
+        'disk' => env('TEAMS_FILESYSTEM_DISK', 'local'),
+        'prefix' => 'teams',
+    ],
+
+    'cache' => [
+        'prefix' => 'teams',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Custom domains
     |--------------------------------------------------------------------------
     |

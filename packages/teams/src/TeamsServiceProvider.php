@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams;
 
+use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamPermissionResolver;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,6 +30,10 @@ class TeamsServiceProvider extends ServiceProvider
             'permission.teams' => true,
             'permission.team_resolver' => TeamPermissionResolver::class,
         ]);
+
+        // The single source of truth for the active team (query/permission/
+        // filesystem/cache scope) — see TeamContext and the CurrentTeam facade.
+        $this->app->singleton(TeamContext::class);
     }
 
     public function boot(): void
