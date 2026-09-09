@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Factories\Teams;
+namespace Concise\Teams\Database\Factories;
 
-use App\Models\Teams\Team;
 use App\Models\User;
+use Concise\Teams\Models\Team;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

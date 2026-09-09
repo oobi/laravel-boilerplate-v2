@@ -7,7 +7,7 @@ use App\Enums\UserStatus;
 use App\Models\Concerns\HasProfilePhoto;
 use App\Models\Concerns\HasSuperAdminFlag;
 // teams:start
-use App\Models\Concerns\HasTeams;
+use Concise\Teams\Concerns\HasTeams;
 // teams:end
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;

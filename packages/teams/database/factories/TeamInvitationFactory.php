@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Factories\Teams;
+namespace Concise\Teams\Database\Factories;
 
-use App\Models\Teams\Team;
-use App\Models\Teams\TeamInvitation;
+use Concise\Teams\Models\Team;
+use Concise\Teams\Models\TeamInvitation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

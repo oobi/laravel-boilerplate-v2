@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Models\Teams;
+namespace Concise\Teams\Models;
 
 use App\Models\User;
-use Database\Factories\Teams\TeamFactory;
+use Concise\Teams\Database\Factories\TeamFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -56,6 +56,12 @@ class Team extends Model
             'active' => 'boolean',
             'data' => 'array',
         ];
+    }
+
+    /** Package models can't auto-resolve their factory by namespace convention. */
+    protected static function newFactory(): TeamFactory
+    {
+        return TeamFactory::new();
     }
 
     /** Slug is the route key so team URLs read `/{prefix}/{slug}` (see config/teams.php). */

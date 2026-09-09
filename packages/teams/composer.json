@@ -1,0 +1,26 @@
+{
+    "name": "concise-dot-digital/teams",
+    "description": "Opt-in teams tier for the boilerplate — team membership, per-team roles (via spatie/laravel-permission's teams feature), team admin area, and optional custom domains. Delete this folder + its two root composer.json entries to remove it entirely.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Concise\\Teams\\": "src/",
+            "Concise\\Teams\\Database\\Factories\\": "database/factories/",
+            "Concise\\Teams\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Concise\\Teams\\TeamsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

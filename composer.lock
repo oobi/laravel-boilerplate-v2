@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b3912e976dc798c17614c13349f7995",
+    "content-hash": "2957b54a5058a617ab2304cf5c363a91",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -404,6 +404,42 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
+        },
+        {
+            "name": "concise-dot-digital/teams",
+            "version": "dev-feature/teams-tier",
+            "dist": {
+                "type": "path",
+                "url": "packages/teams",
+                "reference": "3a2283e6b5334a29718c9004928629340bdfe4a9"
+            },
+            "require": {
+                "illuminate/support": "^12.0",
+                "php": "^8.4"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Concise\\Teams\\TeamsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Concise\\Teams\\": "src/",
+                    "Concise\\Teams\\Database\\Factories\\": "database/factories/",
+                    "Concise\\Teams\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Opt-in teams tier for the boilerplate — team membership, per-team roles (via spatie/laravel-permission's teams feature), team admin area, and optional custom domains. Delete this folder + its two root composer.json entries to remove it entirely.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "danharrin/date-format-converter",
@@ -9410,7 +9446,7 @@
         },
         {
             "name": "concise-dot-digital/theme-demo",
-            "version": "dev-feat-spatie",
+            "version": "dev-feature/teams-tier",
             "dist": {
                 "type": "path",
                 "url": "packages/theme-demo",
@@ -12179,6 +12215,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "concise-dot-digital/teams": 20,
         "concise-dot-digital/theme-demo": 20
     },
     "prefer-stable": true,

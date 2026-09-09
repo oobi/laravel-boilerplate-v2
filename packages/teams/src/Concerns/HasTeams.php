@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Models\Concerns;
+namespace Concise\Teams\Concerns;
 
-use App\Models\Teams\Membership;
-use App\Models\Teams\Team;
+use Concise\Teams\Models\Membership;
+use Concise\Teams\Models\Team;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;

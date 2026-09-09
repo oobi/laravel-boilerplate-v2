@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Models\Teams;
+namespace Concise\Teams\Models;
 
-use Database\Factories\Teams\TeamInvitationFactory;
+use Concise\Teams\Database\Factories\TeamInvitationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +30,11 @@ class TeamInvitation extends Model
         'email',
         'role',
     ];
+
+    protected static function newFactory(): TeamInvitationFactory
+    {
+        return TeamInvitationFactory::new();
+    }
 
     public function team(): BelongsTo
     {
