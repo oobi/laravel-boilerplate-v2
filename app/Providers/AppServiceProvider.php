@@ -11,6 +11,7 @@ use App\Http\Responses\PasswordResetLinkResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
 use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFortify();
         $this->registerFilamentIcons();
         $this->registerFilamentModalDefaults();
+        $this->registerFilamentBulkActionDefaults();
         $this->registerNotifications();
 
         User::observe(UserObserver::class);
@@ -66,9 +68,14 @@ class AppServiceProvider extends ServiceProvider
      *   from Filament's default left alignment to End, which pairs with the
      *   `fi-align-end` flex-row-reverse footer to land cancel-left /
      *   action-right, matching <x-modal>'s right-aligned footer.
-     * - The header (title + close) and footer (buttons) stick, so on a long
-     *   modal they stay in view while only the content scrolls — matters most
-     *   on mobile. Harmless on short modals that never scroll.
+     * - On long form/content modals the header (title + close) and footer
+     *   (buttons) stick, so they stay in view while only the content scrolls —
+     *   matters most on mobile. A short confirmation dialog never scrolls, and
+     *   sticky adds a header/footer divider that makes it look busier than a
+     *   daisyUI confirmation — so it stays non-sticky (and divider-free). The
+     *   sticky condition is a closure because `isConfirmationRequired()` isn't
+     *   known yet when this configureUsing callback runs (it's set later, by
+     *   the action's own `->requiresConfirmation()`).
      */
     private function registerFilamentModalDefaults(): void
     {
@@ -78,11 +85,29 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $action
-                ->stickyModalHeader()
-                ->stickyModalFooter()
+                ->stickyModalHeader(fn (): bool => ! $action->isConfirmationRequired())
+                ->stickyModalFooter(fn (): bool => ! $action->isConfirmationRequired())
                 ->modalFooterActionsAlignment(
                     fn (): Alignment => $action->isConfirmationRequired() ? Alignment::Center : Alignment::End,
                 );
+        });
+    }
+
+    /**
+     * Every table's bulk-action toolbar renders its trigger as a pale,
+     * menu-like outline button (Filament's default outlined look, not the
+     * strong neutral outline) so it reads as a "menu" rather than a solid
+     * button — see `.fi-btn-menu` in filament-buttons.css. Applied app-wide
+     * so individual tables don't repeat the styling; a table can still
+     * override any of it with its own fluent calls after make().
+     */
+    private function registerFilamentBulkActionDefaults(): void
+    {
+        BulkActionGroup::configureUsing(function (BulkActionGroup $group): void {
+            $group
+                ->button()
+                ->outlined()
+                ->extraAttributes(['class' => 'fi-btn-menu']);
         });
     }
 

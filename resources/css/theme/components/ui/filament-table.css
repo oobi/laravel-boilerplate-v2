@@ -17,6 +17,34 @@
 
 /*
 |--------------------------------------------------------------------------
+| Bulk-action toolbar — the one part of Filament's header we DO want
+|--------------------------------------------------------------------------
+| The header container above is hidden because its search/filter chrome
+| duplicates <x-table-header>. The bulk-actions toolbar, though, has no
+| equivalent in our chrome, so it must appear while rows are selected.
+|
+| `.fi-ta-selection-indicator` ("N selected / Select all / Deselect all")
+| is a sibling of the header inside `.fi-ta-main`; Alpine drops its inline
+| `display: none` (and, on init, the `x-cloak` attribute) once a row is
+| selected. Anchor on that to reveal the header again — then re-hide every
+| child except the bulk-actions cluster so only the toolbar buttons show,
+| never the duplicated search/filter chrome. (Same `:has()` technique as
+| floating-label.css; degrades to "hidden", never to broken.)
+*/
+.fi-ta-main:has(
+        > .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])
+    )
+    > .fi-ta-header-ctn {
+    display: block;
+}
+
+.fi-ta-header-ctn > .fi-ta-header,
+.fi-ta-header-toolbar > :not(.fi-ta-actions) {
+    display: none;
+}
+
+/*
+|--------------------------------------------------------------------------
 | Table island — same border colour + shadow as the toolbar above it
 |--------------------------------------------------------------------------
 | Filament ships this as a `ring-1 ring-gray-950/5` + `shadow-sm` card.

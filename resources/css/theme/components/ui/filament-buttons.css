@@ -172,3 +172,26 @@
     color: var(--color-warning-soft);
     box-shadow: inset 0 0 0 var(--border, 1px) color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
 }
+
+/*
+|--------------------------------------------------------------------------
+| `.fi-btn-menu` — a low-emphasis, pale-bordered outline trigger
+|--------------------------------------------------------------------------
+| The default neutral outline above (`--color-neutral` ring + text) reads as a
+| solid "button". A dropdown trigger like the table's "Bulk actions" menu wants
+| to read as a *menu* instead — Filament's own pale-gray outlined default. Swap
+| the strong neutral ring for the pale `--color-base-300` border used by cards
+| and the table island, keep dark `--color-base-content` text, and hover to the
+| `--color-base-200` surface. Applied via `->extraAttributes(['class' =>
+| 'fi-btn-menu'])` on an outlined ActionGroup trigger. (Placed after the
+| neutral-outline rule so the equal-specificity override wins.)
+*/
+.fi-btn.fi-outlined.fi-btn-menu {
+    color: var(--color-base-content);
+    --tw-ring-color: var(--color-base-300);
+}
+
+.fi-btn.fi-outlined.fi-btn-menu:hover {
+    background-color: var(--color-base-200);
+    --tw-ring-color: var(--color-base-300);
+}

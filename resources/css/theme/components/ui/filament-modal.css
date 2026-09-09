@@ -1,0 +1,26 @@
+/*
+|--------------------------------------------------------------------------
+| Filament modals — nudge them toward the daisyUI modal look
+|--------------------------------------------------------------------------
+| Two small, low-risk cosmetic overrides applied app-wide to every Filament
+| modal (confirmation dialogs, action modals):
+|
+| 1. Drop the divider Filament draws above a sticky footer. daisyUI modals
+|    have no such rule, and the footer reads cleaner without it.
+| 2. Blur the overlay, the way daisyUI's modal backdrop does — softens the
+|    page behind the dialog instead of only dimming it.
+|
+| Both degrade gracefully: without them the modal simply looks like stock
+| Filament (a divider, an unblurred dim), never broken.
+*/
+.fi-modal-has-sticky-footer
+    > .fi-modal-window-ctn
+    > .fi-modal-window
+    > .fi-modal-footer {
+    border-top: 0;
+}
+
+.fi-modal-close-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}

@@ -13,11 +13,16 @@ use App\Models\User;
 use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables;
@@ -27,6 +32,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -155,20 +161,69 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->icon(fn (User $record): string => $record->active ? 'heroicon-o-pause-circle' : 'heroicon-o-check-circle')
                         ->color(fn (User $record): string => $record->active ? DaisyColor::WARNING->toFilamentColor() : DaisyColor::SUCCESS->toFilamentColor())
                         ->requiresConfirmation()
+                        ->modalDescription(fn (User $record): string => trans_choice(
+                            $record->active ? 'admin.deactivate_confirm' : 'admin.activate_confirm',
+                            1,
+                            ['count' => 1],
+                        ))
                         ->authorize('toggleActive')
                         ->action(fn (User $record) => app(ToggleUserActive::class)($record))
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     DeleteAction::make()
+                        ->modalDescription(trans_choice('admin.delete_confirm', 1, ['count' => 1]))
                         ->authorize('delete'),
 
                     RestoreAction::make()
+                        ->modalDescription(trans_choice('admin.restore_confirm', 1, ['count' => 1]))
                         ->authorize('restore'),
 
                     ForceDeleteAction::make()
                         ->authorize('forceDelete'),
                 ]),
             ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    BulkAction::make('activate')
+                        ->label(__('admin.activate'))
+                        ->icon('heroicon-o-check-circle')
+                        ->color(DaisyColor::SUCCESS->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->modalHeading(__('admin.activate'))
+                        ->modalDescription(fn (Collection $records): string => trans_choice('admin.activate_confirm', $records->count(), ['count' => $records->count()]))
+                        ->authorizeIndividualRecords('toggleActive')
+                        ->hidden(fn (): bool => $this->isViewingOnlyTrashed())
+                        ->action(fn (Collection $records) => $this->setActiveForRecords($records, true))
+                        ->deselectRecordsAfterCompletion(),
+
+                    BulkAction::make('deactivate')
+                        ->label(__('admin.deactivate'))
+                        ->icon('heroicon-o-pause-circle')
+                        ->color(DaisyColor::WARNING->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->modalHeading(__('admin.deactivate'))
+                        ->modalDescription(fn (Collection $records): string => trans_choice('admin.deactivate_confirm', $records->count(), ['count' => $records->count()]))
+                        ->authorizeIndividualRecords('toggleActive')
+                        ->hidden(fn (): bool => $this->isViewingOnlyTrashed())
+                        ->action(fn (Collection $records) => $this->setActiveForRecords($records, false))
+                        ->deselectRecordsAfterCompletion(),
+
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => Gate::allows(SystemPermission::DELETE_USERS->value))
+                        ->modalDescription(fn (Collection $records): string => trans_choice('admin.delete_confirm', $records->count(), ['count' => $records->count()]))
+                        ->authorizeIndividualRecords('delete'),
+
+                    RestoreBulkAction::make()
+                        ->color(DaisyColor::INFO->toFilamentColor())
+                        ->visible(fn (): bool => Gate::allows(SystemPermission::DELETE_USERS->value))
+                        ->modalDescription(fn (Collection $records): string => trans_choice('admin.restore_confirm', $records->count(), ['count' => $records->count()]))
+                        ->authorizeIndividualRecords('restore'),
+                ]),
+            ])
+            // Super Admin and your own record cannot be included in bulk action
+            ->checkIfRecordIsSelectableUsing(
+                fn (User $record): bool => ! $record->isSuperAdmin() && $record->id !== Auth::id()
+            )
             ->searchPlaceholder(__('admin.search_placeholder'))
             ->emptyStateHeading(__('admin.no_users_found'))
             ->paginated(config('pagination.page_sizes'))
@@ -179,6 +234,38 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     protected function emptyTrashQuery(): Builder
     {
         return User::onlyTrashed()->where('id', '!=', Auth::id());
+    }
+
+    /**
+     * True when the trashed filter is showing only-trashed records, where the
+     * activate/deactivate bulk actions don't apply (mirrors the per-row
+     * toggleActive action, which is hidden for trashed rows).
+     */
+    protected function isViewingOnlyTrashed(): bool
+    {
+        return ($this->tableFilters[$this->trashedFilterName()]['value'] ?? '') === '0';
+    }
+
+    /**
+     * Flip the active flag for an already-authorized set of records (Filament
+     * pre-filters the collection via authorizeIndividualRecords), surfacing a
+     * count toast. Skips the toast entirely when nothing was authorized —
+     * Filament reports the missing-authorization failure on its own.
+     */
+    protected function setActiveForRecords(Collection $records, bool $active): void
+    {
+        if ($records->isEmpty()) {
+            return;
+        }
+
+        $records->each(fn (User $user) => $user->update(['active' => $active]));
+
+        Notification::make()
+            ->title($active
+                ? __('admin.users_activated', ['count' => $records->count()])
+                : __('admin.users_deactivated', ['count' => $records->count()]))
+            ->success()
+            ->send();
     }
 
     /** Options for the Blade view's role <x-table-filter-select>, mirroring the table filter above. */

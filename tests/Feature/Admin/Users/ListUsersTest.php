@@ -48,6 +48,106 @@ class ListUsersTest extends TestCase
             ->assertDontSee($other->name);
     }
 
+    public function test_selected_users_can_be_bulk_activated(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $targets = User::factory()->count(2)->inactive()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callTableBulkAction('activate', $targets);
+
+        $targets->each(fn (User $user) => $this->assertTrue($user->fresh()->active));
+    }
+
+    public function test_selected_users_can_be_bulk_deactivated(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $targets = User::factory()->count(2)->create(['active' => true]);
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callTableBulkAction('deactivate', $targets);
+
+        $targets->each(fn (User $user) => $this->assertFalse($user->fresh()->active));
+    }
+
+    public function test_bulk_deactivate_never_deactivates_the_acting_admin(): void
+    {
+        $admin = User::factory()->superAdmin()->create(['active' => true]);
+        $target = User::factory()->create(['active' => true]);
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callTableBulkAction('deactivate', collect([$admin, $target]));
+
+        // The actor is filtered out of the selection; the ordinary user is deactivated.
+        $this->assertTrue($admin->fresh()->active);
+        $this->assertFalse($target->fresh()->active);
+    }
+
+    public function test_support_bulk_deactivate_skips_super_admins(): void
+    {
+        $support = User::factory()->support()->create();
+        $protectedSuperAdmin = User::factory()->superAdmin()->create(['active' => true]);
+        $target = User::factory()->create(['active' => true]);
+
+        Livewire::actingAs($support)
+            ->test(ListUsers::class)
+            ->callTableBulkAction('deactivate', collect([$protectedSuperAdmin, $target]));
+
+        // Support may suspend an ordinary user but never a super admin.
+        $this->assertTrue($protectedSuperAdmin->fresh()->active);
+        $this->assertFalse($target->fresh()->active);
+    }
+
+    public function test_selected_users_can_be_bulk_deleted(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $targets = User::factory()->count(2)->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callTableBulkAction('delete', $targets);
+
+        $targets->each(fn (User $user) => $this->assertSoftDeleted($user));
+    }
+
+    public function test_trashed_users_can_be_bulk_restored(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $targets = User::factory()->count(2)->create();
+        $targets->each->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->filterTable('trashed', '0')
+            ->callTableBulkAction('restore', $targets);
+
+        $targets->each(fn (User $user) => $this->assertNotSoftDeleted($user->fresh()));
+    }
+
+    public function test_support_cannot_bulk_delete_or_restore_users(): void
+    {
+        $support = User::factory()->support()->create();
+
+        Livewire::actingAs($support)
+            ->test(ListUsers::class)
+            ->assertTableBulkActionHidden('delete')
+            ->assertTableBulkActionHidden('restore');
+    }
+
+    public function test_activate_and_deactivate_bulk_actions_are_hidden_in_the_trash_view(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->filterTable('trashed', '0')
+            ->assertTableBulkActionHidden('activate')
+            ->assertTableBulkActionHidden('deactivate');
+    }
+
     public function test_a_non_self_user_can_be_deactivated(): void
     {
         $admin = User::factory()->superAdmin()->create();

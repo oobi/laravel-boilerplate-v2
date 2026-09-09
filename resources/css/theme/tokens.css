@@ -31,7 +31,7 @@
      white — the 600 shades only reached 4.10 / 3.30. Soft stays comfortable. */
   --color-info: #0369a1;
   --color-info-content: oklch(100% 0 0);
-  --color-success: #15803d;
+  --color-success: #16a34a;
   --color-success-content: oklch(100% 0 0);
   /* Kept as a bright gold for impact (dark label text on it is ~10:1). The gold
      fill itself is only ~1.76:1 against the white page, so warning-contrast.css
