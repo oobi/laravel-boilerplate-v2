@@ -35,35 +35,38 @@
                 style="display: none;"
             ></div>
 
-            {{-- Sidebar: persistent on desktop, drawer on mobile --}}
+            {{-- Sidebar: persistent on desktop (no pin/collapse), drawer on mobile --}}
             <aside
                 class="fixed inset-y-0 left-0 z-50 w-64 -translate-x-full transition-transform md:static md:translate-x-0"
-                :class="drawerOpen && '!translate-x-0'"
+                :class="drawerOpen && 'translate-x-0!'"
             >
                 <div class="flex h-full w-64 flex-col border-r border-base-300 bg-base-100">
+                    {{-- Branding --}}
                     <div class="flex h-16 flex-shrink-0 items-center justify-between border-b border-base-300 px-4">
-                        <a href="{{ $team ? route('team.dashboard', ['team' => $team->slug]) : url('/') }}" class="min-w-0 flex-1">
-                            <x-application-logo />
-                        </a>
+                        <x-application-logo class="min-w-0 flex-1" />
                         <x-button.icon @click="drawerOpen = false" class="md:hidden" aria-label="{{ __('Close menu') }}">
                             <x-heroicon-o-x-mark class="h-5 w-5" />
                         </x-button.icon>
                     </div>
 
-                    @includeWhen($team !== null, 'teams::partials.team-sidebar-nav', ['team' => $team])
+                    {{-- Team select — sits in the left nav, above the nav links --}}
+                    @if ($team)
+                        <div class="border-b border-base-300 p-3">
+                            <x-teams::team-switcher :team="$team" />
+                        </div>
+
+                        @include('teams::partials.team-sidebar-nav', ['team' => $team])
+                    @endif
                 </div>
             </aside>
 
             {{-- Main column --}}
             <div class="flex min-w-0 flex-1 flex-col">
                 <header class="sticky top-0 z-30 flex h-16 flex-shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-4 backdrop-blur md:px-8">
+                    {{-- Mobile menu button --}}
                     <x-button.icon class="md:hidden" @click="drawerOpen = !drawerOpen" title="{{ __('Open menu') }}">
                         <x-heroicon-o-bars-3 class="h-5 w-5" />
                     </x-button.icon>
-
-                    @if ($team)
-                        <x-teams::team-switcher :team="$team" />
-                    @endif
 
                     <div class="flex-1"></div>
 

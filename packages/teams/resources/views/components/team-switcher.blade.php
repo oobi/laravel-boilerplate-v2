@@ -2,17 +2,19 @@
 
 @php($teams = auth()->user()->teams()->orderBy('name')->get())
 
-<div class="dropdown">
-    <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2 normal-case">
-        <span class="max-w-48 truncate font-semibold">{{ $team->name }}</span>
+<div class="dropdown w-full">
+    <div tabindex="0" role="button" class="flex w-full items-center gap-2 rounded-box border border-base-300 bg-base-100 px-3 py-2 text-left transition hover:bg-base-200">
+        <div class="min-w-0 flex-1">
+            <div class="text-[0.65rem] font-medium uppercase tracking-wide text-base-content/50">{{ config('teams.labels.singular', 'Team') }}</div>
+            <div class="truncate text-sm font-semibold text-base-content">{{ $team->name }}</div>
+        </div>
         @if ($teams->count() > 1)
-            <x-heroicon-o-chevron-up-down class="h-4 w-4 opacity-60" />
+            <x-heroicon-o-chevron-up-down class="h-4 w-4 flex-shrink-0 text-base-content/50" />
         @endif
     </div>
 
     @if ($teams->count() > 1)
-        <ul tabindex="0" class="menu dropdown-content z-50 mt-2 w-60 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
-            <li class="menu-title">{{ config('teams.labels.plural', 'Teams') }}</li>
+        <ul tabindex="0" class="menu dropdown-content z-50 mt-1 w-full min-w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
             @foreach ($teams as $t)
                 <li>
                     <a href="{{ route('team.dashboard', ['team' => $t->slug]) }}" @class(['font-semibold' => $t->is($team)])>
