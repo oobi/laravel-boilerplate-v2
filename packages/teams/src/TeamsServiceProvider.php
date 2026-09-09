@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams;
 
+use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamPermissionResolver;
 use Illuminate\Support\ServiceProvider;
@@ -39,5 +40,23 @@ class TeamsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'teams');
+        $this->loadRoutesFrom(__DIR__.'/../routes/teams.php');
+
+        $this->registerTeamNavigation();
+    }
+
+    /**
+     * The team area's default sidebar. Add-ons extend it via TeamNavRegistry the
+     * same way they extend the system nav — abilities resolve against the current
+     * team (see the team-sidebar-nav partial).
+     */
+    private function registerTeamNavigation(): void
+    {
+        TeamNavRegistry::item('team-dashboard')
+            ->label(__('Dashboard'))
+            ->route('team.dashboard')
+            ->icon('heroicon-o-home')
+            ->order(0);
     }
 }
