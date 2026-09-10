@@ -24,7 +24,9 @@
 .ui-option-group-header {
     padding: 0.625rem 1rem;
     column-gap: 1rem;
-    background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
+    /* 8% (not 6%) so the band keeps its weight against a recessed `--ui-inset-bg`
+       section as well as a plain base-100 card. */
+    background-color: color-mix(in oklab, var(--color-neutral) 10%, var(--color-base-100));
 }
 
 /* The box supplies the spacing inside: no schema gap, the options carry their own padding. */

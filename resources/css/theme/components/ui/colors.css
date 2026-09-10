@@ -9,6 +9,16 @@
  * reads the color via `--avatar-color`/`--avatar-color-content`.
  */
 @layer components {
+    /*
+     * Recessed-surface fill for nested islands (`.card-inset`, nested
+     * `.fi-section`). A subtle step off base-100 toward base-200 — enough to
+     * read as a well carved into the parent without going so dark that faintly
+     * tinted children (e.g. option-group header bands) lose contrast against
+     * it. Derived from base-200 so the shade points the right way — darker than
+     * base-100 — in both light and dark themes.
+     */
+    :root { --ui-inset-bg: color-mix(in oklab, var(--color-base-200) 55%, var(--color-base-100)); }
+
     .ui-banner-primary   { --ui-banner-color: var(--color-primary); }
     .bg-soft-primary     { background-color: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); }
     .avatar-primary      { --avatar-color: var(--color-primary); --avatar-color-content: var(--color-primary-content); }

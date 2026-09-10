@@ -12,3 +12,27 @@
 .fi-section:not(.fi-aside) {
     box-shadow: var(--ui-island-shadow);
 }
+
+/*
+|--------------------------------------------------------------------------
+| Nested sections — recessed, not a second floating island
+|--------------------------------------------------------------------------
+| When a section sits inside another island — a `.card` body or the tab panel
+| (e.g. the Roles editor's form inside its scope tabs) — the island shadow
+| stacks a second elevation on the first and a white section on a white panel
+| reads as white-on-white. Recess it instead, matching `.card-inset` and the
+| `.ui-option-group` treatment in filament-forms.css: drop the shadow, keep the
+| standard outline, shade one step to base-200 so it reads as a well carved
+| into the parent. Sections sitting directly on the page background are
+| unaffected and keep their island shadow.
+|
+| The shade is deliberately subtle (the shared `--ui-inset-bg`): a heavier fill
+| swallows faintly tinted children like the permission option-group header
+| bands, which sit only a few percent off base-100.
+*/
+.card .fi-section:not(.fi-aside),
+.tabs-connected__content .fi-section:not(.fi-aside) {
+    box-shadow: none;
+    border: 1px solid var(--color-base-300);
+    background-color: var(--ui-inset-bg);
+}

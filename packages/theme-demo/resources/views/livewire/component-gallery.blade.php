@@ -20,6 +20,21 @@
         @endforeach
     </x-card>
 
+    {{-- Cards — including nested (inset) cards --}}
+    <x-card :title="__('Cards')">
+        <p class="ui-subtle text-sm">{{ __('A card nested inside another card/panel should use `inset` so it reads as a recessed well (no shadow, shaded to base-200) rather than a second floating island.') }}</p>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <x-card :title="__('Default')" type="panel">
+                <p class="text-sm">{{ __('Standard island — shadow + base-100 surface.') }}</p>
+            </x-card>
+
+            <x-card :title="__('Inset')" type="panel" inset>
+                <p class="text-sm">{{ __('Recessed into the parent — flat + base-200 surface.') }}</p>
+            </x-card>
+        </div>
+    </x-card>
+
     {{-- Buttons --}}
     <x-card :title="__('Buttons')" bodyClass="gap-4">
         {{-- Semantic intent components — the preferred API in app markup (see .ai/rules/components.md) --}}
