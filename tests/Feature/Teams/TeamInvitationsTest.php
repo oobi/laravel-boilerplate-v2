@@ -44,7 +44,7 @@ class TeamInvitationsTest extends TestCase
         $team = $this->team($owner);
 
         Livewire::actingAs($owner)
-            ->test(ListInvitations::class, ['team' => $team])
+            ->test(PendingInvitations::class, ['team' => $team])
             ->callAction('invite', data: ['email' => 'New.Person@Example.com', 'role' => 'Member'])
             ->assertHasNoActionErrors();
 
@@ -95,7 +95,7 @@ class TeamInvitationsTest extends TestCase
         $team->addMember($member, 'Member');
 
         Livewire::actingAs($owner)
-            ->test(ListInvitations::class, ['team' => $team])
+            ->test(PendingInvitations::class, ['team' => $team])
             ->callAction('invite', data: ['email' => 'MEMBER@example.com'])
             ->assertHasActionErrors(['email']);
 

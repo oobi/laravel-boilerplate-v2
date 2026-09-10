@@ -3,7 +3,6 @@
 namespace Tests\Feature\Teams\Admin;
 
 use App\Models\User;
-use Concise\Teams\Livewire\Admin\Teams\TeamInvitations;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
@@ -57,7 +56,7 @@ class TeamInvitationsPageTest extends TestCase
         config(['teams.creation' => 'admin-provisioned']);
 
         Livewire::actingAs($this->admin)
-            ->test(TeamInvitations::class, ['team' => $this->team])
+            ->test(PendingInvitations::class, ['team' => $this->team])
             ->callAction('invite', data: ['email' => 'new@example.com', 'role' => 'Member'])
             ->assertHasNoActionErrors();
 

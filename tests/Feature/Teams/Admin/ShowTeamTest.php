@@ -4,7 +4,6 @@ namespace Tests\Feature\Teams\Admin;
 
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
-use Concise\Teams\Livewire\Admin\Teams\TeamMembers;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
@@ -81,12 +80,19 @@ class ShowTeamTest extends TestCase
         $user = User::factory()->create();
 
         Livewire::actingAs($this->admin)
-            ->test(TeamMembers::class, ['team' => $this->team])
+            ->test(MembersTable::class, ['team' => $this->team])
             ->callAction('addMember', data: ['user_id' => $user->id, 'roles' => 'Member'])
             ->assertHasNoActionErrors();
 
         $this->assertTrue($this->team->fresh()->hasUser($user));
         $this->assertSame('Member', $this->team->roleFor($user));
+    }
+
+    public function test_add_member_is_a_system_admin_tool_not_a_team_one(): void
+    {
+        Livewire::actingAs($this->owner)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertActionHidden('addMember');
     }
 
     public function test_a_system_admin_manages_members_without_being_one(): void

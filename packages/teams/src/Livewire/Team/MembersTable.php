@@ -15,6 +15,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -262,9 +263,64 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }
 
+    /**
+     * System admin only: add an existing account as a member (the team area
+     * invites by email instead). Lives in the table's toolbar — a table's
+     * primary action belongs beside the table, not in a row of its own.
+     */
+    public function addMemberAction(): Action
+    {
+        return Action::make('addMember')
+            ->label(__('Add member'))
+            ->icon('heroicon-o-user-plus')
+            ->modalHeading(__('Add a member to :team', ['team' => $this->team->name]))
+            ->modalWidth(Width::Medium)
+            ->visible(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value))
+            ->schema([
+                Select::make('user_id')
+                    ->label(__('admin.user'))
+                    ->required()
+                    ->searchable()
+                    ->getSearchResultsUsing(fn (string $search): array => $this->searchNonMembers($search))
+                    ->getOptionLabelUsing(fn (mixed $value): ?string => User::find($value)?->email),
+
+                TeamRoleField::make(),
+            ])
+            ->action(function (array $data): void {
+                Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+
+                $user = User::query()->findOrFail($data['user_id']);
+                $this->team->addMember($user, TeamRoleField::selected($data));
+                $this->memberRoles = null;
+                $this->dispatch('team-members-updated');
+
+                Notification::make()
+                    ->title(__(':name added to :team', ['name' => $user->name, 'team' => $this->team->name]))
+                    ->success()
+                    ->send();
+            });
+    }
+
     public function render(): View
     {
         return view('teams::livewire.team.members-table');
+    }
+
+    /** @return array<int, string> */
+    private function searchNonMembers(string $search): array
+    {
+        return User::query()
+            ->whereDoesntHave('teams', fn (Builder $query) => $query->whereKey($this->team->getKey()))
+            ->where(function (Builder $query) use ($search): void {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->orderBy('last_name')
+            ->limit(20)
+            ->get()
+            ->mapWithKeys(fn (User $user): array => [$user->id => "{$user->name} — {$user->email}"])
+            ->all();
     }
 
     /**

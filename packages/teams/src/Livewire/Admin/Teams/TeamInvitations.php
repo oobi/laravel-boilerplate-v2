@@ -5,27 +5,18 @@ declare(strict_types=1);
 namespace Concise\Teams\Livewire\Admin\Teams;
 
 use App\Enums\SystemPermission;
-use Concise\Teams\Livewire\Concerns\HasInviteAction;
 use Concise\Teams\Models\Team;
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Filament\Schemas\Contracts\HasSchemas;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 /**
- * System admin: a team's Invitations tab — invite by email (in any creation
- * mode; the mode only restricts members) plus the shared pending invitations
- * table.
+ * System admin: a team's Invitations tab — the shared pending invitations
+ * table, which carries "invite" in its toolbar (in any creation mode; the
+ * mode only restricts members).
  */
-class TeamInvitations extends Component implements HasActions, HasSchemas
+class TeamInvitations extends Component
 {
-    use HasInviteAction;
-    use InteractsWithActions;
-    use InteractsWithSchemas;
-
     public Team $team;
 
     public function mount(Team $team): void
@@ -33,11 +24,6 @@ class TeamInvitations extends Component implements HasActions, HasSchemas
         Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
 
         $this->team = $team;
-    }
-
-    public function canInvite(): bool
-    {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value);
     }
 
     public function render(): View

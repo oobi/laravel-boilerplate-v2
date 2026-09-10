@@ -23,6 +23,12 @@
                 class="min-w-36"
             />
         </x-slot:filters>
+
+        @if ($this->addMemberAction->isVisible())
+            <x-slot:actions>
+                {{ $this->addMemberAction }}
+            </x-slot:actions>
+        @endif
     </x-table-header>
 
     {{ $this->table }}

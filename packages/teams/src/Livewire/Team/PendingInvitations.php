@@ -8,6 +8,7 @@ use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamCreationMode;
+use Concise\Teams\Livewire\Concerns\HasInviteAction;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Filament\Actions\Action;
@@ -37,6 +38,7 @@ use Livewire\Component;
  */
 class PendingInvitations extends Component implements HasActions, HasSchemas, HasTable
 {
+    use HasInviteAction;
     use InteractsWithActions;
     use InteractsWithSchemas;
     use InteractsWithTable;
@@ -49,6 +51,12 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
         $this->team = $team;
 
         abort_unless($this->canManage(), 403);
+    }
+
+    /** "Invite" lives in this table's toolbar; whoever may manage invitations may send one. */
+    public function canInvite(): bool
+    {
+        return $this->canManage();
     }
 
     /** Re-query after the host page sends a new invitation. */
