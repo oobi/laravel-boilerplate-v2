@@ -12,6 +12,7 @@ use App\Enums\UserAbility;
 use App\Http\Responses\PasswordResetLinkResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Support\Roles\AdminRoleScopes;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Notifications\Livewire\Notifications;
@@ -51,6 +52,8 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentModalDefaults();
         $this->registerFilamentBulkActionDefaults();
         $this->registerNotifications();
+
+        AdminRoleScopes::define();
 
         User::observe(UserObserver::class);
     }

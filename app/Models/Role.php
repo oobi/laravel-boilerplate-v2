@@ -52,12 +52,22 @@ class Role extends SpatieRole
     }
 
     /**
+     * Roles in one scope — see App\Support\Roles\RoleScope for what a scope is.
+     *
+     * @param  Builder<Role>  $query
+     */
+    public function scopeOfScope(Builder $query, string $scope): void
+    {
+        $query->where('scope', $scope);
+    }
+
+    /**
      * App-wide roles managed in the system Roles screen.
      *
      * @param  Builder<Role>  $query
      */
     public function scopeSystemRoles(Builder $query): void
     {
-        $query->where('scope', self::SYSTEM_SCOPE);
+        $query->ofScope(self::SYSTEM_SCOPE);
     }
 }

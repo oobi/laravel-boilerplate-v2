@@ -6,8 +6,10 @@ namespace Concise\Teams\Models;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Theme\DaisyColor;
 use Concise\Teams\Database\Factories\TeamFactory;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -178,7 +180,7 @@ class Team extends Model
      */
     public static function availableRoles(): Builder
     {
-        return Role::query()->where('scope', self::ROLE_SCOPE);
+        return Role::query()->ofScope(self::ROLE_SCOPE);
     }
 
     /**
@@ -189,7 +191,7 @@ class Team extends Model
      *
      * @param  list<TeamPermission>  $permissions
      */
-    public static function createRole(string $name, array $permissions = []): Role
+    public static function createRole(string $name, array $permissions = [], ?DaisyColor $color = null): Role
     {
         $guard = Guard::getDefaultName(Role::class);
         $existing = Role::query()->where('name', $name)->where('guard_name', $guard)->first();
@@ -205,8 +207,8 @@ class Team extends Model
         $role = Role::query()->create([
             'name' => $name,
             'guard_name' => $guard,
-            'team_id' => null,
-            'scope' => self::ROLE_SCOPE,
+            'color' => $color,
+            ...app(TeamRoleScope::class)->attributes(),
         ]);
 
         if ($permissions !== []) {

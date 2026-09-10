@@ -16,6 +16,15 @@
 @utility ui-subtle {
     @apply text-sm text-base-content/60;
 }
+/*
+ * Eyebrow: a small uppercase label that names a group without competing with
+ * the content it heads — a tier below ui-h3, and unmistakable next to body
+ * text. Same voice as .nav-section-label and the table header cells; use it
+ * for sub-groups inside a card or form section (e.g. a permission category).
+ */
+@utility ui-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-base-content/70;
+}
 
 @layer components {
     /* Links */

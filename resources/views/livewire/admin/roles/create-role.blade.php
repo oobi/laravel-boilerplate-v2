@@ -1,7 +1,7 @@
 <div>
     @section('page-title', __('admin.create'))
 
-    <x-page-header :title="__('admin.add_role')" />
+    <x-page-header :title="__('admin.add_role')" :description="$description" />
 
     <form wire:submit="create">
         {{ $this->form }}
@@ -11,7 +11,7 @@
                 {{ __('admin.add_role') }}
             </x-button.action>
 
-            <x-button.cancel href="{{ route('roles.index') }}" />
+            <x-button.cancel href="{{ $cancelUrl }}" />
         </div>
     </form>
 </div>

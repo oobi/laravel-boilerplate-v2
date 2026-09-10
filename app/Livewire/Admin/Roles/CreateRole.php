@@ -7,6 +7,8 @@ namespace App\Livewire\Admin\Roles;
 use App\Enums\SystemGate;
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use App\Models\Role;
+use App\Support\Roles\RoleScope;
+use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Theme\DaisyColor;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -17,6 +19,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Spatie\Permission\Models\Permission;
 
@@ -25,6 +28,10 @@ class CreateRole extends Component implements HasSchemas
     use HasPermissionsSchema;
     use InteractsWithSchemas;
 
+    /** The RoleScope the new role belongs to (`?scope=`, from the Roles screen's active tab). */
+    #[Locked]
+    public string $scopeKey = Role::SYSTEM_SCOPE;
+
     /** @var array<string, mixed> */
     public ?array $data = [];
 
@@ -32,10 +39,19 @@ class CreateRole extends Component implements HasSchemas
     {
         Gate::authorize(SystemGate::MANAGE_ROLES);
 
+        $this->scopeKey = (string) request()->query('scope', RoleScopeRegistry::default()->key());
+
+        abort_if(RoleScopeRegistry::find($this->scopeKey) === null, 404);
+
         $this->form->fill([
             'color' => DaisyColor::NEUTRAL->value,
             ...$this->permissionsStateForRole(null),
         ]);
+    }
+
+    protected function roleScope(): RoleScope
+    {
+        return RoleScopeRegistry::find($this->scopeKey) ?? abort(404);
     }
 
     public function form(Schema $schema): Schema
@@ -74,6 +90,7 @@ class CreateRole extends Component implements HasSchemas
         $role = Role::create([
             'name' => $data['name'],
             'color' => $data['color'],
+            ...$this->roleScope()->attributes(),
         ]);
 
         $role->givePermissionTo(collect($this->resolvePermissionsFromState($data))
@@ -90,6 +107,12 @@ class CreateRole extends Component implements HasSchemas
 
     public function render(): View
     {
-        return view('livewire.admin.roles.create-role');
+        $scope = $this->roleScope();
+
+        return view('livewire.admin.roles.create-role', [
+            // Only worth saying which family the role joins when there's more than one.
+            'description' => RoleScopeRegistry::all()->count() > 1 ? $scope->description() : null,
+            'cancelUrl' => route('roles.index', RoleScopeRegistry::routeParameters($scope)),
+        ]);
     }
 }

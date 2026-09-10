@@ -1,9 +1,9 @@
 <div>
     @section('page-title', __('admin.roles'))
 
-    <x-page-header :title="__('admin.roles')" :description="__('admin.roles_description')">
+    <x-page-header :title="__('admin.roles')" :description="$scope->description()">
         <x-slot:actions>
-            <x-button href="{{ route('roles.create') }}">
+            <x-button href="{{ $createUrl }}">
                 {{ __('admin.add_role') }}
             </x-button>
 
@@ -11,32 +11,21 @@
         </x-slot:actions>
     </x-page-header>
 
-    @if ($role)
-        <x-form-select
-            name="selectedRoleId"
-            :label="__('admin.select_role')"
-            wire:model.live="selectedRoleId"
-            :floating="false"
-            class="mb-6 max-w-sm"
-        >
-            @foreach ($roles as $option)
-                <option value="{{ $option->id }}">{{ $option->name }}</option>
+    @if ($tabs->isNotEmpty())
+        {{-- One tab per registered RoleScope (core's system scope plus any add-on's). --}}
+        <x-tabs-nav :scrollable="false">
+            @foreach ($tabs as $tab)
+                <x-tabs-item :active="$tab['active']" :href="$tab['href']" :badge="$tab['badge']">
+                    {{ $tab['label'] }}
+                </x-tabs-item>
             @endforeach
-        </x-form-select>
 
-        <form wire:submit="save">
-            {{ $this->form }}
-
-            <div class="mt-6 flex items-center gap-4">
-                <x-button.action type="submit">
-                    {{ __('admin.save_changes') }}
-                </x-button.action>
-            </div>
-        </form>
+            <x-slot:content>
+                @include('livewire.admin.roles.partials.editor', ['form' => $this->form])
+            </x-slot:content>
+        </x-tabs-nav>
     @else
-        <x-alert color="info">
-            {{ __('admin.no_roles_found') }}
-        </x-alert>
+        @include('livewire.admin.roles.partials.editor', ['form' => $this->form])
     @endif
 
     <x-filament-actions::modals />

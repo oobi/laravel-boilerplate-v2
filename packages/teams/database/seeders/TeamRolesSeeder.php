@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Database\Seeders;
 
+use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\TeamsServiceProvider;
@@ -24,19 +25,25 @@ use Spatie\Permission\PermissionRegistrar;
 class TeamRolesSeeder extends Seeder
 {
     /**
-     * Role name => the TeamPermission cases it holds.
+     * Role name => badge colour and the TeamPermission cases it holds.
      *
-     * @return array<string, list<TeamPermission>>
+     * @return array<string, array{color: DaisyColor, permissions: list<TeamPermission>}>
      */
     protected function defaults(): array
     {
         return [
             'Team Admin' => [
-                TeamPermission::MANAGE_MEMBERS,
-                TeamPermission::INVITE_MEMBERS,
-                TeamPermission::UPDATE_TEAM,
+                'color' => DaisyColor::ERROR,
+                'permissions' => [
+                    TeamPermission::MANAGE_MEMBERS,
+                    TeamPermission::INVITE_MEMBERS,
+                    TeamPermission::UPDATE_TEAM,
+                ],
             ],
-            'Member' => [],
+            'Member' => [
+                'color' => DaisyColor::PRIMARY,
+                'permissions' => [],
+            ],
         ];
     }
 
@@ -53,8 +60,8 @@ class TeamRolesSeeder extends Seeder
         }
 
         if (Team::availableRoles()->doesntExist()) {
-            foreach ($this->defaults() as $name => $permissions) {
-                Team::createRole($name, $permissions);
+            foreach ($this->defaults() as $name => $role) {
+                Team::createRole($name, $role['permissions'], $role['color']);
             }
         }
 

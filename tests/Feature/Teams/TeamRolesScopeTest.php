@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Teams;
 
+use App\Enums\SystemPermission;
+use App\Livewire\Admin\Roles\CreateRole;
 use App\Livewire\Admin\Roles\ManageRoles;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Theme\DaisyColor;
 use Concise\Teams\Database\Seeders\TeamRolesSeeder;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
@@ -41,9 +44,11 @@ class TeamRolesScopeTest extends TestCase
         $this->assertNull($admin->team_id, 'shared team roles resolve in every team scope');
         $this->assertSame(Team::ROLE_SCOPE, $admin->scope);
         $this->assertTrue($admin->hasPermissionTo(TeamPermission::MANAGE_MEMBERS->value));
+        $this->assertSame(DaisyColor::ERROR, $admin->color);
 
         $member = Team::availableRoles()->where('name', 'Member')->firstOrFail();
         $this->assertFalse($member->hasPermissionTo(TeamPermission::MANAGE_MEMBERS->value));
+        $this->assertSame(DaisyColor::PRIMARY, $member->color);
     }
 
     public function test_the_seeder_does_nothing_when_the_teams_tier_is_not_active(): void
@@ -146,12 +151,54 @@ class TeamRolesScopeTest extends TestCase
             ->assertDontSee('Team Admin');
     }
 
-    public function test_the_system_roles_screen_rejects_a_team_role(): void
+    public function test_the_roles_screen_shows_a_team_tab_that_opens_on_the_first_team_role(): void
+    {
+        Team::createRole('Team Admin');
+        $member = Team::createRole('Member');
+        Role::findOrCreate('Support');
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->withQueryParams(['scope' => Team::ROLE_SCOPE])
+            ->test(ManageRoles::class)
+            ->assertSet('scopeKey', Team::ROLE_SCOPE)
+            ->assertSet('selectedRoleId', (string) $member->id)
+            ->assertSeeHtml('role="tab"')
+            ->assertSee(config('teams.labels.singular'))
+            ->assertDontSee('Support');
+    }
+
+    public function test_a_team_role_is_edited_with_the_team_vocabulary(): void
     {
         $teamRole = Team::createRole('Team Admin');
 
-        $this->actingAs(User::factory()->superAdmin()->create())
-            ->get(route('roles.edit', $teamRole))
-            ->assertNotFound();
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageRoles::class, ['role' => $teamRole])
+            ->assertSet('scopeKey', Team::ROLE_SCOPE)
+            ->assertSee(TeamPermission::MANAGE_MEMBERS->label())
+            ->assertDontSee(SystemPermission::MANAGE_USERS->label())
+            ->set('data.permissions_members', [TeamPermission::MANAGE_MEMBERS->value])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $teamRole->refresh();
+        $this->assertTrue($teamRole->checkPermissionTo(TeamPermission::MANAGE_MEMBERS->value));
+        $this->assertFalse($teamRole->checkPermissionTo(TeamPermission::INVITE_MEMBERS->value));
+    }
+
+    public function test_a_team_role_can_be_created_from_the_team_tab(): void
+    {
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->withQueryParams(['scope' => Team::ROLE_SCOPE])
+            ->test(CreateRole::class)
+            ->assertSee(TeamPermission::INVITE_MEMBERS->label())
+            ->assertDontSee(SystemPermission::MANAGE_USERS->label())
+            ->set('data.name', 'Billing')
+            ->set('data.permissions_members', [TeamPermission::INVITE_MEMBERS->value])
+            ->call('create')
+            ->assertHasNoErrors();
+
+        $role = Team::availableRoles()->where('name', 'Billing')->firstOrFail();
+        $this->assertNull($role->team_id, 'shared team roles resolve in every team scope');
+        $this->assertTrue($role->checkPermissionTo(TeamPermission::INVITE_MEMBERS->value));
     }
 }

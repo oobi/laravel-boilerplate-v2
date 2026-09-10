@@ -5,6 +5,7 @@ namespace Database\Seeders\Demo;
 use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Theme\DaisyColor;
 use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
@@ -22,6 +23,7 @@ class UserSeeder extends Seeder
 
         // Demo non-super-admin role, showing what an admin-configured role looks like
         $support = Role::findOrCreate('Support');
+        $support->update(['color' => DaisyColor::WARNING]);
         $support->givePermissionTo([
             SystemPermission::ACCESS_ADMIN_PANEL->value,
             SystemPermission::MANAGE_USERS->value,

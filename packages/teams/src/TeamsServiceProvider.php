@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Concise\Teams;
 
+use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
+use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamPermissionResolver;
 use Illuminate\Support\Facades\Gate;
@@ -59,6 +61,9 @@ class TeamsServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/teams.php');
 
         Gate::policy(Team::class, TeamPolicy::class);
+
+        // Team roles get their own tab on the admin Roles screen.
+        RoleScopeRegistry::register(TeamRoleScope::class);
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — not a role — and team roles are seeded centrally by
