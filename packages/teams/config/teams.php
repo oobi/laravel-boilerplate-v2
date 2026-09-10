@@ -45,7 +45,7 @@ return [
     |
     */
 
-    'creation' => 'self-service',
+    'creation' => env('TEAMS_CREATION', 'self-service'),
 
     /*
     |--------------------------------------------------------------------------
@@ -59,7 +59,7 @@ return [
     |
     */
 
-    'multiple_roles_per_member' => false,
+    'multiple_roles_per_member' => (bool) env('TEAMS_MULTIPLE_ROLES', false),
 
     /*
     |--------------------------------------------------------------------------

@@ -9,17 +9,17 @@
                 id="members-role-filter"
                 model="tableFilters.role.value"
                 :label="\Concise\Teams\Models\Team::allowsMultipleRoles() ? __('Roles') : __('Role')"
-                :placeholder="__('All roles')"
-                :options="$this->roleOptions()"
+                :placeholder="__('admin.all_roles')"
+                :options="$this->roleFilterOptions()"
                 class="min-w-36"
             />
 
             <x-table-filter-select
-                id="members-standing-filter"
-                model="tableFilters.standing.value"
-                :label="__('Standing')"
-                :placeholder="__('Everyone')"
-                :options="\Concise\Teams\Livewire\Team\MembersTable::standingOptions()"
+                id="members-status-filter"
+                model="tableFilters.status.value"
+                :label="__('admin.status')"
+                :placeholder="__('admin.all_statuses')"
+                :options="\Concise\Teams\Livewire\Team\MembersTable::statusOptions()"
                 class="min-w-36"
             />
         </x-slot:filters>

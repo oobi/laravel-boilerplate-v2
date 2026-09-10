@@ -44,7 +44,7 @@ class TeamInvitationNotification extends Notification implements ShouldQueue
                 'label' => $label,
                 'app' => config('app.name'),
             ]))
-            ->line(__('If you don’t have an account yet, register with this email address (:email) first, then open the link below.', [
+            ->line(__('If you already have an account for :email, you’ll be asked to sign in; if not, the link lets you create one.', [
                 'email' => $this->invitation->email,
             ]))
             ->action(__('Accept invitation'), $this->invitation->acceptUrl())

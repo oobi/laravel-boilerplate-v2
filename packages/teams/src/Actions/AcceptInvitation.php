@@ -8,11 +8,15 @@ use App\Models\User;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Str;
 
 /**
  * Accept an invitation as the signed-in user: they join the team with the
  * invited role (or none, if that role has since been deleted), the invitation
- * is consumed, and the team becomes their current one.
+ * is consumed, and the team becomes their current one. Following the signed
+ * link sent to their address is proof of control of it, so an unverified
+ * account is marked verified — the same standard as Laravel's own
+ * verification link.
  */
 class AcceptInvitation
 {
@@ -27,6 +31,10 @@ class AcceptInvitation
 
         $team = $invitation->team;
 
+        if (! $team->active) {
+            throw new AuthorizationException(__('This :label is currently inactive.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]));
+        }
+
         $role = $invitation->role !== null && Team::availableRoles()->where('name', $invitation->role)->exists()
             ? $invitation->role
             : null;
@@ -34,6 +42,10 @@ class AcceptInvitation
         $team->addMember($user, $role);
         $invitation->delete();
         $user->switchTeam($team);
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
 
         return $team;
     }

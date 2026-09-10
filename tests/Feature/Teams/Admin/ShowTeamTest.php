@@ -126,13 +126,17 @@ class ShowTeamTest extends TestCase
             ->assertCanSeeTableRecords([$admin])
             ->assertCanNotSeeTableRecords([$this->owner, $member, $suspended])
             ->resetTableFilters()
-            ->filterTable('standing', 'owners')
+            ->filterTable('role', MembersTable::OWNERS_FILTER_VALUE)
             ->assertCanSeeTableRecords([$this->owner])
             ->assertCanNotSeeTableRecords([$admin, $member, $suspended])
             ->resetTableFilters()
-            ->filterTable('standing', 'suspended')
+            ->filterTable('status', 'suspended')
             ->assertCanSeeTableRecords([$suspended])
-            ->assertCanNotSeeTableRecords([$this->owner, $admin, $member]);
+            ->assertCanNotSeeTableRecords([$this->owner, $admin, $member])
+            ->resetTableFilters()
+            ->filterTable('status', 'active')
+            ->assertCanSeeTableRecords([$this->owner, $admin, $member])
+            ->assertCanNotSeeTableRecords([$suspended]);
     }
 
     public function test_members_are_paginated(): void

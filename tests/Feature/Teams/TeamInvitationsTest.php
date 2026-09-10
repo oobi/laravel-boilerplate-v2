@@ -14,6 +14,7 @@ use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use RuntimeException;
 use Tests\TestCase;
@@ -174,12 +175,173 @@ class TeamInvitationsTest extends TestCase
         $this->assertFalse($team->fresh()->hasUser($invitee));
     }
 
-    public function test_guests_log_in_first(): void
+    public function test_a_guest_with_an_account_signs_in_and_comes_back_to_accept(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+
+        $this->get($invitation->acceptUrl())
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status')
+            ->assertSessionHas('url.intended', $invitation->acceptUrl());
+
+        // …and after signing in, the intended URL is the signed accept link.
+        $this->actingAs($invitee)
+            ->get($invitation->acceptUrl())
+            ->assertRedirect(route('team.dashboard', ['team' => $team->slug]));
+
+        $this->assertTrue($team->fresh()->hasUser($invitee));
+    }
+
+    public function test_signing_in_returns_to_the_accept_link_and_joins(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+
+        $this->get($invitation->acceptUrl())->assertRedirect(route('login'));
+
+        // Fortify sends a fresh login to the intended URL — the signed accept link.
+        $this->post('/login', ['email' => 'invitee@example.com', 'password' => 'password'])
+            ->assertRedirect($invitation->acceptUrl());
+
+        $this->get($invitation->acceptUrl())
+            ->assertRedirect(route('team.dashboard', ['team' => $team->slug]));
+
+        $this->assertTrue($team->fresh()->hasUser($invitee));
+    }
+
+    public function test_a_revoked_invitation_link_is_dead(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+        $link = $invitation->acceptUrl();
+        $registerLink = URL::signedRoute('team.invitations.register', ['invitation' => $invitation]);
+
+        $invitation->delete();
+
+        $this->actingAs($invitee)->get($link)->assertNotFound();
+        $this->get($registerLink)->assertNotFound();
+        $this->assertFalse($team->fresh()->hasUser($invitee));
+    }
+
+    public function test_a_role_deleted_after_inviting_is_simply_not_granted(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+        $temporary = Team::createRole('Temporary');
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com', 'role' => 'Temporary']);
+        $temporary->delete();
+
+        $this->actingAs($invitee)->get($invitation->acceptUrl())->assertRedirect();
+
+        $this->assertTrue($team->fresh()->hasUser($invitee));
+        $this->assertNull($team->roleFor($invitee));
+    }
+
+    public function test_an_invitation_to_an_inactive_team_cannot_be_accepted(): void
+    {
+        $team = Team::factory()->inactive()->create();
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+
+        $this->actingAs($invitee)->get($invitation->acceptUrl())->assertForbidden();
+
+        $this->assertFalse($team->fresh()->hasUser($invitee));
+        $this->assertModelExists($invitation, 'kept for when the team is reactivated');
+    }
+
+    public function test_the_email_names_the_team_and_links_to_the_signed_accept_url(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+
+        $mail = (new TeamInvitationNotification($invitation))->toMail(new AnonymousNotifiable);
+
+        $this->assertStringContainsString($team->name, $mail->subject);
+        $this->assertSame($invitation->acceptUrl(), $mail->actionUrl);
+        $this->assertStringContainsString('invitee@example.com', implode(' ', $mail->introLines));
+    }
+
+    public function test_a_guest_without_an_account_registers_through_the_invitation(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'newcomer@example.com', 'role' => 'Member']);
+
+        $registerUrl = $this->get($invitation->acceptUrl())->headers->get('Location');
+        $this->assertStringContainsString(route('team.invitations.register', $invitation), $registerUrl);
+
+        $this->get($registerUrl)
+            ->assertOk()
+            ->assertSee($team->name)
+            ->assertSee('newcomer@example.com');
+
+        $storeUrl = URL::signedRoute('team.invitations.register.store', ['invitation' => $invitation]);
+
+        $this->post($storeUrl, [
+            'first_name' => 'New',
+            'last_name' => 'Comer',
+            'password' => 'Str0ng-passw0rd!',
+            'password_confirmation' => 'Str0ng-passw0rd!',
+        ])->assertRedirect(route('team.dashboard', ['team' => $team->slug]));
+
+        $user = User::query()->where('email', 'newcomer@example.com')->firstOrFail();
+        $this->assertAuthenticatedAs($user);
+        $this->assertTrue($user->hasVerifiedEmail(), 'the signed link proved the address');
+        $this->assertTrue($team->fresh()->hasUser($user));
+        $this->assertSame('Member', $team->roleFor($user));
+        $this->assertModelMissing($invitation);
+    }
+
+    public function test_the_invitation_registration_pages_must_be_signed(): void
     {
         $team = $this->team(User::factory()->create());
         $invitation = TeamInvitation::factory()->create(['team_id' => $team->id]);
 
-        $this->get($invitation->acceptUrl())->assertRedirect(route('login'));
+        $this->get(route('team.invitations.register', $invitation))->assertForbidden();
+        $this->post(route('team.invitations.register.store', $invitation), [])->assertForbidden();
+    }
+
+    public function test_registering_through_an_invitation_ignores_a_submitted_email(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invited@example.com']);
+        $storeUrl = URL::signedRoute('team.invitations.register.store', ['invitation' => $invitation]);
+
+        $this->post($storeUrl, [
+            'email' => 'someone-else@example.com',
+            'first_name' => 'New',
+            'last_name' => 'Comer',
+            'password' => 'Str0ng-passw0rd!',
+            'password_confirmation' => 'Str0ng-passw0rd!',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['email' => 'invited@example.com']);
+        $this->assertDatabaseMissing('users', ['email' => 'someone-else@example.com']);
+    }
+
+    public function test_a_signed_in_user_is_sent_from_the_registration_page_to_accept(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+
+        $this->actingAs($invitee)
+            ->get(URL::signedRoute('team.invitations.register', ['invitation' => $invitation]))
+            ->assertRedirect($invitation->acceptUrl());
+    }
+
+    public function test_accepting_verifies_an_unverified_account(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $invitee = User::factory()->unverified()->create(['email' => 'invitee@example.com']);
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+
+        $this->actingAs($invitee)->get($invitation->acceptUrl())->assertRedirect();
+
+        $this->assertTrue($invitee->fresh()->hasVerifiedEmail());
     }
 
     protected function tearDown(): void

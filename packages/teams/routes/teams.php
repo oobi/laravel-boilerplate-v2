@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\SystemPermission;
 use Concise\Teams\Http\Controllers\AcceptTeamInvitation;
+use Concise\Teams\Http\Controllers\RegisterFromInvitation;
 use Concise\Teams\Http\Controllers\TeamRedirect;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
 use Concise\Teams\Livewire\Admin\Teams\ListTeams;
@@ -28,12 +29,6 @@ Route::middleware(['web', 'auth', 'verified'])
         Route::get('/', TeamRedirect::class)->name('index');
         Route::get('/onboarding', Onboarding::class)->name('onboarding');
 
-        // The signed accept link from an invitation email. The signature proves the link is ours;
-        // the signed-in account must be the invitee (AcceptInvitation). Guests log in first and return.
-        Route::get('/invitations/{invitation}/accept', AcceptTeamInvitation::class)
-            ->middleware('signed')
-            ->name('invitations.accept');
-
         // Team-scoped pages: {team} slug is resolved + authorized by the middleware.
         Route::middleware(ResolveTeamContext::class)
             ->prefix('{team}')
@@ -42,6 +37,19 @@ Route::middleware(['web', 'auth', 'verified'])
                 Route::get('/members', ListMembers::class)->name('members');
                 Route::get('/invitations', ListInvitations::class)->name('invitations');
             });
+    });
+
+// Invitation links: signed, and deliberately NOT behind auth. The signature is
+// what authorizes them (it's the emailed link); AcceptTeamInvitation then routes
+// a guest to sign in or to register through the invitation, and holds a
+// signed-in account to the invited email.
+Route::middleware(['web', 'signed'])
+    ->prefix($prefix.'/invitations/{invitation}')
+    ->name('team.invitations.')
+    ->group(function () {
+        Route::get('/accept', AcceptTeamInvitation::class)->name('accept');
+        Route::get('/register', [RegisterFromInvitation::class, 'show'])->name('register');
+        Route::post('/register', [RegisterFromInvitation::class, 'store'])->name('register.store');
     });
 
 // The system admin area: "manage all teams", in the admin shell, gated by the

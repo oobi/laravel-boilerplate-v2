@@ -35,7 +35,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
- * A team's members — searchable, filterable (role, standing), paginated —
+ * A team's members — searchable, filterable (role, status), paginated —
  * with per-row role change, ownership (make/revoke co-owner, transfer primary
  * ownership), suspension and removal. Shared by the team area (Members page)
  * and the system admin (team Members tab). Membership actions are open to
@@ -50,6 +50,9 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     use InteractsWithActions;
     use InteractsWithSchemas;
     use InteractsWithTable;
+
+    /** The role filter's entry for owners, who hold no role (cf. ListUsers' super-admin entry). */
+    public const OWNERS_FILTER_VALUE = '__owners__';
 
     #[Locked]
     public Team $team;
@@ -100,20 +103,23 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     ->color(fn (string $state): string => $this->badgeColor($state)),
             ])
             ->filters([
+                // Mirrors the Users list: a "role" filter (with owners as the structural entry, like
+                // Super Admin there) and a "status" filter.
                 Tables\Filters\SelectFilter::make('role')
                     ->label(__('Role'))
-                    ->options(fn (): array => $this->roleOptions())
-                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
-                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
-                        ? $this->whereHoldsRole($query, (string) $data['value'])
-                        : $query),
-
-                Tables\Filters\SelectFilter::make('standing')
-                    ->label(__('Standing'))
-                    ->options(self::standingOptions())
+                    ->options(fn (): array => $this->roleFilterOptions())
                     ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
                     ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
-                        'owners' => $query->whereIn('users.id', $this->ownerIds()),
+                        null, '' => $query,
+                        self::OWNERS_FILTER_VALUE => $query->whereIn('users.id', $this->ownerIds()),
+                        default => $this->whereHoldsRole($query, (string) $data['value']),
+                    }),
+
+                Tables\Filters\SelectFilter::make('status')
+                    ->label(__('admin.status'))
+                    ->options(self::statusOptions())
+                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
                         'active' => $query->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNull('team_user.suspended_at')),
                         'suspended' => $query->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNotNull('team_user.suspended_at')),
                         default => $query,
@@ -262,16 +268,28 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     }
 
     /**
-     * Options for the standing filter (shared with the Blade header's select).
+     * Options for the status filter (shared with the Blade header's select).
      *
      * @return array<string, string>
      */
-    public static function standingOptions(): array
+    public static function statusOptions(): array
     {
         return [
-            'owners' => __('Owners'),
             'active' => __('Active'),
             'suspended' => __('Suspended'),
+        ];
+    }
+
+    /**
+     * Options for the role filter: owners first (structural, not a role), then the team roles.
+     *
+     * @return array<string, string>
+     */
+    public function roleFilterOptions(): array
+    {
+        return [
+            self::OWNERS_FILTER_VALUE => __('Owners'),
+            ...$this->roleOptions(),
         ];
     }
 
