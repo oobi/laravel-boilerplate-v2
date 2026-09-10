@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Enums\UserAbility;
 use App\Livewire\Admin\Users\ShowUser;
 use App\Models\Role;
 use App\Models\User;
@@ -228,8 +229,8 @@ class ShowUserTest extends TestCase
 
         $this->actingAs($support);
 
-        $this->assertFalse(Gate::allows('assignRole', $target));
-        $this->assertFalse(Gate::allows('grantSuperAdmin', $target));
+        $this->assertFalse(Gate::allows(UserAbility::ASSIGN_ROLE, $target));
+        $this->assertFalse(Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $target));
         $this->assertFalse($target->fresh()->is_super_admin);
     }
 

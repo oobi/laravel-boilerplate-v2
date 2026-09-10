@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Users;
 
+use App\Enums\UserAbility;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Gate;
@@ -17,7 +18,7 @@ class ToggleUserActive
 {
     public function __invoke(User $user): void
     {
-        Gate::authorize('toggleActive', $user);
+        Gate::authorize(UserAbility::TOGGLE_ACTIVE, $user);
 
         $user->update(['active' => ! $user->active]);
 

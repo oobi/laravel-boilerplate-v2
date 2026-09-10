@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Team;
 
+use App\Models\Role;
 use App\Models\User;
+use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Team members list with per-member role changes and removal. Only admin-level
- * members reach it (TeamPolicy::manageMembers). The owner can't be changed or
- * removed here.
+ * Team members list with per-member role changes and removal. Reached only by
+ * members holding the manage-members permission or the owner
+ * (TeamPolicy::manageMembers). The owner can't be changed or removed here.
  */
 #[Layout('teams::layouts.team')]
 class ListMembers extends Component
@@ -25,7 +28,7 @@ class ListMembers extends Component
     public function mount(Team $team): void
     {
         $this->team = $team;
-        Gate::authorize('manageMembers', $team);
+        Gate::authorize(TeamAbility::MANAGE_MEMBERS, $team);
     }
 
     /**
@@ -40,9 +43,9 @@ class ListMembers extends Component
 
     public function changeRole(int $userId, string $role): void
     {
-        Gate::authorize('manageMembers', $this->team);
+        Gate::authorize(TeamAbility::MANAGE_MEMBERS, $this->team);
 
-        if (! in_array($role, config('teams.roles', []), true) || $userId === $this->team->user_id) {
+        if ($userId === $this->team->user_id || ! $this->teamRoles()->contains('name', $role)) {
             return;
         }
 
@@ -51,7 +54,7 @@ class ListMembers extends Component
 
     public function removeMember(int $userId): void
     {
-        Gate::authorize('manageMembers', $this->team);
+        Gate::authorize(TeamAbility::MANAGE_MEMBERS, $this->team);
 
         if ($userId === $this->team->user_id) {
             return; // the owner is never removed from their own team
@@ -68,7 +71,13 @@ class ListMembers extends Component
 
         return view('teams::livewire.team.members', [
             'members' => $members,
-            'roles' => config('teams.roles', []),
+            'roles' => $this->teamRoles(),
         ]);
+    }
+
+    /** The centrally-defined roles a member may hold. @return \Illuminate\Database\Eloquent\Collection<int, Role> */
+    private function teamRoles(): Collection
+    {
+        return Team::availableRoles()->orderBy('name')->get();
     }
 }

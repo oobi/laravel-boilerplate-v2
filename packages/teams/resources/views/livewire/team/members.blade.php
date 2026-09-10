@@ -35,7 +35,7 @@
                                     wire:change="changeRole({{ $member->id }}, $event.target.value)"
                                 >
                                     @foreach ($roles as $role)
-                                        <option value="{{ $role }}" @selected($member->roles->first()?->name === $role)>{{ ucfirst($role) }}</option>
+                                        <option value="{{ $role->name }}" @selected($member->roles->first()?->name === $role->name)>{{ $role->name }}</option>
                                     @endforeach
                                 </select>
                             @endif

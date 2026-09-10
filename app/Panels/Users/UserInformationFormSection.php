@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Panels\Users;
 
+use App\Enums\UserAbility;
 use App\Models\User;
 use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\FormSection;
@@ -58,7 +59,7 @@ class UserInformationFormSection implements FormSection
 
                     Forms\Components\Toggle::make('active')
                         ->label(__('admin.active'))
-                        ->disabled($isSelf || ! Gate::allows('toggleActive', $subject)),
+                        ->disabled($isSelf || ! Gate::allows(UserAbility::TOGGLE_ACTIVE, $subject)),
                 ]),
         ];
     }

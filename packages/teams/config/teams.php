@@ -62,19 +62,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Team roles
-    |--------------------------------------------------------------------------
-    |
-    | The default set of team-scoped roles seeded for use across teams. Stored
-    | in spatie/laravel-permission (team-scoped assignments), never a pivot
-    | column. A per-team custom-role editor is a deferred extension.
-    |
-    */
-
-    'roles' => ['owner', 'admin', 'member'],
-
-    /*
-    |--------------------------------------------------------------------------
     | Isolation
     |--------------------------------------------------------------------------
     |

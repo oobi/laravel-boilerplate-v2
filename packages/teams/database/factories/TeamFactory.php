@@ -44,7 +44,7 @@ class TeamFactory extends Factory
         ]);
     }
 
-    /** Own the team with the given user (SetUpTeam adds them as a member + owner). */
+    /** Own the team with the given user (the Team::created hook also adds them as a member). */
     public function ownedBy(User $user): static
     {
         return $this->state(fn (array $attributes): array => [

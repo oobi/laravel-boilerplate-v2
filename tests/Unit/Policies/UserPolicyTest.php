@@ -3,6 +3,7 @@
 namespace Tests\Unit\Policies;
 
 use App\Enums\SystemPermission;
+use App\Enums\UserAbility;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -157,8 +158,8 @@ class UserPolicyTest extends TestCase
 
         $this->actingAs($admin);
 
-        $this->assertFalse(Gate::allows('impersonate', $otherAdmin));
-        $this->assertFalse(Gate::allows('impersonate', $admin));
+        $this->assertFalse(Gate::allows(UserAbility::IMPERSONATE, $otherAdmin));
+        $this->assertFalse(Gate::allows(UserAbility::IMPERSONATE, $admin));
     }
 
     public function test_super_admin_can_impersonate_a_regular_user(): void
@@ -168,7 +169,7 @@ class UserPolicyTest extends TestCase
 
         $this->actingAs($admin);
 
-        $this->assertTrue(Gate::allows('impersonate', $regular));
+        $this->assertTrue(Gate::allows(UserAbility::IMPERSONATE, $regular));
     }
 
     public function test_neither_super_admin_nor_support_can_impersonate_an_inactive_user(): void

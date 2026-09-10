@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams;
 
-use Concise\Teams\Actions\SetUpTeam;
+use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
@@ -21,6 +21,17 @@ use Illuminate\Support\ServiceProvider;
  */
 class TeamsServiceProvider extends ServiceProvider
 {
+    /**
+     * Whether the teams tier is active in this application. Today that means
+     * "this provider has booted" (the package is installed and discovered);
+     * install/activation tooling (scope §11.5) may refine the signal later, so
+     * callers ask here rather than probing config or class existence.
+     */
+    public static function isActive(): bool
+    {
+        return app()->providerIsLoaded(static::class);
+    }
+
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/teams.php', 'teams');
@@ -49,9 +60,10 @@ class TeamsServiceProvider extends ServiceProvider
 
         Gate::policy(Team::class, TeamPolicy::class);
 
-        // Every team is self-consistent: seed its roles, add the owner as a
-        // member, and grant them the owner role (see SetUpTeam).
-        Team::created(fn (Team $team) => app(SetUpTeam::class)($team));
+        // The owner is always a member. Ownership itself is structural
+        // (teams.user_id) — not a role — and team roles are seeded centrally by
+        // TeamRolesSeeder, never per team.
+        Team::created(fn (Team $team) => $team->users()->syncWithoutDetaching([$team->user_id]));
 
         $this->registerTeamNavigation();
     }
@@ -69,7 +81,7 @@ class TeamsServiceProvider extends ServiceProvider
             ->route('team.members')
             ->icon('heroicon-o-users')
             ->active('team.members')
-            ->can('manageMembers')
+            ->can(TeamAbility::MANAGE_MEMBERS)
             ->order(10);
     }
 }

@@ -7,6 +7,8 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Enums\SystemGate;
+use App\Enums\UserAbility;
 use App\Http\Responses\PasswordResetLinkResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
@@ -143,7 +145,7 @@ class AppServiceProvider extends ServiceProvider
     private function registerAuthorization(): void
     {
         Gate::before(function (User $actor, string $ability, array $arguments = []): ?bool {
-            if (in_array($ability, ['impersonate', 'assignRole'], true)) {
+            if (in_array($ability, [UserAbility::IMPERSONATE->value, UserAbility::ASSIGN_ROLE->value], true)) {
                 return null;
             }
 
@@ -154,7 +156,7 @@ class AppServiceProvider extends ServiceProvider
             $target = $arguments[0] ?? null;
             $isSelf = $target instanceof User && $target->id === $actor->id;
 
-            if ($isSelf && in_array($ability, ['delete', 'toggleActive', 'grantSuperAdmin'], true)) {
+            if ($isSelf && in_array($ability, [UserAbility::DELETE->value, UserAbility::TOGGLE_ACTIVE->value, UserAbility::GRANT_SUPER_ADMIN->value], true)) {
                 return null;
             }
 
@@ -166,7 +168,7 @@ class AppServiceProvider extends ServiceProvider
         // otherwise a role could grant itself broader permissions by editing
         // its own definition. Registered explicitly (rather than left
         // undefined) so nav visibility resolves deterministically.
-        Gate::define('manage roles', fn (User $user): bool => $user->isSuperAdmin());
+        Gate::define(SystemGate::MANAGE_ROLES, fn (User $user): bool => $user->isSuperAdmin());
     }
 
     private function registerFortify(): void

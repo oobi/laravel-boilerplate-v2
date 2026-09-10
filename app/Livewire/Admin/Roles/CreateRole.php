@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Roles;
 
+use App\Enums\SystemGate;
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use App\Models\Role;
 use App\Support\Theme\DaisyColor;
@@ -29,7 +30,7 @@ class CreateRole extends Component implements HasSchemas
 
     public function mount(): void
     {
-        Gate::authorize('manage roles');
+        Gate::authorize(SystemGate::MANAGE_ROLES);
 
         $this->form->fill([
             'color' => DaisyColor::NEUTRAL->value,
@@ -66,7 +67,7 @@ class CreateRole extends Component implements HasSchemas
 
     public function create(): void
     {
-        Gate::authorize('manage roles');
+        Gate::authorize(SystemGate::MANAGE_ROLES);
 
         $data = $this->form->getState();
 

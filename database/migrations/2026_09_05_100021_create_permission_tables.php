@@ -44,11 +44,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('guard_name');
             $table->timestamps();
-            if ($teams || config('permission.testing')) {
-                $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
-            } else {
-                $table->unique(['name', 'guard_name']);
-            }
+            // Diverges from spatie's stub: role names are globally unique in this
+            // app (the Roles form has always enforced this). spatie's stub relaxes
+            // it to (team_id, name, guard_name) — one name per team — whenever its
+            // teams feature is on; this app never permits duplicate role
+            // definitions, whether or not that feature is enabled. With the
+            // feature off this is identical to spatie's default.
+            $table->unique(['name', 'guard_name']);
         });
 
         Schema::create($tableNames['model_has_permissions'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {

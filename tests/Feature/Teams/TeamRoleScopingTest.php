@@ -48,10 +48,10 @@ class TeamRoleScopingTest extends TestCase
         // Team role (scope N).
         $team = Team::factory()->create();
         $this->scope($team->id, $user);
-        $user->assignRole(Role::findOrCreate('admin'));
+        $user->assignRole(Role::findOrCreate('editor'));
 
         // In the team scope: the team role resolves, the system role does not.
-        $this->assertTrue($user->hasRole('admin'));
+        $this->assertTrue($user->hasRole('editor'));
         $this->assertFalse($user->hasRole('support'));
         $this->assertFalse($user->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
 
@@ -59,7 +59,7 @@ class TeamRoleScopingTest extends TestCase
         // the team role does not.
         $this->scope(TeamPermissionResolver::SYSTEM_SCOPE, $user);
         $this->assertTrue($user->hasRole('support'));
-        $this->assertFalse($user->hasRole('admin'));
+        $this->assertFalse($user->hasRole('editor'));
         $this->assertTrue($user->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
     }
 
@@ -70,18 +70,18 @@ class TeamRoleScopingTest extends TestCase
         $teamB = Team::factory()->create();
 
         $this->scope($teamA->id, $user);
-        $user->assignRole(Role::findOrCreate('admin'));
+        $user->assignRole(Role::findOrCreate('editor'));
 
         $this->scope($teamB->id, $user);
-        $user->assignRole(Role::findOrCreate('member'));
+        $user->assignRole(Role::findOrCreate('viewer'));
 
         $this->scope($teamA->id, $user);
-        $this->assertTrue($user->hasRole('admin'));
-        $this->assertFalse($user->hasRole('member'));
+        $this->assertTrue($user->hasRole('editor'));
+        $this->assertFalse($user->hasRole('viewer'));
 
         $this->scope($teamB->id, $user);
-        $this->assertTrue($user->hasRole('member'));
-        $this->assertFalse($user->hasRole('admin'));
+        $this->assertTrue($user->hasRole('viewer'));
+        $this->assertFalse($user->hasRole('editor'));
     }
 
     protected function tearDown(): void

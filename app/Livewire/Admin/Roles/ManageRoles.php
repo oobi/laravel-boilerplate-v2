@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Roles;
 
+use App\Enums\SystemGate;
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use App\Models\Role;
 use App\Support\Theme\DaisyColor;
@@ -42,12 +43,15 @@ class ManageRoles extends Component implements HasActions, HasSchemas
 
     public function mount(?Role $role = null): void
     {
-        Gate::authorize('manage roles');
+        Gate::authorize(SystemGate::MANAGE_ROLES);
 
         // On the bare `/admin/roles` route (no {role} segment) Laravel's container still
         // instantiates an empty, unsaved Role for the nullable type-hint instead of passing
         // null — treat that the same as "no role selected" and fall back to the first one.
-        $this->role = $role?->exists ? $role : Role::query()->orderBy('name')->first();
+        // This screen manages system roles only; team roles live in their own scope.
+        abort_if($role?->exists && $role->scope !== Role::SYSTEM_SCOPE, 404);
+
+        $this->role = $role?->exists ? $role : Role::query()->systemRoles()->orderBy('name')->first();
         $this->selectedRoleId = $this->role ? (string) $this->role->getKey() : null;
 
         if (! $this->role) {
@@ -98,7 +102,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
 
     public function save(): void
     {
-        Gate::authorize('manage roles');
+        Gate::authorize(SystemGate::MANAGE_ROLES);
 
         $data = $this->form->getState();
 
@@ -126,7 +130,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
             ->requiresConfirmation()
             ->visible(fn (): bool => (bool) $this->role)
             ->action(function (): void {
-                Gate::authorize('manage roles');
+                Gate::authorize(SystemGate::MANAGE_ROLES);
 
                 $this->role->delete();
 
@@ -142,7 +146,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
     public function render(): View
     {
         return view('livewire.admin.roles.manage-roles', [
-            'roles' => Role::query()->orderBy('name')->get(),
+            'roles' => Role::query()->systemRoles()->orderBy('name')->get(),
         ]);
     }
 }

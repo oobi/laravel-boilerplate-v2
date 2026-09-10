@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Navigation\Registry;
 
+use BackedEnum;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
 
@@ -59,10 +60,10 @@ final class NavItem
         return $this;
     }
 
-    /** Gate ability name required to see this item; null (default) means always visible. */
-    public function can(?string $ability): static
+    /** Gate ability required to see this item — an ability/permission enum case or its name; null (default) means always visible. */
+    public function can(BackedEnum|string|null $ability): static
     {
-        $this->can = $ability;
+        $this->can = $ability instanceof BackedEnum ? (string) $ability->value : $ability;
 
         return $this;
     }

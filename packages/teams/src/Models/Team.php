@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Models;
 
+use App\Models\Role;
 use App\Models\User;
 use Concise\Teams\Database\Factories\TeamFactory;
+use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +17,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
+use RuntimeException;
+use Spatie\Permission\Guard;
+use Spatie\Permission\Models\Permission;
 
 /**
  * A team (relabelable per project — see config/teams.php). Owned, Jetstream-free:
@@ -128,25 +134,22 @@ class Team extends Model
             || $this->user_id === $user->getKey();
     }
 
-    /**
-     * The owner, or a member holding an admin-level role, may manage the team.
-     *
-     * REVIEW (flagged 2026-09-10): the `['owner', 'admin']` role-name check is
-     * awkward once teams can define custom roles — it assumes those exact names
-     * exist and are the admin-level ones. Per .ai/rules/policies.md, promote this
-     * to a named team permission (e.g. `manage team members`) that the default
-     * admin roles hold, and check the permission here instead of role names.
-     */
-    public function userIsAdmin(User $user): bool
+    /** Ownership is structural (`user_id`), not a role — the team's "super admin". */
+    public function isOwnedBy(User $user): bool
     {
-        if ($this->user_id === $user->getKey()) {
-            return true;
-        }
+        return $this->user_id === $user->getKey();
+    }
 
-        return app(TeamContext::class)->run($this, function () use ($user): bool {
+    /**
+     * Whether the member holds the given team permission, resolved in this
+     * team's scope. Ownership bypasses this at the policy level (TeamPolicy::before).
+     */
+    public function memberHasPermission(User $user, TeamPermission $permission): bool
+    {
+        return app(TeamContext::class)->run($this, function () use ($user, $permission): bool {
             $user->unsetRelation('roles');
 
-            return $user->hasAnyRole(['owner', 'admin']);
+            return $user->checkPermissionTo($permission->value);
         });
     }
 
@@ -158,5 +161,87 @@ class Team extends Model
 
             return $user->getRoleNames()->first();
         });
+    }
+
+    /**
+     * The scope value for centrally-defined team roles. Core's Role knows only
+     * its own `system` scope; the set is open, so the teams tier contributes
+     * this value — nothing in core names "team".
+     */
+    public const ROLE_SCOPE = 'team';
+
+    /**
+     * The centrally-defined roles a member may hold — shared by every team
+     * (spatie team_id NULL, so they resolve in every team's scope).
+     *
+     * @return Builder<Role>
+     */
+    public static function availableRoles(): Builder
+    {
+        return Role::query()->where('scope', self::ROLE_SCOPE);
+    }
+
+    /**
+     * Define a shared team role holding the given permissions. Role names are
+     * globally unique, so an existing role of that name (any scope) is a real
+     * conflict — fail loudly rather than reuse or shadow it. Used by
+     * TeamRolesSeeder, by tests as fixture setup, and by any Team Roles screen.
+     *
+     * @param  list<TeamPermission>  $permissions
+     */
+    public static function createRole(string $name, array $permissions = []): Role
+    {
+        $guard = Guard::getDefaultName(Role::class);
+        $existing = Role::query()->where('name', $name)->where('guard_name', $guard)->first();
+
+        if ($existing !== null) {
+            throw new RuntimeException(sprintf(
+                "Cannot create team role '%s': a role with that name already exists (scope '%s') and role names are unique.",
+                $name,
+                $existing->scope,
+            ));
+        }
+
+        $role = Role::query()->create([
+            'name' => $name,
+            'guard_name' => $guard,
+            'team_id' => null,
+            'scope' => self::ROLE_SCOPE,
+        ]);
+
+        if ($permissions !== []) {
+            // Straight from the table, not Permission::findOrCreate(): spatie
+            // answers that from a cache it flushes via model events, which are
+            // off inside WithoutModelEvents seeders — a stale "missing" there
+            // turns into a duplicate insert. givePermissionTo flushes explicitly.
+            $role->givePermissionTo(collect($permissions)
+                ->map(fn (TeamPermission $permission): Permission => Permission::query()->firstOrCreate([
+                    'name' => $permission->value,
+                    'guard_name' => $guard,
+                ]))
+                ->all());
+        }
+
+        return $role;
+    }
+
+    /**
+     * Add a user to the team, optionally holding one of the shared team roles.
+     * The single write path for membership (seeders, invitations, tests): the
+     * pivot row and the spatie role assignment are two writes that must agree.
+     *
+     * @throws InvalidArgumentException when $role is not a team role
+     */
+    public function addMember(User $user, ?string $role = null): void
+    {
+        if ($role !== null && ! static::availableRoles()->where('name', $role)->exists()) {
+            throw new InvalidArgumentException(sprintf("'%s' is not a team role.", $role));
+        }
+
+        $this->users()->syncWithoutDetaching([$user->getKey()]);
+
+        if ($role !== null) {
+            app(TeamContext::class)->run($this, fn () => $user->syncRoles([$role]));
+        }
     }
 }
