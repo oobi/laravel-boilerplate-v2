@@ -1,6 +1,7 @@
 @props(['team'])
 
-@php($teams = auth()->user()->teams()->orderBy('name')->get())
+{{-- Only teams the user can enter are switchable (active, and not suspended in — see ResolveTeamContext). --}}
+@php($teams = auth()->user()->accessibleTeams()->orderBy('name')->get())
 
 <div class="dropdown w-full">
     <div tabindex="0" role="button" class="flex w-full items-center gap-2 rounded-box border border-base-300 bg-base-100 px-3 py-2 text-left transition hover:bg-base-200">

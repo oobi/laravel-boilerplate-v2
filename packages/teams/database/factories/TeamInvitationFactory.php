@@ -21,7 +21,7 @@ class TeamInvitationFactory extends Factory
         return [
             'team_id' => Team::factory(),
             'email' => fake()->unique()->safeEmail(),
-            'role' => 'member',
+            'role' => null,
         ];
     }
 }

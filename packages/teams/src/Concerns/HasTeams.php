@@ -39,10 +39,19 @@ trait HasTeams
         return $this->belongsTo(Team::class, 'current_team_id');
     }
 
+    /** Active membership — the access check. A suspended member is still listed in teams() but not "belonging" for access. */
     public function belongsToTeam(Team $team): bool
     {
-        return $this->teams()->whereKey($team->getKey())->exists()
-            || $team->user_id === $this->getKey();
+        return $team->isActiveMember($this);
+    }
+
+    /**
+     * The teams this user can actually enter: active teams they're an active
+     * (unsuspended) member of. What the switcher and /{prefix} entry offer.
+     */
+    public function accessibleTeams(): BelongsToMany
+    {
+        return $this->teams()->active()->wherePivotNull('suspended_at');
     }
 
     public function isCurrentTeam(Team $team): bool

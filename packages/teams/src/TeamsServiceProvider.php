@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Concise\Teams;
 
+use App\Enums\SystemPermission;
+use App\Support\Navigation\Registry\NavItem;
+use App\Support\Navigation\Registry\NavRegistry;
+use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamCreationMode;
+use Concise\Teams\Livewire\Team\MembersTable;
+use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
@@ -14,6 +22,7 @@ use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamPermissionResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 /**
  * The teams tier's single wiring point (see ~dev/TEAMS_TIER_SCOPE.md). Auto-discovered
@@ -60,10 +69,16 @@ class TeamsServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'teams');
         $this->loadRoutesFrom(__DIR__.'/../routes/teams.php');
 
+        // Child components shared by the team area and the system admin pages.
+        Livewire::component('teams-members-table', MembersTable::class);
+        Livewire::component('teams-pending-invitations', PendingInvitations::class);
+
         Gate::policy(Team::class, TeamPolicy::class);
 
         // Team roles get their own tab on the admin Roles screen.
         RoleScopeRegistry::register(TeamRoleScope::class);
+
+        $this->registerSystemAdminArea();
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — not a role — and team roles are seeded centrally by
@@ -88,5 +103,37 @@ class TeamsServiceProvider extends ServiceProvider
             ->active('team.members')
             ->can(TeamAbility::MANAGE_MEMBERS)
             ->order(10);
+
+        // Admin-provisioned teams have no member-driven invitations, so no page and no nav item.
+        if (TeamCreationMode::current()->allowsMemberInvitations()) {
+            TeamNavRegistry::item('team-invitations')
+                ->label(__('Invitations'))
+                ->route('team.invitations')
+                ->icon('heroicon-o-envelope')
+                ->active('team.invitations')
+                ->can(TeamAbility::INVITE)
+                ->order(20);
+        }
+    }
+
+    /**
+     * The system admin side (scope §7 "manage all teams"): a Teams entry in the
+     * admin sidebar's Management group and the memberships panel on the user
+     * Show page — both contributed through core's registries, so no core nav
+     * or panel file changes.
+     */
+    private function registerSystemAdminArea(): void
+    {
+        NavRegistry::group('management')->add(
+            NavItem::make('teams')
+                ->label(config('teams.labels.plural', 'Teams'))
+                ->route('teams.index')
+                ->icon('heroicon-o-user-group')
+                ->active('teams.*')
+                ->can(SystemPermission::MANAGE_TEAMS)
+                ->order(30),
+        );
+
+        PanelRegistry::for('users.show')->add(TeamMembershipsPanel::class);
     }
 }

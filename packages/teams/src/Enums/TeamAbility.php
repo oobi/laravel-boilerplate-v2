@@ -16,5 +16,9 @@ enum TeamAbility: string
     case MANAGE_MEMBERS = 'manageMembers';
     case INVITE = 'invite';
     case UPDATE = 'update';
+
+    /** Primary owner only (see TeamPolicy::PRIMARY_OWNER_ONLY). */
+    case MANAGE_OWNERS = 'manageOwners';
+    case TRANSFER_OWNERSHIP = 'transferOwnership';
     case DELETE = 'delete';
 }

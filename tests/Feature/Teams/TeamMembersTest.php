@@ -4,7 +4,7 @@ namespace Tests\Feature\Teams;
 
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
-use Concise\Teams\Livewire\Team\ListMembers;
+use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -107,13 +107,14 @@ class TeamMembersTest extends TestCase
         $this->addMember($team, $member);
 
         Livewire::actingAs($owner)
-            ->test(ListMembers::class, ['team' => $team])
-            ->call('changeRole', $member->id, self::TEAM_ADMIN);
+            ->test(MembersTable::class, ['team' => $team])
+            ->callTableAction('changeRole', $member, data: ['roles' => self::TEAM_ADMIN])
+            ->assertHasNoTableActionErrors();
 
         $this->assertSame(self::TEAM_ADMIN, $team->roleFor($member));
     }
 
-    public function test_an_unknown_role_is_ignored(): void
+    public function test_an_unknown_role_is_rejected(): void
     {
         $owner = User::factory()->create();
         $team = $this->team($owner);
@@ -121,10 +122,48 @@ class TeamMembersTest extends TestCase
         $this->addMember($team, $member);
 
         Livewire::actingAs($owner)
-            ->test(ListMembers::class, ['team' => $team])
-            ->call('changeRole', $member->id, 'Superuser');
+            ->test(MembersTable::class, ['team' => $team])
+            ->callTableAction('changeRole', $member, data: ['roles' => 'Superuser'])
+            ->assertHasTableActionErrors(['roles']);
 
         $this->assertSame(self::MEMBER, $team->roleFor($member));
+    }
+
+    public function test_a_member_holds_one_role_unless_the_project_allows_several(): void
+    {
+        $team = $this->team(User::factory()->create());
+        $member = User::factory()->create();
+        $this->addMember($team, $member);
+
+        try {
+            $team->syncMemberRoles($member, [self::TEAM_ADMIN, self::MEMBER]);
+            $this->fail('two roles should be refused in single-role mode');
+        } catch (\InvalidArgumentException) {
+            $this->assertSame([self::MEMBER], $team->rolesFor($member)->all());
+        }
+
+        config(['teams.multiple_roles_per_member' => true]);
+
+        $team->syncMemberRoles($member, [self::TEAM_ADMIN, self::MEMBER]);
+
+        $this->assertEqualsCanonicalizing([self::TEAM_ADMIN, self::MEMBER], $team->rolesFor($member)->all());
+        $this->assertEqualsCanonicalizing([self::TEAM_ADMIN, self::MEMBER], $team->memberRoles()->get($member->id));
+    }
+
+    public function test_the_role_picker_follows_the_projects_cardinality(): void
+    {
+        config(['teams.multiple_roles_per_member' => true]);
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $member = User::factory()->create();
+        $this->addMember($team, $member);
+
+        Livewire::actingAs($owner)
+            ->test(MembersTable::class, ['team' => $team])
+            ->callTableAction('changeRole', $member, data: ['roles' => [self::TEAM_ADMIN, self::MEMBER]])
+            ->assertHasNoTableActionErrors();
+
+        $this->assertCount(2, $team->rolesFor($member));
     }
 
     public function test_an_admin_can_remove_a_member(): void
@@ -135,8 +174,8 @@ class TeamMembersTest extends TestCase
         $this->addMember($team, $member);
 
         Livewire::actingAs($owner)
-            ->test(ListMembers::class, ['team' => $team])
-            ->call('removeMember', $member->id);
+            ->test(MembersTable::class, ['team' => $team])
+            ->callTableAction('remove', $member);
 
         $this->assertFalse($team->fresh()->hasUser($member));
         $this->assertNull($team->roleFor($member));
@@ -148,13 +187,16 @@ class TeamMembersTest extends TestCase
         $team = $this->team($owner);
 
         Livewire::actingAs($owner)
-            ->test(ListMembers::class, ['team' => $team])
-            ->call('removeMember', $owner->id);
+            ->test(MembersTable::class, ['team' => $team])
+            ->assertTableActionHidden('remove', $owner)
+            ->assertTableActionHidden('changeRole', $owner);
+
+        $team->removeMember($owner); // the domain method is a no-op for the owner too
 
         $this->assertTrue($team->fresh()->hasUser($owner));
     }
 
-    public function test_a_regular_member_cannot_call_member_actions(): void
+    public function test_a_regular_member_cannot_use_the_members_table(): void
     {
         $owner = User::factory()->create();
         $team = $this->team($owner);
@@ -162,7 +204,7 @@ class TeamMembersTest extends TestCase
         $this->addMember($team, $member);
 
         Livewire::actingAs($member)
-            ->test(ListMembers::class, ['team' => $team])
+            ->test(MembersTable::class, ['team' => $team])
             ->assertForbidden();
     }
 

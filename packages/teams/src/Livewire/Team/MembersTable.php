@@ -1,0 +1,381 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Concise\Teams\Livewire\Team;
+
+use App\Enums\SystemPermission;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\Theme\DaisyColor;
+use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamRoleField;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Support\Enums\Width;
+use Filament\Tables;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
+use Livewire\Component;
+
+/**
+ * A team's members — searchable, filterable (role, standing), paginated —
+ * with per-row role change, ownership (make/revoke co-owner, transfer primary
+ * ownership), suspension and removal. Shared by the team area (Members page)
+ * and the system admin (team Members tab). Membership actions are open to
+ * either audience — the `manage teams` system permission, or the team's
+ * manage-members ability (any owner, or permission holder); ownership actions
+ * to the primary owner or a system admin. Never enters the team context — the
+ * Team methods scope themselves — so a system admin's own permission checks
+ * stay in the system scope.
+ */
+class MembersTable extends Component implements HasActions, HasSchemas, HasTable
+{
+    use InteractsWithActions;
+    use InteractsWithSchemas;
+    use InteractsWithTable;
+
+    #[Locked]
+    public Team $team;
+
+    /** @var SupportCollection<int, list<string>>|null */
+    private ?SupportCollection $memberRoles = null;
+
+    /** @var Collection<string, Role>|null */
+    private ?Collection $teamRoles = null;
+
+    /** @var SupportCollection<int, int>|null */
+    private ?SupportCollection $ownerIds = null;
+
+    /** @var SupportCollection<int, int>|null */
+    private ?SupportCollection $suspendedIds = null;
+
+    public function mount(Team $team): void
+    {
+        $this->team = $team;
+
+        abort_unless($this->canManage(), 403);
+    }
+
+    /** Re-query after the host page adds a member (or this table changes one). */
+    #[On('team-members-updated')]
+    public function refreshMembers(): void {}
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(fn (): Builder => User::query()
+                ->whereHas('teams', fn (Builder $query) => $query->whereKey($this->team->getKey())))
+            ->defaultSort('last_name')
+            ->columns([
+                Tables\Columns\ViewColumn::make('user_composite')
+                    ->label(__('admin.user'))
+                    ->view('filament.tables.columns.user-column')
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
+                        $q->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    })),
+
+                Tables\Columns\TextColumn::make('team_role')
+                    ->label(Team::allowsMultipleRoles() ? __('Roles') : __('Role'))
+                    ->getStateUsing(fn (User $record): array => $this->badgesFor($record))
+                    ->badge()
+                    ->color(fn (string $state): string => $this->badgeColor($state)),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('role')
+                    ->label(__('Role'))
+                    ->options(fn (): array => $this->roleOptions())
+                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
+                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                        ? $this->whereHoldsRole($query, (string) $data['value'])
+                        : $query),
+
+                Tables\Filters\SelectFilter::make('standing')
+                    ->label(__('Standing'))
+                    ->options(self::standingOptions())
+                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        'owners' => $query->whereIn('users.id', $this->ownerIds()),
+                        'active' => $query->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNull('team_user.suspended_at')),
+                        'suspended' => $query->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNotNull('team_user.suspended_at')),
+                        default => $query,
+                    }),
+            ])
+            ->deferFilters(false)
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('changeRole')
+                        ->label(Team::allowsMultipleRoles() ? __('Change roles') : __('Change role'))
+                        ->icon('heroicon-o-shield-check')
+                        ->modalWidth(Width::Small)
+                        ->hidden(fn (User $record): bool => $this->isOwner($record))
+                        ->fillForm(fn (User $record): array => [
+                            'roles' => Team::allowsMultipleRoles()
+                                ? $this->memberRoles()->get($record->id, [])
+                                : ($this->memberRoles()->get($record->id, [])[0] ?? null),
+                        ])
+                        ->schema([TeamRoleField::make()->required()])
+                        ->action(function (User $record, array $data): void {
+                            abort_unless($this->canManage(), 403);
+
+                            $this->team->syncMemberRoles($record, TeamRoleField::selected($data));
+                            $this->memberRoles = null;
+
+                            Notification::make()->title(__('Roles updated'))->success()->send();
+                        }),
+
+                    Action::make('makeOwner')
+                        ->label(__('Make owner'))
+                        ->icon('heroicon-o-key')
+                        ->requiresConfirmation()
+                        ->modalDescription(fn (User $record): string => __('Make :name a co-owner of :team? Owners bypass every team permission; only the primary owner can demote them.', ['name' => $record->name, 'team' => $this->team->name]))
+                        ->visible(fn (User $record): bool => $this->canManageOwners() && ! $this->isOwner($record))
+                        ->action(function (User $record): void {
+                            abort_unless($this->canManageOwners(), 403);
+
+                            $this->team->makeOwner($record);
+                            $this->ownerIds = null;
+                            $this->dispatch('team-members-updated');
+
+                            Notification::make()->title(__(':name is now an owner', ['name' => $record->name]))->success()->send();
+                        }),
+
+                    Action::make('revokeOwner')
+                        ->label(__('Remove as owner'))
+                        ->icon('heroicon-o-key')
+                        ->color(DaisyColor::WARNING->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->modalDescription(fn (User $record): string => __('Remove :name as an owner of :team? They stay a member.', ['name' => $record->name, 'team' => $this->team->name]))
+                        ->visible(fn (User $record): bool => $this->canManageOwners() && $this->isOwner($record) && ! $this->team->isPrimaryOwner($record))
+                        ->action(function (User $record): void {
+                            abort_unless($this->canManageOwners(), 403);
+
+                            $this->team->revokeOwner($record);
+                            $this->ownerIds = null;
+                            $this->dispatch('team-members-updated');
+
+                            Notification::make()->title(__(':name is no longer an owner', ['name' => $record->name]))->success()->send();
+                        }),
+
+                    Action::make('transferOwnership')
+                        ->label(__('Transfer ownership'))
+                        ->icon('heroicon-o-arrow-right-circle')
+                        ->color(DaisyColor::WARNING->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->modalDescription(fn (User $record): string => __('Make :name the primary owner of :team? The current primary owner stays on as a co-owner.', ['name' => $record->name, 'team' => $this->team->name]))
+                        ->visible(fn (User $record): bool => $this->canTransferOwnership() && ! $this->team->isPrimaryOwner($record))
+                        ->action(function (User $record): void {
+                            abort_unless($this->canTransferOwnership(), 403);
+
+                            $this->team->transferOwnership($record);
+                            $this->ownerIds = null;
+                            $this->dispatch('team-members-updated');
+
+                            Notification::make()->title(__(':name is now the primary owner', ['name' => $record->name]))->success()->send();
+                        }),
+
+                    // The team-level counterpart of deactivating an account: access withheld, everything else kept.
+                    Action::make('suspend')
+                        ->label(__('Suspend'))
+                        ->icon('heroicon-o-pause-circle')
+                        ->color(DaisyColor::WARNING->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->modalDescription(fn (User $record): string => __('Suspend :name from :team? They keep their membership and role but can’t use the :label until reinstated.', ['name' => $record->name, 'team' => $this->team->name, 'label' => Str::lower(config('teams.labels.singular', 'Team'))]))
+                        ->visible(fn (User $record): bool => ! $this->isSuspended($record)
+                            && ! $this->team->isPrimaryOwner($record)
+                            && (! $this->isOwner($record) || $this->canManageOwners()))
+                        ->action(function (User $record): void {
+                            abort_unless($this->canManage(), 403);
+                            abort_if($this->isOwner($record) && ! $this->canManageOwners(), 403);
+
+                            $this->team->suspendMember($record);
+                            $this->suspendedIds = null;
+                            $this->dispatch('team-members-updated');
+
+                            Notification::make()->title(__(':name suspended', ['name' => $record->name]))->success()->send();
+                        }),
+
+                    Action::make('reinstate')
+                        ->label(__('Reinstate'))
+                        ->icon('heroicon-o-play-circle')
+                        ->color(DaisyColor::SUCCESS->toFilamentColor())
+                        ->visible(fn (User $record): bool => $this->isSuspended($record)
+                            && (! $this->isOwner($record) || $this->canManageOwners()))
+                        ->action(function (User $record): void {
+                            abort_unless($this->canManage(), 403);
+
+                            $this->team->reinstateMember($record);
+                            $this->suspendedIds = null;
+                            $this->dispatch('team-members-updated');
+
+                            Notification::make()->title(__(':name reinstated', ['name' => $record->name]))->success()->send();
+                        }),
+
+                    Action::make('remove')
+                        ->label(__('Remove'))
+                        ->icon('heroicon-o-user-minus')
+                        ->color(DaisyColor::ERROR->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->modalDescription(fn (User $record): string => __('Remove :name from :team?', ['name' => $record->name, 'team' => $this->team->name]))
+                        // Never the primary owner; a co-owner only by someone who could demote them.
+                        ->hidden(fn (User $record): bool => $this->team->isPrimaryOwner($record)
+                            || ($this->isOwner($record) && ! $this->canManageOwners()))
+                        ->action(function (User $record): void {
+                            abort_unless($this->canManage(), 403);
+                            abort_if($this->isOwner($record) && ! $this->canManageOwners(), 403);
+
+                            $this->team->removeMember($record);
+                            $this->ownerIds = null;
+                            $this->dispatch('team-members-updated');
+
+                            Notification::make()->title(__('Member removed'))->success()->send();
+                        }),
+                ]),
+            ])
+            ->searchPlaceholder(__('Search members…'))
+            ->emptyStateHeading(__('No members found'))
+            ->paginated(config('pagination.page_sizes'))
+            ->defaultPaginationPageOption(config('pagination.default_page_size'));
+    }
+
+    public function render(): View
+    {
+        return view('teams::livewire.team.members-table');
+    }
+
+    /**
+     * Options for the standing filter (shared with the Blade header's select).
+     *
+     * @return array<string, string>
+     */
+    public static function standingOptions(): array
+    {
+        return [
+            'owners' => __('Owners'),
+            'active' => __('Active'),
+            'suspended' => __('Suspended'),
+        ];
+    }
+
+    /** @return array<string, string> */
+    public function roleOptions(): array
+    {
+        return $this->teamRoles()->map(fn (Role $role): string => $role->name)->all();
+    }
+
+    private function canManage(): bool
+    {
+        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
+            || Gate::allows(TeamAbility::MANAGE_MEMBERS, $this->team);
+    }
+
+    private function canManageOwners(): bool
+    {
+        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
+            || Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
+    }
+
+    private function canTransferOwnership(): bool
+    {
+        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
+            || Gate::allows(TeamAbility::TRANSFER_OWNERSHIP, $this->team);
+    }
+
+    /** Members holding the named role in this team (read from the pivot, outside the team scope). */
+    private function whereHoldsRole(Builder $query, string $role): Builder
+    {
+        $roles = (new Role)->getTable();
+        $pivot = config('permission.table_names.model_has_roles');
+        $teamKey = config('permission.column_names.team_foreign_key', 'team_id');
+        $morphKey = config('permission.column_names.model_morph_key', 'model_id');
+
+        return $query->whereIn('users.id', fn (QueryBuilder $sub) => $sub
+            ->select("{$pivot}.{$morphKey}")
+            ->from($pivot)
+            ->join($roles, "{$roles}.id", '=', "{$pivot}.role_id")
+            ->where("{$pivot}.{$teamKey}", $this->team->getKey())
+            ->where("{$pivot}.model_type", (new User)->getMorphClass())
+            ->where("{$roles}.name", $role));
+    }
+
+    private function isOwner(User $member): bool
+    {
+        return $this->ownerIds()->contains($member->id);
+    }
+
+    /** @return SupportCollection<int, int> */
+    private function ownerIds(): SupportCollection
+    {
+        return $this->ownerIds ??= $this->team->ownerIds();
+    }
+
+    private function isSuspended(User $member): bool
+    {
+        return $this->suspendedIds()->contains($member->id);
+    }
+
+    /** @return SupportCollection<int, int> */
+    private function suspendedIds(): SupportCollection
+    {
+        return $this->suspendedIds ??= $this->team->users()->wherePivotNotNull('suspended_at')->pluck('users.id');
+    }
+
+    /** @return SupportCollection<int, list<string>> */
+    private function memberRoles(): SupportCollection
+    {
+        return $this->memberRoles ??= $this->team->memberRoles();
+    }
+
+    /** @return Collection<string, Role> */
+    private function teamRoles(): Collection
+    {
+        return $this->teamRoles ??= Team::availableRoles()->orderBy('name')->get()->keyBy('name');
+    }
+
+    /**
+     * The badges for a member: their standing (ownership, else roles, else "No role"), plus "Suspended" when they are.
+     *
+     * @return list<string>
+     */
+    private function badgesFor(User $member): array
+    {
+        $standing = match (true) {
+            $this->team->isPrimaryOwner($member) => [__('Primary Owner')],
+            $this->isOwner($member) => [__('Owner')],
+            default => $this->memberRoles()->get($member->id) ?: [__('No role')],
+        };
+
+        return $this->isSuspended($member) ? [...$standing, __('Suspended')] : $standing;
+    }
+
+    private function badgeColor(string $badge): string
+    {
+        if ($badge === __('Suspended')) {
+            return DaisyColor::WARNING->toFilamentColor();
+        }
+
+        if (in_array($badge, [__('Primary Owner'), __('Owner')], true)) {
+            return DaisyColor::SUCCESS->toFilamentColor();
+        }
+
+        return ($this->teamRoles()->get($badge)?->badgeColor() ?? DaisyColor::NEUTRAL)->toFilamentColor();
+    }
+}

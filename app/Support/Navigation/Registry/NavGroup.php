@@ -84,12 +84,19 @@ final class NavGroup
         return $this->can === null || ($viewer !== null && Gate::forUser($viewer)->allows($this->can));
     }
 
-    /** @return list<NavItem> */
+    /**
+     * Visible items in `order` (stable for equal orders, so registration order
+     * still decides among the app's own items) — an add-on contributing an item
+     * from its provider, which boots before AdminNav, can still slot it last.
+     *
+     * @return list<NavItem>
+     */
     public function visibleItems(?Authenticatable $viewer): array
     {
-        return array_values(array_filter(
-            $this->items,
-            fn (NavItem $item): bool => $item->visible($viewer),
-        ));
+        return collect($this->items)
+            ->filter(fn (NavItem $item): bool => $item->visible($viewer))
+            ->sortBy(fn (NavItem $item): int => $item->order)
+            ->values()
+            ->all();
     }
 }

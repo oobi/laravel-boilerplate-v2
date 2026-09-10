@@ -173,6 +173,16 @@
     box-shadow: inset 0 0 0 var(--border, 1px) color-mix(in oklab, var(--color-warning-soft) var(--soft-ring-strength), transparent);
 }
 
+/* The icon inherits the soft text colour. Filament paints a non-outlined
+   button's icon with the solid `--text` on-colour (a light, high-contrast
+   tone) — see `& > .fi-icon` under `&:not(.fi-outlined)` in Filament's own
+   button.css — which clashes with the soft button's dark coloured label. The
+   extra `.fi-btn-soft` class outranks Filament's rule, and the later import
+   settles any tie. */
+.fi-btn.fi-btn-soft:not(.fi-outlined).fi-color:not(label) > .fi-icon {
+    color: inherit;
+}
+
 /*
 |--------------------------------------------------------------------------
 | `.fi-btn-menu` — a low-emphasis, pale-bordered outline trigger

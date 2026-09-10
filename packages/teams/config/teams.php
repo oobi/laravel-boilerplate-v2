@@ -49,6 +49,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Roles per member
+    |--------------------------------------------------------------------------
+    |
+    | Whether a member may hold several team roles at once (like system users)
+    | or exactly one (a "position", the usual SaaS shape — the default). The
+    | data layer supports both; this only changes validation and the role
+    | picker. Flip it per project rather than working around it.
+    |
+    */
+
+    'multiple_roles_per_member' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Personal teams
     |--------------------------------------------------------------------------
     |

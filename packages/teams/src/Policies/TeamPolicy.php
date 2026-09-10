@@ -5,26 +5,49 @@ declare(strict_types=1);
 namespace Concise\Teams\Policies;
 
 use App\Models\User;
+use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
 
 /**
  * Per-instance team abilities, mirroring UserPolicy's scheme: coarse checks go
  * through spatie permissions (TeamPermission, resolved in the team's scope),
- * never role names. The team owner is the structural "super admin of the team"
- * and bypasses every ability within their own team via before() — the team-level
- * parallel of the global super-admin Gate::before (which still applies here too).
+ * never role names. Owners are structural (Team::isOwnedBy) and bypass every
+ * ability within their own team via before() — the team-level parallel of the
+ * global super-admin Gate::before (which still applies here too). A few
+ * abilities are the PRIMARY owner's alone: co-owners share the bypass for
+ * everything else, so day-to-day owner work never waits on one person.
  */
 class TeamPolicy
 {
+    /** Never granted to a co-owner or through a role — only `teams.user_id` (or a system admin's own gate). */
+    private const PRIMARY_OWNER_ONLY = [
+        TeamAbility::MANAGE_OWNERS->value,
+        TeamAbility::TRANSFER_OWNERSHIP->value,
+        TeamAbility::DELETE->value,
+    ];
+
     public function before(User $user, string $ability, mixed $team = null): ?bool
     {
-        return $team instanceof Team && $team->isOwnedBy($user) ? true : null;
+        if (! $team instanceof Team) {
+            return null;
+        }
+
+        if ($team->isPrimaryOwner($user)) {
+            return true;
+        }
+
+        // A suspended co-owner keeps the flag but not the bypass until reinstated.
+        if ($team->isOwnedBy($user) && ! $team->isSuspended($user) && ! in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
+            return true;
+        }
+
+        return null;
     }
 
     public function view(User $user, Team $team): bool
     {
-        return $team->hasUser($user);
+        return $team->isActiveMember($user);
     }
 
     public function manageMembers(User $user, Team $team): bool
@@ -42,7 +65,19 @@ class TeamPolicy
         return $team->memberHasPermission($user, TeamPermission::UPDATE_TEAM);
     }
 
-    /** Deleting a team is the owner's alone — granted by before(), never by a role. */
+    /** Promoting/demoting co-owners is the primary owner's alone — granted by before(), never by a role. */
+    public function manageOwners(User $user, Team $team): bool
+    {
+        return false;
+    }
+
+    /** Handing over primary ownership is the primary owner's alone — granted by before(), never by a role. */
+    public function transferOwnership(User $user, Team $team): bool
+    {
+        return false;
+    }
+
+    /** Deleting a team is the primary owner's alone — granted by before(), never by a role. */
     public function delete(User $user, Team $team): bool
     {
         return false;

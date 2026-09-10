@@ -19,7 +19,11 @@ class TeamRedirect
     {
         $user = $request->user();
 
-        $team = $user->currentTeam ?? $user->teams()->first();
+        // A current team the user can't enter (inactive, or they're suspended in
+        // it) is skipped for the first accessible one — or onboarding.
+        $team = $user->currentTeam !== null && $user->belongsToTeam($user->currentTeam) && $user->currentTeam->active
+            ? $user->currentTeam
+            : $user->accessibleTeams()->orderBy('name')->first();
 
         if ($team === null) {
             return redirect()->route('team.onboarding');
