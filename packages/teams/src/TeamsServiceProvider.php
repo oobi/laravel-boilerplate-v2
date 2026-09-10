@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Concise\Teams;
 
+use Concise\Teams\Actions\SetUpTeam;
+use Concise\Teams\Models\Team;
+use Concise\Teams\Policies\TeamPolicy;
+use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamPermissionResolver;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -41,5 +46,30 @@ class TeamsServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'teams');
         $this->loadRoutesFrom(__DIR__.'/../routes/teams.php');
+
+        Gate::policy(Team::class, TeamPolicy::class);
+
+        // Every team is self-consistent: seed its roles, add the owner as a
+        // member, and grant them the owner role (see SetUpTeam).
+        Team::created(fn (Team $team) => app(SetUpTeam::class)($team));
+
+        $this->registerTeamNavigation();
+    }
+
+    /**
+     * The team area's default sidebar sections. Add-ons extend it via
+     * TeamNavRegistry the same way they extend the system nav; abilities resolve
+     * against the current team (see the team-sidebar-nav partial). Dashboard is
+     * rendered directly by the partial, so it isn't registered here.
+     */
+    private function registerTeamNavigation(): void
+    {
+        TeamNavRegistry::item('team-members')
+            ->label(__('Members'))
+            ->route('team.members')
+            ->icon('heroicon-o-users')
+            ->active('team.members')
+            ->can('manageMembers')
+            ->order(10);
     }
 }

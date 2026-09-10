@@ -44,13 +44,11 @@ class TeamFactory extends Factory
         ]);
     }
 
-    /** Own the team with (and add as a member) the given user. */
+    /** Own the team with the given user (SetUpTeam adds them as a member + owner). */
     public function ownedBy(User $user): static
     {
         return $this->state(fn (array $attributes): array => [
             'user_id' => $user->getKey(),
-        ])->afterCreating(function (Team $team) use ($user): void {
-            $team->users()->syncWithoutDetaching([$user->getKey()]);
-        });
+        ]);
     }
 }

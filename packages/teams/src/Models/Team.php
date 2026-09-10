@@ -6,6 +6,7 @@ namespace Concise\Teams\Models;
 
 use App\Models\User;
 use Concise\Teams\Database\Factories\TeamFactory;
+use Concise\Teams\Support\TeamContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -125,5 +126,37 @@ class Team extends Model
     {
         return $this->users()->whereKey($user->getKey())->exists()
             || $this->user_id === $user->getKey();
+    }
+
+    /**
+     * The owner, or a member holding an admin-level role, may manage the team.
+     *
+     * REVIEW (flagged 2026-09-10): the `['owner', 'admin']` role-name check is
+     * awkward once teams can define custom roles — it assumes those exact names
+     * exist and are the admin-level ones. Per .ai/rules/policies.md, promote this
+     * to a named team permission (e.g. `manage team members`) that the default
+     * admin roles hold, and check the permission here instead of role names.
+     */
+    public function userIsAdmin(User $user): bool
+    {
+        if ($this->user_id === $user->getKey()) {
+            return true;
+        }
+
+        return app(TeamContext::class)->run($this, function () use ($user): bool {
+            $user->unsetRelation('roles');
+
+            return $user->hasAnyRole(['owner', 'admin']);
+        });
+    }
+
+    /** The member's role name within this team, resolved in the team's scope. */
+    public function roleFor(User $user): ?string
+    {
+        return app(TeamContext::class)->run($this, function () use ($user): ?string {
+            $user->unsetRelation('roles');
+
+            return $user->getRoleNames()->first();
+        });
     }
 }

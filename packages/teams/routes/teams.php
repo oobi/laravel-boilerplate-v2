@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Concise\Teams\Http\Controllers\TeamRedirect;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
 use Concise\Teams\Livewire\Team\Dashboard;
+use Concise\Teams\Livewire\Team\ListMembers;
 use Concise\Teams\Livewire\Team\Onboarding;
 use Illuminate\Support\Facades\Route;
 
@@ -23,5 +24,6 @@ Route::middleware(['web', 'auth', 'verified'])
             ->prefix('{team}')
             ->group(function () {
                 Route::get('/dashboard', Dashboard::class)->name('dashboard');
+                Route::get('/members', ListMembers::class)->name('members');
             });
     });
