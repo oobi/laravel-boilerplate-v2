@@ -21,7 +21,6 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 /**
@@ -59,18 +58,18 @@ class TeamSettings extends Component implements HasActions, HasSchemas
         return $schema
             ->record($this->team)
             ->components([
-                Section::make(__(':label details', ['label' => config('teams.labels.singular', 'Team')]))
+                Section::make(team_trans('admin.details'))
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('name')
-                                    ->label(__('Name'))
+                                    ->label(team_trans('admin.name'))
                                     ->required()
                                     ->maxLength(255),
 
                                 TextInput::make('slug')
-                                    ->label(__('Slug'))
-                                    ->helperText(__('The :label’s URL segment.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]))
+                                    ->label(team_trans('admin.slug'))
+                                    ->helperText(team_trans('admin.slug_help'))
                                     ->required()
                                     ->maxLength(255)
                                     ->alphaDash()
@@ -78,8 +77,8 @@ class TeamSettings extends Component implements HasActions, HasSchemas
                             ]),
 
                         Toggle::make('active')
-                            ->label(__('Active'))
-                            ->helperText(__('Inactive :label keep their members but can’t be entered.', ['label' => Str::lower(config('teams.labels.plural', 'Teams'))])),
+                            ->label(team_trans('admin.active'))
+                            ->helperText(team_trans('admin.active_help')),
                     ]),
             ])
             ->statePath('data');
@@ -97,7 +96,7 @@ class TeamSettings extends Component implements HasActions, HasSchemas
             'active' => (bool) $data['active'],
         ]);
 
-        Notification::make()->title(__(':label updated', ['label' => config('teams.labels.singular', 'Team')]))->success()->send();
+        Notification::make()->title(team_trans('admin.updated_notice'))->success()->send();
 
         // The slug is the URL; stay on this page even if it changed.
         $this->redirect(route('teams.settings', $this->team));
@@ -112,8 +111,8 @@ class TeamSettings extends Component implements HasActions, HasSchemas
             ->color(fn (): string => ($this->team->active ? DaisyColor::WARNING : DaisyColor::SUCCESS)->toFilamentColor())
             ->requiresConfirmation()
             ->modalDescription(fn (): string => $this->team->active
-                ? __('Deactivate :team? Its members keep their membership but can’t use it until it’s reactivated.', ['team' => $this->team->name])
-                : __('Reactivate :team? Its members regain access immediately.', ['team' => $this->team->name]))
+                ? team_trans('admin.deactivate_confirm', ['name' => $this->team->name])
+                : team_trans('admin.reactivate_confirm', ['name' => $this->team->name]))
             ->action(function (): void {
                 Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
 
@@ -122,8 +121,8 @@ class TeamSettings extends Component implements HasActions, HasSchemas
 
                 Notification::make()
                     ->title($this->team->active
-                        ? __(':team activated', ['team' => $this->team->name])
-                        : __(':team deactivated', ['team' => $this->team->name]))
+                        ? team_trans('admin.activated', ['name' => $this->team->name])
+                        : team_trans('admin.deactivated', ['name' => $this->team->name]))
                     ->success()
                     ->send();
             });
@@ -131,24 +130,22 @@ class TeamSettings extends Component implements HasActions, HasSchemas
 
     public function deleteTeamAction(): Action
     {
-        $label = Str::lower(config('teams.labels.singular', 'Team'));
-
         return AdminAction::make('deleteTeam')
-            ->label(__('Delete :label', ['label' => config('teams.labels.singular', 'Team')]))
+            ->label(team_trans('admin.delete'))
             ->icon('heroicon-o-trash')
             ->soft()
             ->color(DaisyColor::ERROR->toFilamentColor())
             ->disabled(fn (): bool => $this->team->active)
-            ->tooltip(fn (): ?string => $this->team->active ? __('Deactivate the :label first.', ['label' => $label]) : null)
+            ->tooltip(fn (): ?string => $this->team->active ? team_trans('admin.deactivate_first') : null)
             ->requiresConfirmation()
             ->modalDescription(fn (): string => Team::deleteWarning($this->team))
-            ->action(function () use ($label): void {
+            ->action(function (): void {
                 Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
-                abort_if($this->team->active, 403, __('Deactivate the :label before deleting it.', ['label' => $label]));
+                abort_if($this->team->active, 403, team_trans('admin.deactivate_before_delete'));
 
                 $this->team->delete();
 
-                Notification::make()->title(__(':label deleted', ['label' => config('teams.labels.singular', 'Team')]))->success()->send();
+                Notification::make()->title(team_trans('admin.deleted_notice'))->success()->send();
 
                 $this->redirect(route('teams.index'));
             });

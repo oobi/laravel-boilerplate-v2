@@ -70,25 +70,25 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
             ->defaultSort('email')
             ->columns([
                 Tables\Columns\TextColumn::make('email')
-                    ->label(__('Email'))
+                    ->label(team_trans('invitations.email'))
                     ->weight('medium')
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('role')
-                    ->label(__('Role'))
+                    ->label(team_trans('invitations.role'))
                     ->badge()
-                    ->placeholder(__('No role')),
+                    ->placeholder(team_trans('members.no_role')),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label(__('Sent'))
+                    ->label(team_trans('invitations.sent'))
                     ->since()
                     ->sortable(),
             ])
             ->recordActions([
                 ActionGroup::make([
                     Action::make('resend')
-                        ->label(__('Resend'))
+                        ->label(team_trans('invitations.resend'))
                         ->icon('heroicon-o-envelope')
                         ->action(function (TeamInvitation $record): void {
                             abort_unless($this->canManage(), 403);
@@ -96,29 +96,29 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                             $record->send();
 
                             Notification::make()
-                                ->title(__('Invitation re-sent to :email', ['email' => $record->email]))
+                                ->title(team_trans('invitations.resent_to', ['email' => $record->email]))
                                 ->success()
                                 ->send();
                         }),
 
                     Action::make('revoke')
-                        ->label(__('Revoke'))
+                        ->label(team_trans('invitations.revoke'))
                         ->icon('heroicon-o-x-circle')
                         ->color(DaisyColor::ERROR->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (TeamInvitation $record): string => __('Revoke the invitation for :email?', ['email' => $record->email]))
+                        ->modalDescription(fn (TeamInvitation $record): string => team_trans('invitations.revoke_confirm', ['email' => $record->email]))
                         ->action(function (TeamInvitation $record): void {
                             abort_unless($this->canManage(), 403);
 
                             $record->delete();
                             $this->dispatch('team-invitations-updated');
 
-                            Notification::make()->title(__('Invitation revoked'))->success()->send();
+                            Notification::make()->title(team_trans('invitations.revoked'))->success()->send();
                         }),
                 ]),
             ])
-            ->searchPlaceholder(__('Search invitations…'))
-            ->emptyStateHeading(__('No pending invitations'))
+            ->searchPlaceholder(team_trans('invitations.search'))
+            ->emptyStateHeading(team_trans('invitations.empty'))
             ->paginated(config('pagination.page_sizes'))
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }

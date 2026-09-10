@@ -30,7 +30,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -98,7 +97,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     })),
 
                 Tables\Columns\TextColumn::make('team_role')
-                    ->label(Team::allowsMultipleRoles() ? __('Roles') : __('Role'))
+                    ->label(Team::allowsMultipleRoles() ? team_trans('members.roles') : team_trans('members.role'))
                     ->getStateUsing(fn (User $record): array => $this->badgesFor($record))
                     ->badge()
                     ->color(fn (string $state): string => $this->badgeColor($state)),
@@ -107,7 +106,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                 // Mirrors the Users list: a "role" filter (with owners as the structural entry, like
                 // Super Admin there) and a "status" filter.
                 Tables\Filters\SelectFilter::make('role')
-                    ->label(__('Role'))
+                    ->label(team_trans('members.role'))
                     ->options(fn (): array => $this->roleFilterOptions())
                     ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
                     ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
@@ -130,7 +129,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ->recordActions([
                 ActionGroup::make([
                     Action::make('changeRole')
-                        ->label(Team::allowsMultipleRoles() ? __('Change roles') : __('Change role'))
+                        ->label(Team::allowsMultipleRoles() ? team_trans('members.change_roles') : team_trans('members.change_role'))
                         ->icon('heroicon-o-shield-check')
                         ->modalWidth(Width::Small)
                         ->hidden(fn (User $record): bool => $this->isOwner($record))
@@ -146,14 +145,14 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->team->syncMemberRoles($record, TeamRoleField::selected($data));
                             $this->memberRoles = null;
 
-                            Notification::make()->title(__('Roles updated'))->success()->send();
+                            Notification::make()->title(team_trans('members.roles_updated'))->success()->send();
                         }),
 
                     Action::make('makeOwner')
-                        ->label(__('Make owner'))
+                        ->label(team_trans('members.make_owner'))
                         ->icon('heroicon-o-key')
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => __('Make :name a co-owner of :team? Owners bypass every team permission; only the primary owner can demote them.', ['name' => $record->name, 'team' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.make_owner_confirm', ['member' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => $this->canManageOwners() && ! $this->isOwner($record))
                         ->action(function (User $record): void {
                             abort_unless($this->canManageOwners(), 403);
@@ -162,15 +161,15 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->ownerIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(__(':name is now an owner', ['name' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.made_owner', ['member' => $record->name]))->success()->send();
                         }),
 
                     Action::make('revokeOwner')
-                        ->label(__('Remove as owner'))
+                        ->label(team_trans('members.revoke_owner'))
                         ->icon('heroicon-o-key')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => __('Remove :name as an owner of :team? They stay a member.', ['name' => $record->name, 'team' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.revoke_owner_confirm', ['member' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => $this->canManageOwners() && $this->isOwner($record) && ! $this->team->isPrimaryOwner($record))
                         ->action(function (User $record): void {
                             abort_unless($this->canManageOwners(), 403);
@@ -179,15 +178,15 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->ownerIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(__(':name is no longer an owner', ['name' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.revoked_owner', ['member' => $record->name]))->success()->send();
                         }),
 
                     Action::make('transferOwnership')
-                        ->label(__('Transfer ownership'))
+                        ->label(team_trans('members.transfer'))
                         ->icon('heroicon-o-arrow-right-circle')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => __('Make :name the primary owner of :team? The current primary owner stays on as a co-owner.', ['name' => $record->name, 'team' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.transfer_confirm', ['member' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => $this->canTransferOwnership() && ! $this->team->isPrimaryOwner($record))
                         ->action(function (User $record): void {
                             abort_unless($this->canTransferOwnership(), 403);
@@ -196,16 +195,16 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->ownerIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(__(':name is now the primary owner', ['name' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.transferred', ['member' => $record->name]))->success()->send();
                         }),
 
                     // The team-level counterpart of deactivating an account: access withheld, everything else kept.
                     Action::make('suspend')
-                        ->label(__('Suspend'))
+                        ->label(team_trans('members.suspend'))
                         ->icon('heroicon-o-pause-circle')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => __('Suspend :name from :team? They keep their membership and role but can’t use the :label until reinstated.', ['name' => $record->name, 'team' => $this->team->name, 'label' => Str::lower(config('teams.labels.singular', 'Team'))]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.suspend_confirm', ['member' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => ! $this->isSuspended($record)
                             && ! $this->team->isPrimaryOwner($record)
                             && (! $this->isOwner($record) || $this->canManageOwners()))
@@ -217,11 +216,11 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->suspendedIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(__(':name suspended', ['name' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.suspended_notice', ['member' => $record->name]))->success()->send();
                         }),
 
                     Action::make('reinstate')
-                        ->label(__('Reinstate'))
+                        ->label(team_trans('members.reinstate'))
                         ->icon('heroicon-o-play-circle')
                         ->color(DaisyColor::SUCCESS->toFilamentColor())
                         ->visible(fn (User $record): bool => $this->isSuspended($record)
@@ -233,15 +232,15 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->suspendedIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(__(':name reinstated', ['name' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.reinstated', ['member' => $record->name]))->success()->send();
                         }),
 
                     Action::make('remove')
-                        ->label(__('Remove'))
+                        ->label(team_trans('members.remove'))
                         ->icon('heroicon-o-user-minus')
                         ->color(DaisyColor::ERROR->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => __('Remove :name from :team?', ['name' => $record->name, 'team' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.remove_confirm', ['member' => $record->name, 'name' => $this->team->name]))
                         // Never the primary owner; a co-owner only by someone who could demote them.
                         ->hidden(fn (User $record): bool => $this->team->isPrimaryOwner($record)
                             || ($this->isOwner($record) && ! $this->canManageOwners()))
@@ -253,12 +252,12 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->ownerIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(__('Member removed'))->success()->send();
+                            Notification::make()->title(team_trans('members.removed'))->success()->send();
                         }),
                 ]),
             ])
-            ->searchPlaceholder(__('Search members…'))
-            ->emptyStateHeading(__('No members found'))
+            ->searchPlaceholder(team_trans('members.search'))
+            ->emptyStateHeading(team_trans('members.empty'))
             ->paginated(config('pagination.page_sizes'))
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }
@@ -271,9 +270,9 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     public function addMemberAction(): Action
     {
         return Action::make('addMember')
-            ->label(__('Add member'))
+            ->label(team_trans('members.add'))
             ->icon('heroicon-o-user-plus')
-            ->modalHeading(__('Add a member to :team', ['team' => $this->team->name]))
+            ->modalHeading(team_trans('members.add_heading', ['name' => $this->team->name]))
             ->modalWidth(Width::Medium)
             ->visible(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value))
             ->schema([
@@ -295,7 +294,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                 $this->dispatch('team-members-updated');
 
                 Notification::make()
-                    ->title(__(':name added to :team', ['name' => $user->name, 'team' => $this->team->name]))
+                    ->title(team_trans('members.added', ['member' => $user->name, 'name' => $this->team->name]))
                     ->success()
                     ->send();
             });
@@ -331,8 +330,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     public static function statusOptions(): array
     {
         return [
-            'active' => __('Active'),
-            'suspended' => __('Suspended'),
+            'active' => team_trans('members.active'),
+            'suspended' => team_trans('members.suspended'),
         ];
     }
 
@@ -344,7 +343,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     public function roleFilterOptions(): array
     {
         return [
-            self::OWNERS_FILTER_VALUE => __('Owners'),
+            self::OWNERS_FILTER_VALUE => team_trans('members.owners'),
             ...$this->roleOptions(),
         ];
     }
@@ -432,21 +431,21 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     private function badgesFor(User $member): array
     {
         $standing = match (true) {
-            $this->team->isPrimaryOwner($member) => [__('Primary Owner')],
-            $this->isOwner($member) => [__('Owner')],
-            default => $this->memberRoles()->get($member->id) ?: [__('No role')],
+            $this->team->isPrimaryOwner($member) => [team_trans('members.primary_owner')],
+            $this->isOwner($member) => [team_trans('members.owner')],
+            default => $this->memberRoles()->get($member->id) ?: [team_trans('members.no_role')],
         };
 
-        return $this->isSuspended($member) ? [...$standing, __('Suspended')] : $standing;
+        return $this->isSuspended($member) ? [...$standing, team_trans('members.suspended')] : $standing;
     }
 
     private function badgeColor(string $badge): string
     {
-        if ($badge === __('Suspended')) {
+        if ($badge === team_trans('members.suspended')) {
             return DaisyColor::WARNING->toFilamentColor();
         }
 
-        if (in_array($badge, [__('Primary Owner'), __('Owner')], true)) {
+        if (in_array($badge, [team_trans('members.primary_owner'), team_trans('members.owner')], true)) {
             return DaisyColor::SUCCESS->toFilamentColor();
         }
 

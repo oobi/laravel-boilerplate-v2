@@ -31,7 +31,6 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 /**
@@ -63,7 +62,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
             ->defaultSort('team_composite')
             ->columns([
                 Tables\Columns\ViewColumn::make('team_composite')
-                    ->label(__('Name'))
+                    ->label(team_trans('admin.name'))
                     ->view('teams::filament.tables.columns.team-column')
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('name', $direction))
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
@@ -73,21 +72,21 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
                 // The owner as a person (avatar, linked name, email) — the user column accepts a related User as its state.
                 Tables\Columns\ViewColumn::make('owner')
-                    ->label(__('Owner'))
+                    ->label(team_trans('admin.owner'))
                     ->view('filament.tables.columns.user-column'),
 
                 Tables\Columns\TextColumn::make('users_count')
-                    ->label(__('Members'))
+                    ->label(team_trans('admin.members'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('active')
                     ->label(__('admin.status'))
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? __('Active') : __('Inactive'))
+                    ->formatStateUsing(fn (bool $state): string => $state ? team_trans('admin.active') : team_trans('admin.inactive'))
                     ->color(fn (bool $state): string => ($state ? DaisyColor::SUCCESS : DaisyColor::NEUTRAL)->toFilamentColor()),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label(__('Created'))
+                    ->label(team_trans('admin.created'))
                     ->dateTime()
                     ->sortable(),
             ])
@@ -121,8 +120,8 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                         ->color(fn (Team $record): string => ($record->active ? DaisyColor::WARNING : DaisyColor::SUCCESS)->toFilamentColor())
                         ->requiresConfirmation()
                         ->modalDescription(fn (Team $record): string => $record->active
-                            ? __('Deactivate :team? Its members keep their membership but can’t use it until it’s reactivated.', ['team' => $record->name])
-                            : __('Reactivate :team? Its members regain access immediately.', ['team' => $record->name]))
+                            ? team_trans('admin.deactivate_confirm', ['name' => $record->name])
+                            : team_trans('admin.reactivate_confirm', ['name' => $record->name]))
                         ->hidden(fn (Team $record): bool => $record->trashed())
                         ->action(function (Team $record): void {
                             Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
@@ -131,8 +130,8 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
                             Notification::make()
                                 ->title($record->active
-                                    ? __(':team activated', ['team' => $record->name])
-                                    : __(':team deactivated', ['team' => $record->name]))
+                                    ? team_trans('admin.activated', ['name' => $record->name])
+                                    : team_trans('admin.deactivated', ['name' => $record->name]))
                                 ->success()
                                 ->send();
                         }),
@@ -143,7 +142,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                         ->modalDescription(fn (Team $record): string => Team::deleteWarning($record))
                         ->using(function (Team $record): void {
                             Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
-                            abort_if($record->active, 403, __('Deactivate the :label before deleting it.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]));
+                            abort_if($record->active, 403, team_trans('admin.deactivate_before_delete'));
 
                             $record->delete();
                         }),
@@ -156,8 +155,8 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                         ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value)),
                 ]),
             ])
-            ->searchPlaceholder(__('Search :label…', ['label' => Str::lower(config('teams.labels.plural', 'Teams'))]))
-            ->emptyStateHeading(__('No :label found', ['label' => Str::lower(config('teams.labels.plural', 'Teams'))]))
+            ->searchPlaceholder(team_trans('admin.search'))
+            ->emptyStateHeading(team_trans('admin.empty'))
             ->paginated(config('pagination.page_sizes'))
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }
@@ -166,25 +165,25 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
     public function createTeamAction(): Action
     {
         return Action::make('createTeam')
-            ->label(__('Add :label', ['label' => config('teams.labels.singular', 'Team')]))
+            ->label(team_trans('admin.add'))
             ->icon('heroicon-o-plus')
-            ->modalHeading(__('Add :label', ['label' => config('teams.labels.singular', 'Team')]))
+            ->modalHeading(team_trans('admin.add'))
             ->modalWidth(Width::Medium)
             ->schema([
                 TextInput::make('name')
-                    ->label(__('Name'))
+                    ->label(team_trans('admin.name'))
                     ->required()
                     ->maxLength(255),
 
                 Select::make('user_id')
-                    ->label(__('Owner'))
+                    ->label(team_trans('admin.owner'))
                     ->required()
                     ->searchable()
                     ->getSearchResultsUsing(fn (string $search): array => $this->searchUsers($search))
                     ->getOptionLabelUsing(fn (mixed $value): ?string => User::find($value)?->email),
 
                 Toggle::make('active')
-                    ->label(__('Active'))
+                    ->label(team_trans('admin.active'))
                     ->default(true),
             ])
             ->action(function (array $data): void {
@@ -197,7 +196,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                 ]);
 
                 Notification::make()
-                    ->title(__(':label created', ['label' => config('teams.labels.singular', 'Team')]))
+                    ->title(team_trans('admin.created_notice'))
                     ->success()
                     ->send();
 
@@ -213,8 +212,8 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
     public static function statusOptions(): array
     {
         return [
-            '1' => __('Active'),
-            '0' => __('Inactive'),
+            '1' => team_trans('admin.active'),
+            '0' => team_trans('admin.inactive'),
         ];
     }
 

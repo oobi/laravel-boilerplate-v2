@@ -16,8 +16,8 @@ return [
     */
 
     'labels' => [
-        'singular' => 'Team',
-        'plural' => 'Teams',
+        'singular' => env('TEAMS_LABEL_SINGULAR', 'Team'),
+        'plural' => env('TEAMS_LABEL_PLURAL', 'Teams'),
     ],
 
     /*
@@ -31,7 +31,7 @@ return [
     |
     */
 
-    'route_prefix' => 'teams',
+    'route_prefix' => env('TEAMS_ROUTE_PREFIX', 'teams'),
 
     /*
     |--------------------------------------------------------------------------

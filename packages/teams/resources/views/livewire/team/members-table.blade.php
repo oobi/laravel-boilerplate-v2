@@ -1,14 +1,14 @@
 <div>
     <x-table-header>
         <x-slot:search>
-            <x-table-search id="members-search" :label="__('Search members…')" />
+            <x-table-search id="members-search" :label="team_trans('members.search')" />
         </x-slot:search>
 
         <x-slot:filters>
             <x-table-filter-select
                 id="members-role-filter"
                 model="tableFilters.role.value"
-                :label="\Concise\Teams\Models\Team::allowsMultipleRoles() ? __('Roles') : __('Role')"
+                :label="\Concise\Teams\Models\Team::allowsMultipleRoles() ? team_trans('members.roles') : team_trans('members.role')"
                 :placeholder="__('admin.all_roles')"
                 :options="$this->roleFilterOptions()"
                 class="min-w-36"

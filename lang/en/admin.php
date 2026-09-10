@@ -141,5 +141,4 @@ return [
     'force_disable_2fa' => 'Force Disable 2FA',
     'force_disable_2fa_confirm' => "Are you sure you want to disable this user's two factor authentication?",
     'two_factor_force_disabled' => 'Two factor authentication disabled for this user.',
-    'team_memberships' => 'Team Memberships',
 ];

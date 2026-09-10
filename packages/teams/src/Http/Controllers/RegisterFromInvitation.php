@@ -56,7 +56,7 @@ class RegisterFromInvitation
         $team = $accept($invitation, $user);
 
         Notification::make()
-            ->title(__('Welcome — you’ve joined :team.', ['team' => $team->name]))
+            ->title(team_trans('invitations.welcome', ['name' => $team->name]))
             ->success()
             ->send();
 

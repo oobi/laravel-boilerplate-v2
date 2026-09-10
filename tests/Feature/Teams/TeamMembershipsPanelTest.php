@@ -24,7 +24,7 @@ class TeamMembershipsPanelTest extends TestCase
         $this->actingAs(User::factory()->superAdmin()->create())
             ->get(route('users.show', $user))
             ->assertOk()
-            ->assertSee(__('admin.team_memberships'))
+            ->assertSee('Team memberships')
             ->assertSee('Owned Co')
             ->assertSee('Owner')
             ->assertSee('Other Co')
@@ -38,8 +38,8 @@ class TeamMembershipsPanelTest extends TestCase
         $this->actingAs(User::factory()->superAdmin()->create())
             ->get(route('users.show', $user))
             ->assertOk()
-            ->assertSee(__('admin.team_memberships'))
-            ->assertSee('Not a member of any');
+            ->assertSee('Team memberships')
+            ->assertSee('Not a member of any team');
     }
 
     protected function tearDown(): void

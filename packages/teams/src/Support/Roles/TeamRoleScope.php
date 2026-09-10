@@ -7,7 +7,7 @@ namespace Concise\Teams\Support\Roles;
 use App\Support\Roles\RoleScope;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
-use Illuminate\Support\Str;
+use Concise\Teams\Support\TeamLabels;
 
 /**
  * The teams tier's tab on the admin Roles screen: the centrally-defined roles
@@ -23,14 +23,12 @@ final class TeamRoleScope implements RoleScope
 
     public function label(): string
     {
-        return config('teams.labels.singular', 'Team');
+        return TeamLabels::singular();
     }
 
     public function description(): string
     {
-        return __('Define what members of a :label can do. These roles are shared by every :label; the owner bypasses them.', [
-            'label' => Str::lower(config('teams.labels.singular', 'Team')),
-        ]);
+        return team_trans('roles.scope_description');
     }
 
     public function permissions(): array

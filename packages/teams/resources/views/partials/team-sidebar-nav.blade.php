@@ -15,7 +15,7 @@
         icon="heroicon-o-squares-2x2"
         :routes="['team.dashboard']"
     >
-        {{ __('Dashboard') }}
+        {{ team_trans('nav.dashboard') }}
     </x-nav-item>
 
     @foreach (\Concise\Teams\Support\Navigation\TeamNavRegistry::resolve($viewer, $team) as $node)

@@ -20,11 +20,11 @@ final class TeamRoleField
         $multiple = Team::allowsMultipleRoles();
 
         return Select::make('roles')
-            ->label($label ?? ($multiple ? __('Roles') : __('Role')))
+            ->label($label ?? team_trans($multiple ? 'members.roles' : 'members.role'))
             ->options(fn (): array => Team::availableRoles()->orderBy('name')->pluck('name', 'name')->all())
             ->multiple($multiple)
             ->native(! $multiple)
-            ->placeholder($multiple ? __('No roles') : __('No role'));
+            ->placeholder(team_trans($multiple ? 'members.no_roles' : 'members.no_role'));
     }
 
     /**

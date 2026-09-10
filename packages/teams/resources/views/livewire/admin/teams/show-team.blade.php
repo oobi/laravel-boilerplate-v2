@@ -16,11 +16,11 @@
                      and the same treatment as the Settings tab's Danger zone — sibling tabs match. --}}
                 <x-card :title="__('admin.statistics')" type="panel">
                     <x-stats-list>
-                        <x-stat-row icon="heroicon-o-users" :label="__('Members')" :value="$memberCount" />
-                        <x-stat-row icon="heroicon-o-key" :label="__('Owners')" :value="$ownerCount" />
-                        <x-stat-row icon="heroicon-o-pause-circle" :label="__('Suspended')" :value="$suspendedCount" :muted="$suspendedCount === 0" />
-                        <x-stat-row icon="heroicon-o-envelope" :label="__('Pending invitations')" :value="$invitationCount" :muted="$invitationCount === 0" />
-                        <x-stat-row icon="heroicon-o-calendar-days" :label="__('Created')" :value="$team->created_at?->diffForHumans()" />
+                        <x-stat-row icon="heroicon-o-users" :label="team_trans('admin.members')" :value="$memberCount" />
+                        <x-stat-row icon="heroicon-o-key" :label="team_trans('admin.owners')" :value="$ownerCount" />
+                        <x-stat-row icon="heroicon-o-pause-circle" :label="team_trans('admin.suspended')" :value="$suspendedCount" :muted="$suspendedCount === 0" />
+                        <x-stat-row icon="heroicon-o-envelope" :label="team_trans('admin.pending_invitations')" :value="$invitationCount" :muted="$invitationCount === 0" />
+                        <x-stat-row icon="heroicon-o-calendar-days" :label="team_trans('admin.created')" :value="$team->created_at?->diffForHumans()" />
                     </x-stats-list>
                 </x-card>
             </div>

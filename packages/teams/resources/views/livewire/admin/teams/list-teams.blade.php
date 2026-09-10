@@ -1,9 +1,9 @@
 {{-- Block-form php directive only: mixing it with the inline parenthesised form in one file makes Blade's block regex swallow everything between them. --}}
-@php $plural = config('teams.labels.plural', 'Teams'); @endphp
+@php $plural = \Concise\Teams\Support\TeamLabels::plural(); @endphp
 <div>
     @section('page-title', $plural)
 
-    <x-page-header :title="$plural" :description="__('Every :label on the system — who owns it and who belongs to it.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))])">
+    <x-page-header :title="$plural" :description="team_trans('admin.description')">
         <x-slot:actions>
             {{ $this->createTeamAction }}
         </x-slot:actions>
@@ -13,7 +13,7 @@
 
     <x-table-header>
         <x-slot:search>
-            <x-table-search id="teams-search" :label="__('Search :label…', ['label' => Str::lower(config('teams.labels.plural', 'Teams'))])" />
+            <x-table-search id="teams-search" :label="team_trans('admin.search')" />
         </x-slot:search>
 
         <x-slot:filters>

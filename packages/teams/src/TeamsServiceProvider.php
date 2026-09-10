@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Concise\Teams;
 
 use App\Enums\SystemPermission;
+use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavItem;
 use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
@@ -19,6 +20,7 @@ use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
+use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\Support\TeamPermissionResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -67,7 +69,15 @@ class TeamsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'teams');
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'teams');
         $this->loadRoutesFrom(__DIR__.'/../routes/teams.php');
+
+        // `php artisan vendor:publish --tag=teams-config` / `--tag=teams-lang` to override in the app.
+        $this->publishes([__DIR__.'/../config/teams.php' => config_path('teams.php')], 'teams-config');
+        $this->publishes([__DIR__.'/../lang' => lang_path('vendor/teams')], 'teams-lang');
+
+        // The admin breadcrumb for `teams.*` routes uses the project's word for teams (scope §8).
+        Breadcrumbs::label('teams', fn (): string => TeamLabels::plural());
 
         // Child components shared by the team area and the system admin pages.
         Livewire::component('teams-members-table', MembersTable::class);
@@ -97,7 +107,7 @@ class TeamsServiceProvider extends ServiceProvider
     private function registerTeamNavigation(): void
     {
         TeamNavRegistry::item('team-members')
-            ->label(__('Members'))
+            ->label(team_trans('nav.members'))
             ->route('team.members')
             ->icon('heroicon-o-users')
             ->active('team.members')
@@ -107,7 +117,7 @@ class TeamsServiceProvider extends ServiceProvider
         // Admin-provisioned teams have no member-driven invitations, so no page and no nav item.
         if (TeamCreationMode::current()->allowsMemberInvitations()) {
             TeamNavRegistry::item('team-invitations')
-                ->label(__('Invitations'))
+                ->label(team_trans('nav.invitations'))
                 ->route('team.invitations')
                 ->icon('heroicon-o-envelope')
                 ->active('team.invitations')
@@ -126,7 +136,7 @@ class TeamsServiceProvider extends ServiceProvider
     {
         NavRegistry::group('management')->add(
             NavItem::make('teams')
-                ->label(config('teams.labels.plural', 'Teams'))
+                ->label(TeamLabels::plural())
                 ->route('teams.index')
                 ->icon('heroicon-o-user-group')
                 ->active('teams.*')

@@ -32,7 +32,7 @@ class AcceptTeamInvitation
         $team = $accept($invitation, $request->user());
 
         Notification::make()
-            ->title(__('You’ve joined :team.', ['team' => $team->name]))
+            ->title(team_trans('invitations.joined', ['name' => $team->name]))
             ->success()
             ->send();
 
@@ -45,9 +45,9 @@ class AcceptTeamInvitation
             // Come back here after signing in (the full signed URL is kept as the intended one).
             return redirect()
                 ->guest(route('login'))
-                ->with('status', __('Sign in as :email to accept your invitation to :team.', [
+                ->with('status', team_trans('invitations.sign_in_first', [
                     'email' => $invitation->email,
-                    'team' => $invitation->team->name,
+                    'name' => $invitation->team->name,
                 ]));
         }
 

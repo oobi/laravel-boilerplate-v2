@@ -1,8 +1,8 @@
 {{-- Team memberships panel (Concise\Teams\Panels\Users\TeamMembershipsPanel) --}}
-<x-card :title="__('admin.team_memberships')" type="panel">
+<x-card :title="team_trans('memberships.title')" type="panel">
     @if ($memberships->isEmpty())
         <p class="text-sm text-base-content/60">
-            {{ __('Not a member of any :label.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]) }}
+            {{ team_trans('memberships.none') }}
         </p>
     @else
         <ul class="divide-y divide-base-300">

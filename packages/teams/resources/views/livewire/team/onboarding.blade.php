@@ -4,14 +4,14 @@
     </div>
 
     <h1 class="text-xl font-semibold text-base-content">
-        {{ __('You’re not part of a :label yet', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]) }}
+        {{ team_trans('onboarding.title') }}
     </h1>
 
     <p class="mt-2 text-sm text-base-content/60">
         @if ($canCreate)
-            {{ __('Create one to get started, or ask an admin to invite you.') }}
+            {{ team_trans('onboarding.can_create') }}
         @else
-            {{ __('Ask an administrator to add you to a :label.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]) }}
+            {{ team_trans('onboarding.ask_admin') }}
         @endif
     </p>
 </div>

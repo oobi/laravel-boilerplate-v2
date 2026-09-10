@@ -18,9 +18,9 @@
                     </div>
                 </form>
 
-                <x-card :title="__('Danger zone')" type="panel">
+                <x-card :title="team_trans('admin.danger_zone')" type="panel">
                     <p class="text-sm text-base-content/60">
-                        {{ __('Deactivate first, then delete. A deleted :label can be restored from the trash.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]) }}
+                        {{ team_trans('admin.danger_help') }}
                     </p>
 
                     <x-action-list>

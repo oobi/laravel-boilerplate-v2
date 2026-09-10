@@ -8,7 +8,6 @@ use App\Models\User;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Str;
 
 /**
  * Accept an invitation as the signed-in user: they join the team with the
@@ -26,13 +25,13 @@ class AcceptInvitation
     public function __invoke(TeamInvitation $invitation, User $user): Team
     {
         if (! $invitation->isFor($user)) {
-            throw new AuthorizationException(__('This invitation was sent to a different email address.'));
+            throw new AuthorizationException(team_trans('invitations.wrong_account'));
         }
 
         $team = $invitation->team;
 
         if (! $team->active) {
-            throw new AuthorizationException(__('This :label is currently inactive.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]));
+            throw new AuthorizationException(team_trans('inactive'));
         }
 
         $role = $invitation->role !== null && Team::availableRoles()->where('name', $invitation->role)->exists()

@@ -8,7 +8,6 @@ use Closure;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -38,7 +37,7 @@ class ResolveTeamContext
         // switcher and /{prefix} entry point already skip inactive teams, so this
         // is only reached by a direct URL — say why rather than a bare 403.
         if (! $team->active) {
-            abort(403, __('This :label is currently inactive.', ['label' => Str::lower(config('teams.labels.singular', 'Team'))]));
+            abort(403, team_trans('inactive'));
         }
 
         $context = app(TeamContext::class);

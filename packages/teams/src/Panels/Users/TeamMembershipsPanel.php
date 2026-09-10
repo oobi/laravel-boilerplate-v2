@@ -55,19 +55,19 @@ class TeamMembershipsPanel implements ShowPanel
     private function badgesFor(Team $team, User $user, $roles): array
     {
         $standing = match (true) {
-            $team->isPrimaryOwner($user) => [['label' => __('Primary Owner'), 'color' => DaisyColor::SUCCESS->value]],
-            $team->isOwnedBy($user) => [['label' => __('Owner'), 'color' => DaisyColor::SUCCESS->value]],
+            $team->isPrimaryOwner($user) => [['label' => team_trans('members.primary_owner'), 'color' => DaisyColor::SUCCESS->value]],
+            $team->isOwnedBy($user) => [['label' => team_trans('members.owner'), 'color' => DaisyColor::SUCCESS->value]],
             default => $team->rolesFor($user)
                 ->map(fn (string $name): array => [
                     'label' => $name,
                     'color' => ($roles->get($name)?->badgeColor() ?? DaisyColor::NEUTRAL)->value,
                 ])
-                ->whenEmpty(fn () => collect([['label' => __('No role'), 'color' => DaisyColor::NEUTRAL->value]]))
+                ->whenEmpty(fn () => collect([['label' => team_trans('members.no_role'), 'color' => DaisyColor::NEUTRAL->value]]))
                 ->all(),
         };
 
         if ($team->isSuspended($user)) {
-            $standing[] = ['label' => __('Suspended'), 'color' => DaisyColor::WARNING->value];
+            $standing[] = ['label' => team_trans('members.suspended'), 'color' => DaisyColor::WARNING->value];
         }
 
         return $standing;

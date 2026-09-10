@@ -15,10 +15,9 @@ use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
 
 /**
- * The "invite by email" modal, shared by the team area's Invitations page and
- * the system admin's Invitations tab. The host exposes `$team` and decides
- * canInvite(); an invitation grants at most one role regardless of the
- * project's roles-per-member setting.
+ * The "invite by email" modal, in the pending invitations table's toolbar.
+ * The host exposes `$team` and decides canInvite(); an invitation grants at
+ * most one role regardless of the project's roles-per-member setting.
  *
  * @property Team $team
  */
@@ -29,14 +28,14 @@ trait HasInviteAction
     public function inviteAction(): Action
     {
         return Action::make('invite')
-            ->label(__('Invite'))
+            ->label(team_trans('invitations.invite'))
             ->icon('heroicon-o-envelope')
-            ->modalHeading(__('Invite someone to :team', ['team' => $this->team->name]))
+            ->modalHeading(team_trans('invitations.invite_heading', ['name' => $this->team->name]))
             ->modalWidth(Width::Medium)
             ->visible(fn (): bool => $this->canInvite())
             ->schema([
                 TextInput::make('email')
-                    ->label(__('Email'))
+                    ->label(team_trans('invitations.email'))
                     ->email()
                     ->required()
                     ->maxLength(255)
@@ -44,15 +43,15 @@ trait HasInviteAction
                     ->rules([
                         fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
                             if ($this->team->users()->where('email', User::normalizeEmail($value))->exists()) {
-                                $fail(__('That person is already a member.'));
+                                $fail(team_trans('invitations.already_member'));
                             }
                         },
                     ]),
 
                 Select::make('role')
-                    ->label(__('Role'))
+                    ->label(team_trans('invitations.role'))
                     ->options(fn (): array => Team::availableRoles()->orderBy('name')->pluck('name', 'name')->all())
-                    ->placeholder(__('No role')),
+                    ->placeholder(team_trans('members.no_role')),
             ])
             ->action(function (array $data): void {
                 abort_unless($this->canInvite(), 403);
@@ -61,7 +60,7 @@ trait HasInviteAction
                 $this->dispatch('team-invitations-updated');
 
                 Notification::make()
-                    ->title(__('Invitation sent to :email', ['email' => $invitation->email]))
+                    ->title(team_trans('invitations.sent_to', ['email' => $invitation->email]))
                     ->success()
                     ->send();
             });

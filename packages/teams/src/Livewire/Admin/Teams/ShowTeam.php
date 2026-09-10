@@ -41,33 +41,33 @@ class ShowTeam extends Component implements HasSchemas
         return $schema
             ->record($this->team)
             ->components([
-                Section::make(__(':label information', ['label' => config('teams.labels.singular', 'Team')]))
+                Section::make(team_trans('admin.information'))
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextEntry::make('name')
-                                    ->label(__('Name')),
+                                    ->label(team_trans('admin.name')),
 
                                 TextEntry::make('owner.name')
-                                    ->label(__('Primary owner'))
+                                    ->label(team_trans('admin.primary_owner'))
                                     ->url(fn (Team $record): ?string => $record->owner ? route('users.show', $record->owner) : null)
                                     ->helperText(fn (Team $record): ?string => $record->owner?->email),
 
                                 TextEntry::make('slug')
-                                    ->label(__('Slug')),
+                                    ->label(team_trans('admin.slug')),
 
                                 TextEntry::make('active')
                                     ->label(__('admin.status'))
                                     ->badge()
-                                    ->formatStateUsing(fn (bool $state): string => $state ? __('Active') : __('Inactive'))
+                                    ->formatStateUsing(fn (bool $state): string => $state ? team_trans('admin.active') : team_trans('admin.inactive'))
                                     ->color(fn (bool $state): string => ($state ? DaisyColor::SUCCESS : DaisyColor::NEUTRAL)->toFilamentColor()),
 
                                 TextEntry::make('created_at')
-                                    ->label(__('Created'))
+                                    ->label(team_trans('admin.created'))
                                     ->dateTime(),
 
                                 TextEntry::make('updated_at')
-                                    ->label(__('Last updated'))
+                                    ->label(team_trans('admin.updated'))
                                     ->dateTime(),
                             ]),
                     ]),

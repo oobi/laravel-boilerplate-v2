@@ -10,7 +10,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Str;
 
 /**
  * The "you've been invited" email, sent on demand to the invited address (which
@@ -35,19 +34,12 @@ class TeamInvitationNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $team = $this->invitation->team;
-        $label = Str::lower(config('teams.labels.singular', 'Team'));
 
         return (new MailMessage)
-            ->subject(__('You’ve been invited to join :team', ['team' => $team->name]))
-            ->line(__('You have been invited to join the :team :label on :app.', [
-                'team' => $team->name,
-                'label' => $label,
-                'app' => config('app.name'),
-            ]))
-            ->line(__('If you already have an account for :email, you’ll be asked to sign in; if not, the link lets you create one.', [
-                'email' => $this->invitation->email,
-            ]))
-            ->action(__('Accept invitation'), $this->invitation->acceptUrl())
-            ->line(__('If you weren’t expecting this invitation, you can ignore this email.'));
+            ->subject(team_trans('invitations.mail.subject', ['name' => $team->name]))
+            ->line(team_trans('invitations.mail.intro', ['name' => $team->name, 'app' => config('app.name')]))
+            ->line(team_trans('invitations.mail.account', ['email' => $this->invitation->email]))
+            ->action(team_trans('invitations.mail.action'), $this->invitation->acceptUrl())
+            ->line(team_trans('invitations.mail.ignore'));
     }
 }

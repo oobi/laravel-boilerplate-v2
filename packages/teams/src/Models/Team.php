@@ -110,18 +110,10 @@ class Team extends Model
     {
         $count = $team->users()->count();
 
-        if ($permanent) {
-            return trans_choice(
-                '{0} Permanently delete :team? This cannot be undone.|{1} Permanently delete :team? Its one member’s membership and role are erased with it. This cannot be undone.|[2,*] Permanently delete :team? Its :count members’ memberships and roles are erased with it. This cannot be undone.',
-                $count,
-                ['team' => $team->name, 'count' => $count],
-            );
-        }
-
-        return trans_choice(
-            '{0} Delete :team? It can be restored from the trash.|{1} Delete :team? Its one member loses access until it is restored from the trash.|[2,*] Delete :team? Its :count members lose access until it is restored from the trash.',
+        return team_trans_choice(
+            $permanent ? 'admin.force_delete_warning' : 'admin.delete_warning',
             $count,
-            ['team' => $team->name, 'count' => $count],
+            ['name' => $team->name, 'count' => $count],
         );
     }
 

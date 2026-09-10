@@ -7,11 +7,11 @@ namespace Concise\Teams\Enums;
 /**
  * The fixed, code-checked vocabulary of team-level capabilities — the team
  * counterpart of App\Enums\SystemPermission. Each case is a real TeamPolicy
- * check and is seeded as a spatie Permission row (see EnsureTeamRoles). Which
+ * check and is seeded as a spatie Permission row (TeamRolesSeeder). Which
  * team roles hold which permission is admin-configurable, never a hardcoded
- * match(); the team owner bypasses all of these within their own team, exactly
- * as the super admin bypasses SystemPermission. A project extends this enum
- * with its own domain capabilities the same way it extends SystemPermission.
+ * match(); owners bypass all of these within their own team, exactly as the
+ * super admin bypasses SystemPermission. A project extends this enum with its
+ * own domain capabilities the same way it extends SystemPermission.
  */
 enum TeamPermission: string
 {
@@ -22,9 +22,9 @@ enum TeamPermission: string
     public function label(): string
     {
         return match ($this) {
-            self::MANAGE_MEMBERS => 'Manage Members',
-            self::INVITE_MEMBERS => 'Invite Members',
-            self::UPDATE_TEAM => 'Update Team Settings',
+            self::MANAGE_MEMBERS => team_trans('permissions.manage_members'),
+            self::INVITE_MEMBERS => team_trans('permissions.invite_members'),
+            self::UPDATE_TEAM => team_trans('permissions.update_team'),
         };
     }
 
@@ -32,9 +32,9 @@ enum TeamPermission: string
     {
         return match ($this) {
             self::MANAGE_MEMBERS,
-            self::INVITE_MEMBERS => 'Members',
+            self::INVITE_MEMBERS => team_trans('permissions.category_members'),
 
-            self::UPDATE_TEAM => 'Team Settings',
+            self::UPDATE_TEAM => team_trans('permissions.category_settings'),
         };
     }
 
