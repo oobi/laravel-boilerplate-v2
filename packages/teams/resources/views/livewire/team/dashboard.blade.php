@@ -1,8 +1,8 @@
 <div class="flex flex-col gap-6">
-    <div>
-        <h1 class="text-2xl font-semibold text-base-content">{{ $team->name }}</h1>
-        <p class="text-sm text-base-content/60">{{ config('teams.labels.singular', 'Team') }} dashboard</p>
-    </div>
+    <x-page-header
+        :title="$team->name"
+        :description="config('teams.labels.singular', 'Team') . ' dashboard'"
+    />
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-box border border-base-300 bg-base-100 p-5">

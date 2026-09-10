@@ -12,6 +12,8 @@
                     {{ $this->teamInfolist }}
                 </div>
 
+                {{-- A peer of the Filament section beside it (the tabs island is a page container, not a card),
+                     and the same treatment as the Settings tab's Danger zone — sibling tabs match. --}}
                 <x-card :title="__('admin.statistics')" type="panel">
                     <x-stats-list>
                         <x-stat-row icon="heroicon-o-users" :label="__('Members')" :value="$memberCount" />
