@@ -41,7 +41,7 @@ class TeamNavigationTest extends TestCase
 
     public function test_a_user_with_no_teams_who_cannot_create_sees_neither(): void
     {
-        config(['teams.creation' => 'admin-provisioned']);
+        config(['teams.creation' => 'admin-only']);
         $user = User::factory()->create();
 
         $this->assertSame([], $this->menuNamesFor($user));
@@ -49,7 +49,7 @@ class TeamNavigationTest extends TestCase
 
     public function test_the_teams_link_points_at_the_entry_point_and_follows_the_label(): void
     {
-        config(['teams.labels.singular' => 'Salon', 'teams.labels.plural' => 'Salons']);
+        config(['teams.labels.team.singular' => 'Salon', 'teams.labels.team.plural' => 'Salons']);
         $user = User::factory()->create();
         Team::factory()->ownedBy($user)->create();
 

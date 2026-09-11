@@ -8,14 +8,16 @@
     {{ team_trans('nav.members') }}
 </x-tabs-item>
 
-<x-tabs-item
-    :active="$current === 'invitations'"
-    :href="route('teams.invitations', $team)"
-    icon="heroicon-o-envelope"
-    :badge="($pending = $team->invitations()->count()) > 0 ? $pending : null"
->
-    {{ team_trans('nav.invitations') }}
-</x-tabs-item>
+@if (\Concise\Teams\Support\InvitationPolicy::adminsMayInvite())
+    <x-tabs-item
+        :active="$current === 'invitations'"
+        :href="route('teams.invitations', $team)"
+        icon="heroicon-o-envelope"
+        :badge="($pending = $team->invitations()->count()) > 0 ? $pending : null"
+    >
+        {{ team_trans('nav.invitations') }}
+    </x-tabs-item>
+@endif
 
 <x-tabs-item :active="$current === 'settings'" :href="route('teams.settings', $team)" icon="heroicon-o-cog-6-tooth">
     {{ team_trans('nav.settings') }}

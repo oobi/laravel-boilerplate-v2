@@ -7,18 +7,19 @@ namespace Concise\Teams;
 use App\Enums\SystemPermission;
 use App\Models\User;
 use App\Support\AccountMenu\AccountMenuRegistry;
+use App\Support\Auth\LoginRedirectRegistry;
 use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavItem;
 use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
-use Concise\Teams\Enums\TeamCreationMode;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
+use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
@@ -92,6 +93,7 @@ class TeamsServiceProvider extends ServiceProvider
 
         $this->registerSystemAdminArea();
         $this->registerAccountMenu();
+        $this->registerLoginRedirect();
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — not a role — and team roles are seeded centrally by
@@ -117,8 +119,8 @@ class TeamsServiceProvider extends ServiceProvider
             ->can(TeamAbility::MANAGE_MEMBERS)
             ->order(10);
 
-        // Admin-provisioned teams have no member-driven invitations, so no page and no nav item.
-        if (TeamCreationMode::current()->allowsMemberInvitations()) {
+        // With member invitations off there's no page and no nav item (see InvitationPolicy).
+        if (InvitationPolicy::membersMayInvite()) {
             TeamNavRegistry::item('team-invitations')
                 ->label(team_trans('nav.invitations'))
                 ->route('team.invitations')
@@ -159,6 +161,19 @@ class TeamsServiceProvider extends ServiceProvider
             ->order(20)
             ->visibleWhen(fn (?User $user): bool => $user !== null
                 && Gate::forUser($user)->allows(SystemPermission::ACCESS_ADMIN_PANEL->value));
+    }
+
+    /**
+     * After login, a user without a system role is sent to the team area — their
+     * team, the picker, or the "ask an admin" onboarding, as TeamRedirect decides.
+     * Contributed to core's LoginRedirectRegistry so core auth stays teams-agnostic;
+     * a system role is resolved by core before this resolver is ever consulted.
+     */
+    private function registerLoginRedirect(): void
+    {
+        LoginRedirectRegistry::register(
+            fn (User $user): ?string => $user->canAccessAdmin() ? null : route('team.index'),
+        );
     }
 
     private function registerSystemAdminArea(): void

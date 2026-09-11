@@ -19,7 +19,9 @@
                         <x-stat-row icon="heroicon-o-users" :label="team_trans('admin.members')" :value="$memberCount" />
                         <x-stat-row icon="heroicon-o-key" :label="team_trans('admin.owners')" :value="$ownerCount" />
                         <x-stat-row icon="heroicon-o-pause-circle" :label="team_trans('admin.suspended')" :value="$suspendedCount" :muted="$suspendedCount === 0" />
-                        <x-stat-row icon="heroicon-o-envelope" :label="team_trans('admin.pending_invitations')" :value="$invitationCount" :muted="$invitationCount === 0" />
+                        @if ($showInvitations)
+                            <x-stat-row icon="heroicon-o-envelope" :label="team_trans('admin.pending_invitations')" :value="$invitationCount" :muted="$invitationCount === 0" />
+                        @endif
                         <x-stat-row icon="heroicon-o-calendar-days" :label="team_trans('admin.created')" :value="$team->created_at?->diffForHumans()" />
                     </x-stats-list>
                 </x-card>

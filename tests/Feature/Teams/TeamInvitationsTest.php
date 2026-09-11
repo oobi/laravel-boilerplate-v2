@@ -72,13 +72,13 @@ class TeamInvitationsTest extends TestCase
             ->assertDontSee(route('team.invitations', ['team' => $team->slug]));
     }
 
-    public function test_invitations_are_unavailable_when_teams_are_admin_provisioned(): void
+    public function test_invitations_are_unavailable_when_member_invitations_are_off(): void
     {
-        config(['teams.creation' => 'admin-provisioned']);
+        config(['teams.invitations.members' => false]);
         $owner = User::factory()->create();
         $team = $this->team($owner);
 
-        // No page for members in this mode (and no nav item — see TeamsServiceProvider).
+        // No page for members with the switch off (and no nav item — see TeamsServiceProvider).
         Livewire::actingAs($owner)
             ->test(ListInvitations::class, ['team' => $team])
             ->assertNotFound();

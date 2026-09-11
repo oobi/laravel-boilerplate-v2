@@ -187,7 +187,7 @@ class TeamSelectTest extends TestCase
 
     public function test_the_switcher_offers_no_creation_when_the_mode_forbids_it(): void
     {
-        config(['teams.creation' => 'admin-provisioned']);
+        config(['teams.creation' => 'admin-only']);
         $user = User::factory()->create();
         $team = Team::factory()->ownedBy($user)->create();
 

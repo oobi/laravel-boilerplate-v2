@@ -48,7 +48,7 @@ class TeamCreationTest extends TestCase
             ->assertOk()
             ->assertSee('Create one to get started');
 
-        config(['teams.creation' => 'admin-provisioned']);
+        config(['teams.creation' => 'admin-only']);
 
         Livewire::actingAs($user)
             ->test(Onboarding::class)
@@ -58,7 +58,7 @@ class TeamCreationTest extends TestCase
 
     public function test_creation_is_refused_at_the_write_boundary_when_the_mode_forbids_it(): void
     {
-        config(['teams.creation' => 'invitation-only']);
+        config(['teams.creation' => 'admin-only']);
         $user = User::factory()->create();
 
         $this->assertFalse(Gate::forUser($user)->allows(TeamAbility::CREATE, Team::class));
@@ -133,7 +133,7 @@ class TeamCreationTest extends TestCase
     public function test_a_system_admin_provisioning_a_team_is_not_subject_to_the_limit(): void
     {
         // Admin > Teams goes through the `manage teams` permission, not TeamPolicy::create.
-        config(['teams.max_teams_per_user' => 1, 'teams.creation' => 'admin-provisioned']);
+        config(['teams.max_teams_per_user' => 1, 'teams.creation' => 'admin-only']);
         $admin = User::factory()->superAdmin()->create();
         $owner = User::factory()->create();
         Team::factory()->ownedBy($owner)->create();

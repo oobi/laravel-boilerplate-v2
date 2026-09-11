@@ -7,10 +7,10 @@ namespace Concise\Teams\Livewire\Team;
 use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
-use Concise\Teams\Enums\TeamCreationMode;
 use Concise\Teams\Livewire\Concerns\HasInviteAction;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
+use Concise\Teams\Support\InvitationPolicy;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -32,9 +32,9 @@ use Livewire\Component;
 /**
  * A team's pending invitations — searchable, paginated — with resend and
  * revoke, shared by the team area's Invitations page and the system admin's
- * Invitations tab. Authorized for either audience: the `manage teams` system
- * permission, or — when the creation mode allows member invitations — the
- * team's invite ability.
+ * Invitations tab. Authorized for either audience against the matching
+ * invitation switch: the `manage teams` system permission when admin invites
+ * are on, or the team's invite ability when member invites are on.
  */
 class PendingInvitations extends Component implements HasActions, HasSchemas, HasTable
 {
@@ -130,7 +130,7 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
 
     private function canManage(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || (TeamCreationMode::current()->allowsMemberInvitations() && Gate::allows(TeamAbility::INVITE, $this->team));
+        return (InvitationPolicy::adminsMayInvite() && Gate::allows(SystemPermission::MANAGE_TEAMS->value))
+            || (InvitationPolicy::membersMayInvite() && Gate::allows(TeamAbility::INVITE, $this->team));
     }
 }

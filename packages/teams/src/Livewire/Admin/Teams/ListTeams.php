@@ -36,7 +36,7 @@ use Livewire\Component;
 /**
  * System admin: every team on the platform (scope §7 "manage all teams").
  * Gated by the `manage teams` system permission, not team membership — this is
- * where admin-provisioned teams are created.
+ * where an admin provisions teams (the only entry point under `admin-only` creation).
  *
  * Taking a team out of service is a two-step, reversible act: deactivate
  * (members keep their membership, can't enter), then delete (soft — restorable

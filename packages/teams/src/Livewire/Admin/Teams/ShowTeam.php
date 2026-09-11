@@ -7,6 +7,7 @@ namespace Concise\Teams\Livewire\Admin\Teams;
 use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\InvitationPolicy;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -80,6 +81,7 @@ class ShowTeam extends Component implements HasSchemas
             'memberCount' => $this->team->users()->count(),
             'ownerCount' => $this->team->ownerIds()->count(),
             'suspendedCount' => $this->team->users()->wherePivotNotNull('suspended_at')->count(),
+            'showInvitations' => InvitationPolicy::adminsMayInvite(),
             'invitationCount' => $this->team->invitations()->count(),
         ]);
     }

@@ -27,7 +27,8 @@ class LoginTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect('/');
+        // Where they land is decided by LoginResponse and covered by LoginRedirectTest.
+        $response->assertRedirect();
     }
 
     public function test_users_cannot_authenticate_with_invalid_password(): void
