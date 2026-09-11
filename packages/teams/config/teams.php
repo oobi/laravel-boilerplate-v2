@@ -151,10 +151,28 @@ return [
     | The optional custom-domain overlay. Off by default — teams are reached via
     | the path prefix above. Only verified domains ever route (OQ3).
     |
+    | `self_service` lets a team's owner manage its domains; turn it off for an
+    | admin-managed shape (backoffice / newsletter / salon) where only a system
+    | admin should touch domain config. A system admin can always manage domains
+    | while the feature is enabled, regardless of this switch.
+    |
+    | `reserved` is a blacklist of leftmost labels a team may never claim as a
+    | domain (infra/system names). Matched case-insensitively against the first
+    | label, so it blocks e.g. `admin.acme.com` and `mail.acme.com`. Extend it
+    | per project; the application's own host (APP_URL) is always reserved too.
+    |
     */
 
     'domains' => [
         'enabled' => false,
+
+        'self_service' => true,
+
+        'reserved' => [
+            'www', 'admin', 'mail', 'webmail', 'smtp', 'imap', 'pop',
+            'ftp', 'api', 'app', 'ns1', 'ns2', 'mx', 'cpanel',
+            'autodiscover', 'autoconfig', 'localhost',
+        ],
     ],
 
 ];

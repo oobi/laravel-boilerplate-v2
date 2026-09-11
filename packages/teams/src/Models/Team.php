@@ -153,6 +153,21 @@ class Team extends Model
         return $this->hasMany(TeamInvitation::class);
     }
 
+    /** Custom domains for this team (the optional overlay, 5h). */
+    public function domains(): HasMany
+    {
+        return $this->hasMany(Domain::class);
+    }
+
+    /** The team's verified primary domain, if it has one. */
+    public function primaryDomain(): ?Domain
+    {
+        return $this->domains()
+            ->whereNotNull('verified_at')
+            ->where('is_primary', true)
+            ->first();
+    }
+
     /** @param  Builder<Team>  $query */
     public function scopeActive(Builder $query): void
     {

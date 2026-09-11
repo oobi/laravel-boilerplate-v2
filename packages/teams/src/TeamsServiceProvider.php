@@ -19,6 +19,8 @@ use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
+use Concise\Teams\Support\Dns\DnsResolver;
+use Concise\Teams\Support\Dns\SystemDnsResolver;
 use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
@@ -66,6 +68,10 @@ class TeamsServiceProvider extends ServiceProvider
         // The single source of truth for the active team (query/permission/
         // filesystem/cache scope) — see TeamContext and the CurrentTeam facade.
         $this->app->singleton(TeamContext::class);
+
+        // The DNS boundary for custom-domain verification (5h). Swapped for a
+        // FakeDnsResolver in tests.
+        $this->app->bind(DnsResolver::class, SystemDnsResolver::class);
     }
 
     public function boot(): void
