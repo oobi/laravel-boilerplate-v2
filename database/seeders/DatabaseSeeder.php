@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+// teams:start
 use Concise\Teams\Database\Seeders\TeamRolesSeeder;
+// teams:end
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,12 +21,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(PermissionSeeder::class);
 
-        // Teams tier (packages/teams). Guarded so this seeder still runs when
-        // the package has been removed; the seeder itself is a no-op unless the
-        // tier is active. See ~dev/TEAMS_TIER_SCOPE.md §11.5.
+        // teams:start — teams tier role seeder (packages/teams). The class_exists
+        // guard keeps this safe if the fence is ever left in place after removal;
+        // the uninstaller strips the whole block. See ~dev/TEAMS_TIER_SCOPE.md §11.5.
         if (class_exists(TeamRolesSeeder::class)) {
             $this->call(TeamRolesSeeder::class);
         }
+        // teams:end
 
         // User::factory()->create([
         //     'first_name' => 'Test',

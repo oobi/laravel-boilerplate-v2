@@ -26,6 +26,26 @@ to the dashboard). Only the "neither" tail above is a configurable choice.
 
 ## Recipes
 
+Each recipe below has a matching scenario test in `tests/Feature/Scenarios/`
+that pins this exact config and walks its critical paths, so a change that
+breaks one recipe fails under `php artisan test` even if the others still pass.
+
+### Vanilla (no teams tier)
+
+The base boilerplate with the teams package not installed. Public registration,
+and login routing that knows only "system role → dashboard, everyone else → the
+public home". This is the foundation the recipes below build on.
+
+| Setting | Value |
+|---|---|
+| Teams tier | not installed |
+| `LOGIN_FALLBACK` | `home` |
+| Public registration | on |
+| Public landing page | keep |
+
+*Why:* the core app must stand alone; the teams tier only adds a destination to
+the login cascade, never replaces it. (`VanillaAppTest`.)
+
 ### Public SaaS (the default)
 
 Anyone signs up, creates their own team, and invites their staff.

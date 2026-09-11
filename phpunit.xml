@@ -32,5 +32,19 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Pin the teams tier to its defaults so the suite is deterministic regardless of a
+             developer's .env (relabelling, creation mode, invitations). Tests that exercise a
+             non-default value override it at runtime with config(). -->
+        <env name="TEAMS_LABEL_SINGULAR" value="Team"/>
+        <env name="TEAMS_LABEL_PLURAL" value="Teams"/>
+        <env name="TEAMS_MEMBER_LABEL_SINGULAR" value="Member"/>
+        <env name="TEAMS_MEMBER_LABEL_PLURAL" value="Members"/>
+        <env name="TEAMS_OWNER_LABEL_SINGULAR" value="Owner"/>
+        <env name="TEAMS_OWNER_LABEL_PLURAL" value="Owners"/>
+        <env name="TEAMS_CREATION" value="self-service"/>
+        <env name="TEAMS_MEMBER_INVITATIONS" value="true"/>
+        <env name="TEAMS_ADMIN_INVITATIONS" value="true"/>
+        <env name="TEAMS_MAX_PER_USER" value="null"/>
+        <env name="TEAMS_MULTIPLE_ROLES" value="false"/>
     </php>
 </phpunit>
