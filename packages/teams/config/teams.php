@@ -151,10 +151,12 @@ return [
     | The optional custom-domain overlay. Off by default — teams are reached via
     | the path prefix above. Only verified domains ever route (OQ3).
     |
-    | `self_service` lets a team's owner manage its domains; turn it off for an
-    | admin-managed shape (backoffice / newsletter / salon) where only a system
-    | admin should touch domain config. A system admin can always manage domains
-    | while the feature is enabled, regardless of this switch.
+    | `team_access` controls the team-area (self-service) domains surface:
+    |  - 'manage'     team owners add / verify / remove their own domains
+    |  - 'read-only'  team owners see their domains + status but can't change them
+    |  - 'none'       no team-area surface — domains are centrally administered
+    | A system admin can always manage any team's domains from Admin › Teams while
+    | the feature is enabled, regardless of this setting.
     |
     | `reserved` is a blacklist of leftmost labels a team may never claim as a
     | domain (infra/system names). Matched case-insensitively against the first
@@ -166,7 +168,7 @@ return [
     'domains' => [
         'enabled' => false,
 
-        'self_service' => true,
+        'team_access' => 'manage',
 
         'reserved' => [
             'www', 'admin', 'mail', 'webmail', 'smtp', 'imap', 'pop',

@@ -17,6 +17,7 @@ use Concise\Teams\Livewire\Team\ListInvitations;
 use Concise\Teams\Livewire\Team\ListMembers;
 use Concise\Teams\Livewire\Team\Onboarding;
 use Concise\Teams\Livewire\Team\SelectTeam;
+use Concise\Teams\Livewire\Team\Settings;
 use Illuminate\Support\Facades\Route;
 
 $prefix = config('teams.route_prefix', 'teams');
@@ -38,6 +39,7 @@ Route::middleware(['web', 'auth', 'verified'])
                 Route::get('/dashboard', Dashboard::class)->name('dashboard');
                 Route::get('/members', ListMembers::class)->name('members');
                 Route::get('/invitations', ListInvitations::class)->name('invitations');
+                Route::get('/settings', Settings::class)->name('settings');
             });
     });
 

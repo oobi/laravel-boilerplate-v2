@@ -14,6 +14,7 @@ use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
@@ -21,6 +22,7 @@ use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Dns\DnsResolver;
 use Concise\Teams\Support\Dns\SystemDnsResolver;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
@@ -91,6 +93,7 @@ class TeamsServiceProvider extends ServiceProvider
         // Child components shared by the team area and the system admin pages.
         Livewire::component('teams-members-table', MembersTable::class);
         Livewire::component('teams-pending-invitations', PendingInvitations::class);
+        Livewire::component('teams-manage-domains', ManageDomains::class);
 
         Gate::policy(Team::class, TeamPolicy::class);
 
@@ -134,6 +137,18 @@ class TeamsServiceProvider extends ServiceProvider
                 ->active('team.invitations')
                 ->can(TeamAbility::INVITE)
                 ->order(20);
+        }
+
+        // The team-area Settings page exists only when the domains overlay gives
+        // teams a surface (config teams.domains.team_access); gated to owners/settings-admins.
+        if (DomainPolicy::teamCanView()) {
+            TeamNavRegistry::item('team-settings')
+                ->label(team_trans('nav.settings'))
+                ->route('team.settings')
+                ->icon('heroicon-o-cog-6-tooth')
+                ->active('team.settings')
+                ->can(TeamAbility::UPDATE)
+                ->order(30);
         }
     }
 

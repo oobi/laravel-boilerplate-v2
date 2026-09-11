@@ -29,6 +29,18 @@
                     </x-action-list>
                 </x-card>
             </div>
+
+            @if (\Concise\Teams\Support\DomainPolicy::enabled())
+                <div class="mt-6">
+                    <x-card :title="team_trans('domains.title')" type="panel">
+                        <p class="mb-4 text-sm text-base-content/60">
+                            {{ team_trans('domains.description', ['name' => $team->name]) }}
+                        </p>
+
+                        <livewire:teams-manage-domains :team="$team" :key="'domains-'.$team->id" />
+                    </x-card>
+                </div>
+            @endif
         </x-slot:content>
     </x-tabs-nav>
 
