@@ -18,6 +18,12 @@ the core files:
 > removing the tier from a developed codebase means redesigning it. These are
 > setup-time transforms on a fresh clone.
 
+> Fresh-clone prerequisite (independent of teams): a freshly cloned boilerplate
+> needs `composer install` **and** `npm install && npm run build` before it
+> boots or its test suite runs — without the Vite manifest, any view-rendering
+> request/test throws `Vite manifest not found`. `bp:setup` will fold this in so
+> the tree is "ready to roll" after it runs.
+
 ## The markers
 
 Every place teams touches core is fenced so it's greppable and unambiguous:
@@ -56,21 +62,32 @@ so there is no `bootstrap/providers.php` entry to touch.
 1. **Composer** — remove the require and the path repository entry, then
    `composer update` (or `composer remove concise-dot-digital/teams` and delete
    the repository block).
-2. **Strip the core markers** — for each `teams:start…teams:end` block:
-   - `User.php`: **replace** the block with the canonical trait line printed in
-     its fence (deleting it outright would leave `User` with no traits).
-   - `SystemPermission.php`, `DatabaseSeeder.php`: **delete** the block.
+2. **Strip the core markers** — all delete-style fences can be stripped with
+   `sed -i '' '/teams:start/,/teams:end/d' <file>` — **except `User.php`**, which
+   is the one *replace* case: swap its `teams:start…teams:end` block for the
+   canonical trait line printed in its fence (deleting it outright would leave
+   `User` with no traits). Delete the fenced blocks in `SystemPermission.php`,
+   `DatabaseSeeder.php`, and `DemoSeeder.php` — **the fenced blocks only**; those
+   seeder files survive and keep their non-teams calls (`PermissionSeeder`,
+   `UserSeeder`), which a vanilla app still needs.
 3. **Delete the package** — `rm -rf packages/teams`.
-4. **`.env`** — no `TEAMS_*` keys are needed; set `LOGIN_FALLBACK=home` and keep
+4. **Remove the teams tests** — they import `Concise\Teams\…` and would fatal the
+   suite otherwise: `rm -rf tests/Feature/Teams`, the `PublicSaas` /
+   `InvitationOnly` / `Backoffice` scenario tests, and
+   `tests/Feature/Auth/LoginRedirectTest.php` (teams-coupled — `VanillaAppTest`
+   covers the core login behaviour). **Keep `VanillaAppTest`** — it's the vanilla
+   contract.
+5. **`.env`** — no `TEAMS_*` keys are needed; set `LOGIN_FALLBACK=home` and keep
    registration as your app requires. See [config-recipes.md](config-recipes.md)
    (Vanilla).
-5. **Migrations** — teams migrations are loaded *from the package*, so once it's
+6. **Migrations** — teams migrations are loaded *from the package*, so once it's
    gone they no longer run on a fresh install. An existing database keeps its
    `teams` / `team_user` / `team_invitations` tables; drop them by hand if you
    want them gone.
-6. **Verify** — `php artisan test` (the `Tests\Feature\Scenarios\VanillaAppTest`
-   contract must pass) and boot the app. Nothing should reference `Concise\Teams`
-   any more: `grep -rn "Concise..Teams" app config routes database`.
+7. **Verify** — `composer dump-autoload`, then `php artisan test` (must be green;
+   `VanillaAppTest` is the contract) and boot the app. Nothing should reference
+   the tier any more: `grep -rn "Concise" app config routes database tests`.
+   *(Proven end-to-end in a throwaway clone: 257 tests pass with teams removed.)*
 
 ## Ejecting into `app/`
 
