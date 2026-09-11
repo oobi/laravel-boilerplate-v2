@@ -93,17 +93,36 @@ Role -> permission assignment is 100% admin-configurable and only happens in
 one place: `App\Livewire\Admin\Roles\ManageRoles` (route names `roles.index`
 / `roles.edit`, both render the same component — there's no separate roles
 list page, a dropdown at the top switches which role is being edited). It
-renders one tab per `SystemPermission::category()`, each with a "select all"
+renders one row per `SystemPermission::category()`, each with a "select all"
 toggle and a checkbox list, and calls `$role->syncPermissions(...)` on save.
 
 Creating a new role (`App\Livewire\Admin\Roles\CreateRole`, route
-`roles.create`) uses the same tabbed schema, built by the shared
+`roles.create`) uses the same schema, built by the shared
 `App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema` trait — this is the
-one place that knows how to turn `SystemPermission::byCategory()` into
-Filament form components, fill a role's current permissions into per-tab
-state, and flatten per-tab state back into a single permission list on save.
-Both Livewire components use it so the tab layout/behaviour can't drift
-between "create" and "edit".
+one place that knows how to turn a scope's permission vocabulary into
+Filament form components, fill a role's current permissions into
+per-category state, and flatten that state back into a single permission
+list on save. Both Livewire components use it so the layout/behaviour can't
+drift between "create" and "edit".
+
+### Role scopes: one screen, one tab per family of roles
+
+Roles carry a `scope` column (`Role::SYSTEM_SCOPE = 'system'` for the roles
+above). The Roles screen doesn't hardcode that: it renders one tab per
+`App\Support\Roles\RoleScope` registered with `RoleScopeRegistry` — the same
+extension pattern as `NavRegistry` and `PanelRegistry`. A scope declares its
+`key()` (the `scope` value), tab `label()`, header `description()`, the
+`permissions()` vocabulary its roles can hold (category => [name => label]),
+the extra `attributes()` a role created in it needs, and its tab `order()`.
+
+- Core registers `SystemRoleScope` in `App\Support\Roles\AdminRoleScopes`.
+- An add-on registers its own from its service provider, e.g. the teams tier's
+  `TeamRoleScope` (`TeamPermission` vocabulary, `team_id = NULL` rows). It
+  gets a "Team" tab without touching the roles components or views.
+- With a single scope registered the screen shows no tabs at all, and its
+  URLs stay `/admin/roles` — the default scope never adds a `?scope=`.
+- A role whose scope has no registered `RoleScope` (an add-on since removed)
+  is a 404 on this screen rather than being edited with the wrong vocabulary.
 
 The **`manage roles`** ability that gates both screens is deliberately
 hardcoded super-admin-only in `AppServiceProvider` (`Gate::define('manage

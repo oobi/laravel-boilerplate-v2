@@ -9,3 +9,18 @@
 .card {
     box-shadow: var(--ui-island-shadow);
 }
+
+/*
+|--------------------------------------------------------------------------
+| .card-inset — a card nested inside another card/panel
+|--------------------------------------------------------------------------
+| A card sitting inside another island shouldn't read as a second floating
+| island on top of the first: the stacked shadows muddy the elevation and a
+| `bg-base-100` card on a `bg-base-100` parent is white-on-white. `card-inset`
+| recesses it instead — no shadow, filled with the shared `--ui-inset-bg` shade
+| — so it reads as a well carved into the parent. Pair it with `<x-card inset>`.
+*/
+.card-inset {
+    box-shadow: none;
+    background-color: var(--ui-inset-bg);
+}

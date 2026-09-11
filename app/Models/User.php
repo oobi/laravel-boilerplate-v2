@@ -6,6 +6,9 @@ use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
 use App\Models\Concerns\HasProfilePhoto;
 use App\Models\Concerns\HasSuperAdminFlag;
+// teams:start
+use Concise\Teams\Concerns\HasTeams;
+// teams:end
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -22,7 +25,15 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    // teams:start — teams composes HasTeams alongside HasRoles here to resolve the
+    // teams() name clash (spatie's HasRoles also declares an introspection-only
+    // teams()). On uninstall, restore the canonical line:
+    //   use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, HasTeams, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
+        HasTeams::teams insteadof HasRoles;
+        HasRoles::teams as roleTeams;
+    }
+    // teams:end
 
     /**
      * The attributes that are mass assignable.

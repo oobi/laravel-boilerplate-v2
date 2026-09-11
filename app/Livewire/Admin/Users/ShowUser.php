@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Users;
 
 use App\Enums\SystemPermission;
+use App\Enums\UserAbility;
 use App\Livewire\Concerns\ConfirmsPassword;
 use App\Models\Role;
 use App\Models\User;
@@ -54,12 +55,12 @@ class ShowUser extends Component implements HasActions, HasSchemas
     /** The one place a viewer can edit this user from — see docs/panels.md "UX flow". */
     public function canEditUser(): bool
     {
-        return Gate::allows('update', $this->user);
+        return Gate::allows(UserAbility::UPDATE, $this->user);
     }
 
     public function canImpersonateUser(): bool
     {
-        return Gate::allows('impersonate', $this->user);
+        return Gate::allows(UserAbility::IMPERSONATE, $this->user);
     }
 
     public function userInfolist(Schema $schema): Schema
@@ -118,7 +119,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->icon('heroicon-o-finger-print')
             ->soft()
             ->color(DaisyColor::WARNING->toFilamentColor())
-            ->visible(fn (): bool => Gate::allows('impersonate', $this->user))
+            ->visible(fn (): bool => Gate::allows(UserAbility::IMPERSONATE, $this->user))
             ->url(fn (): string => route('users.impersonate', $this->user->id));
     }
 
@@ -141,7 +142,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
             // need that. A dev with a very long role list can widen it again.
             // (Sticky header/footer is applied globally in AppServiceProvider.)
             ->modalWidth(Width::Large)
-            ->visible(fn (): bool => Gate::allows('assignRole', $this->user) || Gate::allows('grantSuperAdmin', $this->user))
+            ->visible(fn (): bool => Gate::allows(UserAbility::ASSIGN_ROLE, $this->user) || Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user))
             ->fillForm(fn (): array => [
                 'roles' => $this->user->roles->pluck('name')->all(),
                 'is_super_admin' => $this->user->is_super_admin,
@@ -150,30 +151,30 @@ class ShowUser extends Component implements HasActions, HasSchemas
                 Forms\Components\Toggle::make('is_super_admin')
                     ->label(__('admin.super_admin'))
                     ->helperText(__('admin.super_admin_toggle_warning'))
-                    ->visible(fn (): bool => Gate::allows('grantSuperAdmin', $this->user)),
+                    ->visible(fn (): bool => Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user)),
 
                 // Only shown when both sections are present, so it never floats alone.
                 Html::make('<hr class="border-base-300">')
-                    ->visible(fn (): bool => Gate::allows('grantSuperAdmin', $this->user) && Gate::allows('assignRole', $this->user)),
+                    ->visible(fn (): bool => Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user) && Gate::allows(UserAbility::ASSIGN_ROLE, $this->user)),
 
                 Forms\Components\CheckboxList::make('roles')
                     ->label(__('admin.roles'))
                     ->options(fn (): array => Role::query()->pluck('name', 'name')->all())
                     ->columns(2)
-                    ->visible(fn (): bool => Gate::allows('assignRole', $this->user)),
+                    ->visible(fn (): bool => Gate::allows(UserAbility::ASSIGN_ROLE, $this->user)),
             ])
             ->action(function (array $data): void {
-                if (Gate::allows('assignRole', $this->user) && array_key_exists('roles', $data)) {
-                    Gate::authorize('assignRole', $this->user);
+                if (Gate::allows(UserAbility::ASSIGN_ROLE, $this->user) && array_key_exists('roles', $data)) {
+                    Gate::authorize(UserAbility::ASSIGN_ROLE, $this->user);
 
                     $this->user->syncRoles($data['roles'] ?? []);
                 }
 
-                if (Gate::allows('grantSuperAdmin', $this->user)
+                if (Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user)
                     && array_key_exists('is_super_admin', $data)
                     && (bool) $data['is_super_admin'] !== $this->user->is_super_admin
                 ) {
-                    Gate::authorize('grantSuperAdmin', $this->user);
+                    Gate::authorize(UserAbility::GRANT_SUPER_ADMIN, $this->user);
 
                     $this->user->forceFill(['is_super_admin' => (bool) $data['is_super_admin']])->save();
                 }
@@ -193,14 +194,14 @@ class ShowUser extends Component implements HasActions, HasSchemas
      */
     public function resetPasswordAction(): Action
     {
-        if (Gate::allows('updatePasswordDirectly', $this->user)) {
+        if (Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user)) {
             return AdminAction::make('resetPassword')
                 ->label(__('admin.reset_password'))
                 ->icon('heroicon-o-key')
                 ->soft()
                 // Two stacked password fields don't need Filament's default 4xl.
                 ->modalWidth(Width::Medium)
-                ->visible(fn (): bool => Gate::allows('updatePasswordDirectly', $this->user))
+                ->visible(fn (): bool => Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user))
                 ->schema([
                     Forms\Components\TextInput::make('password')
                         ->label(__('admin.new_password'))
@@ -217,7 +218,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
                         ->dehydrated(false),
                 ])
                 ->action(function (array $data): void {
-                    Gate::authorize('updatePasswordDirectly', $this->user);
+                    Gate::authorize(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user);
 
                     // Changing the stored hash makes every live session the
                     // target still has elsewhere fail AuthenticateSession's hash
@@ -237,10 +238,10 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->label(__('admin.send_password_reset_link'))
             ->icon('heroicon-o-key')
             ->soft()
-            ->visible(fn (): bool => Gate::allows('sendPasswordResetLink', $this->user))
+            ->visible(fn (): bool => Gate::allows(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user))
             ->requiresConfirmation()
             ->action(function (): void {
-                Gate::authorize('sendPasswordResetLink', $this->user);
+                Gate::authorize(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user);
 
                 Password::sendResetLink(['email' => $this->user->email]);
 

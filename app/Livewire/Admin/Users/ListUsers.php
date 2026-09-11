@@ -6,6 +6,7 @@ namespace App\Livewire\Admin\Users;
 
 use App\Actions\Users\ToggleUserActive;
 use App\Enums\SystemPermission;
+use App\Enums\UserAbility;
 use App\Enums\UserStatus;
 use App\Livewire\Concerns\ManagesTrashedRecords;
 use App\Models\Role;
@@ -136,14 +137,14 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->label(__('admin.view'))
                         ->icon('heroicon-o-eye')
                         ->url(fn (User $record): string => route('users.show', $record))
-                        ->authorize('view')
+                        ->authorize(UserAbility::VIEW)
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     Action::make('edit')
                         ->label(__('admin.edit'))
                         ->icon('heroicon-o-pencil-square')
                         ->url(fn (User $record): string => route('users.edit', $record))
-                        ->authorize('update')
+                        ->authorize(UserAbility::UPDATE)
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     Action::make('impersonate')
@@ -151,7 +152,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->icon('heroicon-o-finger-print')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->url(fn (User $record): string => route('users.impersonate', $record->id))
-                        ->authorize('impersonate')
+                        ->authorize(UserAbility::IMPERSONATE)
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     Action::make('toggleActive')
@@ -166,20 +167,20 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                             1,
                             ['count' => 1],
                         ))
-                        ->authorize('toggleActive')
+                        ->authorize(UserAbility::TOGGLE_ACTIVE)
                         ->action(fn (User $record) => app(ToggleUserActive::class)($record))
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
                     DeleteAction::make()
                         ->modalDescription(trans_choice('admin.delete_confirm', 1, ['count' => 1]))
-                        ->authorize('delete'),
+                        ->authorize(UserAbility::DELETE),
 
                     RestoreAction::make()
                         ->modalDescription(trans_choice('admin.restore_confirm', 1, ['count' => 1]))
-                        ->authorize('restore'),
+                        ->authorize(UserAbility::RESTORE),
 
                     ForceDeleteAction::make()
-                        ->authorize('forceDelete'),
+                        ->authorize(UserAbility::FORCE_DELETE),
                 ]),
             ])
             ->toolbarActions([

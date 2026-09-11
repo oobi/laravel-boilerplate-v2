@@ -6,6 +6,8 @@ use App\Enums\SystemPermission;
 use App\Livewire\Admin\Roles\ManageRoles;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Roles\AdminRoleScopes;
+use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Theme\DaisyColor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -70,7 +72,11 @@ class ManageRolesTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ManageRoles::class, ['role' => $role])
-            ->assertSet('data.color', DaisyColor::NEUTRAL->value);
+            ->assertSet('data.color', DaisyColor::NEUTRAL->value)
+            // the colour picker is a listbox whose options preview this role's badge, each named by its colour
+            ->assertSeeHtml('aria-haspopup="listbox"')
+            ->assertSeeHtml('aria-label="'.DaisyColor::NEUTRAL->getLabel().'"')
+            ->assertSeeHtml('x-text="preview()">Editor<');
     }
 
     public function test_super_admins_can_update_a_roles_badge_color(): void
@@ -100,6 +106,19 @@ class ManageRolesTest extends TestCase
             ->test(ManageRoles::class, ['role' => $role])
             ->assertSet('data.permissions_user_management', [SystemPermission::MANAGE_USERS->value])
             ->assertSet('data.permissions_system_administration', [SystemPermission::VIEW_SYSTEM_ANALYTICS->value]);
+    }
+
+    public function test_each_categorys_select_all_checkbox_is_labelled_for_screen_readers(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSeeHtml('aria-label="Select all User Management"')
+            ->assertSeeHtml('aria-label="Select all System Administration"')
+            // the indeterminate binding watches the category's own list at the form's state path
+            ->assertSeeHtml("\$wire.get('data.permissions_user_management')");
     }
 
     public function test_select_all_toggle_selects_every_permission_in_its_category(): void
@@ -175,6 +194,35 @@ class ManageRolesTest extends TestCase
             ->test(ManageRoles::class, ['role' => $roleA])
             ->set('selectedRoleId', (string) $roleB->id)
             ->assertRedirect(route('roles.edit', $roleB));
+    }
+
+    public function test_an_unknown_scope_is_not_found(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get('/admin/roles?scope=nope')->assertNotFound();
+    }
+
+    public function test_a_role_in_an_unregistered_scope_cannot_be_edited_here(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        // e.g. left behind by an add-on that has since been removed
+        $orphan = Role::create(['name' => 'Orphan', 'scope' => 'legacy']);
+
+        $this->actingAs($admin)->get(route('roles.edit', $orphan))->assertNotFound();
+    }
+
+    public function test_scope_tabs_are_hidden_when_only_the_system_scope_is_registered(): void
+    {
+        RoleScopeRegistry::flush();
+        AdminRoleScopes::define();
+        $admin = User::factory()->superAdmin()->create();
+        Role::findOrCreate('Editor');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class)
+            ->assertDontSeeHtml('role="tab"')
+            ->assertSee('Editor');
     }
 
     public function test_super_admins_can_delete_a_role(): void

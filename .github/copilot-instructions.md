@@ -36,6 +36,7 @@ quietly baking a compromise into the foundation.
 | A Livewire full-page component | `app/Livewire/{Area}/{Domain}/*` (e.g. `app/Livewire/Admin/Users/*`) | — |
 | RBAC checks | Global abilities: `$user->hasPermissionTo(SystemPermission::X->value)` (spatie/laravel-permission). Per-instance User abilities (edit/activate/delete a specific user): `App\Policies\UserPolicy` via `Gate::authorize('ability', $target)`. Super admin bypasses both via a global `Gate::before()` — it's a hardcoded flag, never a role | [.ai/rules/policies.md](../.ai/rules/policies.md), `~/memories/repo/impersonation.md` has impersonation-specific notes |
 | A new role or permission | Admin > Roles screen (`app/Livewire/Admin/Roles/*`) — never hardcode a new role in PHP. New *permissions* are still code (a `SystemPermission` case + seeder entry); role -> permission assignment is admin-configurable | [docs/permissions.md](../docs/permissions.md), [.ai/rules/policies.md](../.ai/rules/policies.md) |
+| A new *family* of roles (a tab on the Roles screen) | An `App\Support\Roles\RoleScope` registered via `RoleScopeRegistry::register()` — core's in `AdminRoleScopes`, add-ons from their own provider (e.g. the teams tier's `TeamRoleScope`) | [docs/permissions.md](../docs/permissions.md) |
 
 ## Group by domain, not by type
 

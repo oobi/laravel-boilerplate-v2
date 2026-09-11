@@ -14,6 +14,9 @@
     - bordered: adds `border border-base-300` (default: true) — every card
       should have a border; only set false when nesting a card inside
       another card, to drop the doubled-up border
+    - inset: recesses the card for nesting inside another card/panel — drops
+      the island shadow and shades it to `base-200` so it reads as a well in
+      the parent rather than a second floating island (default: false)
     - bodyClass: extra classes on `.card-body` (default: gap-3)
 
     Slots:
@@ -27,6 +30,7 @@
     'titleClass' => null,
     'bodyClass' => 'gap-3',
     'bordered' => true,
+    'inset' => false,
 ])
 
 @php
@@ -38,7 +42,7 @@
     $titleClass ??= $titleClasses[$type] ?? 'card-title';
 @endphp
 
-<div {{ $attributes->class(['card bg-base-100', 'border border-base-300' => $bordered]) }}>
+<div {{ $attributes->class(['card', 'bg-base-100' => ! $inset, 'card-inset' => $inset, 'border border-base-300' => $bordered]) }}>
     <div class="card-body {{ $bodyClass }}">
         @if (isset($title) || isset($actions))
             <div class="flex items-center justify-between">

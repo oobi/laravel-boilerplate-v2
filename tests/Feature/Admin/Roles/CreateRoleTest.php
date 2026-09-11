@@ -22,6 +22,13 @@ class CreateRoleTest extends TestCase
         $this->actingAs($support)->get('/admin/roles/create')->assertForbidden();
     }
 
+    public function test_an_unknown_scope_is_not_found(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get('/admin/roles/create?scope=nope')->assertNotFound();
+    }
+
     public function test_super_admins_can_create_a_role_with_permissions(): void
     {
         $admin = User::factory()->superAdmin()->create();

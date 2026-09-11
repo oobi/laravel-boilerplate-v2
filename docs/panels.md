@@ -52,8 +52,8 @@ then append one or more classes.
    Livewire component. To find every registration, grep the codebase for
    `PanelRegistry::for(`.
 
-   Example (see `app/Providers/PanelExtensionDemoServiceProvider.php` for a
-   real, working one):
+   Example (the teams tier's `packages/teams/src/TeamsServiceProvider.php`
+   does exactly this for its Team Memberships panel):
    ```php
    class TeamsServiceProvider extends ServiceProvider
    {

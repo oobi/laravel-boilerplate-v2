@@ -67,6 +67,7 @@
 @import "./components/ui/filament-table.css";
 @import "./components/ui/filament-badge.css";
 @import "./components/ui/filament-section.css";
+@import "./components/ui/filament-forms.css";
 @import "./components/ui/filament-modal.css";
 
 /* ── Overrides/patches to daisyUI's own component behaviour ──────────── */

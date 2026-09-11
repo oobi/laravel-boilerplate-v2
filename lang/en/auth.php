@@ -8,6 +8,7 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
 
     'inactive' => 'These credentials do not match our records.',
+    'no_workspace' => 'Your account isn’t set up to access anything yet. Please contact an administrator.',
     'current_password_mismatch' => 'The provided password does not match your current password.',
     'reset_link_sent' => 'If an account exists for that email, a password reset link has been sent.',
 ];

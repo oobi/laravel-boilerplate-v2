@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Navigation\Registry;
 
+use BackedEnum;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
 
@@ -40,10 +41,10 @@ final class NavGroup
         return $this;
     }
 
-    /** Gate ability name required to see this group; null (default) means always visible. */
-    public function can(?string $ability): static
+    /** Gate ability required to see this group — an ability/permission enum case or its name; null (default) means always visible. */
+    public function can(BackedEnum|string|null $ability): static
     {
-        $this->can = $ability;
+        $this->can = $ability instanceof BackedEnum ? (string) $ability->value : $ability;
 
         return $this;
     }
@@ -83,12 +84,19 @@ final class NavGroup
         return $this->can === null || ($viewer !== null && Gate::forUser($viewer)->allows($this->can));
     }
 
-    /** @return list<NavItem> */
+    /**
+     * Visible items in `order` (stable for equal orders, so registration order
+     * still decides among the app's own items) — an add-on contributing an item
+     * from its provider, which boots before AdminNav, can still slot it last.
+     *
+     * @return list<NavItem>
+     */
     public function visibleItems(?Authenticatable $viewer): array
     {
-        return array_values(array_filter(
-            $this->items,
-            fn (NavItem $item): bool => $item->visible($viewer),
-        ));
+        return collect($this->items)
+            ->filter(fn (NavItem $item): bool => $item->visible($viewer))
+            ->sortBy(fn (NavItem $item): int => $item->order)
+            ->values()
+            ->all();
     }
 }

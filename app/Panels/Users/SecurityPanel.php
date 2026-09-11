@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Panels\Users;
 
+use App\Enums\UserAbility;
 use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
@@ -44,7 +45,7 @@ class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
     {
         return [
             'force-disable-2fa' => function (Model $subject): void {
-                Gate::authorize('resetTwoFactorAuthentication', $subject);
+                Gate::authorize(UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, $subject);
 
                 $subject->forceFill([
                     'two_factor_secret' => null,

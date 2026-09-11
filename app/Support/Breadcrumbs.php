@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Closure;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -19,14 +20,40 @@ use Illuminate\Support\Str;
  */
 class Breadcrumbs
 {
-    /** @return list<array{label: string, url: ?string}> */
-    public static function trail(): array
+    /** @var array<string, Closure|string> */
+    protected static array $labels = [];
+
+    /**
+     * Name a resource's parent crumb explicitly — for an add-on whose label
+     * isn't in `lang/en/admin.php` (e.g. the teams tier, whose word for a
+     * team is configurable). A Closure is resolved at render time.
+     */
+    public static function label(string $resource, Closure|string $label): void
+    {
+        static::$labels[$resource] = $label;
+    }
+
+    /** Test/console helper — clears runtime registrations. */
+    public static function flush(): void
+    {
+        static::$labels = [];
+    }
+
+    /**
+     * @param  array{label: string, url: ?string}|null  $root  Overrides the root
+     *                                                         crumb (defaults to the "Admin" home). Areas that aren't the system admin
+     *                                                         (e.g. a team area) pass their own root so the trail reads in their context.
+     * @param  bool  $withResource  Whether to auto-derive the `{resource}.index`
+     *                              parent crumb from the route name.
+     * @return list<array{label: string, url: ?string}>
+     */
+    public static function trail(?array $root = null, bool $withResource = true): array
     {
         $crumbs = [
-            ['label' => __('admin.breadcrumb_root'), 'url' => null],
+            $root ?? ['label' => __('admin.breadcrumb_root'), 'url' => null],
         ];
 
-        $resource = static::resource();
+        $resource = $withResource ? static::resource() : null;
 
         if ($resource && Route::has("{$resource}.index")) {
             $crumbs[] = [
@@ -53,6 +80,10 @@ class Breadcrumbs
 
     protected static function resourceLabel(string $resource): string
     {
+        if (isset(static::$labels[$resource])) {
+            return (string) value(static::$labels[$resource]);
+        }
+
         $key = "admin.{$resource}";
 
         return Lang::has($key) ? __($key) : Str::headline(str_replace('.', ' ', $resource));

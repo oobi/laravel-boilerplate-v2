@@ -12,10 +12,18 @@
             "options": {
                 "symlink": true
             }
+        },
+        {
+            "type": "path",
+            "url": "packages/teams",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "require": {
         "php": "^8.4",
+        "concise-dot-digital/teams": "@dev",
         "filament/tables": "^5.7",
         "lab404/laravel-impersonate": "^1.7",
         "laravel/fortify": "^1.39",

@@ -7,9 +7,13 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Enums\SystemGate;
+use App\Enums\UserAbility;
+use App\Http\Responses\LoginResponse;
 use App\Http\Responses\PasswordResetLinkResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Support\Roles\AdminRoleScopes;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Notifications\Livewire\Notifications;
@@ -25,6 +29,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Fortify;
 
@@ -49,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentModalDefaults();
         $this->registerFilamentBulkActionDefaults();
         $this->registerNotifications();
+
+        AdminRoleScopes::define();
 
         User::observe(UserObserver::class);
     }
@@ -143,7 +150,7 @@ class AppServiceProvider extends ServiceProvider
     private function registerAuthorization(): void
     {
         Gate::before(function (User $actor, string $ability, array $arguments = []): ?bool {
-            if (in_array($ability, ['impersonate', 'assignRole'], true)) {
+            if (in_array($ability, [UserAbility::IMPERSONATE->value, UserAbility::ASSIGN_ROLE->value], true)) {
                 return null;
             }
 
@@ -154,7 +161,7 @@ class AppServiceProvider extends ServiceProvider
             $target = $arguments[0] ?? null;
             $isSelf = $target instanceof User && $target->id === $actor->id;
 
-            if ($isSelf && in_array($ability, ['delete', 'toggleActive', 'grantSuperAdmin'], true)) {
+            if ($isSelf && in_array($ability, [UserAbility::DELETE->value, UserAbility::TOGGLE_ACTIVE->value, UserAbility::GRANT_SUPER_ADMIN->value], true)) {
                 return null;
             }
 
@@ -166,7 +173,7 @@ class AppServiceProvider extends ServiceProvider
         // otherwise a role could grant itself broader permissions by editing
         // its own definition. Registered explicitly (rather than left
         // undefined) so nav visibility resolves deterministically.
-        Gate::define('manage roles', fn (User $user): bool => $user->isSuperAdmin());
+        Gate::define(SystemGate::MANAGE_ROLES, fn (User $user): bool => $user->isSuperAdmin());
     }
 
     private function registerFortify(): void
@@ -180,6 +187,9 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(SuccessfulPasswordResetLinkRequestResponse::class, PasswordResetLinkResponse::class);
         $this->app->singleton(FailedPasswordResetLinkRequestResponse::class, PasswordResetLinkResponse::class);
+
+        // Route each user to the right area after login (see LoginResponse).
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());

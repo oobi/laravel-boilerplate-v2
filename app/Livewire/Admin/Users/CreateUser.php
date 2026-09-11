@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
+use App\Enums\UserAbility;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -25,7 +26,7 @@ class CreateUser extends Component implements HasSchemas
 
     public function mount(): void
     {
-        Gate::authorize('create', User::class);
+        Gate::authorize(UserAbility::CREATE, User::class);
 
         $this->form->fill();
     }
@@ -80,7 +81,7 @@ class CreateUser extends Component implements HasSchemas
 
     public function create(): void
     {
-        Gate::authorize('create', User::class);
+        Gate::authorize(UserAbility::CREATE, User::class);
 
         $data = $this->form->getState();
 

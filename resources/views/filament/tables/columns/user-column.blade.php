@@ -1,6 +1,12 @@
 @php
-    /** @var \App\Models\User $record */
-    $record = $getRecord();
+    /**
+     * The listed user: the row itself, or a related User passed as the column's
+     * state (e.g. ViewColumn::make('owner') on a teams table) — see .ai/rules/tables.md.
+     *
+     * @var \App\Models\User $record
+     */
+    $state = $getState();
+    $record = $state instanceof \App\Models\User ? $state : $getRecord();
     $isCurrent = $record->id === auth()->id();
 @endphp
 

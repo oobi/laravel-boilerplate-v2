@@ -20,6 +20,9 @@ enum SystemPermission: string
     case SUSPEND_USERS = 'suspend users';
     case DELETE_USERS = 'delete users';
     case IMPERSONATE_USERS = 'impersonate users';
+    // teams:start — contributed by the teams tier (packages/teams): the system-level "manage all teams" area. Removed on uninstall.
+    case MANAGE_TEAMS = 'manage teams';
+    // teams:end
 
     public function label(): string
     {
@@ -31,6 +34,9 @@ enum SystemPermission: string
             self::SUSPEND_USERS => 'Suspend Users',
             self::DELETE_USERS => 'Delete Users',
             self::IMPERSONATE_USERS => 'Impersonate Users',
+            // teams:start
+            self::MANAGE_TEAMS => 'Manage Teams',
+            // teams:end
         };
     }
 
@@ -45,6 +51,10 @@ enum SystemPermission: string
             self::MANAGE_SYSTEM_SETTINGS,
             self::VIEW_SYSTEM_ANALYTICS,
             self::ACCESS_ADMIN_PANEL => 'System Administration',
+
+            // teams:start
+            self::MANAGE_TEAMS => 'System Administration',
+            // teams:end
         };
     }
 
