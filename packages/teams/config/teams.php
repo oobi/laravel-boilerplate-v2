@@ -49,6 +49,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Teams per user
+    |--------------------------------------------------------------------------
+    |
+    | How many teams one user may OWN under self-service creation — null (the
+    | default) for unlimited. Counts teams they own, not teams they belong to:
+    | being invited to a tenth team shouldn't stop you making your own. System
+    | admins provisioning teams (Admin > Teams) are never subject to it.
+    |
+    */
+
+    'max_teams_per_user' => env('TEAMS_MAX_PER_USER'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Roles per member
     |--------------------------------------------------------------------------
     |

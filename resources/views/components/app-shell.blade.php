@@ -3,11 +3,15 @@
     'title' => null,
     'breadcrumbRoot' => null,
     'breadcrumbResource' => true,
+    'breadcrumbs' => true,
 ])
 
 @php
     $home ??= url('/');
     $themeMode = request()->cookie('theme', 'auto');
+    // No navigation slot → no sidebar (a gateway/lobby page). The header, account
+    // menu and impersonation banner still render, so it's not a bare page.
+    $hasNav = isset($navigation) && ! $navigation->isEmpty();
 @endphp
 
 <!DOCTYPE html>
@@ -42,6 +46,7 @@
             @resize.window="if (window.innerWidth < 768) sidebarDrawerOpen = false"
             class="ui-app-inner flex"
         >
+            @if ($hasNav)
             {{-- Drawer backdrop — shown when the drawer is open (mobile, or desktop while unpinned) --}}
             <div
                 x-show="sidebarDrawerOpen"
@@ -113,43 +118,55 @@
                     {{ $navigation }}
                 </div>
             </aside>
+            @endif
 
             {{-- Main column --}}
             <div class="flex min-w-0 flex-1 flex-col">
                 <header class="sticky top-0 z-30 flex h-16 flex-shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-8 backdrop-blur">
-                    {{-- Logo — visible on desktop only while the sidebar is unpinned --}}
-                    <x-application-logo
-                        variant="icon"
-                        :href="$home"
-                        x-show="!sidebarPinned"
-                        x-cloak
-                        class="hidden flex-shrink-0 items-center md:flex"
-                    />
+                    @if ($hasNav)
+                        {{-- Logo — visible on desktop only while the sidebar is unpinned --}}
+                        <x-application-logo
+                            variant="icon"
+                            :href="$home"
+                            x-show="!sidebarPinned"
+                            x-cloak
+                            class="hidden flex-shrink-0 items-center md:flex"
+                        />
 
-                    {{-- Mobile logo — always visible; drawer/pinned asides cover this on desktop --}}
-                    <x-application-logo
-                        variant="icon"
-                        :href="$home"
-                        class="flex flex-shrink-0 items-center md:hidden"
-                    />
+                        {{-- Mobile logo — always visible; drawer/pinned asides cover this on desktop --}}
+                        <x-application-logo
+                            variant="icon"
+                            :href="$home"
+                            class="flex flex-shrink-0 items-center md:hidden"
+                        />
 
-                    {{-- Mobile menu button --}}
-                    <x-button.icon class="md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
-                        <x-heroicon-o-bars-3 class="h-5 w-5" />
-                    </x-button.icon>
-                    {{-- Desktop menu button — visible when the sidebar is unpinned --}}
-                    <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
-                        <x-heroicon-o-bars-3 class="h-5 w-5" />
-                    </x-button.icon>
+                        {{-- Mobile menu button --}}
+                        <x-button.icon class="md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
+                            <x-heroicon-o-bars-3 class="h-5 w-5" />
+                        </x-button.icon>
+                        {{-- Desktop menu button — visible when the sidebar is unpinned --}}
+                        <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
+                            <x-heroicon-o-bars-3 class="h-5 w-5" />
+                        </x-button.icon>
+                    @else
+                        {{-- No sidebar: the logo lives in the header at every width. --}}
+                        <x-application-logo :href="$home" class="flex flex-shrink-0 items-center" />
+                    @endif
 
-                    <x-breadcrumbs :root="$breadcrumbRoot" :with-resource="$breadcrumbResource" />
+                    @if ($breadcrumbs)
+                        <x-breadcrumbs :root="$breadcrumbRoot" :with-resource="$breadcrumbResource" />
+                    @else
+                        {{-- Breadcrumbs is the flex-1 element that right-aligns the account menu; keep a spacer. --}}
+                        <div class="flex-1"></div>
+                    @endif
 
                     <x-header-menu />
                 </header>
 
                 <main class="flex-1 overflow-y-auto">
                     <div class="py-6">
-                        <div class="ui-page flex flex-col gap-4">
+                        {{-- No sidebar → cap the width so content isn't spread across the whole viewport (roughly the admin content width). --}}
+                        <div @class(['ui-page flex flex-col gap-4', 'max-w-6xl' => ! $hasNav])>
                             @session('status')
                                 <x-alert color="success">{{ $value }}</x-alert>
                             @endsession

@@ -288,6 +288,22 @@ class Team extends Model
         return (bool) config('teams.multiple_roles_per_member', false);
     }
 
+    /** The most teams one user may own, or null for unlimited (config `teams.max_teams_per_user`). */
+    public static function ownedLimit(): ?int
+    {
+        $max = config('teams.max_teams_per_user');
+
+        return $max === null || $max === '' ? null : max(0, (int) $max);
+    }
+
+    /** Whether the user already owns as many teams as they're allowed (see TeamPolicy::create). */
+    public static function hasReachedOwnedLimit(User $user): bool
+    {
+        $limit = self::ownedLimit();
+
+        return $limit !== null && $user->ownedTeams()->count() >= $limit;
+    }
+
     /**
      * Whether the member holds the given team permission, resolved in this
      * team's scope. Ownership bypasses this at the policy level (TeamPolicy::before).

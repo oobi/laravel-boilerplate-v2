@@ -24,12 +24,36 @@ return [
         'members' => 'Members',
         'invitations' => 'Invitations',
         'settings' => 'Settings',
+        // Account-menu cross-area links. "My :Teams" distinguishes this (enter my workspace)
+        // from the admin sidebar's ":Teams" (manage every team). "Admin" stays literal.
+        'my_teams' => 'My :Teams',
+        'admin_dashboard' => 'Admin dashboard',
     ],
 
     'onboarding' => [
         'title' => 'You’re not part of a :team yet',
         'can_create' => 'Create one to get started, or ask an admin to invite you.',
         'ask_admin' => 'Ask an administrator to add you to a :team.',
+    ],
+
+    'create' => [
+        'action' => 'Create :Team',
+        'heading' => 'Create a :team',
+        'submit' => 'Create',
+        'name' => 'Name',
+        'name_help' => 'You can change this later.',
+        'created' => ':name created',
+        'not_allowed' => 'You can’t create a :team right now.',
+        'throttled' => 'You’ve created several :teams just now — try again shortly.',
+    ],
+
+    'select' => [
+        'title' => 'Your :teams',
+        'description' => 'Choose which :team to open.',
+        'all' => 'All :teams',
+        // "Mine" here means owned, not merely joined — everything on the panel is already joined.
+        'mine' => 'My :teams',
+        'members' => '{0} No members|{1} 1 member|[2,*] :count members',
     ],
 
     'dashboard' => [

@@ -16,6 +16,7 @@ use Concise\Teams\Livewire\Team\Dashboard;
 use Concise\Teams\Livewire\Team\ListInvitations;
 use Concise\Teams\Livewire\Team\ListMembers;
 use Concise\Teams\Livewire\Team\Onboarding;
+use Concise\Teams\Livewire\Team\SelectTeam;
 use Illuminate\Support\Facades\Route;
 
 $prefix = config('teams.route_prefix', 'teams');
@@ -28,6 +29,7 @@ Route::middleware(['web', 'auth', 'verified'])
         // Entry point + zero-team onboarding (no {team}, so no team context).
         Route::get('/', TeamRedirect::class)->name('index');
         Route::get('/onboarding', Onboarding::class)->name('onboarding');
+        Route::get('/select', SelectTeam::class)->name('select');
 
         // Team-scoped pages: {team} slug is resolved + authorized by the middleware.
         Route::middleware(ResolveTeamContext::class)

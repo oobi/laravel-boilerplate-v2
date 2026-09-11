@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Concise\Teams;
 
 use App\Enums\SystemPermission;
+use App\Models\User;
+use App\Support\AccountMenu\AccountMenuRegistry;
 use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavItem;
 use App\Support\Navigation\Registry\NavRegistry;
@@ -89,6 +91,7 @@ class TeamsServiceProvider extends ServiceProvider
         RoleScopeRegistry::register(TeamRoleScope::class);
 
         $this->registerSystemAdminArea();
+        $this->registerAccountMenu();
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — not a role — and team roles are seeded centrally by
@@ -132,6 +135,32 @@ class TeamsServiceProvider extends ServiceProvider
      * Show page — both contributed through core's registries, so no core nav
      * or panel file changes.
      */
+    /**
+     * Cross-area links in the header account menu (avatar dropdown). Both exist
+     * only because the tier adds a second area beside the system admin: "Teams"
+     * to reach it, "Admin dashboard" to get back. They're always shown where the
+     * viewer has the capability (a dropdown that's occasionally in-context is
+     * cheaper than fragile route detection); uninstalling the tier removes both.
+     */
+    private function registerAccountMenu(): void
+    {
+        AccountMenuRegistry::item('teams')
+            ->label(fn (): string => team_trans('nav.my_teams'))
+            ->url(fn (): string => route('team.index'))
+            ->icon('heroicon-o-user-group')
+            ->order(10)
+            ->visibleWhen(fn (?User $user): bool => $user !== null
+                && ($user->accessibleTeams()->exists() || Gate::forUser($user)->allows(TeamAbility::CREATE, Team::class)));
+
+        AccountMenuRegistry::item('admin-dashboard')
+            ->label(fn (): string => team_trans('nav.admin_dashboard'))
+            ->url(fn (): string => route('dashboard'))
+            ->icon('heroicon-o-squares-2x2')
+            ->order(20)
+            ->visibleWhen(fn (?User $user): bool => $user !== null
+                && Gate::forUser($user)->allows(SystemPermission::ACCESS_ADMIN_PANEL->value));
+    }
+
     private function registerSystemAdminArea(): void
     {
         NavRegistry::group('management')->add(

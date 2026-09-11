@@ -6,6 +6,7 @@ namespace Concise\Teams\Policies;
 
 use App\Models\User;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamCreationMode;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
 
@@ -43,6 +44,19 @@ class TeamPolicy
         }
 
         return null;
+    }
+
+    /**
+     * Self-service creation: the mode must allow it and the user must be under
+     * the owned-teams limit (config `teams.max_teams_per_user`). Class-level,
+     * so there's no team to bypass with — before() falls through. Admins
+     * provisioning teams go through the `manage teams` system permission
+     * instead and are never subject to the limit.
+     */
+    public function create(User $user): bool
+    {
+        return TeamCreationMode::current()->allowsSelfServiceCreation()
+            && ! Team::hasReachedOwnedLimit($user);
     }
 
     public function view(User $user, Team $team): bool

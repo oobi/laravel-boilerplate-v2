@@ -12,6 +12,9 @@ namespace Concise\Teams\Enums;
  */
 enum TeamAbility: string
 {
+    /** Class-level: check with `Gate::allows(TeamAbility::CREATE, Team::class)`. */
+    case CREATE = 'create';
+
     case VIEW = 'view';
     case MANAGE_MEMBERS = 'manageMembers';
     case INVITE = 'invite';
