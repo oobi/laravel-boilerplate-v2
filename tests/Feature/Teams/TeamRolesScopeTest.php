@@ -48,6 +48,7 @@ class TeamRolesScopeTest extends TestCase
 
         $member = Team::availableRoles()->where('name', 'Member')->firstOrFail();
         $this->assertFalse($member->hasPermissionTo(TeamPermission::MANAGE_MEMBERS->value));
+        $this->assertTrue($member->hasPermissionTo(TeamPermission::VIEW_MEMBERS->value), 'members see the roster by default');
         $this->assertSame(DaisyColor::PRIMARY, $member->color);
     }
 
@@ -183,6 +184,49 @@ class TeamRolesScopeTest extends TestCase
         $teamRole->refresh();
         $this->assertTrue($teamRole->checkPermissionTo(TeamPermission::MANAGE_MEMBERS->value));
         $this->assertFalse($teamRole->checkPermissionTo(TeamPermission::INVITE_MEMBERS->value));
+    }
+
+    public function test_saving_a_manage_permission_auto_grants_its_view_counterpart(): void
+    {
+        $role = Team::createRole('Manager');
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageRoles::class, ['role' => $role])
+            ->set('data.permissions_members', [TeamPermission::MANAGE_MEMBERS->value])
+            ->set('data.permissions_team_settings', [TeamPermission::UPDATE_TEAM->value])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $role->refresh();
+        // Manage/Update imply their View counterpart — stored, not just displayed.
+        $this->assertTrue($role->checkPermissionTo(TeamPermission::VIEW_MEMBERS->value));
+        $this->assertTrue($role->checkPermissionTo(TeamPermission::VIEW_SETTINGS->value));
+    }
+
+    public function test_the_roles_form_keeps_view_and_manage_implications_consistent(): void
+    {
+        config(['teams.domains.enabled' => true]); // so Manage Domains is offered in the Settings group
+        $role = Team::createRole('Manager');
+
+        $component = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageRoles::class, ['role' => $role]);
+
+        // Forward: ticking Update auto-ticks its View counterpart.
+        $component->set('data.permissions_team_settings', [TeamPermission::UPDATE_TEAM->value])
+            ->assertSet('data.permissions_team_settings', [
+                TeamPermission::VIEW_SETTINGS->value,
+                TeamPermission::UPDATE_TEAM->value,
+            ]);
+
+        // Reverse: unticking View clears everything that required it (Update + Manage Domains).
+        $component->set('data.permissions_team_settings', [
+            TeamPermission::VIEW_SETTINGS->value,
+            TeamPermission::UPDATE_TEAM->value,
+            TeamPermission::MANAGE_DOMAINS->value,
+        ])->set('data.permissions_team_settings', [
+            TeamPermission::UPDATE_TEAM->value,
+            TeamPermission::MANAGE_DOMAINS->value,
+        ])->assertSet('data.permissions_team_settings', []);
     }
 
     public function test_a_team_role_can_be_created_from_the_team_tab(): void

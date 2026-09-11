@@ -23,6 +23,17 @@ the core files:
 > boots or its test suite runs — without the Vite manifest, any view-rendering
 > request/test throws `Vite manifest not found`. `bp:setup` will fold this in so
 > the tree is "ready to roll" after it runs.
+>
+> Teams-specific: `composer install` (or `composer update`) is also what links
+> the `packages/teams` **path package** into `vendor/` (a symlink) and registers
+> its autoload. Skip it and nothing under `Concise\Teams\…` resolves — the
+> `HasTeams` trait composed into `app/Models/User.php` then throws a fatal
+> `Trait "Concise\Teams\Concerns\HasTeams" not found` at boot (and your editor's
+> language server flags every teams reference in `User.php`). If you add teams to
+> a clone that didn't already have it wired, run
+> `composer update concise-dot-digital/teams` to create the symlink and autoload,
+> then `php artisan optimize:clear` (and reload your editor's PHP language server
+> so it re-indexes `vendor/`).
 
 ## The markers
 

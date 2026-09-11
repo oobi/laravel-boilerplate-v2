@@ -63,6 +63,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Ownership model
+    |--------------------------------------------------------------------------
+    |
+    | What being a team's owner grants. One of:
+    |  - 'sovereign' the team is a self-governing entity; owners have authority
+    |    directly (they bypass team permissions within their own team, like a
+    |    super admin does app-wide). The SaaS default.
+    |  - 'managed'   the team is a platform-controlled silo; the "owner" is an
+    |    operational manager whose authority comes only from their assigned team
+    |    role (no bypass). Config-level acts (settings, domains, delete, transfer)
+    |    stay with system admins unless a role is granted the matching permission.
+    |
+    | Ownership itself is always structural (teams.user_id) — this only changes
+    | whether that status carries power. See ~dev/TEAMS_TIER_SCOPE.md.
+    |
+    */
+
+    'ownership' => env('TEAMS_OWNERSHIP', 'sovereign'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Invitations
     |--------------------------------------------------------------------------
     |
@@ -120,7 +141,7 @@ return [
     |
     */
 
-    'personal_teams' => false,
+    'personal_teams' => (bool) env('TEAMS_PERSONAL_TEAMS', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -151,12 +172,11 @@ return [
     | The optional custom-domain overlay. Off by default — teams are reached via
     | the path prefix above. Only verified domains ever route (OQ3).
     |
-    | `team_access` controls the team-area (self-service) domains surface:
-    |  - 'manage'     team owners add / verify / remove their own domains
-    |  - 'read-only'  team owners see their domains + status but can't change them
-    |  - 'none'       no team-area surface — domains are centrally administered
-    | A system admin can always manage any team's domains from Admin › Teams while
-    | the feature is enabled, regardless of this setting.
+    | Who may manage a team's domains is runtime authorization, not config: the
+    | `MANAGE_DOMAINS` team permission (Roles screen), plus a sovereign owner's
+    | bypass and system admins. This flag (env TEAMS_DOMAINS_ENABLED) only turns
+    | the whole overlay on/off — a setup-time/per-environment decision, not a live
+    | runtime flip (host mode switches every team from path to host URLs).
     |
     | `reserved` is a blacklist of leftmost labels a team may never claim as a
     | domain (infra/system names). Matched case-insensitively against the first
@@ -166,9 +186,7 @@ return [
     */
 
     'domains' => [
-        'enabled' => false,
-
-        'team_access' => 'manage',
+        'enabled' => (bool) env('TEAMS_DOMAINS_ENABLED', false),
 
         'reserved' => [
             'www', 'admin', 'mail', 'webmail', 'smtp', 'imap', 'pop',

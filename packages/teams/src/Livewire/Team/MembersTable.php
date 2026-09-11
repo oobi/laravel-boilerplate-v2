@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamOwnership;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamRoleField;
 use Filament\Actions\Action;
@@ -73,7 +74,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     {
         $this->team = $team;
 
-        abort_unless($this->canManage(), 403);
+        abort_unless($this->canView(), 403);
     }
 
     /** Re-query after the host page adds a member (or this table changes one). */
@@ -128,11 +129,19 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ->deferFilters(false)
             ->recordActions([
                 ActionGroup::make([
+                    // The row actions all mutate — hidden for a view-only viewer
+                    // (each still re-checks its own authorization on run).
                     Action::make('changeRole')
                         ->label(Team::allowsMultipleRoles() ? team_trans('members.change_roles') : team_trans('members.change_role'))
                         ->icon('heroicon-o-shield-check')
                         ->modalWidth(Width::Small)
-                        ->hidden(fn (User $record): bool => $this->isOwner($record))
+                        // An owner has an editable role only under the managed ownership
+                        // model (a sovereign owner is powered by the bypass, not a role). And
+                        // an owner's/co-owner's role is protected: only someone who can manage
+                        // owners (the primary owner, or a system admin) may change it, so a
+                        // plain manage-members holder can't strip an owner's role.
+                        ->visible(fn (User $record): bool => ! $this->isOwner($record)
+                            || (! TeamOwnership::current()->ownersBypass() && $this->canManageOwners()))
                         ->fillForm(fn (User $record): array => [
                             'roles' => Team::allowsMultipleRoles()
                                 ? $this->memberRoles()->get($record->id, [])
@@ -140,7 +149,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ])
                         ->schema([TeamRoleField::make()->required()])
                         ->action(function (User $record, array $data): void {
-                            abort_unless($this->canManage(), 403);
+                            abort_unless($this->canManage()
+                                && (! $this->isOwner($record) || (! TeamOwnership::current()->ownersBypass() && $this->canManageOwners())), 403);
 
                             $this->team->syncMemberRoles($record, TeamRoleField::selected($data));
                             $this->memberRoles = null;
@@ -254,7 +264,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
 
                             Notification::make()->title(team_trans('members.removed'))->success()->send();
                         }),
-                ]),
+                ])->visible(fn (): bool => $this->canManage()),
             ])
             ->searchPlaceholder(team_trans('members.search'))
             ->emptyStateHeading(team_trans('members.empty'))
@@ -354,6 +364,13 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         return $this->teamRoles()->map(fn (Role $role): string => $role->name)->all();
     }
 
+    /** May the viewer see the roster at all? (Managing implies viewing; owners always can.) */
+    private function canView(): bool
+    {
+        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
+            || Gate::allows(TeamAbility::VIEW_MEMBERS, $this->team);
+    }
+
     private function canManage(): bool
     {
         return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
@@ -430,13 +447,30 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
      */
     private function badgesFor(User $member): array
     {
-        $standing = match (true) {
-            $this->team->isPrimaryOwner($member) => [team_trans('members.primary_owner')],
-            $this->isOwner($member) => [team_trans('members.owner')],
-            default => $this->memberRoles()->get($member->id) ?: [team_trans('members.no_role')],
-        };
+        $badges = [];
 
-        return $this->isSuspended($member) ? [...$standing, team_trans('members.suspended')] : $standing;
+        // Owner status is shown ALONGSIDE the role, not instead of it — the badge
+        // marks protected owner standing, the role shows actual authority (which,
+        // under the managed ownership model, is where an owner's power comes from).
+        if ($this->team->isPrimaryOwner($member)) {
+            $badges[] = team_trans('members.primary_owner');
+        } elseif ($this->isOwner($member)) {
+            $badges[] = team_trans('members.owner');
+        }
+
+        $roles = $this->memberRoles()->get($member->id, []);
+
+        if ($roles !== []) {
+            $badges = [...$badges, ...$roles];
+        } elseif ($badges === []) {
+            $badges[] = team_trans('members.no_role');
+        }
+
+        if ($this->isSuspended($member)) {
+            $badges[] = team_trans('members.suspended');
+        }
+
+        return $badges;
     }
 
     private function badgeColor(string $badge): string

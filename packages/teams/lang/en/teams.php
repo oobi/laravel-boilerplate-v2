@@ -63,6 +63,12 @@ return [
         'placeholder' => 'This :team’s content will live here.',
     ],
 
+    'settings' => [
+        'save' => 'Save changes',
+        'saved' => 'Settings saved',
+        'slug_warning' => 'Changing this changes your :team’s URL — existing links (and any custom-domain subdomain) will break.',
+    ],
+
     'members' => [
         'title' => ':Members',
         'description' => 'Manage who belongs to :name and their roles.',
@@ -223,9 +229,12 @@ return [
     ],
 
     'permissions' => [
+        'view_members' => 'View :Members',
         'manage_members' => 'Manage :Members',
         'invite_members' => 'Invite :Members',
+        'view_settings' => 'View :Team Settings',
         'update_team' => 'Update :Team Settings',
+        'manage_domains' => 'Manage Domains',
         'category_members' => ':Members',
         'category_settings' => ':Team Settings',
     ],

@@ -4,6 +4,7 @@ namespace Tests\Feature\Teams;
 
 use App\Models\User;
 use Concise\Teams\Actions\CreateDomain;
+use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
@@ -13,12 +14,26 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * The add-domain write boundary (validation) and the team-area access modes
- * (`teams.domains.team_access`) for the domains management surface (5h.3).
+ * The add-domain write boundary (validation) and who may view/manage a team's
+ * domains — runtime authorization via the MANAGE_DOMAINS permission + ownership
+ * model, not config (5h.3, reworked).
  */
 class DomainManagementTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Seed the team permission rows so the policy's checkPermissionTo resolves
+        // (createRole first-or-creates them); the role is left unassigned.
+        Team::createRole('Team Admin', [
+            TeamPermission::MANAGE_DOMAINS,
+            TeamPermission::UPDATE_TEAM,
+            TeamPermission::MANAGE_MEMBERS,
+        ]);
+    }
 
     // --- CreateDomain validation ---
 
@@ -59,22 +74,22 @@ class DomainManagementTest extends TestCase
         app(CreateDomain::class)($team, 'ACME.com');
     }
 
-    // --- team-area access modes ---
+    // --- who may view / manage domains ---
 
-    public function test_the_team_settings_page_404s_when_the_overlay_is_off(): void
+    public function test_the_domains_component_is_forbidden_when_the_overlay_is_off(): void
     {
-        // enabled defaults to false
+        // enabled defaults to false → even an owner can't view.
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
-        $this->actingAs($owner)
-            ->get(route('team.settings', ['team' => $team->slug]))
-            ->assertNotFound();
+        Livewire::actingAs($owner)
+            ->test(ManageDomains::class, ['team' => $team])
+            ->assertForbidden();
     }
 
-    public function test_a_team_owner_manages_domains_when_access_is_manage(): void
+    public function test_a_sovereign_owner_manages_domains(): void
     {
-        config(['teams.domains.enabled' => true, 'teams.domains.team_access' => 'manage']);
+        config(['teams.domains.enabled' => true, 'teams.ownership' => 'sovereign']);
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
@@ -83,39 +98,42 @@ class DomainManagementTest extends TestCase
             ->assertActionVisible('addDomain');
     }
 
-    public function test_read_only_lets_a_team_owner_view_but_not_manage(): void
+    public function test_a_managed_owner_without_the_permission_is_read_only(): void
     {
-        config(['teams.domains.enabled' => true, 'teams.domains.team_access' => 'read-only']);
+        config(['teams.domains.enabled' => true, 'teams.ownership' => 'managed']);
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
-        // The component mounts (view allowed) but the add action is hidden.
+        // Owner still sees it (read-only floor) but can't act — no bypass, no role.
         Livewire::actingAs($owner)
             ->test(ManageDomains::class, ['team' => $team])
             ->assertActionHidden('addDomain');
     }
 
-    public function test_access_none_404s_the_team_settings_page(): void
+    public function test_a_managed_owner_with_the_permission_manages(): void
     {
-        config(['teams.domains.enabled' => true, 'teams.domains.team_access' => 'none']);
+        config(['teams.domains.enabled' => true, 'teams.ownership' => 'managed']);
+        Team::createRole('Manager', [TeamPermission::MANAGE_DOMAINS]);
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
+        $team->syncMemberRoles($owner, ['Manager']);
 
-        $this->actingAs($owner)
-            ->get(route('team.settings', ['team' => $team->slug]))
-            ->assertNotFound();
-    }
-
-    public function test_a_system_admin_always_manages_even_when_team_access_is_none(): void
-    {
-        config(['teams.domains.enabled' => true, 'teams.domains.team_access' => 'none']);
-        $admin = User::factory()->superAdmin()->create();
-        $team = Team::factory()->create();
-
-        Livewire::actingAs($admin)
+        Livewire::actingAs($owner)
             ->test(ManageDomains::class, ['team' => $team])
             ->assertActionVisible('addDomain');
     }
+
+    public function test_a_system_admin_always_manages(): void
+    {
+        config(['teams.domains.enabled' => true, 'teams.ownership' => 'managed']);
+        $team = Team::factory()->create();
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageDomains::class, ['team' => $team])
+            ->assertActionVisible('addDomain');
+    }
+
+    // Team-area Settings page access (view vs edit) lives in TeamSettingsTest.
 
     protected function tearDown(): void
     {

@@ -28,7 +28,7 @@ class TeamDemoSeederTest extends TestCase
         foreach ($teams as $team) {
             $this->assertNotEmpty($team->slug);
             $this->assertTrue($team->hasUser($team->owner));
-            $this->assertNull($team->roleFor($team->owner), 'ownership is structural, not a role');
+            $this->assertSame('Team Admin', $team->roleFor($team->owner), 'each owner is seeded the admin role for operational sense');
 
             $members = $team->users->reject(fn (User $user) => $user->is($team->owner));
             $this->assertGreaterThanOrEqual(5, $members->count());

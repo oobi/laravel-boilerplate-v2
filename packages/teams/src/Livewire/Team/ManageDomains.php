@@ -34,10 +34,11 @@ use Livewire\Component;
 
 /**
  * A team's custom domains — the shared section rendered in both the system
- * admin's team Settings tab and the team-area Settings page. Access is gated by
- * DomainPolicy: a system admin always manages; a team owner views or manages per
- * `teams.domains.team_access`. Whoever may only view sees the table without its
- * actions. See ~dev/TEAMS_DOMAINS_SCOPE.md (5h.3).
+ * admin's team Settings tab and the team-area Settings page. Access is runtime
+ * authorization: a system admin always manages; otherwise the `MANAGE_DOMAINS`
+ * team permission (a sovereign owner holds it via bypass). Owners always at least
+ * view (read-only floor); a viewer without manage sees the table without its
+ * actions. Only active when `teams.domains.enabled`. See ~dev/TEAMS_DOMAINS_SCOPE.md.
  *
  * @property Team $team
  */
@@ -57,7 +58,7 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
         abort_unless($this->canView(), 403);
     }
 
-    /** May the current viewer see this team's domains at all? */
+    /** May the current viewer see this team's domains at all? (Owners always can — read-only floor.) */
     public function canView(): bool
     {
         if (! DomainPolicy::enabled()) {
@@ -65,7 +66,8 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
         }
 
         return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || (DomainPolicy::teamCanView() && Gate::allows(TeamAbility::UPDATE, $this->team));
+            || $this->team->isOwnedBy(auth()->user())
+            || Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
     /** May the current viewer add/verify/remove domains (vs read-only)? */
@@ -76,7 +78,7 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
         }
 
         return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || (DomainPolicy::teamCanManage() && Gate::allows(TeamAbility::UPDATE, $this->team));
+            || Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
     public function addDomainAction(): Action

@@ -42,11 +42,17 @@ class TeamRolesSeeder extends Seeder
                     TeamPermission::MANAGE_MEMBERS,
                     TeamPermission::INVITE_MEMBERS,
                     TeamPermission::UPDATE_TEAM,
+                    TeamPermission::MANAGE_DOMAINS,
                 ],
             ],
             TeamLabels::member() => [
                 'color' => DaisyColor::PRIMARY,
-                'permissions' => [],
+                // Sees the roster read-only by default — a sensible starting point; a
+                // project that wants members blind to each other unticks it on the
+                // Roles screen (or edits this default).
+                'permissions' => [
+                    TeamPermission::VIEW_MEMBERS,
+                ],
             ],
         ];
     }

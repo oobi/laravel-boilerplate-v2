@@ -240,6 +240,16 @@ class Team extends Model
     }
 
     /**
+     * A co-owner who currently carries the owner bypass: an owner who is neither
+     * the primary owner nor suspended. (The sovereign bypass in TeamPolicy is
+     * paused for a suspended co-owner — the flag stays, the power doesn't.)
+     */
+    public function isCoOwner(User $user): bool
+    {
+        return $this->isOwnedBy($user) && ! $this->isPrimaryOwner($user) && ! $this->isSuspended($user);
+    }
+
+    /**
      * Every owner's user id, primary first.
      *
      * @return SupportCollection<int, int>
@@ -444,8 +454,11 @@ class Team extends Model
     }
 
     /**
-     * Set a member's team roles (replacing any held). Owners hold none —
-     * ownership is structural — so they're left untouched.
+     * Set a member's team roles (replacing any held). Works for any member,
+     * owners included: ownership is structural (a pivot flag), so an owner may
+     * also hold a role — it shows alongside their owner badge and, under the
+     * managed model, is where their authority comes from. Who is allowed to
+     * change an owner's role is enforced at the UI/policy layer, not here.
      *
      * @param  list<string>  $roles
      *
@@ -453,10 +466,6 @@ class Team extends Model
      */
     public function syncMemberRoles(User $user, array $roles): void
     {
-        if ($this->isOwnedBy($user)) {
-            return;
-        }
-
         $roles = array_values(array_unique(array_filter($roles)));
 
         if (count($roles) > 1 && ! static::allowsMultipleRoles()) {

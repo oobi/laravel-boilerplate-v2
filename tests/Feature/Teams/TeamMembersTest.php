@@ -26,6 +26,7 @@ class TeamMembersTest extends TestCase
         // Fixtures via the domain method, not the seeder (tests.md): the two
         // roles a fresh install ships with.
         Team::createRole(self::TEAM_ADMIN, [
+            TeamPermission::VIEW_MEMBERS,
             TeamPermission::MANAGE_MEMBERS,
             TeamPermission::INVITE_MEMBERS,
             TeamPermission::UPDATE_TEAM,
@@ -206,6 +207,24 @@ class TeamMembersTest extends TestCase
         Livewire::actingAs($member)
             ->test(MembersTable::class, ['team' => $team])
             ->assertForbidden();
+    }
+
+    public function test_a_view_members_holder_sees_the_roster_but_has_no_actions(): void
+    {
+        Team::createRole('Viewer', [TeamPermission::VIEW_MEMBERS]);
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $viewer = User::factory()->create();
+        $this->addMember($team, $viewer, 'Viewer');
+        $other = User::factory()->create();
+        $this->addMember($team, $other);
+
+        Livewire::actingAs($viewer)
+            ->test(MembersTable::class, ['team' => $team])
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords([$owner, $viewer, $other])
+            ->assertTableActionHidden('changeRole', $other)
+            ->assertTableActionHidden('remove', $other);
     }
 
     protected function tearDown(): void

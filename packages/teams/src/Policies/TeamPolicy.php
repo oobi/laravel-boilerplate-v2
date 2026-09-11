@@ -7,8 +7,10 @@ namespace Concise\Teams\Policies;
 use App\Models\User;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamCreationMode;
+use Concise\Teams\Enums\TeamOwnership;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\DomainPolicy;
 
 /**
  * Per-instance team abilities, mirroring UserPolicy's scheme: coarse checks go
@@ -34,12 +36,29 @@ class TeamPolicy
             return null;
         }
 
+        // Managed (silo) model: ownership is identity, not power. Owners are
+        // authorised exactly like members — through their team role — so there is
+        // no bypass at all; everyone (owner included) falls through to the
+        // permission checks below. See TeamOwnership.
+        if (! TeamOwnership::current()->ownersBypass()) {
+            return null;
+        }
+
+        // Sovereign (entity) model from here down: the team is self-governing and
+        // ownership carries authority directly, without needing a role.
+
+        // The primary owner (teams.user_id) is sovereign over their team — every
+        // ability, including the destructive/handover acts only they may perform.
         if ($team->isPrimaryOwner($user)) {
             return true;
         }
 
-        // A suspended co-owner keeps the flag but not the bypass until reinstated.
-        if ($team->isOwnedBy($user) && ! $team->isSuspended($user) && ! in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
+        // A co-owner shares day-to-day authority but NOT the primary-owner-only
+        // acts (delete / transfer ownership / manage co-owners) — those fall
+        // through to their policy methods (which deny), reserving them to the
+        // primary owner. isCoOwner() is false for a suspended co-owner: the flag
+        // is kept but the bypass is paused until they're reinstated.
+        if ($team->isCoOwner($user) && ! in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
             return true;
         }
 
@@ -64,6 +83,19 @@ class TeamPolicy
         return $team->isActiveMember($user);
     }
 
+    /**
+     * May the user see the member roster (read-only)? Owners always can (floor,
+     * even when managed), plus the dedicated view permission and — since managing
+     * implies viewing — anyone who can manage members. Acting on members
+     * (role/suspend/remove) is gated separately by manageMembers.
+     */
+    public function viewMembers(User $user, Team $team): bool
+    {
+        return $team->isOwnedBy($user)
+            || $team->memberHasPermission($user, TeamPermission::VIEW_MEMBERS)
+            || $team->memberHasPermission($user, TeamPermission::MANAGE_MEMBERS);
+    }
+
     public function manageMembers(User $user, Team $team): bool
     {
         return $team->memberHasPermission($user, TeamPermission::MANAGE_MEMBERS);
@@ -77,6 +109,27 @@ class TeamPolicy
     public function update(User $user, Team $team): bool
     {
         return $team->memberHasPermission($user, TeamPermission::UPDATE_TEAM);
+    }
+
+    public function manageDomains(User $user, Team $team): bool
+    {
+        return $team->memberHasPermission($user, TeamPermission::MANAGE_DOMAINS);
+    }
+
+    /**
+     * May the user open the team-area Settings page at all? Owners (read-only
+     * floor, even when managed), the dedicated view-settings permission (see the
+     * page without editing), plus anyone who can edit one of its sections — team
+     * details or, when the overlay's on, domains. Viewing and editing are
+     * separate permissions: editing within is gated per-section by update /
+     * manageDomains (VIEW_SETTINGS never grants a write).
+     */
+    public function viewSettings(User $user, Team $team): bool
+    {
+        return $team->isOwnedBy($user)
+            || $team->memberHasPermission($user, TeamPermission::VIEW_SETTINGS)
+            || $team->memberHasPermission($user, TeamPermission::UPDATE_TEAM)
+            || (DomainPolicy::enabled() && $team->memberHasPermission($user, TeamPermission::MANAGE_DOMAINS));
     }
 
     /** Promoting/demoting co-owners is the primary owner's alone — granted by before(), never by a role. */

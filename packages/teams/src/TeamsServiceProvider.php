@@ -22,7 +22,6 @@ use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Dns\DnsResolver;
 use Concise\Teams\Support\Dns\SystemDnsResolver;
-use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
@@ -125,7 +124,7 @@ class TeamsServiceProvider extends ServiceProvider
             ->route('team.members')
             ->icon('heroicon-o-users')
             ->active('team.members')
-            ->can(TeamAbility::MANAGE_MEMBERS)
+            ->can(TeamAbility::VIEW_MEMBERS)
             ->order(10);
 
         // With member invitations off there's no page and no nav item (see InvitationPolicy).
@@ -139,17 +138,15 @@ class TeamsServiceProvider extends ServiceProvider
                 ->order(20);
         }
 
-        // The team-area Settings page exists only when the domains overlay gives
-        // teams a surface (config teams.domains.team_access); gated to owners/settings-admins.
-        if (DomainPolicy::teamCanView()) {
-            TeamNavRegistry::item('team-settings')
-                ->label(team_trans('nav.settings'))
-                ->route('team.settings')
-                ->icon('heroicon-o-cog-6-tooth')
-                ->active('team.settings')
-                ->can(TeamAbility::UPDATE)
-                ->order(30);
-        }
+        // The team-area Settings page (team details + domains). Shown to whoever
+        // can view it — owners (read-only floor) or holders of update/manageDomains.
+        TeamNavRegistry::item('team-settings')
+            ->label(team_trans('nav.settings'))
+            ->route('team.settings')
+            ->icon('heroicon-o-cog-6-tooth')
+            ->active('team.settings')
+            ->can(TeamAbility::VIEW_SETTINGS)
+            ->order(30);
     }
 
     /**

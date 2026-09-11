@@ -30,6 +30,16 @@ use Illuminate\Support\Str;
  */
 trait HasPermissionsSchema
 {
+    /**
+     * The last reconciled selection per category field, so an update can tell an
+     * addition (pull in implied permissions) from a removal (drop the ones that
+     * depended on it). Keyed by category field name; persisted across Livewire
+     * round-trips like any public state.
+     *
+     * @var array<string, list<string>>
+     */
+    public array $permissionSnapshots = [];
+
     /** The scope whose vocabulary the form edits. */
     abstract protected function roleScope(): RoleScope;
 
@@ -63,7 +73,11 @@ trait HasPermissionsSchema
                     ->hiddenLabel()
                     ->dehydrated(false)
                     ->live()
-                    ->afterStateUpdated(fn (bool $state, Set $set) => $set($field, $state ? $values : []))
+                    ->afterStateUpdated(function (bool $state, Set $set) use ($field, $values): void {
+                        $selected = $state ? $values : [];
+                        $set($field, $selected);
+                        $this->permissionSnapshots[$field] = $selected;
+                    })
                     ->extraInputAttributes(fn (Checkbox $component): array => [
                         'aria-label' => __('admin.select_all_in', ['group' => $category]),
                         'title' => __('admin.select_all'),
@@ -87,7 +101,14 @@ trait HasPermissionsSchema
             CheckboxList::make($field)
                 ->hiddenLabel()
                 ->live()
-                ->afterStateUpdated(fn (?array $state, Set $set) => $set($selectAllField, count($state ?? []) === count($values)))
+                // Keep implications consistent: ticking Update auto-ticks View; unticking
+                // View clears the Update/Manage that required it. Then sync "select all".
+                ->afterStateUpdated(function (?array $state, Set $set) use ($field, $values, $selectAllField): void {
+                    $reconciled = $this->reconcilePermissions($field, $state ?? [], $values);
+
+                    $set($field, $reconciled);
+                    $set($selectAllField, count($reconciled) === count($values));
+                })
                 ->options($options)
                 // Fill left-to-right in vocabulary order (Filament's default fills column-first, which zigzags),
                 // into auto-fitting columns (.ui-option-grid) rather than a fixed count stretched across the card.
@@ -102,23 +123,85 @@ trait HasPermissionsSchema
         return 'permissions_'.Str::slug($category, '_');
     }
 
+    /**
+     * Expand a selected-permission set to include everything those permissions
+     * imply (see RoleScope::implications()). Single level — the scopes' maps
+     * don't chain.
+     *
+     * @param  list<string>  $selected
+     * @return list<string>
+     */
+    protected function applyImplications(array $selected): array
+    {
+        $implications = $this->roleScope()->implications();
+        $expanded = $selected;
+
+        foreach ($selected as $permission) {
+            foreach ($implications[$permission] ?? [] as $implied) {
+                $expanded[] = $implied;
+            }
+        }
+
+        return array_values(array_unique($expanded));
+    }
+
+    /**
+     * Keep a category's selection internally consistent after a change. Diffs
+     * against the last snapshot: a permission that was just added pulls in
+     * everything it implies; a permission that was just removed drops everything
+     * that implied it (so unticking "View" clears the "Update"/"Manage" that
+     * required it). Updates the snapshot for the next change.
+     *
+     * @param  list<string>  $new
+     * @param  list<string>  $values  every permission in this category, in order
+     * @return list<string>
+     */
+    protected function reconcilePermissions(string $field, array $new, array $values): array
+    {
+        $implications = $this->roleScope()->implications();
+        $old = $this->permissionSnapshots[$field] ?? [];
+        $result = $new;
+
+        // Added → pull in what it implies.
+        foreach (array_diff($new, $old) as $permission) {
+            foreach ($implications[$permission] ?? [] as $implied) {
+                $result[] = $implied;
+            }
+        }
+
+        // Removed → drop everything that implied it.
+        foreach (array_diff($old, $new) as $permission) {
+            foreach ($implications as $dependent => $implied) {
+                if (in_array($permission, $implied, true)) {
+                    $result = array_diff($result, [$dependent]);
+                }
+            }
+        }
+
+        $result = array_values(array_intersect($values, array_unique($result)));
+        $this->permissionSnapshots[$field] = $result;
+
+        return $result;
+    }
+
     /** @return array<string, list<string>|bool> */
     protected function permissionsStateForRole(?Role $role): array
     {
-        $assigned = $role?->permissions->pluck('name')->all() ?? [];
+        $assigned = $this->applyImplications($role?->permissions->pluck('name')->all() ?? []);
+        $state = [];
 
-        return collect($this->roleScope()->permissions())
-            ->mapWithKeys(function (array $options, string $category) use ($assigned): array {
-                $field = $this->permissionsFieldName($category);
-                $values = array_keys($options);
-                $selected = array_values(array_intersect($values, $assigned));
+        foreach ($this->roleScope()->permissions() as $category => $options) {
+            $field = $this->permissionsFieldName($category);
+            $values = array_keys($options);
+            $selected = array_values(array_intersect($values, $assigned));
 
-                return [
-                    $field => $selected,
-                    "{$field}_select_all" => count($selected) === count($values),
-                ];
-            })
-            ->all();
+            // Seed the snapshot so the first change can be diffed correctly.
+            $this->permissionSnapshots[$field] = $selected;
+            $state[$field] = $selected;
+            $state["{$field}_select_all"] = count($selected) === count($values);
+        }
+
+        return $state;
     }
 
     /**
@@ -127,11 +210,12 @@ trait HasPermissionsSchema
      */
     protected function resolvePermissionsFromState(array $data): array
     {
-        return collect($this->roleScope()->permissions())
+        $selected = collect($this->roleScope()->permissions())
             ->keys()
             ->flatMap(fn (string $category): array => $data[$this->permissionsFieldName($category)] ?? [])
-            ->unique()
-            ->values()
             ->all();
+
+        // Store the implied permissions too, so the saved role matches the form.
+        return $this->applyImplications($selected);
     }
 }

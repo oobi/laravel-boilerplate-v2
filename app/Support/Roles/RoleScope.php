@@ -31,6 +31,17 @@ interface RoleScope
     public function permissions(): array;
 
     /**
+     * Permission implications: selecting a permission also grants everything it
+     * implies. Keyed by permission name, each mapping to the permissions it
+     * pulls in (e.g. an "update" permission implies its "view" counterpart, so a
+     * role that can edit can always read). Applied both in the Roles form (the
+     * implied box auto-ticks) and on save. Return [] for a scope with none.
+     *
+     * @return array<string, list<string>>
+     */
+    public function implications(): array;
+
+    /**
      * Extra attributes for a role created in this scope (its `scope` value and
      * anything role resolution needs), merged into Role::create().
      *
