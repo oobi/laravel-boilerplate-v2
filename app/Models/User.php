@@ -26,9 +26,9 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     // teams:start — teams composes HasTeams alongside HasRoles here to resolve the
-    // teams() name clash (spatie's HasRoles also declares an introspection-only
-    // teams()). On uninstall, restore the canonical line:
-    //   use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    // teams() name clash (spatie's HasRoles also declares an introspection-only teams()).
+    // On uninstall bp:remove-teams replaces this whole block with the canonical line below:
+    // teams:canonical: use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
     use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, HasTeams, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
         HasTeams::teams insteadof HasRoles;
         HasRoles::teams as roleTeams;
