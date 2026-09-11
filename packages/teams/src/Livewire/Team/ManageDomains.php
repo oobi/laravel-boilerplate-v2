@@ -127,16 +127,15 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
                 Tables\Columns\TextColumn::make('domain')
                     ->label(team_trans('domains.domain'))
                     ->weight('medium')
-                    ->badge(fn (Domain $record): bool => $record->is_primary)
-                    ->color(DaisyColor::PRIMARY->toFilamentColor())
-                    ->icon(fn (Domain $record): ?string => $record->is_primary ? 'heroicon-o-star' : null)
+                    ->icon(fn (Domain $record): ?string => $record->is_primary ? 'heroicon-s-star' : null)
+                    ->iconColor(DaisyColor::WARNING->toFilamentColor())
                     ->tooltip(fn (Domain $record): ?string => $record->is_primary ? team_trans('domains.primary') : null),
 
-                Tables\Columns\TextColumn::make('verified_at')
+                Tables\Columns\TextColumn::make('status')
                     ->label(team_trans('domains.status'))
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => $state ? team_trans('domains.verified') : team_trans('domains.pending'))
-                    ->color(fn (?string $state): string => ($state ? DaisyColor::SUCCESS : DaisyColor::WARNING)->toFilamentColor()),
+                    ->getStateUsing(fn (Domain $record): string => $record->isVerified() ? team_trans('domains.verified') : team_trans('domains.pending'))
+                    ->color(fn (Domain $record): string => ($record->isVerified() ? DaisyColor::SUCCESS : DaisyColor::WARNING)->toFilamentColor()),
             ])
             ->recordActions([
                 ActionGroup::make([
