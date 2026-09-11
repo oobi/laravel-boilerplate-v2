@@ -28,8 +28,8 @@ class TeamRelabelTest extends TestCase
     {
         parent::setUp();
 
-        config(['teams.labels.singular' => 'Salon', 'teams.labels.plural' => 'Salons']);
-        Team::createRole('Team Admin', [TeamPermission::MANAGE_MEMBERS]);
+        config(['teams.labels.team.singular' => 'Salon', 'teams.labels.team.plural' => 'Salons']);
+        Team::createRole('Salon Admin', [TeamPermission::MANAGE_MEMBERS]);
     }
 
     public function test_the_admin_team_pages_use_the_configured_word(): void
@@ -71,6 +71,32 @@ class TeamRelabelTest extends TestCase
             ->assertSee('Define what members of a salon can do')
             ->assertSee('Update Salon Settings')
             ->assertSee('Salon Settings');
+    }
+
+    public function test_the_member_and_owner_words_are_configurable(): void
+    {
+        config([
+            'teams.labels.member.singular' => 'Stylist', 'teams.labels.member.plural' => 'Stylists',
+            'teams.labels.owner.singular' => 'Manager', 'teams.labels.owner.plural' => 'Managers',
+        ]);
+        $team = Team::factory()->create(['name' => 'Chez Claude']);
+
+        // The admin overview's stat labels come straight from the member/owner words.
+        $this->actingAs(User::factory()->superAdmin()->create())
+            ->get(route('teams.show', $team))
+            ->assertOk()
+            ->assertSee('Stylists')
+            ->assertSee('Managers');
+
+        // …and so does the owner badge on the team's own members page.
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        $this->actingAs($owner)
+            ->get(route('team.members', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee('Stylists')          // the ":Members" page heading
+            ->assertSee('Primary Manager');  // the ":Owner" badge
     }
 
     public function test_the_user_page_and_the_email_use_the_configured_word(): void

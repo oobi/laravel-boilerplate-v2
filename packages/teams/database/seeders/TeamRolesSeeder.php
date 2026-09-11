@@ -7,6 +7,7 @@ namespace Concise\Teams\Database\Seeders;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\TeamsServiceProvider;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -25,14 +26,17 @@ use Spatie\Permission\PermissionRegistrar;
 class TeamRolesSeeder extends Seeder
 {
     /**
-     * Role name => badge colour and the TeamPermission cases it holds.
+     * Role name => badge colour and the TeamPermission cases it holds. Names are
+     * derived from the configured labels so a relabelled install seeds coherent
+     * defaults ("Salon Admin" / "Stylist", not "Team Admin" / "Member"). They're
+     * only defaults — the names become editable data once seeded.
      *
      * @return array<string, array{color: DaisyColor, permissions: list<TeamPermission>}>
      */
     protected function defaults(): array
     {
         return [
-            'Team Admin' => [
+            TeamLabels::singular().' Admin' => [
                 'color' => DaisyColor::ERROR,
                 'permissions' => [
                     TeamPermission::MANAGE_MEMBERS,
@@ -40,7 +44,7 @@ class TeamRolesSeeder extends Seeder
                     TeamPermission::UPDATE_TEAM,
                 ],
             ],
-            'Member' => [
+            TeamLabels::member() => [
                 'color' => DaisyColor::PRIMARY,
                 'permissions' => [],
             ],

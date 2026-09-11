@@ -6,7 +6,7 @@
 <x-app-shell
     :home="$team ? route('team.dashboard', ['team' => $team->slug]) : url('/')"
     :title="$title ?? ($team?->name ? $team->name.' · '.config('app.name') : null)"
-    :breadcrumb-root="$team ? ['label' => config('teams.labels.singular', 'Team'), 'url' => null] : null"
+    :breadcrumb-root="$team ? ['label' => \Concise\Teams\Support\TeamLabels::singular(), 'url' => null] : null"
     :breadcrumb-resource="false"
 >
     <x-slot:navigation>

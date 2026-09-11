@@ -6,11 +6,12 @@
 |--------------------------------------------------------------------------
 |
 | Short keys, read through team_trans('group.key') — which also supplies the
-| project's word for a team from config('teams.labels'): `:team` / `:teams`
-| are the lower-case singular / plural ("team", "salon"), and `:Team` /
-| `:Teams` their sentence-case forms (Laravel capitalises a placeholder whose
-| name is capitalised). A specific team's *name* is always `:name`, a person
-| always `:member`. Publish to lang/vendor/teams to override.
+| project's words from config('teams.labels'): `:team`/`:teams`,
+| `:member`/`:members` and `:owner`/`:owners` are the lower-case singular /
+| plural ("team"/"salon", "member"/"stylist", "owner"/"manager"), and their
+| capitalised forms (`:Team`, `:Members`, `:Owner`, …) are sentence-cased by
+| Laravel automatically. A specific team's *name* is always `:name`, a specific
+| person `:person`. Publish to lang/vendor/teams to override.
 |
 */
 
@@ -21,7 +22,7 @@ return [
     'nav' => [
         'dashboard' => 'Dashboard',
         'overview' => 'Overview',
-        'members' => 'Members',
+        'members' => ':Members',
         'invitations' => 'Invitations',
         'settings' => 'Settings',
         // Account-menu cross-area links. "My :Teams" distinguishes this (enter my workspace)
@@ -53,52 +54,52 @@ return [
         'all' => 'All :teams',
         // "Mine" here means owned, not merely joined — everything on the panel is already joined.
         'mine' => 'My :teams',
-        'members' => '{0} No members|{1} 1 member|[2,*] :count members',
+        'members' => '{0} No :members|{1} 1 :member|[2,*] :count :members',
     ],
 
     'dashboard' => [
         'subtitle' => ':Team dashboard',
-        'members' => 'Members',
+        'members' => ':Members',
         'placeholder' => 'This :team’s content will live here.',
     ],
 
     'members' => [
-        'title' => 'Members',
+        'title' => ':Members',
         'description' => 'Manage who belongs to :name and their roles.',
-        'search' => 'Search members…',
-        'empty' => 'No members found',
+        'search' => 'Search :members…',
+        'empty' => 'No :members found',
         'role' => 'Role',
         'roles' => 'Roles',
         'no_role' => 'No role',
         'no_roles' => 'No roles',
-        'owners' => 'Owners',
+        'owners' => ':Owners',
         'active' => 'Active',
         'suspended' => 'Suspended',
-        'primary_owner' => 'Primary Owner',
-        'owner' => 'Owner',
+        'primary_owner' => 'Primary :Owner',
+        'owner' => ':Owner',
         'change_role' => 'Change role',
         'change_roles' => 'Change roles',
         'roles_updated' => 'Roles updated',
-        'make_owner' => 'Make owner',
-        'make_owner_confirm' => 'Make :member a co-owner of :name? Owners bypass every :team permission; only the primary owner can demote them.',
-        'made_owner' => ':member is now an owner',
-        'revoke_owner' => 'Remove as owner',
-        'revoke_owner_confirm' => 'Remove :member as an owner of :name? They stay a member.',
-        'revoked_owner' => ':member is no longer an owner',
+        'make_owner' => 'Make :owner',
+        'make_owner_confirm' => 'Make :person a co-:owner of :name? :Owners bypass every :team permission; only the primary :owner can demote them.',
+        'made_owner' => ':person is now an :owner',
+        'revoke_owner' => 'Remove as :owner',
+        'revoke_owner_confirm' => 'Remove :person as an :owner of :name? They stay a :member.',
+        'revoked_owner' => ':person is no longer an :owner',
         'transfer' => 'Transfer ownership',
-        'transfer_confirm' => 'Make :member the primary owner of :name? The current primary owner stays on as a co-owner.',
-        'transferred' => ':member is now the primary owner',
+        'transfer_confirm' => 'Make :person the primary :owner of :name? The current primary :owner stays on as a co-:owner.',
+        'transferred' => ':person is now the primary :owner',
         'suspend' => 'Suspend',
-        'suspend_confirm' => 'Suspend :member from :name? They keep their membership and role but can’t use the :team until reinstated.',
-        'suspended_notice' => ':member suspended',
+        'suspend_confirm' => 'Suspend :person from :name? They keep their membership and role but can’t use the :team until reinstated.',
+        'suspended_notice' => ':person suspended',
         'reinstate' => 'Reinstate',
-        'reinstated' => ':member reinstated',
+        'reinstated' => ':person reinstated',
         'remove' => 'Remove',
-        'remove_confirm' => 'Remove :member from :name?',
-        'removed' => 'Member removed',
-        'add' => 'Add member',
-        'add_heading' => 'Add a member to :name',
-        'added' => ':member added to :name',
+        'remove_confirm' => 'Remove :person from :name?',
+        'removed' => ':Member removed',
+        'add' => 'Add :member',
+        'add_heading' => 'Add a :member to :name',
+        'added' => ':person added to :name',
     ],
 
     'invitations' => [
@@ -111,7 +112,7 @@ return [
         'sent' => 'Sent',
         'invite' => 'Invite',
         'invite_heading' => 'Invite someone to :name',
-        'already_member' => 'That person is already a member.',
+        'already_member' => 'That person is already a :member.',
         'sent_to' => 'Invitation sent to :email',
         'resend' => 'Resend',
         'resent_to' => 'Invitation re-sent to :email',
@@ -149,10 +150,10 @@ return [
         'search' => 'Search :teams…',
         'empty' => 'No :teams found',
         'name' => 'Name',
-        'owner' => 'Owner',
-        'primary_owner' => 'Primary owner',
-        'members' => 'Members',
-        'owners' => 'Owners',
+        'owner' => ':Owner',
+        'primary_owner' => 'Primary :owner',
+        'members' => ':Members',
+        'owners' => ':Owners',
         'suspended' => 'Suspended',
         'pending_invitations' => 'Pending invitations',
         'created' => 'Created',
@@ -161,7 +162,7 @@ return [
         'slug_help' => 'The :team’s URL segment.',
         'active' => 'Active',
         'inactive' => 'Inactive',
-        'active_help' => 'Inactive :teams keep their members but can’t be entered.',
+        'active_help' => 'Inactive :teams keep their :members but can’t be entered.',
         'add' => 'Add :Team',
         'created_notice' => ':Team created',
         'updated_notice' => ':Team updated',
@@ -173,31 +174,31 @@ return [
         'details' => ':Team details',
         'danger_zone' => 'Danger zone',
         'danger_help' => 'Deactivate first, then delete. A deleted :team can be restored from the trash.',
-        'deactivate_confirm' => 'Deactivate :name? Its members keep their membership but can’t use it until it’s reactivated.',
-        'reactivate_confirm' => 'Reactivate :name? Its members regain access immediately.',
+        'deactivate_confirm' => 'Deactivate :name? Its :members keep their membership but can’t use it until it’s reactivated.',
+        'reactivate_confirm' => 'Reactivate :name? Its :members regain access immediately.',
         'activated' => ':name activated',
         'deactivated' => ':name deactivated',
         'deactivate_first' => 'Deactivate the :team first.',
         'deactivate_before_delete' => 'Deactivate the :team before deleting it.',
         'delete' => 'Delete :Team',
-        'delete_warning' => '{0} Delete :name? It can be restored from the trash.|{1} Delete :name? Its one member loses access until it is restored from the trash.|[2,*] Delete :name? Its :count members lose access until it is restored from the trash.',
-        'force_delete_warning' => '{0} Permanently delete :name? This cannot be undone.|{1} Permanently delete :name? Its one member’s membership and role are erased with it. This cannot be undone.|[2,*] Permanently delete :name? Its :count members’ memberships and roles are erased with it. This cannot be undone.',
+        'delete_warning' => '{0} Delete :name? It can be restored from the trash.|{1} Delete :name? Its one :member loses access until it is restored from the trash.|[2,*] Delete :name? Its :count :members lose access until it is restored from the trash.',
+        'force_delete_warning' => '{0} Permanently delete :name? This cannot be undone.|{1} Permanently delete :name? Its one :member’s membership and role are erased with it. This cannot be undone.|[2,*] Permanently delete :name? Its :count :members’ memberships and roles are erased with it. This cannot be undone.',
     ],
 
     'memberships' => [
         'title' => ':Team memberships',
-        'none' => 'Not a member of any :team.',
+        'none' => 'Not a :member of any :team.',
     ],
 
     'roles' => [
-        'scope_description' => 'Define what members of a :team can do. These roles are shared by every :team; the owner bypasses them.',
+        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team; the :owner bypasses them.',
     ],
 
     'permissions' => [
-        'manage_members' => 'Manage Members',
-        'invite_members' => 'Invite Members',
+        'manage_members' => 'Manage :Members',
+        'invite_members' => 'Invite :Members',
         'update_team' => 'Update :Team Settings',
-        'category_members' => 'Members',
+        'category_members' => ':Members',
         'category_settings' => ':Team Settings',
     ],
 

@@ -152,7 +152,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->label(team_trans('members.make_owner'))
                         ->icon('heroicon-o-key')
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => team_trans('members.make_owner_confirm', ['member' => $record->name, 'name' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.make_owner_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => $this->canManageOwners() && ! $this->isOwner($record))
                         ->action(function (User $record): void {
                             abort_unless($this->canManageOwners(), 403);
@@ -161,7 +161,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->ownerIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(team_trans('members.made_owner', ['member' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.made_owner', ['person' => $record->name]))->success()->send();
                         }),
 
                     Action::make('revokeOwner')
@@ -169,7 +169,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->icon('heroicon-o-key')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => team_trans('members.revoke_owner_confirm', ['member' => $record->name, 'name' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.revoke_owner_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => $this->canManageOwners() && $this->isOwner($record) && ! $this->team->isPrimaryOwner($record))
                         ->action(function (User $record): void {
                             abort_unless($this->canManageOwners(), 403);
@@ -178,7 +178,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->ownerIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(team_trans('members.revoked_owner', ['member' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.revoked_owner', ['person' => $record->name]))->success()->send();
                         }),
 
                     Action::make('transferOwnership')
@@ -186,7 +186,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->icon('heroicon-o-arrow-right-circle')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => team_trans('members.transfer_confirm', ['member' => $record->name, 'name' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.transfer_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => $this->canTransferOwnership() && ! $this->team->isPrimaryOwner($record))
                         ->action(function (User $record): void {
                             abort_unless($this->canTransferOwnership(), 403);
@@ -195,7 +195,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->ownerIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(team_trans('members.transferred', ['member' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.transferred', ['person' => $record->name]))->success()->send();
                         }),
 
                     // The team-level counterpart of deactivating an account: access withheld, everything else kept.
@@ -204,7 +204,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->icon('heroicon-o-pause-circle')
                         ->color(DaisyColor::WARNING->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => team_trans('members.suspend_confirm', ['member' => $record->name, 'name' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.suspend_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => ! $this->isSuspended($record)
                             && ! $this->team->isPrimaryOwner($record)
                             && (! $this->isOwner($record) || $this->canManageOwners()))
@@ -216,7 +216,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->suspendedIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(team_trans('members.suspended_notice', ['member' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.suspended_notice', ['person' => $record->name]))->success()->send();
                         }),
 
                     Action::make('reinstate')
@@ -232,7 +232,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                             $this->suspendedIds = null;
                             $this->dispatch('team-members-updated');
 
-                            Notification::make()->title(team_trans('members.reinstated', ['member' => $record->name]))->success()->send();
+                            Notification::make()->title(team_trans('members.reinstated', ['person' => $record->name]))->success()->send();
                         }),
 
                     Action::make('remove')
@@ -240,7 +240,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->icon('heroicon-o-user-minus')
                         ->color(DaisyColor::ERROR->toFilamentColor())
                         ->requiresConfirmation()
-                        ->modalDescription(fn (User $record): string => team_trans('members.remove_confirm', ['member' => $record->name, 'name' => $this->team->name]))
+                        ->modalDescription(fn (User $record): string => team_trans('members.remove_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         // Never the primary owner; a co-owner only by someone who could demote them.
                         ->hidden(fn (User $record): bool => $this->team->isPrimaryOwner($record)
                             || ($this->isOwner($record) && ! $this->canManageOwners()))
@@ -294,7 +294,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                 $this->dispatch('team-members-updated');
 
                 Notification::make()
-                    ->title(team_trans('members.added', ['member' => $user->name, 'name' => $this->team->name]))
+                    ->title(team_trans('members.added', ['person' => $user->name, 'name' => $this->team->name]))
                     ->success()
                     ->send();
             });

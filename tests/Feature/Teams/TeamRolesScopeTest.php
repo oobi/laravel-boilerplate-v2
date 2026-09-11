@@ -163,7 +163,7 @@ class TeamRolesScopeTest extends TestCase
             ->assertSet('scopeKey', Team::ROLE_SCOPE)
             ->assertSet('selectedRoleId', (string) $member->id)
             ->assertSeeHtml('role="tab"')
-            ->assertSee(config('teams.labels.singular'))
+            ->assertSee(config('teams.labels.team.singular'))
             ->assertDontSee('Support');
     }
 

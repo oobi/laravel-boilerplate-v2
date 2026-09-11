@@ -87,5 +87,11 @@ Independent of the recipes above, tune per project:
 | Setting | Why |
 |---|---|
 | `TEAMS_LABEL_SINGULAR` / `TEAMS_LABEL_PLURAL` | Rename "team" throughout (e.g. "Salon" / "Salons") without touching code. |
+| `TEAMS_MEMBER_LABEL_SINGULAR` / `_PLURAL` | Rename "member" (e.g. "Stylist" / "Stylists") — headings, buttons, emails. |
+| `TEAMS_OWNER_LABEL_SINGULAR` / `_PLURAL` | Rename "owner" (e.g. "Manager" / "Managers"), where a franchise "owns" a location. |
 | `TEAMS_MAX_PER_USER` | Cap how many teams one user may own under self-service (unset = unlimited). |
 | `TEAMS_MULTIPLE_ROLES` | Allow a member several team roles at once, or exactly one ("a position"). |
+
+The three label pairs also drive the **seeded default role names** — a relabelled
+install seeds "Salon Admin" / "Stylist" rather than "Team Admin" / "Member".
+Roles are editable data afterwards, so this is just a coherent starting point.
