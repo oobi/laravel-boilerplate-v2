@@ -42,9 +42,12 @@
         <env name="TEAMS_OWNER_LABEL_SINGULAR" value="Owner"/>
         <env name="TEAMS_OWNER_LABEL_PLURAL" value="Owners"/>
         <env name="TEAMS_CREATION" value="self-service"/>
+        <env name="TEAMS_OWNERSHIP" value="sovereign"/>
         <env name="TEAMS_MEMBER_INVITATIONS" value="true"/>
         <env name="TEAMS_ADMIN_INVITATIONS" value="true"/>
         <env name="TEAMS_MAX_PER_USER" value="null"/>
         <env name="TEAMS_MULTIPLE_ROLES" value="false"/>
+        <env name="TEAMS_PERSONAL_TEAMS" value="false"/>
+        <env name="TEAMS_DOMAINS_ENABLED" value="false"/>
     </php>
 </phpunit>
