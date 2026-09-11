@@ -15,16 +15,20 @@ use function Laravel\Prompts\text;
 use function Laravel\Prompts\warning;
 
 /**
- * First-run wizard for a fresh clone: asks the key setup questions (app
- * identity, database, and the teams tier recipe — see docs/config-recipes.md),
- * writes the answers to `.env`, and offers to finalise (app key, migrate+seed,
- * first admin) so the tree is ready to roll. For the vanilla recipe it hands
- * off to bp:remove-teams. The structural code choices a login-only app needs
- * (public registration, public landing) can't be auto-applied safely yet, so
- * it prints exactly what to do.
+ * First-run wizard for a fresh clone: asks the key shaping questions — app
+ * name, and the teams tier recipe with optional relabelling (see
+ * docs/config-recipes.md) — and writes them to `.env`. For the vanilla recipe
+ * it hands off to bp:remove-teams, and it generates the app key if one is
+ * missing.
+ *
+ * It does what it safely can, then prints the finishing steps it leaves to you:
+ * it never runs your database or creates users (those stay explicit commands).
+ * The structural code choices a login-only app needs (public registration is a
+ * Fortify edit, the public landing page a scaffold decision) can't be
+ * auto-applied safely either, so it prints exactly what to do.
  *
  * Interactive by default; `--recipe=` pre-answers the shape and `--force` runs
- * non-interactively (keeps current app/db settings, skips the finalise steps).
+ * non-interactively (keeps the current app name, no prompts).
  */
 class SetupCommand extends Command
 {
@@ -56,7 +60,6 @@ class SetupCommand extends Command
         $config = self::RECIPES[$recipe];
 
         $this->askApplication();
-        $this->askDatabase();
         $this->collectRecipe($config);
 
         if ($this->option('dry-run')) {
@@ -66,29 +69,39 @@ class SetupCommand extends Command
             if (($config['teams'] ?? true) === false) {
                 $this->line('  …and run bp:remove-teams.');
             }
+        } else {
+            if (! $this->option('force') && ! confirm('Write this configuration to .env?', default: true)) {
+                warning('Aborted — nothing changed.');
 
-            return self::SUCCESS;
+                return self::SUCCESS;
+            }
+
+            File::put(base_path('.env'), (new EnvEditor)->apply(File::get(base_path('.env')), $this->env));
+            info('.env configured for the '.$recipe.' recipe.');
+
+            if (($config['teams'] ?? true) === false && $this->call('bp:remove-teams', ['--force' => true]) !== self::SUCCESS) {
+                return self::FAILURE;
+            }
+
+            $this->ensureAppKey();
         }
 
-        if (! $this->option('force') && ! confirm('Write this configuration to .env?', default: true)) {
-            warning('Aborted — nothing changed.');
-
-            return self::SUCCESS;
-        }
-
-        File::put(base_path('.env'), (new EnvEditor)->apply(File::get(base_path('.env')), $this->env));
-        info('.env configured for the '.$recipe.' recipe.');
-
-        if (($config['teams'] ?? true) === false && $this->call('bp:remove-teams', ['--force' => true]) !== self::SUCCESS) {
-            return self::FAILURE;
-        }
-
-        $this->ensureAppKey();
-        $this->finalise();
+        // Guidance + finishing steps print on both paths, so a dry run previews the whole picture.
         $this->structuralGuidance($config);
-        $this->readyToRoll();
+        $this->nextSteps();
 
         return self::SUCCESS;
+    }
+
+    /** The one safe thing we can finish automatically — a fresh clone needs a key. */
+    private function ensureAppKey(): void
+    {
+        if (config('app.key')) {
+            return;
+        }
+
+        info('Generating the application key…');
+        $this->call('key:generate', ['--force' => true]);
     }
 
     private function resolveRecipe(): ?string
@@ -114,26 +127,6 @@ class SetupCommand extends Command
         }
 
         $this->env['APP_NAME'] = text('Application name', default: (string) config('app.name'), required: true);
-        $this->env['APP_URL'] = text('Application URL', default: (string) config('app.url'));
-    }
-
-    private function askDatabase(): void
-    {
-        if ($this->option('force')) {
-            return;
-        }
-
-        if (! confirm('Use SQLite for local development? (quick start — otherwise keep your current DB_* settings)', default: true)) {
-            return;
-        }
-
-        $sqlite = database_path('database.sqlite');
-        if (! File::exists($sqlite)) {
-            File::put($sqlite, '');
-        }
-
-        $this->env['DB_CONNECTION'] = 'sqlite';
-        $this->env['DB_DATABASE'] = $sqlite;
     }
 
     /** @param array{creation?: string, members?: bool, admins?: bool, fallback: string, teams?: bool} $config */
@@ -158,34 +151,9 @@ class SetupCommand extends Command
             return;
         }
 
-        foreach (['TEAMS' => 'Team', 'TEAMS_MEMBER' => 'Member', 'TEAMS_OWNER' => 'Owner'] as $prefix => $noun) {
-            $plural = $noun === 'Team' ? 'Teams' : ($noun === 'Member' ? 'Members' : 'Owners');
-            $this->env[$prefix.'_LABEL_SINGULAR'] = text($noun.' — singular', default: $noun, required: true);
-            $this->env[$prefix.'_LABEL_PLURAL'] = text($noun.' — plural', default: $plural, required: true);
-        }
-    }
-
-    private function ensureAppKey(): void
-    {
-        if (config('app.key')) {
-            return;
-        }
-
-        $this->call('key:generate', ['--force' => true]);
-    }
-
-    private function finalise(): void
-    {
-        if ($this->option('force')) {
-            return;
-        }
-
-        if (confirm('Run database migrations and seed now?', default: true)) {
-            $this->call('migrate', ['--seed' => true, '--force' => true]);
-        }
-
-        if (confirm('Create the first admin user now?', default: true)) {
-            $this->call('bp:make-admin');
+        foreach (['TEAMS' => ['Team', 'Teams'], 'TEAMS_MEMBER' => ['Member', 'Members'], 'TEAMS_OWNER' => ['Owner', 'Owners']] as $prefix => [$singular, $plural]) {
+            $this->env[$prefix.'_LABEL_SINGULAR'] = text($singular.' — singular', default: $singular, required: true);
+            $this->env[$prefix.'_LABEL_PLURAL'] = text($singular.' — plural', default: $plural, required: true);
         }
     }
 
@@ -200,7 +168,7 @@ class SetupCommand extends Command
         warning('This recipe is login-only. Two structural edits are yours to make (one-time, see docs/config-recipes.md):');
 
         if (($config['registration'] ?? true) === false) {
-            $this->line('  • Disable public registration — remove `Features::registration()` from config/fortify.php.');
+            $this->line('  • Disable public registration — remove `Features::registration()` from config/fortify.php (and any "Register" links in the auth/welcome views).');
         }
 
         if (($config['landing'] ?? true) === false) {
@@ -208,12 +176,12 @@ class SetupCommand extends Command
         }
     }
 
-    private function readyToRoll(): void
+    private function nextSteps(): void
     {
         $this->newLine();
-        $this->line('Ready to roll — remaining setup steps if you skipped them:');
-        $this->line('  • npm install && npm run build   (Vite manifest)');
-        $this->line('  • php artisan migrate --seed');
-        $this->line('  • php artisan bp:make-admin');
+        info('To finish setup, run:');
+        $this->line('  • npm install && npm run build   (build the front-end assets)');
+        $this->line('  • php artisan migrate --seed     (create and seed the database)');
+        $this->line('  • php artisan bp:make-admin      (create the first admin user)');
     }
 }
