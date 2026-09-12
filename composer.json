@@ -76,6 +76,7 @@
             "@php artisan config:clear --ansi",
             "@php artisan test --parallel"
         ],
+        "test:summary": "@php scripts/test-summary.php",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",

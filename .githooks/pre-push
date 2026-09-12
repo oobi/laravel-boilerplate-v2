@@ -8,12 +8,16 @@
 # The suite runs in parallel (brianium/paratest) across all available cores.
 # Tests use an in-memory SQLite database, so each worker gets its own isolated
 # schema with no cross-process interference.
+#
+# Failures print as a compact summary rather than PHPUnit's full assertion
+# diffs — a blocked push with a dozen failures should stay readable. Re-run a
+# single one with `php artisan test --filter=<name>` to see the detail.
 
 . "$(dirname "$0")/php-path.sh"
 require_php
 
 echo "Running tests before push..."
-composer test
+composer test:summary
 
 if [ $? -ne 0 ]; then
     echo ""
