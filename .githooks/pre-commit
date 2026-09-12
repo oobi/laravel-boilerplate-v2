@@ -1,47 +1,29 @@
 #!/bin/sh
-# Runs Pint + the test suite before allowing a commit. Bypass with `git commit --no-verify`.
+# Formats staged PHP files with Pint. Bypass with `git commit --no-verify`.
+#
+# Deliberately fast: the test suite runs in .githooks/pre-push, not here, so
+# committing stays cheap and you can commit as often as you like. Nothing
+# broken reaches a remote — push is the gate, commit is not.
 
-# A GUI/IDE git client can launch this hook with a minimal PATH that omits the
-# usual PHP locations, so `php` — and thus `vendor/bin/pint` — is not found and
-# the commit aborts with a misleading "Pint failed". We prepend the common
-# install paths and keep the caller's $PATH intact so the hook works however the
-# commit was triggered, on any OS:
-#   - macOS: GUI apps inherit a stripped launchd PATH without Homebrew/Herd.
-#   - Windows: hooks run under Git Bash, which inherits the Windows system PATH
-#     where php normally lives; the *nix paths below simply don't exist and are
-#     skipped. Add your php dir here (MSYS form, e.g. /c/herd/bin) if it isn't
-#     already on that PATH.
-export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/Library/Application Support/Herd/bin:$HOME/.config/herd/bin:$PATH"
-
-if ! command -v php >/dev/null 2>&1; then
-    echo "Commit aborted: php was not found on PATH."
-    echo "Commit from a terminal where php is available, or add its location to this hook's PATH (see the comment in .githooks/pre-commit)."
-    exit 1
-fi
+. "$(dirname "$0")/php-path.sh"
+require_php
 
 STAGED_PHP_FILES=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
 
-if [ -n "$STAGED_PHP_FILES" ]; then
-    echo "Running Pint on staged PHP files..."
-    echo "$STAGED_PHP_FILES" | xargs vendor/bin/pint
-
-    if [ $? -ne 0 ]; then
-        echo ""
-        echo "Commit aborted: Pint failed. Fix the errors above."
-        exit 1
-    fi
-
-    # Re-stage any files Pint reformatted so the fixes are included in the commit.
-    echo "$STAGED_PHP_FILES" | xargs git add
+if [ -z "$STAGED_PHP_FILES" ]; then
+    exit 0
 fi
 
-echo "Running tests before commit..."
-composer test
+echo "Running Pint on staged PHP files..."
+echo "$STAGED_PHP_FILES" | xargs vendor/bin/pint
 
 if [ $? -ne 0 ]; then
     echo ""
-    echo "Commit aborted: tests failed. Fix the failures or use --no-verify to skip this check."
+    echo "Commit aborted: Pint failed. Fix the errors above."
     exit 1
 fi
+
+# Re-stage any files Pint reformatted so the fixes are included in the commit.
+echo "$STAGED_PHP_FILES" | xargs git add
 
 exit 0

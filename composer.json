@@ -35,6 +35,7 @@
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.4",
+        "brianium/paratest": "^7.8",
         "concise-dot-digital/theme-demo": "@dev",
         "fakerphp/faker": "^1.23",
         "laravel/boost": "^2.7",
@@ -73,7 +74,7 @@
         "dev:stop": "lsof -ti:8000,5173 | xargs kill -9 2>/dev/null; pkill -f 'artisan queue:listen' 2>/dev/null; pkill -f 'artisan pail' 2>/dev/null; echo 'Dev server, queue listener, log tailer and Vite stopped (if they were running).'",
         "test": [
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "@php artisan test --parallel"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
