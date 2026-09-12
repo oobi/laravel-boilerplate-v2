@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Policies;
 
+use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamCreationMode;
@@ -22,7 +23,7 @@ use Concise\Teams\Models\Team;
  */
 class TeamPolicy
 {
-    /** Never granted to a co-owner or through a role — only `teams.user_id` (or a system admin's own gate). */
+    /** Never granted to a co-owner or through a team role — only `teams.user_id`, or a system admin via before(). */
     private const PRIMARY_OWNER_ONLY = [
         TeamAbility::MANAGE_OWNERS->value,
         TeamAbility::TRANSFER_OWNERSHIP->value,
@@ -35,12 +36,19 @@ class TeamPolicy
             return null;
         }
 
-        // Membership is the prerequisite for every team ability: a stale role
-        // row (any detach that isn't removeMember(), an import, a support
+        // A system admin (`manage teams`, answered at the system scope even
+        // inside a team route) may do anything to any team, member or not — the
+        // one place that authority is expressed, so components check a single
+        // TeamAbility and never OR the system permission themselves. The
+        // super-admin bypass has already run before this.
+        if ($user->hasSystemPermission(SystemPermission::MANAGE_TEAMS)) {
+            return true;
+        }
+
+        // Membership is the prerequisite for every other team ability: a stale
+        // role row (any detach that isn't removeMember(), an import, a support
         // script) must never keep granting after the person has left, and a
-        // suspended member has no authority until reinstated. System admins
-        // don't come through here — their `manage teams` gate is checked first
-        // at the call sites — and the global super-admin bypass already ran.
+        // suspended member has no authority until reinstated.
         if (! $team->isActiveMember($user)) {
             return false;
         }

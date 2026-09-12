@@ -80,6 +80,17 @@ guard-mismatched permission (confirmed to happen even for an already-seeded
 permission inside a Livewire component test) — turning an authorization
 check into a 500 instead of a deny. See `.ai/rules/policies.md`.
 
+On a `User`, ask **`$user->hasSystemPermission(SystemPermission::X)`** rather
+than `checkPermissionTo()` directly. It goes through the Gate, so every hook
+that qualifies the answer applies — the super-admin bypass, and (with the
+teams tier installed) the pin that resolves a `SystemPermission` at the
+system scope even inside a team route. spatie answers every check at the
+*current* permissions team id, and team routes set that to the team for the
+whole request, where a system role is invisible; the teams provider's
+`Gate::before` intercepts `SystemPermission` names and answers them at scope 0
+via `TeamContext::runSystem()`. Team permissions never carry `SystemPermission`
+names, so nothing else routes through it.
+
 Super admins bypass all of this via a single, hardcoded
 `Gate::before()` in `AppServiceProvider::registerAuthorization()` — it's a
 boolean flag on `User`, never a role, and is excluded from a small list of

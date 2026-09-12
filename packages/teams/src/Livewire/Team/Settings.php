@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Team;
 
-use App\Enums\SystemPermission;
 use App\Support\Filament\AdminAction;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
@@ -68,27 +67,22 @@ class Settings extends Component implements HasActions, HasSchemas
         return Gate::allows(TeamAbility::UPDATE, $this->team);
     }
 
-    /** Whether to render the domains section (manage-domains permission / system admin). */
+    /** Whether to render the domains section (manage-domains permission; a system admin via TeamPolicy::before). */
     public function canViewDomains(): bool
     {
-        return DomainPolicy::enabled() && (
-            Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team)
-        );
+        return DomainPolicy::enabled() && Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
-    /** Whether to render the ownership section: the primary owner or a system admin. */
+    /** Whether to render the ownership section: the primary owner, or a system admin via TeamPolicy::before. */
     public function canManageOwnership(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
+        return Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
     }
 
-    /** May the viewer delete the team? The primary owner (when `teams.owner_can_delete` allows) or a system admin. */
+    /** May the viewer delete the team? The primary owner (when `teams.owner_can_delete` allows), or a system admin via TeamPolicy::before. */
     public function canDelete(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::DELETE, $this->team);
+        return Gate::allows(TeamAbility::DELETE, $this->team);
     }
 
     public function form(Schema $schema): Schema

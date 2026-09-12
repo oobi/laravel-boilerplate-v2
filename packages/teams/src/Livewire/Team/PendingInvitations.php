@@ -128,9 +128,19 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
         return view('teams::livewire.team.pending-invitations');
     }
 
+    /**
+     * Which invitation switch applies is decided by WHO the viewer is — a system
+     * admin is governed by `invitations.admins`, a member by `invitations.members`
+     * (InvitationPolicy). That's why this one asks the system permission
+     * directly rather than relying on TeamPolicy::before granting `invite` to
+     * admins: the admin switch must stay authoritative for them.
+     */
     private function canManage(): bool
     {
-        return (InvitationPolicy::adminsMayInvite() && Gate::allows(SystemPermission::MANAGE_TEAMS->value))
-            || (InvitationPolicy::membersMayInvite() && Gate::allows(TeamAbility::INVITE, $this->team));
+        if (Gate::allows(SystemPermission::MANAGE_TEAMS->value)) {
+            return InvitationPolicy::adminsMayInvite();
+        }
+
+        return InvitationPolicy::membersMayInvite() && Gate::allows(TeamAbility::INVITE, $this->team);
     }
 }

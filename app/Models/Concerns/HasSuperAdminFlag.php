@@ -20,6 +20,6 @@ trait HasSuperAdminFlag
 
     public function canAccessAdmin(): bool
     {
-        return $this->isSuperAdmin() || $this->checkPermissionTo(SystemPermission::ACCESS_ADMIN_PANEL->value);
+        return $this->isSuperAdmin() || $this->hasSystemPermission(SystemPermission::ACCESS_ADMIN_PANEL);
     }
 }

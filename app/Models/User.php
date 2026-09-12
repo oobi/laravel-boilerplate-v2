@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -172,7 +173,20 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return $this->isSuperAdmin() || $this->checkPermissionTo(SystemPermission::IMPERSONATE_USERS->value);
+        return $this->isSuperAdmin() || $this->hasSystemPermission(SystemPermission::IMPERSONATE_USERS);
+    }
+
+    /**
+     * Whether the user holds an application-wide permission, asked through the
+     * Gate rather than spatie directly so every hook that qualifies the answer
+     * applies — the super-admin bypass, and (with the teams tier) the pin that
+     * resolves a SystemPermission at the system scope even inside a team route.
+     * Use this, not checkPermissionTo(), for any SystemPermission check on a
+     * User; checkPermissionTo() answers at whatever scope is current.
+     */
+    public function hasSystemPermission(SystemPermission $permission): bool
+    {
+        return Gate::forUser($this)->allows($permission->value);
     }
 
     /**

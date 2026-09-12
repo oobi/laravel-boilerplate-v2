@@ -307,17 +307,15 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         return $this->teamRoles()->map(fn (Role $role): string => $role->name)->all();
     }
 
-    /** May the viewer see the roster at all? (Managing implies viewing; owners always can.) */
+    /** May the viewer see the roster at all? One ability — a system admin is answered by TeamPolicy::before(). */
     private function canView(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::VIEW_MEMBERS, $this->team);
+        return Gate::allows(TeamAbility::VIEW_MEMBERS, $this->team);
     }
 
     private function canManage(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_MEMBERS, $this->team);
+        return Gate::allows(TeamAbility::MANAGE_MEMBERS, $this->team);
     }
 
     /**
@@ -339,11 +337,10 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         return $this->isOwner($member) ? $this->canManageOwners() : $this->canManage();
     }
 
-    /** The primary owner or a system admin — see ManageOwnership for the ownership acts themselves. */
+    /** The primary owner or a system admin (via TeamPolicy::before) — see ManageOwnership for the ownership acts themselves. */
     private function canManageOwners(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
+        return Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
     }
 
     /** Members holding the named role in this team (read from the pivot, outside the team scope). */

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Team;
 
-use App\Enums\SystemPermission;
 use App\Models\User;
 use App\Support\Filament\AdminAction;
 use App\Support\Theme\DaisyColor;
@@ -62,17 +61,15 @@ class ManageOwnership extends Component implements HasActions, HasSchemas
     #[On('team-members-updated')]
     public function refreshOwners(): void {}
 
-    /** The primary owner (responsibility anchor) or a system admin. */
+    /** The primary owner (responsibility anchor), or a system admin via TeamPolicy::before. */
     public function canManageOwners(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
+        return Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
     }
 
     public function canTransferOwnership(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::TRANSFER_OWNERSHIP, $this->team);
+        return Gate::allows(TeamAbility::TRANSFER_OWNERSHIP, $this->team);
     }
 
     public function primaryOwner(): User

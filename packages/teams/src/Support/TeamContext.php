@@ -70,6 +70,33 @@ class TeamContext
         }
     }
 
+    /**
+     * Run a callback with spatie's permission scope pinned to the system scope
+     * (team id 0), then restore — without touching the active team, so
+     * storage/cache scoping is unaffected. This is how a SystemPermission is
+     * answered from inside a team route: a system role is assigned at scope 0
+     * and would otherwise be invisible while a team is the current scope.
+     */
+    public function runSystem(callable $callback): mixed
+    {
+        $registrar = app(PermissionRegistrar::class);
+        $previous = $registrar->getPermissionsTeamId();
+
+        $registrar->setPermissionsTeamId(TeamPermissionResolver::SYSTEM_SCOPE);
+
+        try {
+            return $callback();
+        } finally {
+            $registrar->setPermissionsTeamId($previous);
+        }
+    }
+
+    /** Whether spatie's permission scope is currently a team's, rather than the system scope. */
+    public function inTeamScope(): bool
+    {
+        return (int) app(PermissionRegistrar::class)->getPermissionsTeamId() !== TeamPermissionResolver::SYSTEM_SCOPE;
+    }
+
     /** A filesystem confined to the current team's storage area (fail-loud). */
     public function disk(): Filesystem
     {
