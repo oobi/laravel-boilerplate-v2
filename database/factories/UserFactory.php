@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -73,17 +74,19 @@ class UserFactory extends Factory
         });
     }
 
-    /** A non-super-admin actor with a typical "manage users" role, for exercising the coarse permission checks in tests. */
+    /**
+     * A non-super-admin actor with a typical "manage users" role, for exercising
+     * the coarse permission checks in tests. Built from SystemRolesSeeder's
+     * definition (read, not run — tests don't seed) so the fixture can't drift
+     * from what a fresh install actually ships.
+     */
     public function support(): static
     {
         return $this->afterCreating(function (User $user): void {
             $role = Role::findOrCreate('Support');
-            $role->givePermissionTo([
-                Permission::findOrCreate(SystemPermission::ACCESS_ADMIN_PANEL->value),
-                Permission::findOrCreate(SystemPermission::MANAGE_USERS->value),
-                Permission::findOrCreate(SystemPermission::SUSPEND_USERS->value),
-                Permission::findOrCreate(SystemPermission::IMPERSONATE_USERS->value),
-            ]);
+            $role->givePermissionTo(collect(SystemRolesSeeder::defaults()['Support']['permissions'])
+                ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value))
+                ->all());
 
             $user->assignRole($role);
         });

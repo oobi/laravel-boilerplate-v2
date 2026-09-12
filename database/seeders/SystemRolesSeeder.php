@@ -6,6 +6,7 @@ use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Support\Theme\DaisyColor;
 use Illuminate\Database\Seeder;
+use RuntimeException;
 use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -23,19 +24,24 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class SystemRolesSeeder extends Seeder
 {
+    /** The seeded Administrator role's name — what `bp:make-admin --administrator` assigns. */
+    public const ADMINISTRATOR = 'Administrator';
+
     /**
-     * Role name => badge colour and the SystemPermission cases it holds.
+     * Role name => badge colour and the SystemPermission cases it holds. Public
+     * and static so it is the ONE definition of these roles: UserFactory's
+     * `support()` state builds its fixture from it rather than repeating the list.
      *
      * @return array<string, array{color: DaisyColor, permissions: list<SystemPermission>}>
      */
-    protected function defaults(): array
+    public static function defaults(): array
     {
         return [
             // Everything a role can grant. The gap from a super admin is exactly
             // the acts that aren't permissions — managing roles, granting super
             // admin, direct password resets, the policy bypass itself — so an
             // Administrator runs the platform without holding the master key.
-            'Administrator' => [
+            self::ADMINISTRATOR => [
                 'color' => DaisyColor::ERROR,
                 'permissions' => SystemPermission::cases(),
             ],
@@ -61,17 +67,29 @@ class SystemRolesSeeder extends Seeder
 
         $guard = Guard::getDefaultName(Role::class);
 
-        foreach ($this->defaults() as $name => $role) {
+        foreach (self::defaults() as $name => $role) {
+            // Role names are unique per guard across every scope (an add-on's
+            // team roles share the table): a clash is a real conflict — say so,
+            // as Team::createRole() does, rather than surface a constraint error.
+            $existing = Role::query()->where('name', $name)->where('guard_name', $guard)->first();
+
+            if ($existing !== null) {
+                throw new RuntimeException(sprintf(
+                    "Cannot seed system role '%s': a role with that name already exists (scope '%s') and role names are unique.",
+                    $name,
+                    $existing->scope,
+                ));
+            }
+
             $created = Role::create([
                 'name' => $name,
                 'guard_name' => $guard,
                 'color' => $role['color'],
             ]);
 
-            $created->syncPermissions(array_map(
-                fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value, $guard),
-                $role['permissions'],
-            ));
+            $created->syncPermissions(collect($role['permissions'])
+                ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value, $guard))
+                ->all());
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

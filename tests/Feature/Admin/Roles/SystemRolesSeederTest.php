@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Support\Theme\DaisyColor;
 use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use RuntimeException;
 use Tests\TestCase;
 
 /**
@@ -61,6 +62,18 @@ class SystemRolesSeederTest extends TestCase
         $this->runSeeder();
 
         $this->assertSame(2, Role::systemRoles()->count());
+    }
+
+    public function test_it_fails_clearly_when_a_default_name_is_taken_in_another_scope(): void
+    {
+        // Role names are unique per guard across scopes; a clash is a real
+        // conflict and gets a message, not a constraint error.
+        Role::create(['name' => 'Administrator', 'guard_name' => 'web', 'scope' => 'team']);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches("/scope 'team'/");
+
+        $this->runSeeder();
     }
 
     public function test_a_deleted_default_stays_deleted(): void

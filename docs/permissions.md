@@ -58,6 +58,23 @@ foreach (SystemPermission::cases() as $permission) {
 (`afterRefreshingDatabase()`), so feature tests never need their own
 `$this->seed()` call for permissions to exist.
 
+### Default roles: `SystemRolesSeeder`
+
+A fresh install also gets two system roles from
+`database/seeders/SystemRolesSeeder.php`: **Administrator** (every
+`SystemPermission` — the gap from a super admin is exactly the acts that
+aren't permissions: managing roles, granting super admin, direct password
+resets) and a limited **Support** (access the panel, manage and suspend users,
+impersonate). They are seeded **only into an empty set of system roles**;
+after that the database is the source of truth and renaming, deleting or
+replacing them is safe — nothing resurrects them. Edit the seeder's
+`defaults()` to change what a fresh install ships; `UserFactory::support()`
+reads the same definition so the test fixture can't drift from it. The teams
+tier's `TeamRolesSeeder` does the same for team roles.
+
+`bp:make-admin --administrator` puts the first operator on the Administrator
+role instead of the super-admin flag (see `docs/commands.md`).
+
 ## Checking a permission: `Gate::authorize()` / `checkPermissionTo()`
 
 There's no `Gate::define()` per `SystemPermission` case — spatie/laravel-
