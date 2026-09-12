@@ -45,6 +45,11 @@ class TeamOwnershipTest extends TestCase
         Team::createRole(self::TEAM_ADMIN, [TeamPermission::MANAGE_MEMBERS]);
         Team::createRole('Member');
 
+        // Unrelated accounts first, so user ids and team_user pivot ids diverge: a
+        // member query that let the pivot's `id` shadow the user's once slipped
+        // through because in a bare fixture the two happened to coincide.
+        User::factory()->count(3)->create();
+
         $this->primary = User::factory()->create();
         $this->team = Team::factory()->ownedBy($this->primary)->create();
         $this->coOwner = User::factory()->create();
@@ -92,13 +97,19 @@ class TeamOwnershipTest extends TestCase
     {
         $component = Livewire::actingAs($this->primary)
             ->test(ManageOwnership::class, ['team' => $this->team])
-            ->assertActionVisible('coOwners')
-            ->callAction('coOwners', data: ['owners' => [$this->coOwner->id, $this->member->id]])
+            ->assertActionVisible('addCoOwner')
+            ->callAction('addCoOwner', data: ['user_id' => $this->member->id])
             ->assertHasNoActionErrors();
 
         $this->assertTrue($this->team->isOwnedBy($this->member));
 
-        $component->callAction('coOwners', data: ['owners' => [$this->coOwner->id]]);
+        // Someone who's already a co-owner isn't eligible to be added again — and the refusal says so.
+        $component->callAction('addCoOwner', data: ['user_id' => $this->coOwner->id])
+            ->assertHasActionErrors(['user_id' => [team_trans('ownership.already_co_owner', ['person' => $this->coOwner->name])]]);
+
+        Livewire::actingAs($this->primary)
+            ->test(ManageOwnership::class, ['team' => $this->team])
+            ->callAction('removeCoOwner', arguments: ['user' => $this->member->id]);
 
         $this->assertFalse($this->team->isOwnedBy($this->member));
         $this->assertTrue($this->team->hasUser($this->member), 'demotion keeps membership');
@@ -146,11 +157,11 @@ class TeamOwnershipTest extends TestCase
     {
         $this->team->suspendMember($this->member);
 
-        // Not offered as a choice, and rejected as one.
+        // Not offered as a choice, and rejected as one — with the reason.
         Livewire::actingAs($this->primary)
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->callAction('transferOwnership', data: ['user_id' => $this->member->id])
-            ->assertHasActionErrors(['user_id']);
+            ->assertHasActionErrors(['user_id' => [team_trans('ownership.is_suspended', ['person' => $this->member->name])]]);
 
         $this->assertTrue($this->team->fresh()->isPrimaryOwner($this->primary));
     }
@@ -190,7 +201,7 @@ class TeamOwnershipTest extends TestCase
         Livewire::actingAs($this->primary)
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->assertActionVisible('transferOwnership')
-            ->assertActionVisible('coOwners');
+            ->assertActionVisible('addCoOwner');
     }
 
     public function test_the_primary_owner_cannot_change_their_own_role_from_the_team_area(): void

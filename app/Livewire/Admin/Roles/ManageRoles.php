@@ -131,7 +131,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
             'color' => $data['color'],
         ]);
 
-        $this->role->syncPermissions(collect($this->resolvePermissionsFromState($data))
+        $this->role->syncPermissions(collect($this->resolvePermissionsFromState($data, $this->role))
             ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
             ->all());
 

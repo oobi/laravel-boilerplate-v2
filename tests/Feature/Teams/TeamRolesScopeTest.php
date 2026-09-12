@@ -9,12 +9,14 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Database\Seeders\TeamRolesSeeder;
+use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\TeamsServiceProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use RuntimeException;
 use Tests\TestCase;
@@ -203,30 +205,106 @@ class TeamRolesScopeTest extends TestCase
         $this->assertTrue($role->checkPermissionTo(TeamPermission::VIEW_SETTINGS->value));
     }
 
-    public function test_the_roles_form_keeps_view_and_manage_implications_consistent(): void
+    public function test_the_roles_form_ticks_an_implied_permission_with_its_implier_and_keeps_it_while_ticked(): void
     {
-        config(['teams.domains.enabled' => true]); // so Manage Domains is offered in the Settings group
+        config(['teams.domains.enabled' => true]);
         $role = Team::createRole('Manager');
 
         $component = Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ManageRoles::class, ['role' => $role]);
 
-        // Forward: ticking Update auto-ticks its View counterpart.
+        // Ticking Update ticks the View it carries.
         $component->set('data.permissions_team_settings', [TeamPermission::UPDATE_TEAM->value])
             ->assertSet('data.permissions_team_settings', [
                 TeamPermission::VIEW_SETTINGS->value,
                 TeamPermission::UPDATE_TEAM->value,
             ]);
 
-        // Reverse: unticking View clears everything that required it (Update + Manage Domains).
+        // The View option is disabled on screen while Update is on; a state that
+        // arrives without it (bypassing the control) is completed, never honoured.
         $component->set('data.permissions_team_settings', [
+            TeamPermission::UPDATE_TEAM->value,
+            TeamPermission::MANAGE_DOMAINS->value,
+        ])->assertSet('data.permissions_team_settings', [
             TeamPermission::VIEW_SETTINGS->value,
             TeamPermission::UPDATE_TEAM->value,
             TeamPermission::MANAGE_DOMAINS->value,
-        ])->set('data.permissions_team_settings', [
-            TeamPermission::UPDATE_TEAM->value,
-            TeamPermission::MANAGE_DOMAINS->value,
-        ])->assertSet('data.permissions_team_settings', []);
+        ]);
+
+        // Unticking the impliers frees View: it stays ticked (nothing is silently
+        // removed) and can now be unticked on its own.
+        $component->set('data.permissions_team_settings', [TeamPermission::VIEW_SETTINGS->value])
+            ->assertSet('data.permissions_team_settings', [TeamPermission::VIEW_SETTINGS->value])
+            ->set('data.permissions_team_settings', [])
+            ->assertSet('data.permissions_team_settings', []);
+    }
+
+    public function test_a_manage_permission_carries_its_view_counterpart_at_check_time(): void
+    {
+        // Stored minimally (as the seeder does), resolved with the implication —
+        // the one place it's enforced, so form-made and seeded roles agree.
+        Team::createRole('Manager', [TeamPermission::MANAGE_MEMBERS, TeamPermission::UPDATE_TEAM]);
+        $team = Team::factory()->create();
+        $manager = User::factory()->create();
+        $team->addMember($manager, 'Manager');
+
+        $this->assertTrue(Gate::forUser($manager)->allows(TeamAbility::VIEW_MEMBERS, $team));
+        $this->assertTrue(Gate::forUser($manager)->allows(TeamAbility::VIEW_SETTINGS, $team));
+        $this->assertFalse(Gate::forUser($manager)->allows(TeamAbility::INVITE, $team), 'implications are single-level and specific');
+    }
+
+    public function test_a_feature_gated_permission_is_not_offered_but_is_kept_on_save_while_its_feature_is_off(): void
+    {
+        // Granted while domains were on, then the feature switched off in this environment.
+        config(['teams.domains.enabled' => false]);
+        $role = Team::createRole('Manager', [TeamPermission::MANAGE_DOMAINS, TeamPermission::UPDATE_TEAM]);
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageRoles::class, ['role' => $role])
+            // Not on the screen…
+            ->assertDontSee(TeamPermission::MANAGE_DOMAINS->label())
+            // …and select-all can't reach it either…
+            ->set('data.permissions_team_settings_select_all', true)
+            ->assertSet('data.permissions_team_settings', [
+                TeamPermission::VIEW_SETTINGS->value,
+                TeamPermission::UPDATE_TEAM->value,
+            ])
+            // …yet a save keeps what it couldn't show.
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $role->refresh()->unsetRelation('permissions');
+        $this->assertTrue($role->checkPermissionTo(TeamPermission::MANAGE_DOMAINS->value));
+        $this->assertTrue($role->checkPermissionTo(TeamPermission::UPDATE_TEAM->value));
+
+        // With the feature on it's an ordinary option again.
+        config(['teams.domains.enabled' => true]);
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSee(TeamPermission::MANAGE_DOMAINS->label())
+            ->assertSet('data.permissions_team_settings', [
+                TeamPermission::VIEW_SETTINGS->value,
+                TeamPermission::UPDATE_TEAM->value,
+                TeamPermission::MANAGE_DOMAINS->value,
+            ]);
+    }
+
+    public function test_the_seeder_grants_manage_domains_only_while_the_feature_is_on(): void
+    {
+        config(['teams.domains.enabled' => false]);
+        $this->runSeeder();
+
+        $admin = Team::availableRoles()->where('name', 'Team Admin')->firstOrFail();
+        $this->assertFalse($admin->hasPermissionTo(TeamPermission::MANAGE_DOMAINS->value), 'a seeder sets up the base scenario, not a switched-off feature');
+        $this->assertTrue($admin->hasPermissionTo(TeamPermission::UPDATE_TEAM->value));
+
+        Team::availableRoles()->get()->each->delete();
+        config(['teams.domains.enabled' => true]);
+        $this->runSeeder();
+
+        $admin = Team::availableRoles()->where('name', 'Team Admin')->firstOrFail();
+        $this->assertTrue($admin->hasPermissionTo(TeamPermission::MANAGE_DOMAINS->value));
     }
 
     public function test_a_team_role_can_be_created_from_the_team_tab(): void

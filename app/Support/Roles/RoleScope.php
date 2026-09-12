@@ -31,15 +31,29 @@ interface RoleScope
     public function permissions(): array;
 
     /**
-     * Permission implications: selecting a permission also grants everything it
-     * implies. Keyed by permission name, each mapping to the permissions it
-     * pulls in (e.g. an "update" permission implies its "view" counterpart, so a
-     * role that can edit can always read). Applied both in the Roles form (the
-     * implied box auto-ticks) and on save. Return [] for a scope with none.
+     * Which permissions carry which others with them, for DISPLAY on the Roles
+     * form: an implied option shows as "Included with …", is ticked along with
+     * its implier and can't be unticked while the implier is on. Enforcement
+     * is the scope's own concern at check time — the teams tier declares its
+     * map once on TeamPermission::implies() and enforces it in
+     * Team::memberHasPermission(); this method just derives from that. Keyed
+     * by permission name, each mapping to the names it carries. Return [] for
+     * a scope with none.
      *
      * @return array<string, list<string>>
      */
     public function implications(): array;
+
+    /**
+     * Permissions in the vocabulary that don't apply in this environment —
+     * typically a feature that is switched off — so the Roles form doesn't
+     * offer them. They stay in the vocabulary: a role that already holds one
+     * (granted while the feature was on) keeps it across a save rather than
+     * being silently stripped. Return [] when everything applies.
+     *
+     * @return list<string>
+     */
+    public function unavailable(): array;
 
     /**
      * Extra attributes for a role created in this scope (its `scope` value and

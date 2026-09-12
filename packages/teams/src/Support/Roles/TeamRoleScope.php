@@ -7,6 +7,7 @@ namespace Concise\Teams\Support\Roles;
 use App\Support\Roles\RoleScope;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\TeamLabels;
 
 /**
@@ -41,19 +42,27 @@ final class TeamRoleScope implements RoleScope
     }
 
     /**
-     * A "manage/update" permission implies its "view" counterpart — you can't
-     * meaningfully edit what you can't see — so ticking Update/Manage auto-ticks
-     * View. Mirrors the same implications enforced in TeamPolicy.
+     * Derived from the one definition, TeamPermission::implies() — which
+     * Team::memberHasPermission() enforces. Here it only drives the form's
+     * "Included with …" display.
      *
      * @return array<string, list<string>>
      */
     public function implications(): array
     {
-        return [
-            TeamPermission::MANAGE_MEMBERS->value => [TeamPermission::VIEW_MEMBERS->value],
-            TeamPermission::UPDATE_TEAM->value => [TeamPermission::VIEW_SETTINGS->value],
-            TeamPermission::MANAGE_DOMAINS->value => [TeamPermission::VIEW_SETTINGS->value],
-        ];
+        return TeamPermission::implicationMap();
+    }
+
+    /**
+     * Manage Domains doesn't apply while the custom-domain overlay is off, so
+     * the form doesn't offer it; a role that holds it (granted while the
+     * feature was on) keeps it.
+     *
+     * @return list<string>
+     */
+    public function unavailable(): array
+    {
+        return DomainPolicy::enabled() ? [] : [TeamPermission::MANAGE_DOMAINS->value];
     }
 
     /** A shared team role: `team_id` NULL resolves in every team's spatie scope (TEAMS_TIER_SCOPE.md §5). */

@@ -67,7 +67,9 @@ return [
     'settings' => [
         'save' => 'Save changes',
         'saved' => 'Settings saved',
-        'slug_warning' => 'Changing this changes your :team’s URL — existing links (and any custom-domain subdomain) will break.',
+        'slug_warning' => 'Changing this changes your :team’s URL — existing links will break.',
+        // Shown instead of slug_warning while the custom-domain overlay is on (the slug is then the subdomain too).
+        'slug_warning_domains' => 'Changing this changes your :team’s URL and subdomain — existing links will break.',
     ],
 
     'members' => [
@@ -104,20 +106,27 @@ return [
     // the primary owner. Ownership is a shield and a responsibility, never a permission.
     'ownership' => [
         'title' => 'Ownership',
-        'description' => 'Only the primary :owner of :name can change its co-:owners, hand it over, or delete it. Being an :owner grants no permissions — those come from a role, like any :member.',
+        'description' => 'Only the primary :owner can change co-:owners, transfer ownership or delete the :team.',
         'primary' => 'Primary :owner',
         'co_owners' => 'Co-:owners',
         'none' => 'None',
-        'manage_co_owners' => 'Manage co-:owners',
-        'co_owners_help' => 'Co-:owners are protected: only the primary :owner or a system administrator can change their role, suspend or remove them. It grants no permissions of its own.',
-        'co_owners_updated' => 'Co-:owners updated',
+        'co_owner' => 'Co-:owner',
+        'add_co_owner' => 'Add co-:owner',
+        'co_owner_help' => 'A co-:owner can only be changed, suspended or removed by the primary :owner or a system administrator. The status grants no permissions.',
+        'co_owner_added' => ':person is now a co-:owner',
+        'remove_co_owner' => 'Remove co-:owner',
+        'remove_co_owner_confirm' => 'Remove :person as co-:owner of :name? Their membership and role are kept.',
+        'co_owner_removed' => ':person is no longer a co-:owner',
+        'already_primary' => ':person is already the primary :owner.',
+        'is_suspended' => ':person is suspended — reinstate them first.',
+        'already_co_owner' => ':person is already a co-:owner.',
         'transfer' => 'Transfer ownership',
         'transfer_heading' => 'Transfer ownership of :name',
         'transfer_to' => 'New primary :owner',
         'transfer_help' => 'The new primary :owner is given the ":role" role if they don’t already hold it. You stay on as a co-:owner.',
         'transferred' => ':person is now the primary :owner',
         'delete' => 'Delete :team',
-        'delete_help' => 'Deleting the :team removes it for every :member. A system administrator can restore it.',
+        'delete_help' => 'Deleting the :team removes it for all :members. A system administrator can restore it.',
         'deleted' => ':name deleted',
     ],
 
@@ -238,7 +247,7 @@ return [
     ],
 
     'roles' => [
-        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team; :owners hold one like any :member.',
+        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team, and :owners hold one too.',
     ],
 
     'permissions' => [

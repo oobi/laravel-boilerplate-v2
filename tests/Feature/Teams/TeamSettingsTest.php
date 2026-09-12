@@ -59,7 +59,7 @@ class TeamSettingsTest extends TestCase
         $this->actingAs($owner)
             ->get(route('team.settings', ['team' => $team->slug]))
             ->assertOk()
-            ->assertSee(team_trans('ownership.manage_co_owners'));
+            ->assertSee(team_trans('ownership.add_co_owner'));
 
         Livewire::actingAs($owner)
             ->test(Settings::class, ['team' => $team])
@@ -78,12 +78,31 @@ class TeamSettingsTest extends TestCase
         $this->actingAs($editor)
             ->get(route('team.settings', ['team' => $team->slug]))
             ->assertOk()
-            ->assertDontSee(team_trans('ownership.manage_co_owners'));
+            ->assertDontSee(team_trans('ownership.add_co_owner'));
 
         $this->actingAs($owner)
             ->get(route('team.settings', ['team' => $team->slug]))
             ->assertOk()
-            ->assertSee(team_trans('ownership.manage_co_owners'));
+            ->assertSee(team_trans('ownership.add_co_owner'));
+    }
+
+    public function test_the_slug_warning_mentions_the_subdomain_only_while_domains_are_on(): void
+    {
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        config(['teams.domains.enabled' => false]);
+        $this->actingAs($owner)
+            ->get(route('team.settings', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee(team_trans('settings.slug_warning'))
+            ->assertDontSee('subdomain');
+
+        config(['teams.domains.enabled' => true]);
+        $this->actingAs($owner)
+            ->get(route('team.settings', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee(team_trans('settings.slug_warning_domains'));
     }
 
     public function test_the_page_is_forbidden_to_a_plain_member(): void

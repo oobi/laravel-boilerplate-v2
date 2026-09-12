@@ -341,10 +341,13 @@ class Team extends Model
     }
 
     /**
-     * Whether the member holds the given team permission, resolved in this
-     * team's scope. Ownership grants nothing here: the primary owner's three
-     * non-delegable acts are granted in TeamPolicy::before, and everything
-     * else an owner may do comes from their role like any member.
+     * Whether the member holds the given team permission — or one that implies
+     * it (TeamPermission::implies(): manage carries view) — resolved in this
+     * team's scope. This is the one place implications are enforced, so a role
+     * only needs to store what was granted. Ownership grants nothing here: the
+     * primary owner's three non-delegable acts are granted in
+     * TeamPolicy::before, and everything else an owner may do comes from their
+     * role like any member.
      */
     public function memberHasPermission(User $user, TeamPermission $permission): bool
     {
@@ -355,7 +358,13 @@ class Team extends Model
         return app(TeamContext::class)->run($this, function () use ($user, $permission): bool {
             $user->unsetRelation('roles');
 
-            return $user->checkPermissionTo($permission->value);
+            foreach ([$permission, ...TeamPermission::impliedBy($permission)] as $candidate) {
+                if ($user->checkPermissionTo($candidate->value)) {
+                    return true;
+                }
+            }
+
+            return false;
         });
     }
 

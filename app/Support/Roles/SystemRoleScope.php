@@ -40,6 +40,12 @@ final class SystemRoleScope implements RoleScope
         return [];
     }
 
+    /** Every system permission always applies. */
+    public function unavailable(): array
+    {
+        return [];
+    }
+
     /** Role's own defaults already describe a system role. */
     public function attributes(): array
     {

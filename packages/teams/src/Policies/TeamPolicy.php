@@ -9,7 +9,6 @@ use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamCreationMode;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
-use Concise\Teams\Support\DomainPolicy;
 
 /**
  * Per-instance team abilities, mirroring UserPolicy's scheme: coarse checks go
@@ -85,16 +84,15 @@ class TeamPolicy
     }
 
     /**
-     * May the user see the member roster (read-only)? The dedicated view
-     * permission, or — since managing implies viewing — anyone who can manage
-     * members. Ownership grants no visibility of its own: an owner sees the
-     * roster through their role, like any member. Acting on members
-     * (role/suspend/remove) is gated separately by manageMembers.
+     * May the user see the member roster (read-only)? The view permission —
+     * which managing carries with it (TeamPermission::implies, enforced in
+     * memberHasPermission). Ownership grants no visibility of its own: an
+     * owner sees the roster through their role, like any member. Acting on
+     * members (role/suspend/remove) is gated separately by manageMembers.
      */
     public function viewMembers(User $user, Team $team): bool
     {
-        return $team->memberHasPermission($user, TeamPermission::VIEW_MEMBERS)
-            || $team->memberHasPermission($user, TeamPermission::MANAGE_MEMBERS);
+        return $team->memberHasPermission($user, TeamPermission::VIEW_MEMBERS);
     }
 
     public function manageMembers(User $user, Team $team): bool
@@ -118,11 +116,10 @@ class TeamPolicy
     }
 
     /**
-     * May the user open the team-area Settings page at all? The dedicated
-     * view-settings permission (see the page without editing), anyone who can
-     * edit one of its sections — team details or, when the overlay's on,
-     * domains — and always the primary owner: the acts only they may perform
-     * (co-owners, transfer, delete) live on this page, so this is a
+     * May the user open the team-area Settings page at all? The view-settings
+     * permission — which editing a section (update team, manage domains)
+     * carries with it — and always the primary owner: the acts only they may
+     * perform (co-owners, transfer, delete) live on this page, so this is a
      * responsibility floor for one person, not a permission bypass — every
      * section still checks its own ability, and a role-less primary owner gets
      * a read-only details form. Editing within is gated per-section by update /
@@ -131,9 +128,7 @@ class TeamPolicy
     public function viewSettings(User $user, Team $team): bool
     {
         return $team->isPrimaryOwner($user)
-            || $team->memberHasPermission($user, TeamPermission::VIEW_SETTINGS)
-            || $team->memberHasPermission($user, TeamPermission::UPDATE_TEAM)
-            || (DomainPolicy::enabled() && $team->memberHasPermission($user, TeamPermission::MANAGE_DOMAINS));
+            || $team->memberHasPermission($user, TeamPermission::VIEW_SETTINGS);
     }
 
     /** Promoting/demoting co-owners is the primary owner's alone — granted by before(), never by a role. */

@@ -7,6 +7,7 @@ namespace Concise\Teams\Database\Seeders;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\TeamsServiceProvider;
 use Illuminate\Database\Seeder;
@@ -42,7 +43,10 @@ class TeamRolesSeeder extends Seeder
                     TeamPermission::MANAGE_MEMBERS,
                     TeamPermission::INVITE_MEMBERS,
                     TeamPermission::UPDATE_TEAM,
-                    TeamPermission::MANAGE_DOMAINS,
+                    // Only while the custom-domain overlay is on: a seeder sets up the
+                    // base scenario, it doesn't pre-grant a feature that's switched off.
+                    // Enabling domains later is an explicit grant on the Roles screen.
+                    ...(DomainPolicy::enabled() ? [TeamPermission::MANAGE_DOMAINS] : []),
                 ],
             ],
             TeamLabels::member() => [

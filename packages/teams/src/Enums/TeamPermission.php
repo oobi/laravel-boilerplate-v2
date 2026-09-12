@@ -11,9 +11,17 @@ namespace Concise\Teams\Enums;
  * team roles hold which permission is admin-configurable, never a hardcoded
  * match(). Ownership grants none of these: the primary owner's non-delegable
  * acts (co-owners, transfer, delete) are granted in TeamPolicy::before, and
- * everything else an owner does comes from their role like any member. A
- * project extends this enum with its own domain capabilities the same way it
- * extends SystemPermission.
+ * everything else an owner does comes from their role like any member.
+ *
+ * Implications ("manage implies view") are declared once, here (implies()),
+ * and enforced once, in Team::memberHasPermission(); the Roles form only
+ * displays them. A feature-gated case (MANAGE_DOMAINS) is always part of the
+ * vocabulary; while its feature is off the form doesn't offer it
+ * (TeamRoleScope::unavailable()), the seeder doesn't grant it, and a role
+ * that already holds it keeps it across a save.
+ *
+ * A project extends this enum with its own domain capabilities the same way
+ * it extends SystemPermission.
  */
 enum TeamPermission: string
 {
@@ -50,21 +58,48 @@ enum TeamPermission: string
     }
 
     /**
-     * The permissions offered on the Roles screen for the current config —
-     * feature-gated ones (MANAGE_DOMAINS) are hidden while their feature is off,
-     * so a permission for an inactive feature never appears. The full enum stays
-     * the fixed vocabulary; this is just the relevant view of it. (Seeding still
-     * creates every row so the permission is assignable the moment it's enabled.)
+     * The permissions this one carries with it: you can't meaningfully edit
+     * what you can't see, so a manage/update grants its view counterpart.
+     * Single level — these don't chain.
      *
      * @return list<self>
      */
-    public static function available(): array
+    public function implies(): array
+    {
+        return match ($this) {
+            self::MANAGE_MEMBERS => [self::VIEW_MEMBERS],
+            self::UPDATE_TEAM, self::MANAGE_DOMAINS => [self::VIEW_SETTINGS],
+            default => [],
+        };
+    }
+
+    /**
+     * Every permission that carries the given one with it — what a check for
+     * `$permission` also accepts.
+     *
+     * @return list<self>
+     */
+    public static function impliedBy(self $permission): array
     {
         return array_values(array_filter(
             self::cases(),
-            fn (self $permission): bool => $permission !== self::MANAGE_DOMAINS
-                || (bool) config('teams.domains.enabled', false),
+            fn (self $case): bool => in_array($permission, $case->implies(), true),
         ));
+    }
+
+    /**
+     * implies() as the Roles form consumes it: permission name => implied names.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function implicationMap(): array
+    {
+        return collect(self::cases())
+            ->filter(fn (self $case): bool => $case->implies() !== [])
+            ->mapWithKeys(fn (self $case): array => [
+                $case->value => array_map(fn (self $implied): string => $implied->value, $case->implies()),
+            ])
+            ->all();
     }
 
     /** @return array<string, list<TeamPermission>> */
@@ -72,7 +107,7 @@ enum TeamPermission: string
     {
         $categories = [];
 
-        foreach (self::available() as $permission) {
+        foreach (self::cases() as $permission) {
             $categories[$permission->category()][] = $permission;
         }
 

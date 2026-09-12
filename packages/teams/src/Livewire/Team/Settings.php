@@ -107,7 +107,7 @@ class Settings extends Component implements HasActions, HasSchemas
 
                             TextInput::make('slug')
                                 ->label(team_trans('admin.slug'))
-                                ->helperText(team_trans('settings.slug_warning'))
+                                ->helperText(team_trans(DomainPolicy::enabled() ? 'settings.slug_warning_domains' : 'settings.slug_warning'))
                                 ->required()
                                 ->maxLength(255)
                                 ->alphaDash()
