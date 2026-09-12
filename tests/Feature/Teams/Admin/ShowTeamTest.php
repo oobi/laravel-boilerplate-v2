@@ -129,8 +129,9 @@ class ShowTeamTest extends TestCase
             ->assertCanNotSeeTableRecords([$this->owner, $admin, $suspended])
             ->searchTable('')
             ->filterTable('role', 'Team Admin')
-            ->assertCanSeeTableRecords([$admin])
-            ->assertCanNotSeeTableRecords([$this->owner, $member, $suspended])
+            // The owner holds the default owner role (Team Admin) too, so they match.
+            ->assertCanSeeTableRecords([$admin, $this->owner])
+            ->assertCanNotSeeTableRecords([$member, $suspended])
             ->resetTableFilters()
             ->filterTable('role', MembersTable::OWNERS_FILTER_VALUE)
             ->assertCanSeeTableRecords([$this->owner])

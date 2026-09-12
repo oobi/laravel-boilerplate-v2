@@ -93,6 +93,7 @@ return [
     'permissions' => 'Permissions',
     'select_all' => 'Select All',
     'select_all_in' => 'Select all :group',
+    'included_with' => 'Included with :permissions',
     'select_role' => 'Select Role',
     'manage_roles' => 'Manage Roles',
     'roles_updated' => 'Roles updated successfully.',

@@ -76,9 +76,9 @@
                 x-cloak
             >
                 <div class="flex h-full flex-col border-r border-base-300 bg-base-100">
-                    <div class="flex h-16 flex-shrink-0 items-center justify-between border-b border-base-300 px-4">
+                    <div class="flex h-16 shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
-                        <div class="flex flex-shrink-0 items-center gap-1">
+                        <div class="flex shrink-0 items-center gap-1">
                             {{-- Pin button (desktop only) — pins the sidebar as a persistent column --}}
                             <x-button.icon
                                 @click="togglePin(); sidebarDrawerOpen = false"
@@ -101,14 +101,14 @@
                  Base classes assume the default (pinned) state so it renders visible
                  immediately on page load; x-show only hides it once Alpine confirms
                  the user has actually unpinned it, avoiding a flash for pinned users. --}}
-            <aside class="hidden md:flex flex-shrink-0 w-64" x-show="sidebarPinned">
+            <aside class="hidden md:flex shrink-0 w-64" x-show="sidebarPinned">
                 <div class="flex h-full w-64 flex-col border-r border-base-300 bg-base-100">
-                    <div class="flex h-16 flex-shrink-0 items-center justify-between border-b border-base-300 px-4">
+                    <div class="flex h-16 shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
                         {{-- Unpin button — switches the sidebar to drawer mode --}}
                         <x-button.icon
                             @click="togglePin()"
-                            class="flex-shrink-0"
+                            class="shrink-0"
                             title="{{ __('Unpin sidebar') }}"
                         >
                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M184 64C170.7 64 160 74.7 160 88C160 101.3 170.7 112 184 112L214.2 112L204 250.2C186.7 262.6 169.8 279.3 156.5 298.2C140.5 320.7 128 348.5 128 377.7C128 398.8 145.2 416 166.3 416L473.6 416C494.8 416 511.9 398.8 511.9 377.7C511.9 348.5 499.4 320.7 483.4 298.2C470 279.3 453.2 262.7 435.9 250.2L425.8 112L456 112C469.3 112 480 101.3 480 88C480 74.7 469.3 64 456 64L184 64zM377.7 112L388.2 253.8L389.9 276.1L408.1 289.2C424.2 300.8 437.4 315.5 448.5 332C455.4 342.8 461.5 355.3 463.2 368.1L176.8 368C179.3 352.7 186.7 338.5 195.6 325.9C205.6 311.8 218.5 298.8 232 289.1L250.2 276L251.9 253.7L262.4 111.9L377.8 111.9zM296 584C296 597.3 306.7 608 320 608C333.3 608 344 597.3 344 584L344 464L296 464L296 584z"/></svg>
@@ -122,7 +122,7 @@
 
             {{-- Main column --}}
             <div class="flex min-w-0 flex-1 flex-col">
-                <header class="sticky top-0 z-30 flex h-16 flex-shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-8 backdrop-blur">
+                <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-8 backdrop-blur">
                     @if ($hasNav)
                         {{-- Logo — visible on desktop only while the sidebar is unpinned --}}
                         <x-application-logo
@@ -130,14 +130,14 @@
                             :href="$home"
                             x-show="!sidebarPinned"
                             x-cloak
-                            class="hidden flex-shrink-0 items-center md:flex"
+                            class="hidden shrink-0 items-center md:flex"
                         />
 
                         {{-- Mobile logo — always visible; drawer/pinned asides cover this on desktop --}}
                         <x-application-logo
                             variant="icon"
                             :href="$home"
-                            class="flex flex-shrink-0 items-center md:hidden"
+                            class="flex shrink-0 items-center md:hidden"
                         />
 
                         {{-- Mobile menu button --}}
@@ -150,7 +150,7 @@
                         </x-button.icon>
                     @else
                         {{-- No sidebar: the logo lives in the header at every width. --}}
-                        <x-application-logo :href="$home" class="flex flex-shrink-0 items-center" />
+                        <x-application-logo :href="$home" class="flex shrink-0 items-center" />
                     @endif
 
                     @if ($breadcrumbs)

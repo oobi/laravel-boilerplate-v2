@@ -1,0 +1,28 @@
+#!/bin/sh
+# Runs the full test suite before allowing a push. Bypass with `git push --no-verify`.
+#
+# This is the project's only automated gate — there is no CI — so it guards the
+# boundary that matters: work leaving your machine. Pint and formatting are
+# handled earlier, in .githooks/pre-commit.
+#
+# The suite runs in parallel (brianium/paratest) across all available cores.
+# Tests use an in-memory SQLite database, so each worker gets its own isolated
+# schema with no cross-process interference.
+#
+# Failures print as a compact summary rather than PHPUnit's full assertion
+# diffs — a blocked push with a dozen failures should stay readable. Re-run a
+# single one with `php artisan test --filter=<name>` to see the detail.
+
+. "$(dirname "$0")/php-path.sh"
+require_php
+
+echo "Running tests before push..."
+composer test:summary
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "Push aborted: tests failed. Fix the failures or use --no-verify to skip this check."
+    exit 1
+fi
+
+exit 0

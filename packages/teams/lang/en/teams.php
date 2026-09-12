@@ -46,6 +46,7 @@ return [
         'created' => ':name created',
         'not_allowed' => 'You can’t create a :team right now.',
         'throttled' => 'You’ve created several :teams just now — try again shortly.',
+        'owner_role_missing' => 'No “:role” role exists to give the new :owner. Ask an administrator to set one up on the Roles screen.',
     ],
 
     'select' => [
@@ -61,6 +62,14 @@ return [
         'subtitle' => ':Team dashboard',
         'members' => ':Members',
         'placeholder' => 'This :team’s content will live here.',
+    ],
+
+    'settings' => [
+        'save' => 'Save changes',
+        'saved' => 'Settings saved',
+        'slug_warning' => 'Changing this changes your :team’s URL — existing links will break.',
+        // Shown instead of slug_warning while the custom-domain overlay is on (the slug is then the subdomain too).
+        'slug_warning_domains' => 'Changing this changes your :team’s URL and subdomain — existing links will break.',
     ],
 
     'members' => [
@@ -80,15 +89,6 @@ return [
         'change_role' => 'Change role',
         'change_roles' => 'Change roles',
         'roles_updated' => 'Roles updated',
-        'make_owner' => 'Make :owner',
-        'make_owner_confirm' => 'Make :person a co-:owner of :name? :Owners bypass every :team permission; only the primary :owner can demote them.',
-        'made_owner' => ':person is now an :owner',
-        'revoke_owner' => 'Remove as :owner',
-        'revoke_owner_confirm' => 'Remove :person as an :owner of :name? They stay a :member.',
-        'revoked_owner' => ':person is no longer an :owner',
-        'transfer' => 'Transfer ownership',
-        'transfer_confirm' => 'Make :person the primary :owner of :name? The current primary :owner stays on as a co-:owner.',
-        'transferred' => ':person is now the primary :owner',
         'suspend' => 'Suspend',
         'suspend_confirm' => 'Suspend :person from :name? They keep their membership and role but can’t use the :team until reinstated.',
         'suspended_notice' => ':person suspended',
@@ -100,6 +100,34 @@ return [
         'add' => 'Add :member',
         'add_heading' => 'Add a :member to :name',
         'added' => ':person added to :name',
+    ],
+
+    // The Ownership section on Settings (team area and admin): the acts reserved to
+    // the primary owner. Ownership is a shield and a responsibility, never a permission.
+    'ownership' => [
+        'title' => 'Ownership',
+        'description' => 'Only the primary :owner can change co-:owners, transfer ownership or delete the :team.',
+        'primary' => 'Primary :owner',
+        'co_owners' => 'Co-:owners',
+        'none' => 'None',
+        'co_owner' => 'Co-:owner',
+        'add_co_owner' => 'Add co-:owner',
+        'co_owner_help' => 'A co-:owner can only be changed, suspended or removed by the primary :owner or a system administrator. The status grants no permissions.',
+        'co_owner_added' => ':person is now a co-:owner',
+        'remove_co_owner' => 'Remove co-:owner',
+        'remove_co_owner_confirm' => 'Remove :person as co-:owner of :name? Their membership and role are kept.',
+        'co_owner_removed' => ':person is no longer a co-:owner',
+        'already_primary' => ':person is already the primary :owner.',
+        'is_suspended' => ':person is suspended — reinstate them first.',
+        'already_co_owner' => ':person is already a co-:owner.',
+        'transfer' => 'Transfer ownership',
+        'transfer_heading' => 'Transfer ownership of :name',
+        'transfer_to' => 'New primary :owner',
+        'transfer_help' => 'The new primary :owner is given the ":role" role if they don’t already hold it. You stay on as a co-:owner.',
+        'transferred' => ':person is now the primary :owner',
+        'delete' => 'Delete :team',
+        'delete_help' => 'Deleting the :team removes it for all :members. A system administrator can restore it.',
+        'deleted' => ':name deleted',
     ],
 
     'invitations' => [
@@ -143,6 +171,34 @@ return [
             'already_registered' => 'Already registered?',
             'submit' => 'Create account and join',
         ],
+    ],
+
+    'domains' => [
+        'title' => 'Domains',
+        'description' => 'Custom domains that point to :name.',
+        'search' => 'Search domains…',
+        'empty' => 'No domains yet',
+        'domain' => 'Domain',
+        'status' => 'Status',
+        'verified' => 'Verified',
+        'pending' => 'Pending',
+        'primary' => 'Primary',
+        'add' => 'Add domain',
+        'add_heading' => 'Add a domain to :name',
+        'add_help' => 'The domain you’ll point at this :team, e.g. app.example.com.',
+        'added' => ':domain added — add the DNS record and verify it to go live.',
+        'verify' => 'Verify now',
+        'verify_instructions' => 'Add this TXT record at your DNS provider, then verify:',
+        'verified_notice' => ':domain verified',
+        'verify_failed' => 'The TXT record wasn’t found yet — DNS can take a while to propagate. Try again shortly.',
+        'make_primary' => 'Make primary',
+        'made_primary' => ':domain is now the primary domain',
+        'remove' => 'Remove',
+        'remove_confirm' => 'Remove :domain from :name?',
+        'removed' => 'Domain removed',
+        'invalid' => 'Enter a valid domain, e.g. app.example.com.',
+        'reserved' => 'That domain is reserved and can’t be used.',
+        'taken' => 'That domain is already in use.',
     ],
 
     'admin' => [
@@ -191,13 +247,16 @@ return [
     ],
 
     'roles' => [
-        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team; the :owner bypasses them.',
+        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team, and :owners hold one too.',
     ],
 
     'permissions' => [
+        'view_members' => 'View :Members',
         'manage_members' => 'Manage :Members',
         'invite_members' => 'Invite :Members',
+        'view_settings' => 'View :Team Settings',
         'update_team' => 'Update :Team Settings',
+        'manage_domains' => 'Manage Domains',
         'category_members' => ':Members',
         'category_settings' => ':Team Settings',
     ],

@@ -63,6 +63,44 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default owner role
+    |--------------------------------------------------------------------------
+    |
+    | The team role a new team's owner is given at setup. Ownership itself is a
+    | shield (other members can't remove or demote an owner) and a responsibility
+    | anchor (the primary owner holds the non-delegable acts — transfer, delete,
+    | co-owner management — and is the natural home for billing) — it is NEVER a
+    | permission bypass. An owner's day-to-day authority comes entirely from this
+    | role, exactly like any member, so a self-service creator isn't powerless and
+    | a central admin can adjust it afterwards.
+    |
+    | Unset (null) resolves to the seeded "{Team} Admin" role for the current
+    | labels. If no such role exists, creating a team (self-service or from
+    | Admin › Teams) is refused with a clear message rather than producing a
+    | team nobody can run; transferring ownership gives the successor this role
+    | when they lack it. See Team::defaultOwnerRole().
+    |
+    */
+
+    'default_owner_role' => env('TEAMS_DEFAULT_OWNER_ROLE'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Owner deletion
+    |--------------------------------------------------------------------------
+    |
+    | Whether a team's primary owner may delete their own team. Deferred to each
+    | project's business logic: a self-service SaaS lets an owner bin their team;
+    | a platform that provisions and owns the teams (a backoffice, a franchise)
+    | reserves deletion to system admins. A system admin can always delete from
+    | the admin area regardless — this only governs the owner's own team-area act.
+    |
+    */
+
+    'owner_can_delete' => (bool) env('TEAMS_OWNER_CAN_DELETE', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Invitations
     |--------------------------------------------------------------------------
     |
@@ -120,7 +158,7 @@ return [
     |
     */
 
-    'personal_teams' => false,
+    'personal_teams' => (bool) env('TEAMS_PERSONAL_TEAMS', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -151,10 +189,28 @@ return [
     | The optional custom-domain overlay. Off by default — teams are reached via
     | the path prefix above. Only verified domains ever route (OQ3).
     |
+    | Who may manage a team's domains is runtime authorization, not config: the
+    | `MANAGE_DOMAINS` team permission (Roles screen) and system admins. Ownership
+    | grants no bypass, so an owner manages domains only through a role that
+    | carries it. This flag (env TEAMS_DOMAINS_ENABLED) only turns
+    | the whole overlay on/off — a setup-time/per-environment decision, not a live
+    | runtime flip (host mode switches every team from path to host URLs).
+    |
+    | `reserved` is a blacklist of leftmost labels a team may never claim as a
+    | domain (infra/system names). Matched case-insensitively against the first
+    | label, so it blocks e.g. `admin.acme.com` and `mail.acme.com`. Extend it
+    | per project; the application's own host (APP_URL) is always reserved too.
+    |
     */
 
     'domains' => [
-        'enabled' => false,
+        'enabled' => (bool) env('TEAMS_DOMAINS_ENABLED', false),
+
+        'reserved' => [
+            'www', 'admin', 'mail', 'webmail', 'smtp', 'imap', 'pop',
+            'ftp', 'api', 'app', 'ns1', 'ns2', 'mx', 'cpanel',
+            'autodiscover', 'autoconfig', 'localhost',
+        ],
     ],
 
 ];

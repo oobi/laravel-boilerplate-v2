@@ -26,8 +26,15 @@
 }
 
 .tabs-connected {
-    position: relative;
-    z-index: 0;
+    /* The stacking context lives on the HEADER (where the tab layering below
+       needs it), never on the whole island: a Filament modal opened from a
+       component inside the content panel is a fixed element that isn't
+       teleported, and an island-wide context would trap its overlay (z-40)
+       beneath the app's sticky header (z-30). */
+    > .tabs-connected__header {
+        position: relative;
+        z-index: 0;
+    }
 
     > .tabs-connected__header > .tabs {
         > .tab {

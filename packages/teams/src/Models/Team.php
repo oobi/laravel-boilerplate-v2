@@ -11,6 +11,7 @@ use Concise\Teams\Database\Factories\TeamFactory;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
+use Concise\Teams\Support\TeamLabels;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -153,6 +154,21 @@ class Team extends Model
         return $this->hasMany(TeamInvitation::class);
     }
 
+    /** Custom domains for this team (the optional overlay, 5h). */
+    public function domains(): HasMany
+    {
+        return $this->hasMany(Domain::class);
+    }
+
+    /** The team's verified primary domain, if it has one. */
+    public function primaryDomain(): ?Domain
+    {
+        return $this->domains()
+            ->whereNotNull('verified_at')
+            ->where('is_primary', true)
+            ->first();
+    }
+
     /** @param  Builder<Team>  $query */
     public function scopeActive(Builder $query): void
     {
@@ -206,22 +222,34 @@ class Team extends Model
     }
 
     /**
-     * Ownership is structural, not a role — the team's "super admin" (Slack
-     * model). The PRIMARY owner is `user_id`: one account, transferable, and
-     * the only one that may transfer ownership, manage co-owners or delete the
-     * team. CO-OWNERS (`team_user.is_owner`) share the permission bypass so
-     * day-to-day owner work never waits on one person, and can be demoted by
-     * the primary owner.
+     * Ownership is structural, not a role, and never a permission bypass. The
+     * PRIMARY owner is `user_id`: one account, transferable, and the only one
+     * that may transfer ownership, manage co-owners or delete the team (granted
+     * in TeamPolicy::before). CO-OWNERS (`team_user.is_owner`) are shielded —
+     * only the primary owner or a system admin may change their role, suspend
+     * or remove them — but hold no authority from the flag itself. Every
+     * owner's day-to-day authority comes from their team role, like any member;
+     * see defaultOwnerRole() for how a new owner gets one.
      */
     public function isPrimaryOwner(User $user): bool
     {
         return $this->user_id === $user->getKey();
     }
 
-    /** Primary owner or co-owner: anyone who bypasses the team's permission checks. */
+    /** Primary owner or co-owner: anyone the ownership shield protects. */
     public function isOwnedBy(User $user): bool
     {
         return $this->isPrimaryOwner($user) || $this->ownerIds()->contains($user->getKey());
+    }
+
+    /**
+     * A co-owner whose shield is currently active: an owner who is neither the
+     * primary owner nor suspended. (Suspension pauses the shield — the owner flag
+     * stays, but the protection doesn't apply while suspended.)
+     */
+    public function isCoOwner(User $user): bool
+    {
+        return $this->isOwnedBy($user) && ! $this->isPrimaryOwner($user) && ! $this->isSuspended($user);
     }
 
     /**
@@ -263,7 +291,13 @@ class Team extends Model
         $this->users()->updateExistingPivot($user->getKey(), ['is_owner' => false]);
     }
 
-    /** Hand primary ownership to a member. The previous primary owner stays on as a co-owner. */
+    /**
+     * Hand primary ownership to a member. The previous primary owner stays on
+     * as a co-owner and keeps their role; the successor is given the default
+     * owner role if they don't already hold it, so the person now responsible
+     * for the team is never left with less authority than the member they
+     * replaced.
+     */
     public function transferOwnership(User $to): void
     {
         if (! $this->hasUser($to)) {
@@ -280,6 +314,8 @@ class Team extends Model
         $this->users()->updateExistingPivot($to->getKey(), ['is_owner' => false]);
         $this->users()->updateExistingPivot($previous, ['is_owner' => true]);
         $this->unsetRelation('owner');
+
+        $this->ensureHoldsDefaultOwnerRole($to);
     }
 
     /** Whether a member may hold more than one team role (config `teams.multiple_roles_per_member`). */
@@ -305,8 +341,13 @@ class Team extends Model
     }
 
     /**
-     * Whether the member holds the given team permission, resolved in this
-     * team's scope. Ownership bypasses this at the policy level (TeamPolicy::before).
+     * Whether the member holds the given team permission — or one that implies
+     * it (TeamPermission::implies(): manage carries view) — resolved in this
+     * team's scope. This is the one place implications are enforced, so a role
+     * only needs to store what was granted. Ownership grants nothing here: the
+     * primary owner's three non-delegable acts are granted in
+     * TeamPolicy::before, and everything else an owner may do comes from their
+     * role like any member.
      */
     public function memberHasPermission(User $user, TeamPermission $permission): bool
     {
@@ -317,7 +358,13 @@ class Team extends Model
         return app(TeamContext::class)->run($this, function () use ($user, $permission): bool {
             $user->unsetRelation('roles');
 
-            return $user->checkPermissionTo($permission->value);
+            foreach ([$permission, ...TeamPermission::impliedBy($permission)] as $candidate) {
+                if ($user->checkPermissionTo($candidate->value)) {
+                    return true;
+                }
+            }
+
+            return false;
         });
     }
 
@@ -357,6 +404,54 @@ class Team extends Model
     public static function availableRoles(): Builder
     {
         return Role::query()->ofScope(self::ROLE_SCOPE);
+    }
+
+    /**
+     * The role a new team's owner is given at setup (config
+     * `teams.default_owner_role`), defaulting to the seeded "{Team} Admin" role
+     * for the current labels. Ownership carries no permissions of its own, so
+     * this role is where the owner's authority comes from. The name may not
+     * resolve to an existing role (renamed/deleted, or the labels changed
+     * after seeding): the user-facing creation paths refuse loudly in that
+     * case (DefaultOwnerRoleMissing), while the Team::created hook and
+     * transferOwnership() skip the assignment so factories and imports work.
+     */
+    public static function defaultOwnerRole(): string
+    {
+        $configured = config('teams.default_owner_role');
+
+        return is_string($configured) && $configured !== ''
+            ? $configured
+            : TeamLabels::singular().' Admin';
+    }
+
+    /** Whether a team role of the default owner role's name exists to be assigned. */
+    public static function defaultOwnerRoleExists(): bool
+    {
+        return static::availableRoles()->where('name', static::defaultOwnerRole())->exists();
+    }
+
+    /**
+     * Give a member the default owner role unless they already hold it — the one
+     * place "make this person able to run the team" is implemented, used at
+     * creation and on transfer. Additive when the project allows several roles
+     * per member; when a member holds exactly one role (a "position"), the
+     * owner role replaces it. A no-op when the role doesn't exist.
+     */
+    public function ensureHoldsDefaultOwnerRole(User $user): void
+    {
+        if (! static::defaultOwnerRoleExists()) {
+            return;
+        }
+
+        $role = static::defaultOwnerRole();
+        $held = $this->rolesFor($user);
+
+        if ($held->contains($role)) {
+            return;
+        }
+
+        $this->syncMemberRoles($user, static::allowsMultipleRoles() ? [...$held->all(), $role] : [$role]);
     }
 
     /**
@@ -429,8 +524,11 @@ class Team extends Model
     }
 
     /**
-     * Set a member's team roles (replacing any held). Owners hold none —
-     * ownership is structural — so they're left untouched.
+     * Set a member's team roles (replacing any held). Works for any member,
+     * owners included: ownership is structural (a pivot flag), so an owner may
+     * also hold a role — it shows alongside their owner badge and, under the
+     * managed model, is where their authority comes from. Who is allowed to
+     * change an owner's role is enforced at the UI/policy layer, not here.
      *
      * @param  list<string>  $roles
      *
@@ -438,10 +536,6 @@ class Team extends Model
      */
     public function syncMemberRoles(User $user, array $roles): void
     {
-        if ($this->isOwnedBy($user)) {
-            return;
-        }
-
         $roles = array_values(array_unique(array_filter($roles)));
 
         if (count($roles) > 1 && ! static::allowsMultipleRoles()) {

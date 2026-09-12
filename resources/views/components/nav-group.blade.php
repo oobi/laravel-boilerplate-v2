@@ -11,7 +11,7 @@
     <button type="button" @click="open = !open" class="nav-section-label flex w-full items-center justify-between">
         <span class="flex items-center gap-2">
             @if ($icon)
-                <x-dynamic-component :component="$icon" class="h-4 w-4 flex-shrink-0" />
+                <x-dynamic-component :component="$icon" class="h-4 w-4 shrink-0" />
             @endif
             {{ $label }}
         </span>

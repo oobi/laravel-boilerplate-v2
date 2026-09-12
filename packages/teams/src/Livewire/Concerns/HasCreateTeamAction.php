@@ -6,6 +6,7 @@ namespace Concise\Teams\Livewire\Concerns;
 
 use Concise\Teams\Actions\CreateTeam;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Exceptions\DefaultOwnerRoleMissing;
 use Concise\Teams\Models\Team;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
@@ -45,6 +46,16 @@ trait HasCreateTeamAction
                     $team = app(CreateTeam::class)($data['name'], auth()->user());
                 } catch (ThrottleRequestsException) {
                     Notification::make()->title(team_trans('create.throttled'))->danger()->send();
+
+                    return;
+                } catch (DefaultOwnerRoleMissing $exception) {
+                    // A misconfiguration, not a user error: tell the user what to
+                    // ask an admin for, and log it so the admin finds out too.
+                    report($exception);
+                    Notification::make()
+                        ->title(team_trans('create.owner_role_missing', ['role' => Team::defaultOwnerRole()]))
+                        ->danger()
+                        ->send();
 
                     return;
                 }

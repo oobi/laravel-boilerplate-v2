@@ -16,9 +16,12 @@ enum TeamAbility: string
     case CREATE = 'create';
 
     case VIEW = 'view';
+    case VIEW_SETTINGS = 'viewSettings';
+    case VIEW_MEMBERS = 'viewMembers';
     case MANAGE_MEMBERS = 'manageMembers';
     case INVITE = 'invite';
     case UPDATE = 'update';
+    case MANAGE_DOMAINS = 'manageDomains';
 
     /** Primary owner only (see TeamPolicy::PRIMARY_OWNER_ONLY). */
     case MANAGE_OWNERS = 'manageOwners';

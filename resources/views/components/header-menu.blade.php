@@ -22,7 +22,7 @@
                 <li>
                     <a href="{{ $item->getUrl() }}" class="flex items-center gap-2">
                         @if ($item->getIcon())
-                            <x-dynamic-component :component="$item->getIcon()" class="h-4 w-4 flex-shrink-0" />
+                            <x-dynamic-component :component="$item->getIcon()" class="h-4 w-4 shrink-0" />
                         @endif
                         {{ $item->getLabel() }}
                     </a>

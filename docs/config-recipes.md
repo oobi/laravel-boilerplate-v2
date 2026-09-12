@@ -111,6 +111,10 @@ Independent of the recipes above, tune per project:
 | `TEAMS_OWNER_LABEL_SINGULAR` / `_PLURAL` | Rename "owner" (e.g. "Manager" / "Managers"), where a franchise "owns" a location. |
 | `TEAMS_MAX_PER_USER` | Cap how many teams one user may own under self-service (unset = unlimited). |
 | `TEAMS_MULTIPLE_ROLES` | Allow a member several team roles at once, or exactly one ("a position"). |
+| `TEAMS_DEFAULT_OWNER_ROLE` | The role a new team's owner is given at setup. Ownership is a shield (other members can't remove/demote an owner), not a permission bypass — authority comes from this role, like any member. Unset = the seeded "{Team} Admin". |
+| `TEAMS_OWNER_CAN_DELETE` | Whether an owner may delete their own team (default `true`). Off reserves deletion to system admins — for platforms that provision and own the teams. A system admin can always delete from the admin area. |
+| `TEAMS_PERSONAL_TEAMS` | Give every user a personal team on registration (default off; onboarding handles the empty state). |
+| `TEAMS_DOMAINS_ENABLED` | Turn on the custom-domain overlay (default off). A setup-time/per-environment decision — on = teams reached by host, not path. |
 
 The three label pairs also drive the **seeded default role names** — a relabelled
 install seeds "Salon Admin" / "Stylist" rather than "Team Admin" / "Member".

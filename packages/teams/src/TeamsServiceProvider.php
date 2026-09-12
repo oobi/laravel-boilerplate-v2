@@ -14,11 +14,15 @@ use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Livewire\Team\ManageDomains;
+use Concise\Teams\Livewire\Team\ManageOwnership;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
+use Concise\Teams\Support\Dns\DnsResolver;
+use Concise\Teams\Support\Dns\SystemDnsResolver;
 use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
@@ -66,6 +70,10 @@ class TeamsServiceProvider extends ServiceProvider
         // The single source of truth for the active team (query/permission/
         // filesystem/cache scope) — see TeamContext and the CurrentTeam facade.
         $this->app->singleton(TeamContext::class);
+
+        // The DNS boundary for custom-domain verification (5h). Swapped for a
+        // FakeDnsResolver in tests.
+        $this->app->bind(DnsResolver::class, SystemDnsResolver::class);
     }
 
     public function boot(): void
@@ -85,6 +93,8 @@ class TeamsServiceProvider extends ServiceProvider
         // Child components shared by the team area and the system admin pages.
         Livewire::component('teams-members-table', MembersTable::class);
         Livewire::component('teams-pending-invitations', PendingInvitations::class);
+        Livewire::component('teams-manage-domains', ManageDomains::class);
+        Livewire::component('teams-manage-ownership', ManageOwnership::class);
 
         Gate::policy(Team::class, TeamPolicy::class);
 
@@ -96,9 +106,15 @@ class TeamsServiceProvider extends ServiceProvider
         $this->registerLoginRedirect();
 
         // The owner is always a member. Ownership itself is structural
-        // (teams.user_id) — not a role — and team roles are seeded centrally by
-        // TeamRolesSeeder, never per team.
-        Team::created(fn (Team $team) => $team->users()->syncWithoutDetaching([$team->user_id]));
+        // (teams.user_id) — a shield, not a permission bypass — so the owner's
+        // authority comes from a role: give them the configured default at setup.
+        // Lenient here (factories, seeders, imports); the user-facing creation
+        // paths refuse loudly when the role is missing (DefaultOwnerRoleMissing).
+        // Team roles are still seeded centrally by TeamRolesSeeder, never per team.
+        Team::created(function (Team $team): void {
+            $team->users()->syncWithoutDetaching([$team->user_id]);
+            $team->ensureHoldsDefaultOwnerRole($team->owner);
+        });
 
         $this->registerTeamNavigation();
     }
@@ -116,7 +132,7 @@ class TeamsServiceProvider extends ServiceProvider
             ->route('team.members')
             ->icon('heroicon-o-users')
             ->active('team.members')
-            ->can(TeamAbility::MANAGE_MEMBERS)
+            ->can(TeamAbility::VIEW_MEMBERS)
             ->order(10);
 
         // With member invitations off there's no page and no nav item (see InvitationPolicy).
@@ -129,6 +145,16 @@ class TeamsServiceProvider extends ServiceProvider
                 ->can(TeamAbility::INVITE)
                 ->order(20);
         }
+
+        // The team-area Settings page (team details + domains). Shown to whoever
+        // can view it — owners (read-only floor) or holders of update/manageDomains.
+        TeamNavRegistry::item('team-settings')
+            ->label(team_trans('nav.settings'))
+            ->route('team.settings')
+            ->icon('heroicon-o-cog-6-tooth')
+            ->active('team.settings')
+            ->can(TeamAbility::VIEW_SETTINGS)
+            ->order(30);
     }
 
     /**

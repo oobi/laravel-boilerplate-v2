@@ -3,11 +3,13 @@
 namespace Tests\Feature\Teams;
 
 use App\Models\User;
+use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -26,6 +28,7 @@ class TeamMembersTest extends TestCase
         // Fixtures via the domain method, not the seeder (tests.md): the two
         // roles a fresh install ships with.
         Team::createRole(self::TEAM_ADMIN, [
+            TeamPermission::VIEW_MEMBERS,
             TeamPermission::MANAGE_MEMBERS,
             TeamPermission::INVITE_MEMBERS,
             TeamPermission::UPDATE_TEAM,
@@ -59,8 +62,9 @@ class TeamMembersTest extends TestCase
 
         $this->assertTrue($team->hasUser($owner));
         $this->assertTrue($team->isOwnedBy($owner));
-        // Ownership is structural, not a role.
-        $this->assertNull($team->roleFor($owner));
+        // Ownership is structural (a shield); the owner's authority comes from the
+        // default owner role they're given at setup, not from ownership itself.
+        $this->assertSame(self::TEAM_ADMIN, $team->roleFor($owner));
     }
 
     public function test_the_owner_can_view_the_members_page(): void
@@ -83,6 +87,26 @@ class TeamMembersTest extends TestCase
         $this->addMember($team, $admin, self::TEAM_ADMIN);
 
         $this->actingAs($admin)
+            ->get(route('team.members', ['team' => $team->slug]))
+            ->assertOk();
+    }
+
+    public function test_a_view_members_holder_can_open_the_page_the_sidebar_links_to(): void
+    {
+        // The nav item, the page and the table all gate on the same ability, so a
+        // link never leads to a 403 — a viewer just sees the roster without actions.
+        Team::createRole('Viewer', [TeamPermission::VIEW_MEMBERS]);
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $viewer = User::factory()->create();
+        $this->addMember($team, $viewer, 'Viewer');
+
+        $this->actingAs($viewer)
+            ->get(route('team.dashboard', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee(route('team.members', ['team' => $team->slug]), false);
+
+        $this->actingAs($viewer)
             ->get(route('team.members', ['team' => $team->slug]))
             ->assertOk();
     }
@@ -188,8 +212,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->assertTableActionHidden('remove', $owner)
-            ->assertTableActionHidden('changeRole', $owner);
+            ->assertTableActionHidden('remove', $owner);
 
         $team->removeMember($owner); // the domain method is a no-op for the owner too
 
@@ -206,6 +229,42 @@ class TeamMembersTest extends TestCase
         Livewire::actingAs($member)
             ->test(MembersTable::class, ['team' => $team])
             ->assertForbidden();
+    }
+
+    public function test_a_stale_role_row_grants_nothing_to_an_ex_member(): void
+    {
+        // Membership is the prerequisite for every team ability: a detach path
+        // that isn't removeMember() (an import, a support script) leaves the
+        // model_has_roles row behind, and that row must not keep granting.
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $user = User::factory()->create();
+        $this->addMember($team, $user, self::TEAM_ADMIN);
+        $this->assertTrue(Gate::forUser($user)->allows(TeamAbility::MANAGE_MEMBERS, $team));
+
+        $team->users()->detach($user->getKey());
+
+        foreach ([TeamAbility::VIEW, TeamAbility::VIEW_MEMBERS, TeamAbility::MANAGE_MEMBERS, TeamAbility::UPDATE] as $ability) {
+            $this->assertFalse(Gate::forUser($user)->allows($ability, $team), $ability->value);
+        }
+    }
+
+    public function test_a_view_members_holder_sees_the_roster_but_has_no_actions(): void
+    {
+        Team::createRole('Viewer', [TeamPermission::VIEW_MEMBERS]);
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $viewer = User::factory()->create();
+        $this->addMember($team, $viewer, 'Viewer');
+        $other = User::factory()->create();
+        $this->addMember($team, $other);
+
+        Livewire::actingAs($viewer)
+            ->test(MembersTable::class, ['team' => $team])
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords([$owner, $viewer, $other])
+            ->assertTableActionHidden('changeRole', $other)
+            ->assertTableActionHidden('remove', $other);
     }
 
     protected function tearDown(): void

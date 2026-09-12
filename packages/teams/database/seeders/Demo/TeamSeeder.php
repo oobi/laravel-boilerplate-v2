@@ -6,6 +6,7 @@ namespace Concise\Teams\Database\Seeders\Demo;
 
 use App\Models\User;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\TeamsServiceProvider;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
@@ -39,12 +40,23 @@ class TeamSeeder extends Seeder
         $stride = self::MEMBERS_PER_TEAM - self::OVERLAP;
         $poolSize = ($stride * (self::TEAMS - 1)) + self::MEMBERS_PER_TEAM;
 
+        // The seeded team-admin role, if it still exists — given to each owner so
+        // the demo makes operational sense: an owner shown with the top role, not a
+        // bare owner badge (and, under `managed` ownership, not powerless). An owner
+        // may hold a role like any member; it sits alongside their owner badge.
+        $adminRole = TeamLabels::singular().' Admin';
+        $adminRole = $roles->contains($adminRole) ? $adminRole : null;
+
         $users = $this->users(self::TEAMS + $poolSize);
         $owners = $users->take(self::TEAMS)->values();
         $pool = $users->slice(self::TEAMS)->values();
 
-        $teams = $owners->map(function (User $owner, int $index) use ($pool, $roles, $stride): Team {
+        $teams = $owners->map(function (User $owner, int $index) use ($pool, $roles, $stride, $adminRole): Team {
             $team = Team::factory()->ownedBy($owner)->create();
+
+            if ($adminRole !== null) {
+                $team->syncMemberRoles($owner, [$adminRole]);
+            }
 
             $pool->slice($index * $stride, self::MEMBERS_PER_TEAM)->values()
                 ->each(fn (User $member, int $position) => $team->addMember(

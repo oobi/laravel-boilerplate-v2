@@ -34,6 +34,18 @@ final class SystemRoleScope implements RoleScope
             ->all();
     }
 
+    /** No implications between system permissions. */
+    public function implications(): array
+    {
+        return [];
+    }
+
+    /** Every system permission always applies. */
+    public function unavailable(): array
+    {
+        return [];
+    }
+
     /** Role's own defaults already describe a system role. */
     public function attributes(): array
     {
