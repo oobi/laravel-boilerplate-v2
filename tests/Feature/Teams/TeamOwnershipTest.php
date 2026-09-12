@@ -16,8 +16,10 @@ use Tests\TestCase;
 
 /**
  * The Slack model: one primary owner (teams.user_id — transferable, and alone
- * able to delete the team, transfer it, or manage owners) plus co-owners who
- * share the permission bypass for everything else.
+ * able to delete the team, transfer it, or manage owners) plus co-owners.
+ * Ownership is a shield (other members can't remove or demote an owner), never a
+ * permission bypass — an owner's day-to-day authority comes from their team role,
+ * exactly like any member.
  */
 class TeamOwnershipTest extends TestCase
 {
@@ -47,18 +49,18 @@ class TeamOwnershipTest extends TestCase
         $this->team->addMember($this->member, 'Member');
     }
 
-    public function test_a_co_owner_bypasses_team_permissions_like_the_primary_owner(): void
+    public function test_a_co_owner_has_no_bypass_authority_comes_from_a_role(): void
     {
         $this->assertTrue($this->team->isOwnedBy($this->coOwner));
         $this->assertFalse($this->team->isPrimaryOwner($this->coOwner));
-        $this->assertNull($this->team->roleFor($this->coOwner), 'ownership is structural, not a role');
 
-        $this->actingAs($this->coOwner)
-            ->get(route('team.members', ['team' => $this->team->slug]))
-            ->assertOk();
+        // Shielded, not empowered: with no role a co-owner holds no team permissions.
+        $this->assertFalse(Gate::forUser($this->coOwner)->allows(TeamAbility::MANAGE_MEMBERS, $this->team));
+        $this->assertFalse(Gate::forUser($this->coOwner)->allows(TeamAbility::UPDATE, $this->team));
 
+        // Grant a role → the authority comes from it, like any member.
+        $this->team->syncMemberRoles($this->coOwner, ['Team Admin']);
         $this->assertTrue(Gate::forUser($this->coOwner)->allows(TeamAbility::MANAGE_MEMBERS, $this->team));
-        $this->assertTrue(Gate::forUser($this->coOwner)->allows(TeamAbility::UPDATE, $this->team));
     }
 
     public function test_only_the_primary_owner_may_delete_transfer_or_manage_owners(): void
@@ -91,6 +93,10 @@ class TeamOwnershipTest extends TestCase
 
     public function test_a_co_owner_sees_no_ownership_actions(): void
     {
+        // A co-owner needs a role to reach the roster at all; even with manage-members
+        // the ownership acts stay out of reach (primary owner / system admin only).
+        $this->team->syncMemberRoles($this->coOwner, ['Team Admin']);
+
         Livewire::actingAs($this->coOwner)
             ->test(MembersTable::class, ['team' => $this->team])
             ->assertTableActionHidden('makeOwner', $this->member)
@@ -146,6 +152,25 @@ class TeamOwnershipTest extends TestCase
             ->callTableAction('remove', $this->coOwner);
 
         $this->assertFalse($this->team->fresh()->hasUser($this->coOwner));
+    }
+
+    public function test_an_owners_role_is_shielded_from_a_manage_members_holder(): void
+    {
+        // The co-owner holds a role, so changeRole would otherwise be offered.
+        $this->team->syncMemberRoles($this->coOwner, ['Team Admin']);
+
+        $teamAdmin = User::factory()->create();
+        $this->team->addMember($teamAdmin, 'Team Admin'); // manage-members, not manage-owners
+
+        Livewire::actingAs($teamAdmin)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertTableActionHidden('changeRole', $this->coOwner)   // an owner's role is protected
+            ->assertTableActionVisible('changeRole', $this->member);  // a regular member's isn't
+
+        // Manage-owners authority (here the primary owner) may change an owner's role.
+        Livewire::actingAs($this->primary)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertTableActionVisible('changeRole', $this->coOwner);
     }
 
     public function test_the_members_table_labels_owners(): void

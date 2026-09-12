@@ -7,7 +7,6 @@ namespace Concise\Teams\Policies;
 use App\Models\User;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamCreationMode;
-use Concise\Teams\Enums\TeamOwnership;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\DomainPolicy;
@@ -36,29 +35,13 @@ class TeamPolicy
             return null;
         }
 
-        // Managed (silo) model: ownership is identity, not power. Owners are
-        // authorised exactly like members — through their team role — so there is
-        // no bypass at all; everyone (owner included) falls through to the
-        // permission checks below. See TeamOwnership.
-        if (! TeamOwnership::current()->ownersBypass()) {
-            return null;
-        }
-
-        // Sovereign (entity) model from here down: the team is self-governing and
-        // ownership carries authority directly, without needing a role.
-
-        // The primary owner (teams.user_id) is sovereign over their team — every
-        // ability, including the destructive/handover acts only they may perform.
-        if ($team->isPrimaryOwner($user)) {
-            return true;
-        }
-
-        // A co-owner shares day-to-day authority but NOT the primary-owner-only
-        // acts (delete / transfer ownership / manage co-owners) — those fall
-        // through to their policy methods (which deny), reserving them to the
-        // primary owner. isCoOwner() is false for a suspended co-owner: the flag
-        // is kept but the bypass is paused until they're reinstated.
-        if ($team->isCoOwner($user) && ! in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
+        // Ownership is a shield + responsibility anchor, NOT a permission bypass.
+        // The only thing it grants directly is the handful of non-delegable acts
+        // (transfer / delete / manage co-owners), and only to the PRIMARY owner
+        // (teams.user_id). Everything else — including a co-owner's day-to-day
+        // authority — comes from the member's team role, checked in the methods
+        // below, so an owner never sees or does more than their role allows.
+        if ($team->isPrimaryOwner($user) && in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
             return true;
         }
 
@@ -84,15 +67,15 @@ class TeamPolicy
     }
 
     /**
-     * May the user see the member roster (read-only)? Owners always can (floor,
-     * even when managed), plus the dedicated view permission and — since managing
-     * implies viewing — anyone who can manage members. Acting on members
+     * May the user see the member roster (read-only)? The dedicated view
+     * permission, or — since managing implies viewing — anyone who can manage
+     * members. Ownership grants no visibility of its own: an owner sees the
+     * roster through their role, like any member. Acting on members
      * (role/suspend/remove) is gated separately by manageMembers.
      */
     public function viewMembers(User $user, Team $team): bool
     {
-        return $team->isOwnedBy($user)
-            || $team->memberHasPermission($user, TeamPermission::VIEW_MEMBERS)
+        return $team->memberHasPermission($user, TeamPermission::VIEW_MEMBERS)
             || $team->memberHasPermission($user, TeamPermission::MANAGE_MEMBERS);
     }
 
@@ -117,17 +100,16 @@ class TeamPolicy
     }
 
     /**
-     * May the user open the team-area Settings page at all? Owners (read-only
-     * floor, even when managed), the dedicated view-settings permission (see the
-     * page without editing), plus anyone who can edit one of its sections — team
-     * details or, when the overlay's on, domains. Viewing and editing are
-     * separate permissions: editing within is gated per-section by update /
+     * May the user open the team-area Settings page at all? The dedicated
+     * view-settings permission (see the page without editing), plus anyone who
+     * can edit one of its sections — team details or, when the overlay's on,
+     * domains. Ownership grants no visibility of its own: an owner reaches
+     * Settings through their role. Editing within is gated per-section by update /
      * manageDomains (VIEW_SETTINGS never grants a write).
      */
     public function viewSettings(User $user, Team $team): bool
     {
-        return $team->isOwnedBy($user)
-            || $team->memberHasPermission($user, TeamPermission::VIEW_SETTINGS)
+        return $team->memberHasPermission($user, TeamPermission::VIEW_SETTINGS)
             || $team->memberHasPermission($user, TeamPermission::UPDATE_TEAM)
             || (DomainPolicy::enabled() && $team->memberHasPermission($user, TeamPermission::MANAGE_DOMAINS));
     }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Scenarios;
 
 use App\Models\User;
+use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\Onboarding;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
@@ -38,6 +39,16 @@ class PublicSaasTest extends TestCase
             'teams.invitations.members' => true,
             'teams.invitations.admins' => true,
             'fortify.login_fallback' => 'home',
+        ]);
+
+        // A fresh install ships this role, and a self-service creator is given it
+        // at setup — the owner's authority (creating, inviting) comes from it, not
+        // from ownership itself.
+        Team::createRole('Team Admin', [
+            TeamPermission::VIEW_MEMBERS,
+            TeamPermission::MANAGE_MEMBERS,
+            TeamPermission::INVITE_MEMBERS,
+            TeamPermission::UPDATE_TEAM,
         ]);
     }
 

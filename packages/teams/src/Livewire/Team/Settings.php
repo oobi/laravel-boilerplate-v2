@@ -59,12 +59,11 @@ class Settings extends Component implements HasSchemas
         return Gate::allows(TeamAbility::UPDATE, $this->team);
     }
 
-    /** Whether to render the domains section (owner / manage-domains / system admin). */
+    /** Whether to render the domains section (manage-domains permission / system admin). */
     public function canViewDomains(): bool
     {
         return DomainPolicy::enabled() && (
             Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || $this->team->isOwnedBy(auth()->user())
             || Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team)
         );
     }

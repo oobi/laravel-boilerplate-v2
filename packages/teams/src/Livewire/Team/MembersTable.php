@@ -9,7 +9,6 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
-use Concise\Teams\Enums\TeamOwnership;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamRoleField;
 use Filament\Actions\Action;
@@ -129,19 +128,15 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ->deferFilters(false)
             ->recordActions([
                 ActionGroup::make([
-                    // The row actions all mutate — hidden for a view-only viewer
-                    // (each still re-checks its own authorization on run).
                     Action::make('changeRole')
                         ->label(Team::allowsMultipleRoles() ? team_trans('members.change_roles') : team_trans('members.change_role'))
                         ->icon('heroicon-o-shield-check')
                         ->modalWidth(Width::Small)
-                        // An owner has an editable role only under the managed ownership
-                        // model (a sovereign owner is powered by the bypass, not a role). And
-                        // an owner's/co-owner's role is protected: only someone who can manage
-                        // owners (the primary owner, or a system admin) may change it, so a
-                        // plain manage-members holder can't strip an owner's role.
-                        ->visible(fn (User $record): bool => ! $this->isOwner($record)
-                            || (! TeamOwnership::current()->ownersBypass() && $this->canManageOwners()))
+                        // An owner's/co-owner's role is protected (the shield): only
+                        // someone who can manage owners (the primary owner, or a system
+                        // admin) may change it, so a plain manage-members holder can't
+                        // strip it. A regular member's role needs manage-members.
+                        ->visible(fn (User $record): bool => $this->canActOn($record))
                         ->fillForm(fn (User $record): array => [
                             'roles' => Team::allowsMultipleRoles()
                                 ? $this->memberRoles()->get($record->id, [])
@@ -149,8 +144,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ])
                         ->schema([TeamRoleField::make()->required()])
                         ->action(function (User $record, array $data): void {
-                            abort_unless($this->canManage()
-                                && (! $this->isOwner($record) || (! TeamOwnership::current()->ownersBypass() && $this->canManageOwners())), 403);
+                            abort_unless($this->canActOn($record), 403);
 
                             $this->team->syncMemberRoles($record, TeamRoleField::selected($data));
                             $this->memberRoles = null;
@@ -217,10 +211,9 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->modalDescription(fn (User $record): string => team_trans('members.suspend_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         ->visible(fn (User $record): bool => ! $this->isSuspended($record)
                             && ! $this->team->isPrimaryOwner($record)
-                            && (! $this->isOwner($record) || $this->canManageOwners()))
+                            && $this->canActOn($record))
                         ->action(function (User $record): void {
-                            abort_unless($this->canManage(), 403);
-                            abort_if($this->isOwner($record) && ! $this->canManageOwners(), 403);
+                            abort_unless($this->canActOn($record), 403);
 
                             $this->team->suspendMember($record);
                             $this->suspendedIds = null;
@@ -234,9 +227,9 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->icon('heroicon-o-play-circle')
                         ->color(DaisyColor::SUCCESS->toFilamentColor())
                         ->visible(fn (User $record): bool => $this->isSuspended($record)
-                            && (! $this->isOwner($record) || $this->canManageOwners()))
+                            && $this->canActOn($record))
                         ->action(function (User $record): void {
-                            abort_unless($this->canManage(), 403);
+                            abort_unless($this->canActOn($record), 403);
 
                             $this->team->reinstateMember($record);
                             $this->suspendedIds = null;
@@ -253,10 +246,9 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->modalDescription(fn (User $record): string => team_trans('members.remove_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         // Never the primary owner; a co-owner only by someone who could demote them.
                         ->hidden(fn (User $record): bool => $this->team->isPrimaryOwner($record)
-                            || ($this->isOwner($record) && ! $this->canManageOwners()))
+                            || ! $this->canActOn($record))
                         ->action(function (User $record): void {
-                            abort_unless($this->canManage(), 403);
-                            abort_if($this->isOwner($record) && ! $this->canManageOwners(), 403);
+                            abort_if($this->team->isPrimaryOwner($record) || ! $this->canActOn($record), 403);
 
                             $this->team->removeMember($record);
                             $this->ownerIds = null;
@@ -264,7 +256,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
 
                             Notification::make()->title(team_trans('members.removed'))->success()->send();
                         }),
-                ])->visible(fn (): bool => $this->canManage()),
+                ])->visible(fn (): bool => $this->canManage() || $this->canManageOwners() || $this->canTransferOwnership()),
             ])
             ->searchPlaceholder(team_trans('members.search'))
             ->emptyStateHeading(team_trans('members.empty'))
@@ -375,6 +367,17 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     {
         return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
             || Gate::allows(TeamAbility::MANAGE_MEMBERS, $this->team);
+    }
+
+    /**
+     * May the current actor manage this particular member? An owner (primary or
+     * co-) is shielded — only manage-owners authority (primary owner / system
+     * admin) may touch them; a regular member needs manage-members. Used for
+     * role change, suspend/reinstate and removal.
+     */
+    private function canActOn(User $member): bool
+    {
+        return $this->isOwner($member) ? $this->canManageOwners() : $this->canManage();
     }
 
     private function canManageOwners(): bool

@@ -63,24 +63,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Ownership model
+    | Default owner role
     |--------------------------------------------------------------------------
     |
-    | What being a team's owner grants. One of:
-    |  - 'sovereign' the team is a self-governing entity; owners have authority
-    |    directly (they bypass team permissions within their own team, like a
-    |    super admin does app-wide). The SaaS default.
-    |  - 'managed'   the team is a platform-controlled silo; the "owner" is an
-    |    operational manager whose authority comes only from their assigned team
-    |    role (no bypass). Config-level acts (settings, domains, delete, transfer)
-    |    stay with system admins unless a role is granted the matching permission.
+    | The team role a new team's owner is given at setup. Ownership itself is a
+    | shield (other members can't remove or demote an owner) and a responsibility
+    | anchor (the primary owner holds the non-delegable acts — transfer, delete,
+    | co-owner management — and is the natural home for billing) — it is NEVER a
+    | permission bypass. An owner's day-to-day authority comes entirely from this
+    | role, exactly like any member, so a self-service creator isn't powerless and
+    | a central admin can adjust it afterwards.
     |
-    | Ownership itself is always structural (teams.user_id) — this only changes
-    | whether that status carries power. See ~dev/TEAMS_TIER_SCOPE.md.
+    | Unset (null) resolves to the seeded "{Team} Admin" role for the current
+    | labels. If the named role doesn't exist at creation, no role is assigned.
+    | See Team::defaultOwnerRole().
     |
     */
 
-    'ownership' => env('TEAMS_OWNERSHIP', 'sovereign'),
+    'default_owner_role' => env('TEAMS_DEFAULT_OWNER_ROLE'),
 
     /*
     |--------------------------------------------------------------------------
@@ -173,8 +173,9 @@ return [
     | the path prefix above. Only verified domains ever route (OQ3).
     |
     | Who may manage a team's domains is runtime authorization, not config: the
-    | `MANAGE_DOMAINS` team permission (Roles screen), plus a sovereign owner's
-    | bypass and system admins. This flag (env TEAMS_DOMAINS_ENABLED) only turns
+    | `MANAGE_DOMAINS` team permission (Roles screen) and system admins. Ownership
+    | grants no bypass, so an owner manages domains only through a role that
+    | carries it. This flag (env TEAMS_DOMAINS_ENABLED) only turns
     | the whole overlay on/off — a setup-time/per-environment decision, not a live
     | runtime flip (host mode switches every team from path to host URLs).
     |

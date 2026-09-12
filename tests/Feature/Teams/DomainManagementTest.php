@@ -87,9 +87,11 @@ class DomainManagementTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_sovereign_owner_manages_domains(): void
+    public function test_an_owner_with_the_permission_manages_domains(): void
     {
-        config(['teams.domains.enabled' => true, 'teams.ownership' => 'sovereign']);
+        // The default owner role ('Team Admin', seeded in setUp) carries MANAGE_DOMAINS,
+        // so the owner it's given at setup can manage — authority via role, not ownership.
+        config(['teams.domains.enabled' => true]);
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
@@ -98,34 +100,23 @@ class DomainManagementTest extends TestCase
             ->assertActionVisible('addDomain');
     }
 
-    public function test_a_managed_owner_without_the_permission_is_read_only(): void
+    public function test_an_owner_without_the_permission_cannot_manage_domains(): void
     {
-        config(['teams.domains.enabled' => true, 'teams.ownership' => 'managed']);
+        // Ownership grants no bypass: an owner whose role lacks MANAGE_DOMAINS can't view or act.
+        config(['teams.domains.enabled' => true]);
+        Team::createRole('Staff', [TeamPermission::UPDATE_TEAM]); // no manage-domains
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
-
-        // Owner still sees it (read-only floor) but can't act — no bypass, no role.
-        Livewire::actingAs($owner)
-            ->test(ManageDomains::class, ['team' => $team])
-            ->assertActionHidden('addDomain');
-    }
-
-    public function test_a_managed_owner_with_the_permission_manages(): void
-    {
-        config(['teams.domains.enabled' => true, 'teams.ownership' => 'managed']);
-        Team::createRole('Manager', [TeamPermission::MANAGE_DOMAINS]);
-        $owner = User::factory()->create();
-        $team = Team::factory()->ownedBy($owner)->create();
-        $team->syncMemberRoles($owner, ['Manager']);
+        $team->syncMemberRoles($owner, ['Staff']); // replace the default admin role
 
         Livewire::actingAs($owner)
             ->test(ManageDomains::class, ['team' => $team])
-            ->assertActionVisible('addDomain');
+            ->assertForbidden();
     }
 
     public function test_a_system_admin_always_manages(): void
     {
-        config(['teams.domains.enabled' => true, 'teams.ownership' => 'managed']);
+        config(['teams.domains.enabled' => true]);
         $team = Team::factory()->create();
 
         Livewire::actingAs(User::factory()->superAdmin()->create())

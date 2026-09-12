@@ -104,9 +104,19 @@ class TeamsServiceProvider extends ServiceProvider
         $this->registerLoginRedirect();
 
         // The owner is always a member. Ownership itself is structural
-        // (teams.user_id) — not a role — and team roles are seeded centrally by
+        // (teams.user_id) — a shield, not a permission bypass — so the owner's
+        // authority comes from a role: give them the configured default at setup
+        // (when it exists). Team roles are still seeded centrally by
         // TeamRolesSeeder, never per team.
-        Team::created(fn (Team $team) => $team->users()->syncWithoutDetaching([$team->user_id]));
+        Team::created(function (Team $team): void {
+            $team->users()->syncWithoutDetaching([$team->user_id]);
+
+            $role = Team::defaultOwnerRole();
+
+            if (Team::availableRoles()->where('name', $role)->exists()) {
+                $team->syncMemberRoles($team->owner, [$role]);
+            }
+        });
 
         $this->registerTeamNavigation();
     }

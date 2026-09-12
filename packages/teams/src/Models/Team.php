@@ -11,6 +11,7 @@ use Concise\Teams\Database\Factories\TeamFactory;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
+use Concise\Teams\Support\TeamLabels;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -240,9 +241,9 @@ class Team extends Model
     }
 
     /**
-     * A co-owner who currently carries the owner bypass: an owner who is neither
-     * the primary owner nor suspended. (The sovereign bypass in TeamPolicy is
-     * paused for a suspended co-owner — the flag stays, the power doesn't.)
+     * A co-owner whose shield is currently active: an owner who is neither the
+     * primary owner nor suspended. (Suspension pauses the shield — the owner flag
+     * stays, but the protection doesn't apply while suspended.)
      */
     public function isCoOwner(User $user): bool
     {
@@ -382,6 +383,23 @@ class Team extends Model
     public static function availableRoles(): Builder
     {
         return Role::query()->ofScope(self::ROLE_SCOPE);
+    }
+
+    /**
+     * The role a new team's owner is given at setup (config
+     * `teams.default_owner_role`), defaulting to the seeded "{Team} Admin" role
+     * for the current labels. Ownership carries no permissions of its own, so
+     * this role is where the owner's authority comes from. The name may not
+     * resolve to an existing role (renamed/deleted) — callers assign it only
+     * when it exists.
+     */
+    public static function defaultOwnerRole(): string
+    {
+        $configured = config('teams.default_owner_role');
+
+        return is_string($configured) && $configured !== ''
+            ? $configured
+            : TeamLabels::singular().' Admin';
     }
 
     /**

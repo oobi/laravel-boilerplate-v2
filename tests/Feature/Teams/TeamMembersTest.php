@@ -60,8 +60,9 @@ class TeamMembersTest extends TestCase
 
         $this->assertTrue($team->hasUser($owner));
         $this->assertTrue($team->isOwnedBy($owner));
-        // Ownership is structural, not a role.
-        $this->assertNull($team->roleFor($owner));
+        // Ownership is structural (a shield); the owner's authority comes from the
+        // default owner role they're given at setup, not from ownership itself.
+        $this->assertSame(self::TEAM_ADMIN, $team->roleFor($owner));
     }
 
     public function test_the_owner_can_view_the_members_page(): void
@@ -189,8 +190,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->assertTableActionHidden('remove', $owner)
-            ->assertTableActionHidden('changeRole', $owner);
+            ->assertTableActionHidden('remove', $owner);
 
         $team->removeMember($owner); // the domain method is a no-op for the owner too
 

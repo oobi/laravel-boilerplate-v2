@@ -26,11 +26,15 @@ class TeamSettingsTest extends TestCase
         parent::setUp();
 
         // Seed the permission rows the policy's checkPermissionTo resolves against
-        // (both the view and the update permission, so either check is answerable).
+        // (both the view and the update permission, so either check is answerable),
+        // and make it the role a new team's owner is given at setup so owners reach
+        // Settings through a role (ownership grants no visibility of its own).
         Team::createRole('Settings Admin', [
             TeamPermission::VIEW_SETTINGS,
             TeamPermission::UPDATE_TEAM,
         ]);
+
+        config(['teams.default_owner_role' => 'Settings Admin']);
     }
 
     public function test_the_page_is_open_to_an_owner_even_with_domains_off(): void

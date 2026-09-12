@@ -4,6 +4,7 @@ namespace Tests\Feature\Scenarios;
 
 use App\Models\User;
 use Concise\Teams\Actions\InviteMember;
+use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\Onboarding;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
@@ -36,6 +37,15 @@ class InvitationOnlyTest extends TestCase
             'teams.invitations.members' => true,
             'teams.invitations.admins' => true,
             'fortify.login_fallback' => 'home',
+        ]);
+
+        // The role an owner is given at setup — the source of their authority
+        // (inviting), since ownership itself grants no permissions.
+        Team::createRole('Team Admin', [
+            TeamPermission::VIEW_MEMBERS,
+            TeamPermission::MANAGE_MEMBERS,
+            TeamPermission::INVITE_MEMBERS,
+            TeamPermission::UPDATE_TEAM,
         ]);
     }
 
