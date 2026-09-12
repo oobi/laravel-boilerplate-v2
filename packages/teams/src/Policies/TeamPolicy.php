@@ -36,6 +36,16 @@ class TeamPolicy
             return null;
         }
 
+        // Membership is the prerequisite for every team ability: a stale role
+        // row (any detach that isn't removeMember(), an import, a support
+        // script) must never keep granting after the person has left, and a
+        // suspended member has no authority until reinstated. System admins
+        // don't come through here — their `manage teams` gate is checked first
+        // at the call sites — and the global super-admin bypass already ran.
+        if (! $team->isActiveMember($user)) {
+            return false;
+        }
+
         // Ownership is a shield + responsibility anchor, NOT a permission bypass.
         // The only thing it grants directly is the handful of non-delegable acts
         // (transfer / delete / manage co-owners), and only to the PRIMARY owner
@@ -68,6 +78,7 @@ class TeamPolicy
             && ! Team::hasReachedOwnedLimit($user);
     }
 
+    /** Active membership — already required by before(); kept explicit as the ability's own answer. */
     public function view(User $user, Team $team): bool
     {
         return $team->isActiveMember($user);

@@ -180,6 +180,31 @@ class ShowUserTest extends TestCase
         $this->assertTrue($target->fresh()->hasRole('Editor'));
     }
 
+    public function test_manage_roles_offers_and_accepts_system_roles_only(): void
+    {
+        // An add-on's scoped roles (a team role, say) share the table but mean
+        // nothing at the system scope — never offer one, never store one.
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        Role::findOrCreate('Editor');
+        Role::query()->create(['name' => 'Scoped Role', 'scope' => 'team']);
+
+        // Not an option, so the checkbox list's own validation rejects it.
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->callAction('manageRoles', data: ['roles' => ['Scoped Role']])
+            ->assertHasActionErrors();
+
+        $this->assertFalse($target->fresh()->hasRole('Scoped Role'));
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->callAction('manageRoles', data: ['roles' => ['Editor']])
+            ->assertHasNoActionErrors();
+
+        $this->assertTrue($target->fresh()->hasRole('Editor'));
+    }
+
     public function test_super_admins_can_grant_super_admin_through_manage_roles_but_not_to_themselves(): void
     {
         $admin = User::factory()->superAdmin()->create();

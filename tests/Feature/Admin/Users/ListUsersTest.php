@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Users;
 
 use App\Livewire\Admin\Users\ListUsers;
+use App\Models\Role;
 use App\Models\User;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -263,6 +264,20 @@ class ListUsersTest extends TestCase
             ->filterTable('role', '__no_role__')
             ->assertCanSeeTableRecords([$noRole])
             ->assertCanNotSeeTableRecords([$admin, $support]);
+    }
+
+    public function test_the_role_filter_lists_system_roles_only(): void
+    {
+        Role::findOrCreate('Editor');
+        Role::query()->create(['name' => 'Scoped Role', 'scope' => 'team']);
+
+        $options = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListUsers::class)
+            ->instance()
+            ->roleFilterOptions();
+
+        $this->assertArrayHasKey('Editor', $options);
+        $this->assertArrayNotHasKey('Scoped Role', $options);
     }
 
     public function test_the_role_filter_can_show_users_with_a_specific_role(): void

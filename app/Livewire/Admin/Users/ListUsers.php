@@ -275,7 +275,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
         return [
             self::SUPER_ADMIN_FILTER_VALUE => __('admin.super_admin'),
             self::NO_ROLE_FILTER_VALUE => __('admin.no_roles'),
-            ...Role::query()->pluck('name', 'name')->all(),
+            ...Role::systemRoles()->orderBy('name')->pluck('name', 'name')->all(),
         ];
     }
 

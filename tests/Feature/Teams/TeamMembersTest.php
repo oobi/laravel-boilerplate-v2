@@ -3,11 +3,13 @@
 namespace Tests\Feature\Teams;
 
 use App\Models\User;
+use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -227,6 +229,24 @@ class TeamMembersTest extends TestCase
         Livewire::actingAs($member)
             ->test(MembersTable::class, ['team' => $team])
             ->assertForbidden();
+    }
+
+    public function test_a_stale_role_row_grants_nothing_to_an_ex_member(): void
+    {
+        // Membership is the prerequisite for every team ability: a detach path
+        // that isn't removeMember() (an import, a support script) leaves the
+        // model_has_roles row behind, and that row must not keep granting.
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $user = User::factory()->create();
+        $this->addMember($team, $user, self::TEAM_ADMIN);
+        $this->assertTrue(Gate::forUser($user)->allows(TeamAbility::MANAGE_MEMBERS, $team));
+
+        $team->users()->detach($user->getKey());
+
+        foreach ([TeamAbility::VIEW, TeamAbility::VIEW_MEMBERS, TeamAbility::MANAGE_MEMBERS, TeamAbility::UPDATE] as $ability) {
+            $this->assertFalse(Gate::forUser($user)->allows($ability, $team), $ability->value);
+        }
     }
 
     public function test_a_view_members_holder_sees_the_roster_but_has_no_actions(): void

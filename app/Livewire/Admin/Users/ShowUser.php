@@ -159,7 +159,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
                 Forms\Components\CheckboxList::make('roles')
                     ->label(__('admin.roles'))
-                    ->options(fn (): array => Role::query()->pluck('name', 'name')->all())
+                    // System roles only: an add-on's scoped roles (e.g. team roles) live in
+                    // the same table but mean nothing assigned at the system scope.
+                    ->options(fn (): array => Role::systemRoles()->orderBy('name')->pluck('name', 'name')->all())
                     ->columns(2)
                     ->visible(fn (): bool => Gate::allows(UserAbility::ASSIGN_ROLE, $this->user)),
             ])
