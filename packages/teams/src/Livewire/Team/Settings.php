@@ -84,7 +84,7 @@ class Settings extends Component implements HasActions, HasSchemas
             || Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
     }
 
-    /** May the viewer delete the team? The primary owner (under self-service creation) or a system admin. */
+    /** May the viewer delete the team? The primary owner (when `teams.owner_can_delete` allows) or a system admin. */
     public function canDelete(): bool
     {
         return Gate::allows(SystemPermission::MANAGE_TEAMS->value)

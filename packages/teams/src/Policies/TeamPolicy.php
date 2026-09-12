@@ -52,10 +52,12 @@ class TeamPolicy
         // authority — comes from the member's team role, checked in the methods
         // below, so an owner never sees or does more than their role allows.
         if ($team->isPrimaryOwner($user) && in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
-            // Who creates, deletes: under admin-only provisioning the team is the
-            // platform's, and only a system admin may delete it.
+            // Whether an owner may delete their own team is deferred to site policy
+            // via a config switch — some businesses reserve deletion to admins —
+            // independent of who may create teams. A system admin always can, via
+            // the admin area's `manage teams` gate.
             if ($ability === TeamAbility::DELETE->value) {
-                return TeamCreationMode::current()->allowsSelfServiceCreation();
+                return (bool) config('teams.owner_can_delete', true);
             }
 
             return true;

@@ -86,6 +86,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Owner deletion
+    |--------------------------------------------------------------------------
+    |
+    | Whether a team's primary owner may delete their own team. Deferred to each
+    | project's business logic: a self-service SaaS lets an owner bin their team;
+    | a platform that provisions and owns the teams (a backoffice, a franchise)
+    | reserves deletion to system admins. A system admin can always delete from
+    | the admin area regardless — this only governs the owner's own team-area act.
+    |
+    */
+
+    'owner_can_delete' => (bool) env('TEAMS_OWNER_CAN_DELETE', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Invitations
     |--------------------------------------------------------------------------
     |

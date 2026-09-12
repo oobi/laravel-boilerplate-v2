@@ -82,12 +82,12 @@ class TeamOwnershipTest extends TestCase
         }
     }
 
-    public function test_the_primary_owner_may_delete_only_under_self_service_creation(): void
+    public function test_owner_deletion_is_governed_by_the_config_switch(): void
     {
-        // Who creates, deletes: an admin-provisioned team is the platform's to remove.
+        // Deferred to site policy: on by default, off reserves deletion to admins.
         $this->assertTrue(Gate::forUser($this->primary)->allows(TeamAbility::DELETE, $this->team));
 
-        config(['teams.creation' => 'admin-only']);
+        config(['teams.owner_can_delete' => false]);
 
         $this->assertFalse(Gate::forUser($this->primary)->allows(TeamAbility::DELETE, $this->team));
         $this->assertTrue(Gate::forUser($this->primary)->allows(TeamAbility::TRANSFER_OWNERSHIP, $this->team), 'transfer is unaffected');
