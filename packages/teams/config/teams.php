@@ -75,8 +75,10 @@ return [
     | a central admin can adjust it afterwards.
     |
     | Unset (null) resolves to the seeded "{Team} Admin" role for the current
-    | labels. If the named role doesn't exist at creation, no role is assigned.
-    | See Team::defaultOwnerRole().
+    | labels. If no such role exists, creating a team (self-service or from
+    | Admin › Teams) is refused with a clear message rather than producing a
+    | team nobody can run; transferring ownership gives the successor this role
+    | when they lack it. See Team::defaultOwnerRole().
     |
     */
 

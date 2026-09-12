@@ -14,8 +14,9 @@ use Livewire\Component;
 
 /**
  * The team area's Members page: the shared members table (search, filters,
- * pagination, per-row actions). Reached only by members holding the
- * manage-members permission or an owner (TeamPolicy::manageMembers).
+ * pagination, per-row actions). Opens for anyone who may see the roster
+ * (TeamPolicy::viewMembers — the same ability the sidebar link uses, so a link
+ * never leads to a 403); the table hides its actions from a view-only holder.
  * Invitations have their own page (ListInvitations).
  */
 #[Layout('teams::layouts.team')]
@@ -26,7 +27,7 @@ class ListMembers extends Component
     public function mount(Team $team): void
     {
         $this->team = $team;
-        Gate::authorize(TeamAbility::MANAGE_MEMBERS, $team);
+        Gate::authorize(TeamAbility::VIEW_MEMBERS, $team);
     }
 
     /**

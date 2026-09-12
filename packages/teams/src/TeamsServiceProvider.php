@@ -15,6 +15,7 @@ use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Livewire\Team\ManageDomains;
+use Concise\Teams\Livewire\Team\ManageOwnership;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
@@ -93,6 +94,7 @@ class TeamsServiceProvider extends ServiceProvider
         Livewire::component('teams-members-table', MembersTable::class);
         Livewire::component('teams-pending-invitations', PendingInvitations::class);
         Livewire::component('teams-manage-domains', ManageDomains::class);
+        Livewire::component('teams-manage-ownership', ManageOwnership::class);
 
         Gate::policy(Team::class, TeamPolicy::class);
 
@@ -105,17 +107,13 @@ class TeamsServiceProvider extends ServiceProvider
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — a shield, not a permission bypass — so the owner's
-        // authority comes from a role: give them the configured default at setup
-        // (when it exists). Team roles are still seeded centrally by
-        // TeamRolesSeeder, never per team.
+        // authority comes from a role: give them the configured default at setup.
+        // Lenient here (factories, seeders, imports); the user-facing creation
+        // paths refuse loudly when the role is missing (DefaultOwnerRoleMissing).
+        // Team roles are still seeded centrally by TeamRolesSeeder, never per team.
         Team::created(function (Team $team): void {
             $team->users()->syncWithoutDetaching([$team->user_id]);
-
-            $role = Team::defaultOwnerRole();
-
-            if (Team::availableRoles()->where('name', $role)->exists()) {
-                $team->syncMemberRoles($team->owner, [$role]);
-            }
+            $team->ensureHoldsDefaultOwnerRole($team->owner);
         });
 
         $this->registerTeamNavigation();

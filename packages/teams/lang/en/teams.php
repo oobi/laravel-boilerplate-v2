@@ -46,6 +46,7 @@ return [
         'created' => ':name created',
         'not_allowed' => 'You can’t create a :team right now.',
         'throttled' => 'You’ve created several :teams just now — try again shortly.',
+        'owner_role_missing' => 'No “:role” role exists to give the new :owner. Ask an administrator to set one up on the Roles screen.',
     ],
 
     'select' => [
@@ -86,15 +87,6 @@ return [
         'change_role' => 'Change role',
         'change_roles' => 'Change roles',
         'roles_updated' => 'Roles updated',
-        'make_owner' => 'Make :owner',
-        'make_owner_confirm' => 'Make :person a co-:owner of :name? :Owners bypass every :team permission; only the primary :owner can demote them.',
-        'made_owner' => ':person is now an :owner',
-        'revoke_owner' => 'Remove as :owner',
-        'revoke_owner_confirm' => 'Remove :person as an :owner of :name? They stay a :member.',
-        'revoked_owner' => ':person is no longer an :owner',
-        'transfer' => 'Transfer ownership',
-        'transfer_confirm' => 'Make :person the primary :owner of :name? The current primary :owner stays on as a co-:owner.',
-        'transferred' => ':person is now the primary :owner',
         'suspend' => 'Suspend',
         'suspend_confirm' => 'Suspend :person from :name? They keep their membership and role but can’t use the :team until reinstated.',
         'suspended_notice' => ':person suspended',
@@ -106,6 +98,27 @@ return [
         'add' => 'Add :member',
         'add_heading' => 'Add a :member to :name',
         'added' => ':person added to :name',
+    ],
+
+    // The Ownership section on Settings (team area and admin): the acts reserved to
+    // the primary owner. Ownership is a shield and a responsibility, never a permission.
+    'ownership' => [
+        'title' => 'Ownership',
+        'description' => 'Only the primary :owner of :name can change its co-:owners, hand it over, or delete it. Being an :owner grants no permissions — those come from a role, like any :member.',
+        'primary' => 'Primary :owner',
+        'co_owners' => 'Co-:owners',
+        'none' => 'None',
+        'manage_co_owners' => 'Manage co-:owners',
+        'co_owners_help' => 'Co-:owners are protected: only the primary :owner or a system administrator can change their role, suspend or remove them. It grants no permissions of its own.',
+        'co_owners_updated' => 'Co-:owners updated',
+        'transfer' => 'Transfer ownership',
+        'transfer_heading' => 'Transfer ownership of :name',
+        'transfer_to' => 'New primary :owner',
+        'transfer_help' => 'The new primary :owner is given the ":role" role if they don’t already hold it. You stay on as a co-:owner.',
+        'transferred' => ':person is now the primary :owner',
+        'delete' => 'Delete :team',
+        'delete_help' => 'Deleting the :team removes it for every :member. A system administrator can restore it.',
+        'deleted' => ':name deleted',
     ],
 
     'invitations' => [
@@ -225,7 +238,7 @@ return [
     ],
 
     'roles' => [
-        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team; the :owner bypasses them.',
+        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team; :owners hold one like any :member.',
     ],
 
     'permissions' => [

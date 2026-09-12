@@ -189,6 +189,17 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
             ->action(function (array $data): void {
                 Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
 
+                // Same guard as self-service creation: the owner's authority is
+                // the default owner role, so refuse to create a team nobody can run.
+                if (! Team::defaultOwnerRoleExists()) {
+                    Notification::make()
+                        ->title(team_trans('create.owner_role_missing', ['role' => Team::defaultOwnerRole()]))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
                 $team = Team::create([
                     'name' => $data['name'],
                     'user_id' => $data['user_id'],

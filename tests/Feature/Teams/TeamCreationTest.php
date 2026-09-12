@@ -5,6 +5,8 @@ namespace Tests\Feature\Teams;
 use App\Models\User;
 use Concise\Teams\Actions\CreateTeam;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Exceptions\DefaultOwnerRoleMissing;
 use Concise\Teams\Livewire\Admin\Teams\ListTeams;
 use Concise\Teams\Livewire\Team\Onboarding;
 use Concise\Teams\Models\Team;
@@ -22,6 +24,22 @@ class TeamCreationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const TEAM_ADMIN = 'Team Admin';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The role a fresh install ships and gives every new team's owner — creation
+        // refuses without it, since ownership itself grants no permissions.
+        Team::createRole(self::TEAM_ADMIN, [
+            TeamPermission::VIEW_MEMBERS,
+            TeamPermission::MANAGE_MEMBERS,
+            TeamPermission::INVITE_MEMBERS,
+            TeamPermission::UPDATE_TEAM,
+        ]);
+    }
+
     public function test_a_user_with_no_team_can_create_one_and_lands_on_its_dashboard(): void
     {
         $user = User::factory()->create();
@@ -36,8 +54,38 @@ class TeamCreationTest extends TestCase
 
         $this->assertTrue($team->isPrimaryOwner($user), 'the creator owns it');
         $this->assertTrue($team->hasUser($user), 'and is its first member');
+        $this->assertSame(self::TEAM_ADMIN, $team->roleFor($user), 'and holds the default owner role — their authority comes from it');
         $this->assertNotEmpty($team->slug);
         $this->assertSame($team->id, $user->fresh()->current_team_id);
+    }
+
+    public function test_creation_is_refused_loudly_when_no_default_owner_role_exists(): void
+    {
+        // Renamed/deleted after seeding, or never seeded: a team made now would have no one able to run it.
+        Team::availableRoles()->get()->each->delete();
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(Onboarding::class)
+            ->callAction('createTeam', data: ['name' => 'Northwind'])
+            ->assertNotified();
+
+        $this->assertDatabaseMissing('teams', ['name' => 'Northwind']);
+
+        $this->expectException(DefaultOwnerRoleMissing::class);
+        app(CreateTeam::class)('Northwind', $user);
+    }
+
+    public function test_an_admin_cannot_provision_a_team_without_a_default_owner_role_either(): void
+    {
+        Team::availableRoles()->get()->each->delete();
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListTeams::class)
+            ->callAction('createTeam', data: ['name' => 'Northwind', 'user_id' => User::factory()->create()->id, 'active' => true])
+            ->assertNotified();
+
+        $this->assertDatabaseMissing('teams', ['name' => 'Northwind']);
     }
 
     public function test_the_onboarding_page_offers_creation_only_under_self_service(): void

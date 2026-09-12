@@ -14,11 +14,12 @@ use Concise\Teams\Support\DomainPolicy;
 /**
  * Per-instance team abilities, mirroring UserPolicy's scheme: coarse checks go
  * through spatie permissions (TeamPermission, resolved in the team's scope),
- * never role names. Owners are structural (Team::isOwnedBy) and bypass every
- * ability within their own team via before() — the team-level parallel of the
- * global super-admin Gate::before (which still applies here too). A few
- * abilities are the PRIMARY owner's alone: co-owners share the bypass for
- * everything else, so day-to-day owner work never waits on one person.
+ * never role names. Ownership is structural (Team::isOwnedBy) and is a shield
+ * plus a responsibility anchor, never a permission bypass: the PRIMARY owner
+ * alone holds the three non-delegable acts (granted in before()) and a floor
+ * into Settings where they live (viewSettings); everything else any owner
+ * does comes from their team role, like any member. The global super-admin
+ * Gate::before still applies on top.
  */
 class TeamPolicy
 {
@@ -42,6 +43,12 @@ class TeamPolicy
         // authority — comes from the member's team role, checked in the methods
         // below, so an owner never sees or does more than their role allows.
         if ($team->isPrimaryOwner($user) && in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
+            // Who creates, deletes: under admin-only provisioning the team is the
+            // platform's, and only a system admin may delete it.
+            if ($ability === TeamAbility::DELETE->value) {
+                return TeamCreationMode::current()->allowsSelfServiceCreation();
+            }
+
             return true;
         }
 
@@ -101,15 +108,19 @@ class TeamPolicy
 
     /**
      * May the user open the team-area Settings page at all? The dedicated
-     * view-settings permission (see the page without editing), plus anyone who
-     * can edit one of its sections — team details or, when the overlay's on,
-     * domains. Ownership grants no visibility of its own: an owner reaches
-     * Settings through their role. Editing within is gated per-section by update /
+     * view-settings permission (see the page without editing), anyone who can
+     * edit one of its sections — team details or, when the overlay's on,
+     * domains — and always the primary owner: the acts only they may perform
+     * (co-owners, transfer, delete) live on this page, so this is a
+     * responsibility floor for one person, not a permission bypass — every
+     * section still checks its own ability, and a role-less primary owner gets
+     * a read-only details form. Editing within is gated per-section by update /
      * manageDomains (VIEW_SETTINGS never grants a write).
      */
     public function viewSettings(User $user, Team $team): bool
     {
-        return $team->memberHasPermission($user, TeamPermission::VIEW_SETTINGS)
+        return $team->isPrimaryOwner($user)
+            || $team->memberHasPermission($user, TeamPermission::VIEW_SETTINGS)
             || $team->memberHasPermission($user, TeamPermission::UPDATE_TEAM)
             || (DomainPolicy::enabled() && $team->memberHasPermission($user, TeamPermission::MANAGE_DOMAINS));
     }

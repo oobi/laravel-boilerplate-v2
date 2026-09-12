@@ -19,14 +19,18 @@
                 </form>
 
                 <x-card :title="team_trans('admin.danger_zone')" type="panel">
-                    <p class="text-sm text-base-content/60">
-                        {{ team_trans('admin.danger_help') }}
-                    </p>
+                    <livewire:teams-manage-ownership :team="$team" :key="'ownership-'.$team->id" />
 
-                    <x-action-list>
-                        {{ $this->toggleActiveAction }}
-                        {{ $this->deleteTeamAction }}
-                    </x-action-list>
+                    <div class="mt-4 border-t border-base-300 pt-4">
+                        <p class="mb-3 text-sm text-base-content/60">
+                            {{ team_trans('admin.danger_help') }}
+                        </p>
+
+                        <x-action-list>
+                            {{ $this->toggleActiveAction }}
+                            {{ $this->deleteTeamAction }}
+                        </x-action-list>
+                    </div>
                 </x-card>
             </div>
 

@@ -4,6 +4,7 @@ namespace Tests\Feature\Teams\Admin;
 
 use App\Enums\SystemPermission;
 use App\Models\User;
+use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Admin\Teams\ListTeams;
 use Concise\Teams\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +55,8 @@ class ListTeamsTest extends TestCase
 
     public function test_a_team_can_be_created_with_an_owner(): void
     {
+        // Creation needs the default owner role to exist — it's what the owner's authority comes from.
+        Team::createRole('Team Admin', [TeamPermission::MANAGE_MEMBERS]);
         $owner = User::factory()->create();
 
         Livewire::actingAs(User::factory()->superAdmin()->create())

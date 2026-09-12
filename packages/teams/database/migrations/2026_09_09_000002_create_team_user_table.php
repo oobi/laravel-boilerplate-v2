@@ -12,8 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            // Co-owner (Slack model): shares the primary owner's permission bypass;
-            // the primary owner stays `teams.user_id`. See Team::isOwnedBy().
+            // Co-owner: shielded (only the primary owner or a system admin may change
+            // their role, suspend or remove them) but granted no permissions by the flag —
+            // those come from their team role. The primary owner stays `teams.user_id`.
+            // See Team::isOwnedBy().
             $table->boolean('is_owner')->default(false);
             // Suspended by a team admin: membership and role kept, access to the team withheld
             // until reinstated (the team-level counterpart of a deactivated account).

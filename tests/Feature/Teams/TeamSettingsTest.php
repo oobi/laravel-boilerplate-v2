@@ -48,6 +48,44 @@ class TeamSettingsTest extends TestCase
             ->assertOk();
     }
 
+    public function test_the_page_is_open_read_only_to_a_primary_owner_with_no_role(): void
+    {
+        // The responsibility floor: the acts only the primary owner may perform live
+        // here, so they can always open the page — but the details form stays read-only.
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+        $team->syncMemberRoles($owner, []);
+
+        $this->actingAs($owner)
+            ->get(route('team.settings', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee(team_trans('ownership.manage_co_owners'));
+
+        Livewire::actingAs($owner)
+            ->test(Settings::class, ['team' => $team])
+            ->call('save')
+            ->assertForbidden();
+    }
+
+    public function test_the_ownership_section_is_shown_only_to_the_primary_owner(): void
+    {
+        Team::createRole('Editor', [TeamPermission::VIEW_SETTINGS, TeamPermission::UPDATE_TEAM]);
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+        $editor = User::factory()->create();
+        $team->addMember($editor, 'Editor');
+
+        $this->actingAs($editor)
+            ->get(route('team.settings', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertDontSee(team_trans('ownership.manage_co_owners'));
+
+        $this->actingAs($owner)
+            ->get(route('team.settings', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee(team_trans('ownership.manage_co_owners'));
+    }
+
     public function test_the_page_is_forbidden_to_a_plain_member(): void
     {
         $owner = User::factory()->create();

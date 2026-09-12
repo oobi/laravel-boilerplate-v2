@@ -89,6 +89,26 @@ class TeamMembersTest extends TestCase
             ->assertOk();
     }
 
+    public function test_a_view_members_holder_can_open_the_page_the_sidebar_links_to(): void
+    {
+        // The nav item, the page and the table all gate on the same ability, so a
+        // link never leads to a 403 — a viewer just sees the roster without actions.
+        Team::createRole('Viewer', [TeamPermission::VIEW_MEMBERS]);
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $viewer = User::factory()->create();
+        $this->addMember($team, $viewer, 'Viewer');
+
+        $this->actingAs($viewer)
+            ->get(route('team.dashboard', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee(route('team.members', ['team' => $team->slug]), false);
+
+        $this->actingAs($viewer)
+            ->get(route('team.members', ['team' => $team->slug]))
+            ->assertOk();
+    }
+
     public function test_a_regular_member_cannot_manage_members(): void
     {
         $owner = User::factory()->create();

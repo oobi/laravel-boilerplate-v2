@@ -9,9 +9,11 @@ namespace Concise\Teams\Enums;
  * counterpart of App\Enums\SystemPermission. Each case is a real TeamPolicy
  * check and is seeded as a spatie Permission row (TeamRolesSeeder). Which
  * team roles hold which permission is admin-configurable, never a hardcoded
- * match(); owners bypass all of these within their own team, exactly as the
- * super admin bypasses SystemPermission. A project extends this enum with its
- * own domain capabilities the same way it extends SystemPermission.
+ * match(). Ownership grants none of these: the primary owner's non-delegable
+ * acts (co-owners, transfer, delete) are granted in TeamPolicy::before, and
+ * everything else an owner does comes from their role like any member. A
+ * project extends this enum with its own domain capabilities the same way it
+ * extends SystemPermission.
  */
 enum TeamPermission: string
 {
