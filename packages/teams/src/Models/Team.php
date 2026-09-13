@@ -10,7 +10,6 @@ use App\Support\Theme\DaisyColor;
 use Concise\Teams\Database\Factories\TeamFactory;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Support\Roles\TeamRoleScope;
-use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamLabels;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,12 +25,16 @@ use InvalidArgumentException;
 use RuntimeException;
 use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * A team (relabelable per project — see config/teams.php). Owned, Jetstream-free:
- * the schema shape is harvested from Jetstream's proven model, but roles live in
- * spatie/laravel-permission scoped by team (never a pivot `role` column) and there
- * is no tenancy package — see ~dev/TEAMS_TIER_SCOPE.md.
+ * the schema shape is harvested from Jetstream's proven model. Team roles are
+ * spatie Role rows in the `team` scope holding permissions; a member's
+ * assignment is the membership's own pivot (team_user_role — a foreign key to
+ * a role row, never a `role` string). spatie's teams feature is not used, so
+ * system roles resolve exactly as spatie documents. No tenancy package — see
+ * ~dev/TEAMS_TIER_SCOPE.md and ~dev/permission-review-spatie-alignment.md.
  *
  * @property int $id
  * @property string $name
@@ -83,10 +86,9 @@ class Team extends Model
     }
 
     /**
-     * Backfill a unique slug from the name when one isn't supplied explicitly;
-     * and on a hard delete, purge the team-scoped role assignments — spatie's
-     * pivot has no FK to teams, so nothing cascades them (memberships and
-     * invitations do cascade at the DB).
+     * Backfill a unique slug from the name when one isn't supplied explicitly.
+     * (A hard delete needs no cleanup here: memberships, their role
+     * assignments and invitations all cascade at the DB.)
      */
     protected static function booted(): void
     {
@@ -94,12 +96,6 @@ class Team extends Model
             if (blank($team->slug)) {
                 $team->slug = static::uniqueSlug($team->name);
             }
-        });
-
-        static::forceDeleting(function (Team $team): void {
-            DB::table(config('permission.table_names.model_has_roles'))
-                ->where(config('permission.column_names.team_foreign_key', 'team_id'), $team->getKey())
-                ->delete();
         });
     }
 
@@ -178,24 +174,55 @@ class Team extends Model
     /** A member, suspended or not (the owner always is). For access, see isActiveMember(). */
     public function hasUser(User $user): bool
     {
-        return $this->users()->whereKey($user->getKey())->exists()
+        return $this->membershipOf($user) !== null
             || $this->user_id === $user->getKey();
     }
 
     /** Suspended by a team admin: still a member, but without access until reinstated. */
     public function isSuspended(User $user): bool
     {
-        return $this->users()
-            ->whereKey($user->getKey())
-            ->wherePivotNotNull('suspended_at')
-            ->exists();
+        return $this->membershipOf($user)?->suspended_at !== null;
     }
 
     /** A member who may actually use the team: not suspended (the primary owner never is). */
     public function isActiveMember(User $user): bool
     {
-        return $this->isPrimaryOwner($user)
-            || $this->users()->whereKey($user->getKey())->wherePivotNull('suspended_at')->exists();
+        if ($this->isPrimaryOwner($user)) {
+            return true;
+        }
+
+        $membership = $this->membershipOf($user);
+
+        return $membership !== null && $membership->suspended_at === null;
+    }
+
+    /**
+     * The membership row joining this team and the user (with its roles), if
+     * they belong — memoised on the USER (HasTeams::membershipIn), because the
+     * authenticated user is one instance per request while a request may hold
+     * several Team instances. Every membership question on this model reads it.
+     */
+    public function membershipOf(User $user): ?Membership
+    {
+        return $user->membershipIn($this);
+    }
+
+    /**
+     * Forget the memoised membership after a write — on the instance the write
+     * was made with and, if it's the same person, on the authenticated user's
+     * instance (the one a page re-asks). As with any loaded Eloquent relation,
+     * a raw write through users() behind a memoised copy leaves it stale: call
+     * this, or fresh()/refresh() the user.
+     */
+    public function forgetMembership(User $user): void
+    {
+        $user->forgetMembershipIn($this);
+
+        $actor = auth()->user();
+
+        if ($actor instanceof User && $actor->is($user) && $actor !== $user) {
+            $actor->forgetMembershipIn($this);
+        }
     }
 
     /**
@@ -214,11 +241,13 @@ class Team extends Model
         }
 
         $this->users()->updateExistingPivot($user->getKey(), ['suspended_at' => now()]);
+        $this->forgetMembership($user);
     }
 
     public function reinstateMember(User $user): void
     {
         $this->users()->updateExistingPivot($user->getKey(), ['suspended_at' => null]);
+        $this->forgetMembership($user);
     }
 
     /**
@@ -279,6 +308,7 @@ class Team extends Model
         }
 
         $this->users()->updateExistingPivot($user->getKey(), ['is_owner' => true]);
+        $this->forgetMembership($user);
     }
 
     /** Demote a co-owner to an ordinary member (their team role, if any, is untouched). */
@@ -289,6 +319,7 @@ class Team extends Model
         }
 
         $this->users()->updateExistingPivot($user->getKey(), ['is_owner' => false]);
+        $this->forgetMembership($user);
     }
 
     /**
@@ -313,6 +344,8 @@ class Team extends Model
         $this->update(['user_id' => $to->getKey()]);
         $this->users()->updateExistingPivot($to->getKey(), ['is_owner' => false]);
         $this->users()->updateExistingPivot($previous, ['is_owner' => true]);
+        $this->forgetMembership($to);
+        $this->forgetMembership($this->owner);
         $this->unsetRelation('owner');
 
         $this->ensureHoldsDefaultOwnerRole($to);
@@ -341,13 +374,14 @@ class Team extends Model
     }
 
     /**
-     * Whether the member holds the given team permission — or one that implies
-     * it (TeamPermission::implies(): manage carries view) — resolved in this
-     * team's scope. This is the one place implications are enforced, so a role
-     * only needs to store what was granted. Ownership grants nothing here: the
-     * primary owner's three non-delegable acts are granted in
-     * TeamPolicy::before, and everything else an owner may do comes from their
-     * role like any member.
+     * Whether the member holds the given team permission, resolved in this
+     * team's scope — exactly the one permission, as spatie stores it.
+     * Implications (manage carries view) are applied when a role is written
+     * (TeamPermission::withImplied(), via createRole() and the Roles form), so
+     * a stored role is the whole truth and this never has to guess. Ownership
+     * grants nothing here: the primary owner's three non-delegable acts are
+     * granted in TeamPolicy::before, and everything else an owner may do comes
+     * from their role like any member.
      */
     public function memberHasPermission(User $user, TeamPermission $permission): bool
     {
@@ -355,31 +389,43 @@ class Team extends Model
             return false;
         }
 
-        return app(TeamContext::class)->run($this, function () use ($user, $permission): bool {
-            $user->unsetRelation('roles');
+        $membership = $this->membershipOf($user);
 
-            foreach ([$permission, ...TeamPermission::impliedBy($permission)] as $candidate) {
-                if ($user->checkPermissionTo($candidate->value)) {
-                    return true;
-                }
-            }
-
+        if ($membership === null) {
             return false;
-        });
+        }
+
+        // The role → permission half comes from spatie's application cache (the
+        // registrar's permissions carry their roles), exactly as a system check
+        // does — never from a per-role permissions query. So a page's checks cost
+        // the membership lookup once (memoised on the user) and nothing else.
+        $permissionRow = app(PermissionRegistrar::class)
+            ->getPermissions(['name' => $permission->value, 'guard_name' => Guard::getDefaultName(Role::class)], onlyOne: true)
+            ->first();
+
+        if ($permissionRow === null) {
+            return false;
+        }
+
+        $held = $membership->roles->modelKeys();
+
+        return $permissionRow->roles->contains(fn (Role $role): bool => in_array($role->getKey(), $held, true));
     }
 
     /**
-     * The member's role names within this team, resolved in the team's scope.
+     * The member's role names within this team, from the membership's pivot.
      *
      * @return SupportCollection<int, string>
      */
     public function rolesFor(User $user): SupportCollection
     {
-        return app(TeamContext::class)->run($this, function () use ($user): SupportCollection {
-            $user->unsetRelation('roles');
+        $membership = $this->membershipOf($user);
 
-            return $user->getRoleNames()->values();
-        });
+        if ($membership === null) {
+            return collect();
+        }
+
+        return $membership->roles->sortBy('name')->pluck('name')->values();
     }
 
     /** The member's (first) role name within this team — the whole answer when roles are single per member. */
@@ -396,8 +442,8 @@ class Team extends Model
     public const ROLE_SCOPE = 'team';
 
     /**
-     * The centrally-defined roles a member may hold — shared by every team
-     * (spatie team_id NULL, so they resolve in every team's scope).
+     * The centrally-defined roles a member may hold — shared by every team;
+     * a member holds one through the membership pivot (Membership::roles()).
      *
      * @return Builder<Role>
      */
@@ -455,10 +501,11 @@ class Team extends Model
     }
 
     /**
-     * Define a shared team role holding the given permissions. Role names are
-     * globally unique, so an existing role of that name (any scope) is a real
-     * conflict — fail loudly rather than reuse or shadow it. Used by
-     * TeamRolesSeeder, by tests as fixture setup, and by any Team Roles screen.
+     * Define a shared team role holding the given permissions, closed over
+     * their implications. Role names are globally unique, so an existing role
+     * of that name (any scope) is a real conflict — fail loudly rather than
+     * reuse or shadow it. Used by TeamRolesSeeder, by tests as fixture setup,
+     * and by any Team Roles screen.
      *
      * @param  list<TeamPermission>  $permissions
      */
@@ -483,11 +530,13 @@ class Team extends Model
         ]);
 
         if ($permissions !== []) {
-            // Straight from the table, not Permission::findOrCreate(): spatie
-            // answers that from a cache it flushes via model events, which are
-            // off inside WithoutModelEvents seeders — a stale "missing" there
-            // turns into a duplicate insert. givePermissionTo flushes explicitly.
-            $role->givePermissionTo(collect($permissions)
+            // Stored closed over its implications (manage carries view), so the
+            // stored role is the truth. Straight from the table, not
+            // Permission::findOrCreate(): spatie answers that from a cache it
+            // flushes via model events, which are off inside WithoutModelEvents
+            // seeders — a stale "missing" there turns into a duplicate insert.
+            // givePermissionTo flushes explicitly.
+            $role->givePermissionTo(collect(TeamPermission::withImplied($permissions))
                 ->map(fn (TeamPermission $permission): Permission => Permission::query()->firstOrCreate([
                     'name' => $permission->value,
                     'guard_name' => $guard,
@@ -500,39 +549,31 @@ class Team extends Model
 
     /**
      * Each member's team roles in one query: user id => list of role names.
-     * spatie resolves roles per team scope; this reads the pivot directly so an
-     * admin screen can list a team's members without entering its scope (which
-     * would also re-scope the *viewer's* own permission checks).
      *
      * @return SupportCollection<int, list<string>>
      */
     public function memberRoles(): SupportCollection
     {
-        $roles = (new Role)->getTable();
-        $pivot = config('permission.table_names.model_has_roles');
-        $teamKey = config('permission.column_names.team_foreign_key', 'team_id');
-        $morphKey = config('permission.column_names.model_morph_key', 'model_id');
-
-        return Role::query()
-            ->join($pivot, "{$pivot}.role_id", '=', "{$roles}.id")
-            ->where("{$pivot}.{$teamKey}", $this->getKey())
-            ->where("{$pivot}.model_type", (new User)->getMorphClass())
-            ->orderBy("{$roles}.name")
-            ->get(["{$roles}.name", "{$pivot}.{$morphKey} as member_id"])
-            ->groupBy('member_id')
+        return DB::table('team_user_role')
+            ->join('team_user', 'team_user.id', '=', 'team_user_role.team_user_id')
+            ->join('roles', 'roles.id', '=', 'team_user_role.role_id')
+            ->where('team_user.team_id', $this->getKey())
+            ->orderBy('roles.name')
+            ->get(['roles.name', 'team_user.user_id'])
+            ->groupBy('user_id')
             ->map(fn (SupportCollection $rows): array => $rows->pluck('name')->values()->all());
     }
 
     /**
      * Set a member's team roles (replacing any held). Works for any member,
      * owners included: ownership is structural (a pivot flag), so an owner may
-     * also hold a role — it shows alongside their owner badge and, under the
-     * managed model, is where their authority comes from. Who is allowed to
-     * change an owner's role is enforced at the UI/policy layer, not here.
+     * also hold a role — it shows alongside their owner badge and is where
+     * their authority comes from. Who is allowed to change an owner's role is
+     * enforced at the UI/policy layer, not here.
      *
      * @param  list<string>  $roles
      *
-     * @throws InvalidArgumentException for a non-team role, or several roles when the project allows one per member
+     * @throws InvalidArgumentException for a non-member, a non-team role, or several roles when the project allows one per member
      */
     public function syncMemberRoles(User $user, array $roles): void
     {
@@ -542,13 +583,19 @@ class Team extends Model
             throw new InvalidArgumentException('A member may hold one team role (config teams.multiple_roles_per_member).');
         }
 
+        $membership = $this->membershipOf($user)
+            ?? throw new InvalidArgumentException(sprintf('%s is not a member of %s.', $user->email, $this->name));
+
+        $ids = static::availableRoles()->whereIn('name', $roles)->pluck('id', 'name');
+
         foreach ($roles as $role) {
-            if (! static::availableRoles()->where('name', $role)->exists()) {
+            if (! $ids->has($role)) {
                 throw new InvalidArgumentException(sprintf("'%s' is not a team role.", $role));
             }
         }
 
-        app(TeamContext::class)->run($this, fn () => $user->syncRoles($roles));
+        $membership->roles()->sync($ids->values()->all());
+        $this->forgetMembership($user);
     }
 
     /** Set a member's single team role — see syncMemberRoles(). */
@@ -557,22 +604,24 @@ class Team extends Model
         $this->syncMemberRoles($user, [$role]);
     }
 
-    /** Remove a member and their team roles. The primary owner is never removed from their own team. */
+    /**
+     * Remove a member. Their team roles hang off the membership row and cascade
+     * with it at the DB. The primary owner is never removed from their own team.
+     */
     public function removeMember(User $user): void
     {
         if ($this->isPrimaryOwner($user)) {
             return;
         }
 
-        app(TeamContext::class)->run($this, fn () => $user->syncRoles([]));
         $this->users()->detach($user->getKey());
+        $this->forgetMembership($user);
     }
 
     /**
      * Add a user to the team, optionally holding one or more of the shared team
      * roles. The single write path for membership (seeders, invitations,
-     * tests): the pivot row and the spatie role assignment are two writes that
-     * must agree.
+     * tests).
      *
      * @param  string|list<string>|null  $roles
      *
@@ -583,6 +632,7 @@ class Team extends Model
         $roles = array_values(array_filter((array) $roles));
 
         $this->users()->syncWithoutDetaching([$user->getKey()]);
+        $this->forgetMembership($user);
 
         if ($roles !== []) {
             $this->syncMemberRoles($user, $roles);

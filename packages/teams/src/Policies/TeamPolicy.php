@@ -95,10 +95,10 @@ class TeamPolicy
 
     /**
      * May the user see the member roster (read-only)? The view permission —
-     * which managing carries with it (TeamPermission::implies, enforced in
-     * memberHasPermission). Ownership grants no visibility of its own: an
-     * owner sees the roster through their role, like any member. Acting on
-     * members (role/suspend/remove) is gated separately by manageMembers.
+     * which a stored role holding manage also holds, since roles are written
+     * closed over TeamPermission::implies(). Ownership grants no visibility of
+     * its own: an owner sees the roster through their role, like any member.
+     * Acting on members (role/suspend/remove) is gated separately by manageMembers.
      */
     public function viewMembers(User $user, Team $team): bool
     {
@@ -127,8 +127,8 @@ class TeamPolicy
 
     /**
      * May the user open the team-area Settings page at all? The view-settings
-     * permission — which editing a section (update team, manage domains)
-     * carries with it — and always the primary owner: the acts only they may
+     * permission — which a stored role holding update team or manage domains
+     * also holds (written closed over implies()) — and always the primary owner: the acts only they may
      * perform (co-owners, transfer, delete) live on this page, so this is a
      * responsibility floor for one person, not a permission bypass — every
      * section still checks its own ability, and a role-less primary owner gets

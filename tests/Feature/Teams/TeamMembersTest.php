@@ -233,9 +233,9 @@ class TeamMembersTest extends TestCase
 
     public function test_a_stale_role_row_grants_nothing_to_an_ex_member(): void
     {
-        // Membership is the prerequisite for every team ability: a detach path
-        // that isn't removeMember() (an import, a support script) leaves the
-        // model_has_roles row behind, and that row must not keep granting.
+        // Membership is the prerequisite for every team ability. A role hangs
+        // off the membership row and cascades with it, and TeamPolicy::before()
+        // refuses a non-member regardless — belt and braces.
         $owner = User::factory()->create();
         $team = $this->team($owner);
         $user = User::factory()->create();
@@ -243,6 +243,7 @@ class TeamMembersTest extends TestCase
         $this->assertTrue(Gate::forUser($user)->allows(TeamAbility::MANAGE_MEMBERS, $team));
 
         $team->users()->detach($user->getKey());
+        $user = $user->fresh(); // a raw pivot write behind the user's memoised membership, like any loaded relation
 
         foreach ([TeamAbility::VIEW, TeamAbility::VIEW_MEMBERS, TeamAbility::MANAGE_MEMBERS, TeamAbility::UPDATE] as $ability) {
             $this->assertFalse(Gate::forUser($user)->allows($ability, $team), $ability->value);

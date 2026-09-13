@@ -226,10 +226,10 @@ trait HasPermissionsSchema
     }
 
     /**
-     * What the form shows, flattened — implied options are in the state, ticked
-     * alongside their implier, and so are stored — plus anything the role holds
-     * that the form couldn't offer (RoleScope::unavailable()), so a save never
-     * strips a grant it didn't show.
+     * What the form shows, flattened and closed over its implications — the
+     * stored role is the truth, so the closure happens at every write, not at
+     * check time — plus anything the role holds that the form couldn't offer
+     * (RoleScope::unavailable()), so a save never strips a grant it didn't show.
      *
      * @param  array<string, mixed>  $data
      * @return list<string>
@@ -238,11 +238,12 @@ trait HasPermissionsSchema
     {
         $shown = collect($this->offeredPermissions())
             ->keys()
-            ->flatMap(fn (string $category): array => $data[$this->permissionsFieldName($category)] ?? []);
+            ->flatMap(fn (string $category): array => $data[$this->permissionsFieldName($category)] ?? [])
+            ->all();
 
         $kept = collect($role?->permissions->pluck('name') ?? [])
             ->intersect($this->roleScope()->unavailable());
 
-        return $shown->merge($kept)->unique()->values()->all();
+        return collect($this->applyImplications($shown))->merge($kept)->unique()->values()->all();
     }
 }

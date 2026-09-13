@@ -13,6 +13,7 @@ use App\Support\Navigation\Registry\NavItem;
 use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
+use Concise\Teams\Console\Commands\SyncRoleImplicationsCommand;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Livewire\Team\ManageOwnership;
@@ -28,7 +29,6 @@ use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamLabels;
-use Concise\Teams\Support\TeamPermissionResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -56,19 +56,8 @@ class TeamsServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/teams.php', 'teams');
 
-        // Enable spatie/laravel-permission's teams feature so roles/permissions
-        // resolve per team, and default the "no team" scope to the reserved
-        // system id (0) so existing system roles keep working (see
-        // TeamPermissionResolver). Set in register() so both are in place before
-        // the permission migrations read them and before PermissionRegistrar
-        // boots. This is why teams never edits config/permission.php.
-        config([
-            'permission.teams' => true,
-            'permission.team_resolver' => TeamPermissionResolver::class,
-        ]);
-
-        // The single source of truth for the active team (query/permission/
-        // filesystem/cache scope) — see TeamContext and the CurrentTeam facade.
+        // The single source of truth for the active team (query/filesystem/cache
+        // scope — not permissions) — see TeamContext and the CurrentTeam facade.
         $this->app->singleton(TeamContext::class);
 
         // The DNS boundary for custom-domain verification (5h). Swapped for a
@@ -97,7 +86,10 @@ class TeamsServiceProvider extends ServiceProvider
         Livewire::component('teams-manage-ownership', ManageOwnership::class);
 
         Gate::policy(Team::class, TeamPolicy::class);
-        $this->registerSystemPermissionScope();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([SyncRoleImplicationsCommand::class]);
+        }
 
         // Team roles get their own tab on the admin Roles screen.
         RoleScopeRegistry::register(TeamRoleScope::class);
@@ -118,45 +110,6 @@ class TeamsServiceProvider extends ServiceProvider
         });
 
         $this->registerTeamNavigation();
-    }
-
-    /**
-     * A SystemPermission is application-wide by definition, but spatie answers
-     * every Gate check at the CURRENT permissions team id — and team routes set
-     * that to the team for the whole request, where a system role (assigned at
-     * scope 0) is invisible. So a support agent who is also a member of a team
-     * would lose `access admin panel` / `manage teams` the moment they entered
-     * it. This hook answers SystemPermission names at the system scope whenever
-     * a team scope is active, and stays out of the way (null) otherwise — so the
-     * super-admin bypass, spatie's own hook and every policy behave as before.
-     * Team permissions are never SystemPermission names, so nothing else routes
-     * through here.
-     */
-    private function registerSystemPermissionScope(): void
-    {
-        Gate::before(function (User $user, string $ability): ?bool {
-            if (SystemPermission::tryFrom($ability) === null) {
-                return null;
-            }
-
-            $context = app(TeamContext::class);
-
-            if (! $context->inTeamScope()) {
-                return null;
-            }
-
-            return $context->runSystem(function () use ($user, $ability): ?bool {
-                // Relations loaded under the team scope must not answer for the
-                // system scope, nor the other way round afterwards.
-                $user->unsetRelation('roles')->unsetRelation('permissions');
-
-                try {
-                    return $user->checkPermissionTo($ability) ?: null;
-                } finally {
-                    $user->unsetRelation('roles')->unsetRelation('permissions');
-                }
-            });
-        });
     }
 
     /**

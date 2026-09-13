@@ -9,7 +9,6 @@ use Concise\Teams\Support\TeamContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /** A queued job re-establishes the team scope it captured at dispatch (§5.5). */
@@ -54,7 +53,6 @@ class TeamJobContextTest extends TestCase
         $this->assertSame($team->id, RecordsTeamContextJob::$seenTeamId);
         // Scope is restored afterwards, not left pointing at the job's team.
         $this->assertFalse(CurrentTeam::has());
-        $this->assertSame(0, app(PermissionRegistrar::class)->getPermissionsTeamId());
     }
 
     protected function tearDown(): void

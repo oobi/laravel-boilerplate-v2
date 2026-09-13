@@ -10,7 +10,6 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
@@ -84,7 +83,7 @@ class TeamIsolationTest extends TestCase
         );
     }
 
-    public function test_setting_the_current_team_sets_the_permission_scope(): void
+    public function test_setting_the_current_team_makes_it_the_active_scope(): void
     {
         $team = Team::factory()->create();
 
@@ -92,7 +91,6 @@ class TeamIsolationTest extends TestCase
 
         $this->assertTrue(CurrentTeam::has());
         $this->assertSame($team->id, CurrentTeam::id());
-        $this->assertSame($team->id, app(PermissionRegistrar::class)->getPermissionsTeamId());
     }
 
     public function test_run_restores_the_previous_scope_afterwards(): void

@@ -343,21 +343,16 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         return Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
     }
 
-    /** Members holding the named role in this team (read from the pivot, outside the team scope). */
+    /** Members holding the named role in this team. */
     private function whereHoldsRole(Builder $query, string $role): Builder
     {
-        $roles = (new Role)->getTable();
-        $pivot = config('permission.table_names.model_has_roles');
-        $teamKey = config('permission.column_names.team_foreign_key', 'team_id');
-        $morphKey = config('permission.column_names.model_morph_key', 'model_id');
-
         return $query->whereIn('users.id', fn (QueryBuilder $sub) => $sub
-            ->select("{$pivot}.{$morphKey}")
-            ->from($pivot)
-            ->join($roles, "{$roles}.id", '=', "{$pivot}.role_id")
-            ->where("{$pivot}.{$teamKey}", $this->team->getKey())
-            ->where("{$pivot}.model_type", (new User)->getMorphClass())
-            ->where("{$roles}.name", $role));
+            ->select('team_user.user_id')
+            ->from('team_user_role')
+            ->join('team_user', 'team_user.id', '=', 'team_user_role.team_user_id')
+            ->join('roles', 'roles.id', '=', 'team_user_role.role_id')
+            ->where('team_user.team_id', $this->team->getKey())
+            ->where('roles.name', $role));
     }
 
     private function isOwner(User $member): bool

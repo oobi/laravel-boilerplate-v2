@@ -137,6 +137,8 @@ class ListTeamsTest extends TestCase
         $team = Team::factory()->inactive()->create();
         $member = User::factory()->create();
         $team->addMember($member, 'Member');
+        $membershipId = $team->membershipOf($member)->id;
+        $this->assertDatabaseHas('team_user_role', ['team_user_id' => $membershipId]);
         $team->delete();
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
@@ -146,7 +148,7 @@ class ListTeamsTest extends TestCase
 
         $this->assertDatabaseMissing('teams', ['id' => $team->id]);
         $this->assertDatabaseMissing('team_user', ['team_id' => $team->id]);
-        $this->assertDatabaseMissing(config('permission.table_names.model_has_roles'), ['team_id' => $team->id]);
+        $this->assertDatabaseMissing('team_user_role', ['team_user_id' => $membershipId]);
         $this->assertTrue($member->fresh()->exists, 'the member keeps their account');
     }
 

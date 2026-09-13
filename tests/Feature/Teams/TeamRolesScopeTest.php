@@ -12,6 +12,7 @@ use Concise\Teams\Database\Seeders\TeamRolesSeeder;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamContext;
 use Concise\Teams\TeamsServiceProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -19,6 +20,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use RuntimeException;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -43,7 +45,6 @@ class TeamRolesScopeTest extends TestCase
         $this->assertSame(2, Team::availableRoles()->count());
 
         $admin = Team::availableRoles()->where('name', 'Team Admin')->firstOrFail();
-        $this->assertNull($admin->team_id, 'shared team roles resolve in every team scope');
         $this->assertSame(Team::ROLE_SCOPE, $admin->scope);
         $this->assertTrue($admin->hasPermissionTo(TeamPermission::MANAGE_MEMBERS->value));
         $this->assertSame(DaisyColor::ERROR, $admin->color);
@@ -138,7 +139,6 @@ class TeamRolesScopeTest extends TestCase
         Role::query()->create([
             'name' => 'Support',
             'guard_name' => 'web',
-            'team_id' => null,
             'scope' => Team::ROLE_SCOPE,
         ]);
     }
@@ -239,18 +239,42 @@ class TeamRolesScopeTest extends TestCase
             ->assertSet('data.permissions_team_settings', []);
     }
 
-    public function test_a_manage_permission_carries_its_view_counterpart_at_check_time(): void
+    public function test_a_role_is_stored_closed_over_its_implications(): void
     {
-        // Stored minimally (as the seeder does), resolved with the implication —
-        // the one place it's enforced, so form-made and seeded roles agree.
-        Team::createRole('Manager', [TeamPermission::MANAGE_MEMBERS, TeamPermission::UPDATE_TEAM]);
+        // Written with manage/update only; stored with the view counterparts too,
+        // so what spatie stores is the truth and the Gate and checkPermissionTo() agree.
+        $role = Team::createRole('Manager', [TeamPermission::MANAGE_MEMBERS, TeamPermission::UPDATE_TEAM]);
+
+        $this->assertTrue($role->checkPermissionTo(TeamPermission::VIEW_MEMBERS->value));
+        $this->assertTrue($role->checkPermissionTo(TeamPermission::VIEW_SETTINGS->value));
+        $this->assertFalse($role->checkPermissionTo(TeamPermission::INVITE_MEMBERS->value), 'implications are single-level and specific');
+
         $team = Team::factory()->create();
         $manager = User::factory()->create();
         $team->addMember($manager, 'Manager');
 
         $this->assertTrue(Gate::forUser($manager)->allows(TeamAbility::VIEW_MEMBERS, $team));
         $this->assertTrue(Gate::forUser($manager)->allows(TeamAbility::VIEW_SETTINGS, $team));
-        $this->assertFalse(Gate::forUser($manager)->allows(TeamAbility::INVITE, $team), 'implications are single-level and specific');
+    }
+
+    public function test_a_check_asks_for_exactly_the_stored_permission(): void
+    {
+        // Stock spatie semantics: a role that holds only manage (written around
+        // the closure) does NOT pass a view check — there is no second answer.
+        $role = Team::createRole('Raw');
+        $role->givePermissionTo(Permission::findOrCreate(TeamPermission::MANAGE_MEMBERS->value));
+
+        $team = Team::factory()->create();
+        $member = User::factory()->create();
+        $team->addMember($member, 'Raw');
+
+        $this->assertTrue(Gate::forUser($member)->allows(TeamAbility::MANAGE_MEMBERS, $team));
+        $this->assertFalse(Gate::forUser($member)->allows(TeamAbility::VIEW_MEMBERS, $team));
+        $this->assertSame(
+            Gate::forUser($member)->allows(TeamAbility::VIEW_MEMBERS, $team),
+            app(TeamContext::class)->run($team, fn (): bool => $member->fresh()->checkPermissionTo(TeamPermission::VIEW_MEMBERS->value)),
+            'the Gate and spatie give the same answer',
+        );
     }
 
     public function test_a_feature_gated_permission_is_not_offered_but_is_kept_on_save_while_its_feature_is_off(): void

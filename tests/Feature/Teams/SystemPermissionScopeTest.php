@@ -17,9 +17,10 @@ use Tests\TestCase;
 
 /**
  * A SystemPermission is application-wide: it answers the same inside a team
- * route (where spatie's current scope is the team) as outside. And a system
- * admin's authority over teams lives in TeamPolicy::before() — the one place —
- * so components check a single TeamAbility.
+ * route as outside — system roles are stock spatie with no team scoping, and
+ * team roles live on the membership pivot, so nothing can shadow them. And a
+ * system admin's authority over teams lives in TeamPolicy::before() — the one
+ * place — so components check a single TeamAbility.
  */
 class SystemPermissionScopeTest extends TestCase
 {
@@ -49,7 +50,7 @@ class SystemPermissionScopeTest extends TestCase
 
         $this->assertSame([true, true, true], $inside);
 
-        // And the pin leaves nothing behind: back at the system scope the answer is unchanged.
+        // And entering a team context leaves nothing behind.
         $this->assertTrue(Gate::forUser($admin)->allows(SystemPermission::MANAGE_TEAMS->value));
     }
 
@@ -72,7 +73,7 @@ class SystemPermissionScopeTest extends TestCase
 
     public function test_a_team_permission_never_answers_as_a_system_permission(): void
     {
-        // The pin only intercepts SystemPermission names; a team role's grant stays in its team.
+        // A team role is an assignment on the membership, not on the user; its grant stays in its team.
         Team::createRole('Manager', [TeamPermission::MANAGE_MEMBERS]);
         $user = User::factory()->create();
         $team = Team::factory()->create();
@@ -97,7 +98,7 @@ class SystemPermissionScopeTest extends TestCase
             $this->assertTrue(Gate::forUser($admin)->allows($ability, $team), $ability->value);
         }
 
-        // Still true from inside the team's own scope — the system permission is pinned there too.
+        // Still true from inside the team's own context.
         $this->assertTrue(app(TeamContext::class)->run($team, fn (): bool => Gate::forUser($admin)->allows(TeamAbility::MANAGE_OWNERS, $team)));
     }
 
@@ -120,7 +121,7 @@ class SystemPermissionScopeTest extends TestCase
         $other = User::factory()->create();
         $team->addMember($other, 'Member');
 
-        // The team area sets the team scope for the whole request; the admin's system permission must still count.
+        // The team area sets the team context for the whole request; the admin's system permission must still count.
         app(TeamContext::class)->set($team);
 
         Livewire::actingAs($admin)
