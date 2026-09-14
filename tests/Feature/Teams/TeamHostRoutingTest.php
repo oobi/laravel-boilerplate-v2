@@ -105,6 +105,23 @@ class TeamHostRoutingTest extends TestCase
         $this->expectNotToPerformAssertions();
     }
 
+    public function test_control_plane_and_apex_hosts_are_null_in_path_mode(): void
+    {
+        // In path mode the route groups bind to null → no host constraint (5h.4b).
+        config(['teams.domains.enabled' => false, 'teams.domains.admin_host' => 'admin.myapp.com', 'teams.domains.base' => 'myapp.com']);
+
+        $this->assertNull(DomainPolicy::controlPlaneHost());
+        $this->assertNull(DomainPolicy::apexHost());
+    }
+
+    public function test_control_plane_and_apex_hosts_resolve_in_host_mode(): void
+    {
+        $this->enableHostMode();
+
+        $this->assertSame('admin.myapp.com', DomainPolicy::controlPlaneHost());
+        $this->assertSame('myapp.com', DomainPolicy::apexHost());
+    }
+
     // --- ResolveTeamContext (host branch) -----------------------------------
     //
     // Exercised at the middleware level (the {teamHost} route is bound directly);

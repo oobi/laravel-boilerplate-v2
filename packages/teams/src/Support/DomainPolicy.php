@@ -31,6 +31,22 @@ final class DomainPolicy
         return self::host(config('teams.domains.admin_host'));
     }
 
+    /**
+     * The host the control plane (admin, auth, team picker) binds to, or null in
+     * path mode (no host constraint). Route groups pass this straight to
+     * ->domain(); null leaves them unconstrained.
+     */
+    public static function controlPlaneHost(): ?string
+    {
+        return self::enabled() ? self::adminHost() : null;
+    }
+
+    /** The apex/base host the public landing binds to in host mode, or null in path mode. */
+    public static function apexHost(): ?string
+    {
+        return self::enabled() ? self::base() : null;
+    }
+
     /** The registrable base each team's default subdomain hangs off ({slug}.base) in host mode. */
     public static function base(): ?string
     {

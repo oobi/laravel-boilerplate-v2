@@ -36,9 +36,11 @@ $teamPages = function (): void {
     Route::get('/settings', Settings::class)->name('settings');
 };
 
-// Entry point + zero-team onboarding: no team context, always on the app host
-// (path prefix). In host mode these move to the control-plane host in 5h.4b.
+// Entry point + zero-team onboarding: no team context. On the control-plane host
+// (admin_host) in host mode, the app host otherwise; the {prefix} path is kept in
+// both so it never collides with the apex landing at `/`.
 Route::middleware(['web', 'auth', 'verified'])
+    ->domain(DomainPolicy::controlPlaneHost())
     ->prefix($prefix)
     ->name('team.')
     ->group(function () {
@@ -68,6 +70,7 @@ if (DomainPolicy::enabled()) {
 // a guest to sign in or to register through the invitation, and holds a
 // signed-in account to the invited email.
 Route::middleware(['web', 'signed'])
+    ->domain(DomainPolicy::controlPlaneHost())
     ->prefix($prefix.'/invitations/{invitation}')
     ->name('team.invitations.')
     ->group(function () {
@@ -81,6 +84,7 @@ Route::middleware(['web', 'signed'])
 // `manage teams` and the finer team permissions. Flat `teams.*` route names so
 // Breadcrumbs derives the parent crumb.
 Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])
+    ->domain(DomainPolicy::controlPlaneHost())
     ->prefix('admin/teams')
     ->name('teams.')
     ->group(function () {
