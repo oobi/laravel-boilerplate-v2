@@ -47,7 +47,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
     public function mount(User $user): void
     {
-        Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);
+        Gate::authorize(SystemPermission::VIEW_USERS->value);
 
         $this->user = $user;
     }

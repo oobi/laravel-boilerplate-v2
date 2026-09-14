@@ -16,7 +16,7 @@ use App\Models\User;
  */
 class UserPolicy
 {
-    /** Any admin-panel user may view any profile; gated globally at mount(), no extra restriction here. */
+    /** Anyone in the users area (`view users`, gated at mount()) may view any profile; no per-target restriction. */
     public function view(User $actor, User $target): bool
     {
         return true;

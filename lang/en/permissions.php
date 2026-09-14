@@ -19,6 +19,7 @@ return [
         'access_admin_panel' => 'Access Admin Panel',
         'manage_system_settings' => 'Manage System Settings',
         'view_system_analytics' => 'View System Analytics',
+        'view_users' => 'View Users',
         'manage_users' => 'Manage Users',
         'suspend_users' => 'Suspend Users',
         'delete_users' => 'Delete Users',

@@ -104,6 +104,21 @@ class SystemPermissionScopeTest extends TestCase
         $this->assertTrue(app(TeamContext::class)->run($team, fn (): bool => Gate::forUser($admin)->allows(TeamAbility::MANAGE_MEMBERS, $team)));
     }
 
+    public function test_view_teams_grants_the_read_abilities_and_nothing_else(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $team = Team::factory()->create();
+        $this->assertFalse($team->hasUser($viewer));
+
+        foreach ([TeamAbility::VIEW, TeamAbility::VIEW_MEMBERS, TeamAbility::VIEW_SETTINGS] as $ability) {
+            $this->assertTrue(Gate::forUser($viewer)->allows($ability, $team), $ability->value);
+        }
+
+        foreach ([TeamAbility::MANAGE_MEMBERS, TeamAbility::INVITE, TeamAbility::UPDATE, TeamAbility::MANAGE_DOMAINS, TeamAbility::DELETE, TeamAbility::MANAGE_OWNERS, TeamAbility::TRANSFER_OWNERSHIP] as $ability) {
+            $this->assertFalse(Gate::forUser($viewer)->allows($ability, $team), $ability->value);
+        }
+    }
+
     public function test_delete_teams_grants_delete_and_nothing_else_in_the_policy(): void
     {
         $admin = User::factory()->withPermission(SystemPermission::DELETE_TEAMS)->create();

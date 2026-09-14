@@ -23,6 +23,13 @@ use Concise\Teams\Models\Team;
  */
 class TeamPolicy
 {
+    /** What `view teams` opens on any team: the pages of the admin area, read-only. */
+    private const READ_ONLY = [
+        TeamAbility::VIEW->value,
+        TeamAbility::VIEW_MEMBERS->value,
+        TeamAbility::VIEW_SETTINGS->value,
+    ];
+
     /** Never granted to a co-owner or through a team role — only `teams.user_id`, or a system admin via before(). */
     private const PRIMARY_OWNER_ONLY = [
         TeamAbility::MANAGE_OWNERS->value,
@@ -38,12 +45,18 @@ class TeamPolicy
 
         // System-admin authority over any team, member or not — expressed once
         // here so components check a single TeamAbility and never OR the system
-        // permission themselves. `manage teams` is the floor: day-to-day
-        // management of any team. The destructive and ownership acts each need
-        // their own finer permission (mirroring the user side: manage / suspend /
-        // delete), so a support tier can manage memberships without being able to
-        // delete teams or hand ownership around. The super-admin bypass has
-        // already run before this.
+        // permission themselves. `view teams` is the read floor: the admin area
+        // opens read-only on any team. `manage teams` is day-to-day management.
+        // The destructive and ownership acts each need their own finer
+        // permission (mirroring the user side: view / manage / suspend / delete),
+        // so a support tier can manage memberships without being able to delete
+        // teams or hand ownership around, and a stats-only admin can't browse
+        // teams at all. The super-admin bypass has already run before this.
+        if (in_array($ability, self::READ_ONLY, true)
+            && $user->hasSystemPermission(SystemPermission::VIEW_TEAMS)) {
+            return true;
+        }
+
         if ($user->hasSystemPermission(SystemPermission::MANAGE_TEAMS)
             && ! in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
             return true;

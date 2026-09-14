@@ -45,12 +45,12 @@ class SystemRolesSeeder extends Seeder
                 'color' => DaisyColor::ERROR,
                 'permissions' => SystemPermission::cases(),
             ],
-            // A limited desk role: reach the panel, manage and suspend users, and
-            // impersonate to reproduce a problem — not delete, settings or teams.
+            // A limited desk role: manage and suspend users, and impersonate to
+            // reproduce a problem — not delete, settings or teams. The read floor
+            // (`view users`) and panel entry come with those through implies().
             'Support' => [
                 'color' => DaisyColor::WARNING,
                 'permissions' => [
-                    SystemPermission::ACCESS_ADMIN_PANEL,
                     SystemPermission::MANAGE_USERS,
                     SystemPermission::SUSPEND_USERS,
                     SystemPermission::IMPERSONATE_USERS,
@@ -87,7 +87,10 @@ class SystemRolesSeeder extends Seeder
                 'color' => $role['color'],
             ]);
 
-            $created->syncPermissions(collect($role['permissions'])
+            // Closed over implications like every write path (an action carries its
+            // area's read floor, a read floor carries panel entry), so a seeded grant
+            // is always reachable.
+            $created->syncPermissions(collect(SystemPermission::withImplied($role['permissions']))
                 ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value, $guard))
                 ->all());
         }

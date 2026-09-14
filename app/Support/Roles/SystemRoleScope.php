@@ -34,10 +34,10 @@ final class SystemRoleScope implements RoleScope
             ->all();
     }
 
-    /** No implications between system permissions. */
+    /** An action carries its area's read floor, a read floor carries panel entry — SystemPermission::implies(). */
     public function implications(): array
     {
-        return [];
+        return SystemPermission::implicationMap();
     }
 
     /** Every system permission always applies. */

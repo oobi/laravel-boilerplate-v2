@@ -23,7 +23,7 @@ class TeamInvitations extends Component
 
     public function mount(Team $team): void
     {
-        Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
         abort_unless(InvitationPolicy::adminsMayInvite(), 404);
 
         $this->team = $team;

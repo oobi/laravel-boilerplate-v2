@@ -57,7 +57,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 
     public function mount(): void
     {
-        Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);
+        Gate::authorize(SystemPermission::VIEW_USERS->value);
     }
 
     public function table(Table $table): Table

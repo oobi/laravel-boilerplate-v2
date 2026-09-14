@@ -30,6 +30,38 @@ class ListTeamsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_panel_entry_alone_does_not_open_the_teams_area(): void
+    {
+        $panelOnly = User::factory()->withPermission(SystemPermission::ACCESS_ADMIN_PANEL)->create();
+
+        $this->actingAs($panelOnly)->get(route('teams.index'))->assertForbidden();
+    }
+
+    public function test_a_stats_only_admin_cannot_open_the_teams_area(): void
+    {
+        // The teams area has its own read floor: `view system analytics` reaches
+        // the panel but must not carry the teams list with it.
+        $statsAdmin = User::factory()->withPermission(SystemPermission::VIEW_SYSTEM_ANALYTICS)->create();
+
+        $this->actingAs($statsAdmin)->get(route('teams.index'))->assertForbidden();
+    }
+
+    public function test_view_teams_opens_the_list_read_only(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $team = Team::factory()->create(['name' => 'Northwind', 'active' => false]);
+
+        $this->actingAs($viewer)->get(route('teams.index'))->assertOk()->assertSee('Northwind');
+
+        Livewire::actingAs($viewer)
+            ->test(ListTeams::class)
+            ->assertCanSeeTableRecords([$team])
+            ->assertActionHidden('createTeam')
+            ->assertTableActionVisible('view', $team)
+            ->assertTableActionHidden('toggleActive', $team)
+            ->assertTableActionHidden('delete', $team);
+    }
+
     public function test_a_role_holding_manage_teams_can_view_the_list(): void
     {
         $team = Team::factory()->create(['name' => 'Northwind']);

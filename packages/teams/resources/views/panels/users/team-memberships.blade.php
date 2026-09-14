@@ -8,7 +8,7 @@
         <ul class="divide-y divide-base-300">
             @foreach ($memberships as $membership)
                 <li class="flex items-center justify-between gap-3 py-2">
-                    @if ($canManage)
+                    @if ($canViewTeams)
                         <a href="{{ route('teams.show', $membership['team']) }}" class="link link-hover truncate text-sm font-medium">
                             {{ $membership['team']->name }}
                         </a>

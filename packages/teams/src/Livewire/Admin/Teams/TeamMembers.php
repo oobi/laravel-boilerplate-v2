@@ -20,7 +20,7 @@ class TeamMembers extends Component
 
     public function mount(Team $team): void
     {
-        Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
 
         $this->team = $team;
     }

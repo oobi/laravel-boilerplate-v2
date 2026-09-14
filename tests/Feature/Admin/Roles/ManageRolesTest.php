@@ -65,6 +65,39 @@ class ManageRolesTest extends TestCase
         $this->assertFalse($role->fresh()->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
     }
 
+    public function test_ticking_an_action_ticks_and_locks_its_read_floor_and_panel_entry_across_categories(): void
+    {
+        // delete users → view users (same category) → access admin panel (another category).
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+
+        $component = Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->set('data.permissions_user_management', [SystemPermission::DELETE_USERS->value])
+            ->assertSet('data.permissions_user_management', [SystemPermission::VIEW_USERS->value, SystemPermission::DELETE_USERS->value])
+            ->assertSet('data.permissions_system_administration', [SystemPermission::ACCESS_ADMIN_PANEL->value])
+            // Panel entry says on hover which permissions carry it (every read floor, in vocabulary order).
+            ->assertSeeHtml('title="'.e(__('admin.included_with', ['permissions' => collect(SystemPermission::cases())
+                ->filter(fn (SystemPermission $permission): bool => in_array(SystemPermission::ACCESS_ADMIN_PANEL, $permission->implies(), true))
+                ->map(fn (SystemPermission $permission): string => $permission->label())
+                ->implode(', ')])).'"');
+
+        // …and both implied options render disabled on screen, in their own categories,
+        // while the implier stays enabled.
+        $this->assertOptionDisabled($component->html(), SystemPermission::VIEW_USERS->value);
+        $this->assertOptionDisabled($component->html(), SystemPermission::ACCESS_ADMIN_PANEL->value);
+        $this->assertOptionEnabled($component->html(), SystemPermission::DELETE_USERS->value);
+        $this->assertOptionEnabled($component->html(), SystemPermission::MANAGE_USERS->value);
+
+        $component->call('save')->assertHasNoErrors();
+
+        $role = $role->fresh();
+        $this->assertTrue($role->checkPermissionTo(SystemPermission::DELETE_USERS->value));
+        $this->assertTrue($role->checkPermissionTo(SystemPermission::VIEW_USERS->value));
+        $this->assertTrue($role->checkPermissionTo(SystemPermission::ACCESS_ADMIN_PANEL->value));
+        $this->assertFalse($role->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
+    }
+
     public function test_form_is_prefilled_with_neutral_color_when_a_role_has_none_set(): void
     {
         $admin = User::factory()->superAdmin()->create();
@@ -104,8 +137,9 @@ class ManageRolesTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ManageRoles::class, ['role' => $role])
-            ->assertSet('data.permissions_user_management', [SystemPermission::MANAGE_USERS->value])
-            ->assertSet('data.permissions_system_administration', [SystemPermission::VIEW_SYSTEM_ANALYTICS->value]);
+            // The view a held Manage carries shows ticked with it.
+            ->assertSet('data.permissions_user_management', [SystemPermission::VIEW_USERS->value, SystemPermission::MANAGE_USERS->value])
+            ->assertSet('data.permissions_system_administration', [SystemPermission::ACCESS_ADMIN_PANEL->value, SystemPermission::VIEW_SYSTEM_ANALYTICS->value]);
     }
 
     public function test_each_categorys_select_all_checkbox_is_labelled_for_screen_readers(): void
@@ -130,6 +164,7 @@ class ManageRolesTest extends TestCase
             ->test(ManageRoles::class, ['role' => $role])
             ->set('data.permissions_user_management_select_all', true)
             ->assertSet('data.permissions_user_management', [
+                SystemPermission::VIEW_USERS->value,
                 SystemPermission::MANAGE_USERS->value,
                 SystemPermission::SUSPEND_USERS->value,
                 SystemPermission::DELETE_USERS->value,
@@ -236,5 +271,30 @@ class ManageRolesTest extends TestCase
             ->assertRedirect(route('roles.index'));
 
         $this->assertModelMissing($role);
+    }
+
+    /** The rendered checkbox for a permission option (the whole input tag, whitespace collapsed). */
+    private function optionInput(string $html, string $permission): string
+    {
+        $html = preg_replace('/\s+/', ' ', $html);
+        preg_match_all('/<input[^>]*>/', $html, $inputs);
+
+        foreach ($inputs[0] as $input) {
+            if (str_contains($input, 'value="'.$permission.'"')) {
+                return $input;
+            }
+        }
+
+        $this->fail("No checkbox rendered for [{$permission}].");
+    }
+
+    private function assertOptionDisabled(string $html, string $permission): void
+    {
+        $this->assertMatchesRegularExpression('/\sdisabled(=|\s|\/|>)/', $this->optionInput($html, $permission), "[{$permission}] should render disabled while its implier is ticked");
+    }
+
+    private function assertOptionEnabled(string $html, string $permission): void
+    {
+        $this->assertDoesNotMatchRegularExpression('/\sdisabled(=|\s|\/|>)/', $this->optionInput($html, $permission), "[{$permission}] should render enabled");
     }
 }

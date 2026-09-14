@@ -41,9 +41,11 @@ interface RoleScope
      * this method derives from that. Because the closure is stored — as
      * `role_has_permissions` rows, one per implied permission — a scope that
      * adds an entry to its map owes roles written earlier the rows they now
-     * lack (the teams tier's `bp:teams:sync-role-implications` inserts them;
+     * lack (`bp:roles:sync-implications` inserts them for every scope;
      * additive, idempotent). Keyed by permission name, each mapping to the
-     * names it carries. Return [] for a scope with none.
+     * names it carries one hop away — consumers close the chain through
+     * App\Support\Roles\Implications, so "delete users → view users → access
+     * admin panel" is declared as two entries. Return [] for a scope with none.
      *
      * @return array<string, list<string>>
      */

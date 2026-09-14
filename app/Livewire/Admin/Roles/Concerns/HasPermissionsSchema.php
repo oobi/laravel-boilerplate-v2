@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Roles\Concerns;
 
 use App\Models\Role;
+use App\Support\Roles\Implications;
 use App\Support\Roles\RoleScope;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
@@ -32,7 +33,10 @@ use Illuminate\Support\Str;
  * An option another ticked option carries with it (RoleScope::implications())
  * is ticked along with it, disabled while the implier is on, and says so on
  * hover ("Included with …") — the constraint is explained, never a silent
- * block. A permission that doesn't apply in this environment
+ * block. Implications cross categories ("delete users" in User Management
+ * carries "access admin panel" in System Administration) and chain, so every
+ * list reads and completes the selection of the whole form, not just its own
+ * category. A permission that doesn't apply in this environment
  * (RoleScope::unavailable()) isn't offered at all; if the role already holds
  * one, the save keeps it rather than stripping what it couldn't show.
  */
@@ -64,7 +68,6 @@ trait HasPermissionsSchema
         $field = $this->permissionsFieldName($category);
         $selectAllField = "{$field}_select_all";
         $values = array_keys($options);
-        $implications = $this->roleScope()->implications();
 
         return Group::make([
             Flex::make([
@@ -96,29 +99,21 @@ trait HasPermissionsSchema
             CheckboxList::make($field)
                 ->hiddenLabel()
                 ->live()
-                // Ticking Manage also ticks the View it carries; a tick that arrives
-                // without its implied option (only possible by bypassing the disabled
-                // control) is completed the same way. Then sync "select all".
-                ->afterStateUpdated(function (?array $state, Set $set) use ($field, $values, $selectAllField): void {
-                    $completed = array_values(array_intersect($values, $this->applyImplications($state ?? [])));
-
-                    $set($field, $completed);
-                    $set($selectAllField, count($completed) === count($values));
-                })
+                // Ticking Manage also ticks the View it carries — in this category or
+                // another; a tick that arrives without its implied option (only possible
+                // by bypassing the disabled control) is completed the same way. Then
+                // sync every category's "select all".
+                ->afterStateUpdated(fn (CheckboxList $component, Set $set) => $this->completeSelection($component->getContainer()->getRawState(), $set))
                 ->options($this->optionLabels($options))
                 ->allowHtml()
                 // Validate against the whole category, not just the enabled options:
                 // an implied option is disabled on screen but legitimately held.
                 ->in($values)
-                ->disableOptionWhen(function (string $value, ?array $state) use ($implications): bool {
-                    foreach ($state ?? [] as $selected) {
-                        if (in_array($value, $implications[$selected] ?? [], true)) {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                })
+                ->disableOptionWhen(fn (string $value, CheckboxList $component): bool => Implications::isCarried(
+                    $this->roleScope()->implications(),
+                    $this->selectedPermissions($component->getContainer()->getRawState()),
+                    $value,
+                ))
                 // Fill left-to-right in vocabulary order (Filament's default fills column-first, which zigzags),
                 // into auto-fitting columns (.ui-option-grid) rather than a fixed count stretched across the card.
                 ->gridDirection(GridDirection::Row)
@@ -130,6 +125,42 @@ trait HasPermissionsSchema
     protected function permissionsFieldName(string $category): string
     {
         return 'permissions_'.Str::slug($category, '_');
+    }
+
+    /**
+     * The whole form's selection, across every category field, read from the
+     * form's raw state (the container's, so no field path is hardcoded).
+     *
+     * @param  array<string, mixed>  $state
+     * @return list<string>
+     */
+    protected function selectedPermissions(array $state): array
+    {
+        return collect($this->offeredPermissions())
+            ->keys()
+            ->flatMap(fn (string $category): array => $state[$this->permissionsFieldName($category)] ?? [])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Close the whole form's selection over its implications and write each
+     * category's share back, with its "select all" flag.
+     *
+     * @param  array<string, mixed>  $state
+     */
+    protected function completeSelection(array $state, Set $set): void
+    {
+        $closed = $this->applyImplications($this->selectedPermissions($state));
+
+        foreach ($this->offeredPermissions() as $category => $options) {
+            $field = $this->permissionsFieldName($category);
+            $values = array_keys($options);
+            $completed = array_values(array_intersect($values, $closed));
+
+            $set($field, $completed);
+            $set("{$field}_select_all", count($completed) === count($values));
+        }
     }
 
     /**
@@ -187,23 +218,14 @@ trait HasPermissionsSchema
 
     /**
      * Expand a selection to include everything the selected permissions carry
-     * with them (RoleScope::implications()). Single level — the maps don't chain.
+     * with them (RoleScope::implications()), following the chain.
      *
      * @param  list<string>  $selected
      * @return list<string>
      */
     protected function applyImplications(array $selected): array
     {
-        $implications = $this->roleScope()->implications();
-        $expanded = $selected;
-
-        foreach ($selected as $permission) {
-            foreach ($implications[$permission] ?? [] as $implied) {
-                $expanded[] = $implied;
-            }
-        }
-
-        return array_values(array_unique($expanded));
+        return Implications::close($this->roleScope()->implications(), $selected);
     }
 
     /** @return array<string, list<string>|bool> */

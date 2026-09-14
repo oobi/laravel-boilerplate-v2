@@ -13,7 +13,6 @@ use App\Support\Navigation\Registry\NavItem;
 use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
-use Concise\Teams\Console\Commands\SyncRoleImplicationsCommand;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Livewire\Team\ManageOwnership;
@@ -86,10 +85,6 @@ class TeamsServiceProvider extends ServiceProvider
         Livewire::component('teams-manage-ownership', ManageOwnership::class);
 
         Gate::policy(Team::class, TeamPolicy::class);
-
-        if ($this->app->runningInConsole()) {
-            $this->commands([SyncRoleImplicationsCommand::class]);
-        }
 
         // Team roles get their own tab on the admin Roles screen.
         RoleScopeRegistry::register(TeamRoleScope::class);
@@ -203,7 +198,7 @@ class TeamsServiceProvider extends ServiceProvider
                 ->route('teams.index')
                 ->icon('heroicon-o-user-group')
                 ->active('teams.*')
-                ->can(SystemPermission::MANAGE_TEAMS)
+                ->can(SystemPermission::VIEW_TEAMS)
                 ->order(30),
         );
 

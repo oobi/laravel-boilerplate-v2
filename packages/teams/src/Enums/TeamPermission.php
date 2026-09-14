@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Enums;
 
+use App\Support\Roles\Implications;
+
 /**
  * The fixed, code-checked vocabulary of team-level capabilities — the team
  * counterpart of App\Enums\SystemPermission. Each case is a real TeamPolicy
@@ -28,7 +30,7 @@ namespace Concise\Teams\Enums;
  * `role_has_permissions` row for "invite team members" but none for "view team
  * members" out of closure; the Gate would then refuse them the view. The fix
  * is those missing `role_has_permissions` rows, and
- * `php artisan bp:teams:sync-role-implications` inserts exactly them: for each
+ * `php artisan bp:roles:sync-implications` inserts exactly them: for each
  * team role, the implied permissions it lacks (creating the `permissions` row
  * first if it doesn't exist yet). It never deletes a row, so REMOVING an
  * entry from implies() needs no fix — the role keeps its existing grant as an
@@ -78,9 +80,9 @@ enum TeamPermission: string
     }
 
     /**
-     * The permissions this one carries with it: you can't meaningfully edit
-     * what you can't see, so a manage/update grants its view counterpart.
-     * Single level — these don't chain.
+     * The permissions this one carries with it, one hop: you can't
+     * meaningfully edit what you can't see, so a manage/update grants its view
+     * counterpart. withImplied() follows the chain if one is ever declared.
      *
      * @return list<self>
      */
@@ -94,19 +96,18 @@ enum TeamPermission: string
     }
 
     /**
-     * A grant closed over its implications — what every write path stores.
-     * Single level, order preserved, no duplicates.
+     * A grant closed over its implications, transitively — what every write
+     * path stores. Order preserved, no duplicates.
      *
      * @param  list<self>  $permissions
      * @return list<self>
      */
     public static function withImplied(array $permissions): array
     {
-        return collect($permissions)
-            ->flatMap(fn (self $permission): array => [$permission, ...$permission->implies()])
-            ->unique(fn (self $permission): string => $permission->value)
-            ->values()
-            ->all();
+        return collect(Implications::close(
+            self::implicationMap(),
+            array_map(fn (self $permission): string => $permission->value, $permissions),
+        ))->map(fn (string $name): self => self::from($name))->all();
     }
 
     /**

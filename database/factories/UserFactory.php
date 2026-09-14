@@ -63,13 +63,18 @@ class UserFactory extends Factory
         ]);
     }
 
-    /** Grants the given SystemPermission(s) directly, creating the Permission rows on demand. */
+    /**
+     * Grants the given SystemPermission(s) directly, creating the Permission
+     * rows on demand and closing over their implications like every granting
+     * path — `withPermission(MANAGE_TEAMS)` reaches the teams area because it
+     * also holds `view teams` and `access admin panel`.
+     */
     public function withPermission(SystemPermission ...$permissions): static
     {
         return $this->afterCreating(function (User $user) use ($permissions): void {
             $user->givePermissionTo(array_map(
                 fn (SystemPermission $permission) => Permission::findOrCreate($permission->value),
-                $permissions,
+                SystemPermission::withImplied($permissions),
             ));
         });
     }
@@ -84,7 +89,7 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(function (User $user): void {
             $role = Role::findOrCreate('Support');
-            $role->givePermissionTo(collect(SystemRolesSeeder::defaults()['Support']['permissions'])
+            $role->givePermissionTo(collect(SystemPermission::withImplied(SystemRolesSeeder::defaults()['Support']['permissions']))
                 ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value))
                 ->all());
 

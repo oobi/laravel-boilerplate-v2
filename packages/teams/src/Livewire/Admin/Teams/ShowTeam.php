@@ -21,7 +21,7 @@ use Livewire\Component;
 /**
  * System admin: a team's Overview tab — details and statistics. The other
  * tabs (Members, Invitations, Settings) are their own routes/components, one
- * per page like the profile screens. Gated by the `manage teams` system
+ * per page like the profile screens. Gated by the `view teams` system
  * permission, never by membership.
  */
 class ShowTeam extends Component implements HasSchemas
@@ -32,7 +32,7 @@ class ShowTeam extends Component implements HasSchemas
 
     public function mount(Team $team): void
     {
-        Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
 
         $this->team = $team;
     }

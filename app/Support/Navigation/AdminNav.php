@@ -29,7 +29,8 @@ class AdminNav
                     ->label(__('Users'))
                     ->route('users.index')
                     ->icon('heroicon-o-user')
-                    ->active('users.*'),
+                    ->active('users.*')
+                    ->can(SystemPermission::VIEW_USERS),
                 NavItem::make('roles')
                     ->label(__('Roles'))
                     ->route('roles.index')
