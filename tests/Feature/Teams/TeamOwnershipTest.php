@@ -142,6 +142,8 @@ class TeamOwnershipTest extends TestCase
             ->assertHasNoActionErrors();
 
         $this->team->refresh();
+        $this->member->refresh(); // the component wrote through its own instances; ours memoised the old membership
+        $this->primary->refresh();
         $this->assertTrue($this->team->isPrimaryOwner($this->member));
         $this->assertTrue($this->team->isOwnedBy($this->primary), 'previous primary stays a co-owner');
         $this->assertFalse($this->team->isPrimaryOwner($this->primary));

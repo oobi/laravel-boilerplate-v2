@@ -60,7 +60,8 @@ class TeamSuspensionTest extends TestCase
             ->assertSee('Suspended')
             ->callTableAction('reinstate', $this->member);
 
-        $this->assertFalse($this->team->isSuspended($this->member));
+        // The component wrote through its own instances; reload our member before asking about them.
+        $this->assertFalse($this->team->isSuspended($this->member->refresh()));
     }
 
     public function test_a_suspended_member_cannot_enter_the_team(): void

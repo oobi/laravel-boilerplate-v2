@@ -44,7 +44,7 @@ class TeamMembershipsPanel implements ShowPanel
 
         return view('teams::panels.users.team-memberships', [
             'memberships' => $memberships,
-            'canManage' => Gate::allows(SystemPermission::MANAGE_TEAMS->value),
+            'canViewTeams' => Gate::allows(SystemPermission::VIEW_TEAMS->value),
         ]);
     }
 

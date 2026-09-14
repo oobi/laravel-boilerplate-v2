@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(PermissionSeeder::class);
+        $this->call(SystemRolesSeeder::class);
 
         // teams:start — teams tier role seeder (packages/teams). The class_exists
         // guard keeps this safe if the fence is ever left in place after removal;

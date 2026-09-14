@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Teams\Admin;
 
+use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Livewire\Admin\Teams\TeamSettings;
 use Concise\Teams\Models\Team;
@@ -31,10 +32,8 @@ class TeamSettingsTest extends TestCase
             ->test(TeamSettings::class, ['team' => $this->team])
             ->assertSet('data.name', 'Northwind')
             ->assertSet('data.slug', 'northwind')
-            ->assertSet('data.active', true)
             ->set('data.name', 'Southwind')
             ->set('data.slug', 'southwind')
-            ->set('data.active', false)
             ->call('save')
             ->assertHasNoErrors()
             ->assertRedirect(route('teams.settings', 'southwind'));
@@ -42,7 +41,7 @@ class TeamSettingsTest extends TestCase
         $this->team->refresh();
         $this->assertSame('Southwind', $this->team->name);
         $this->assertSame('southwind', $this->team->slug);
-        $this->assertFalse($this->team->active);
+        $this->assertTrue($this->team->active, 'active is not a form field — only the deactivate action changes it');
     }
 
     public function test_the_slug_must_be_unique(): void
@@ -67,6 +66,58 @@ class TeamSettingsTest extends TestCase
         $component->callAction('toggleActive');
 
         $this->assertTrue($this->team->fresh()->active);
+    }
+
+    public function test_view_teams_opens_settings_read_only(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+
+        $this->actingAs($viewer)->get(route('teams.settings', $this->team))
+            ->assertOk()
+            ->assertSee('Northwind')
+            ->assertDontSee(__('admin.save_changes'));
+
+        Livewire::actingAs($viewer)
+            ->test(TeamSettings::class, ['team' => $this->team])
+            ->assertFormFieldDisabled('name', 'form')
+            ->assertActionHidden('toggleActive')
+            ->assertActionHidden('deleteTeam')
+            ->call('save')
+            ->assertForbidden();
+
+        $this->assertSame('Northwind', $this->team->fresh()->name);
+    }
+
+    public function test_manage_teams_edits_details_but_cannot_deactivate_or_delete(): void
+    {
+        $manager = User::factory()->withPermission(SystemPermission::MANAGE_TEAMS)->create();
+
+        Livewire::actingAs($manager)
+            ->test(TeamSettings::class, ['team' => $this->team])
+            ->assertFormFieldEnabled('name', 'form')
+            ->assertActionHidden('toggleActive')
+            ->assertActionHidden('deleteTeam')
+            ->set('data.name', 'Southwind')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->team->refresh();
+        $this->assertSame('Southwind', $this->team->name);
+        $this->assertTrue($this->team->active);
+    }
+
+    public function test_deactivate_teams_alone_runs_the_toggle(): void
+    {
+        $operator = User::factory()->withPermission(SystemPermission::DEACTIVATE_TEAMS)->create();
+
+        Livewire::actingAs($operator)
+            ->test(TeamSettings::class, ['team' => $this->team])
+            ->assertFormFieldDisabled('name', 'form')
+            ->assertActionVisible('toggleActive')
+            ->assertActionHidden('deleteTeam')
+            ->callAction('toggleActive');
+
+        $this->assertFalse($this->team->fresh()->active);
     }
 
     public function test_an_active_team_cannot_be_deleted(): void

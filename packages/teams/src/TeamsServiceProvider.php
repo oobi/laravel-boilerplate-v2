@@ -28,7 +28,6 @@ use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamLabels;
-use Concise\Teams\Support\TeamPermissionResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -56,19 +55,8 @@ class TeamsServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/teams.php', 'teams');
 
-        // Enable spatie/laravel-permission's teams feature so roles/permissions
-        // resolve per team, and default the "no team" scope to the reserved
-        // system id (0) so existing system roles keep working (see
-        // TeamPermissionResolver). Set in register() so both are in place before
-        // the permission migrations read them and before PermissionRegistrar
-        // boots. This is why teams never edits config/permission.php.
-        config([
-            'permission.teams' => true,
-            'permission.team_resolver' => TeamPermissionResolver::class,
-        ]);
-
-        // The single source of truth for the active team (query/permission/
-        // filesystem/cache scope) — see TeamContext and the CurrentTeam facade.
+        // The single source of truth for the active team (query/filesystem/cache
+        // scope — not permissions) — see TeamContext and the CurrentTeam facade.
         $this->app->singleton(TeamContext::class);
 
         // The DNS boundary for custom-domain verification (5h). Swapped for a
@@ -210,7 +198,7 @@ class TeamsServiceProvider extends ServiceProvider
                 ->route('teams.index')
                 ->icon('heroicon-o-user-group')
                 ->active('teams.*')
-                ->can(SystemPermission::MANAGE_TEAMS)
+                ->can(SystemPermission::VIEW_TEAMS)
                 ->order(30),
         );
 

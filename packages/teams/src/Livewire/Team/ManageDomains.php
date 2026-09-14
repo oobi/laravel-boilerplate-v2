@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Team;
 
-use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Closure;
 use Concise\Teams\Actions\CreateDomain;
@@ -57,26 +56,16 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
         abort_unless($this->canView(), 403);
     }
 
-    /** May the current viewer see this team's domains at all? (Via role — MANAGE_DOMAINS — or a system admin.) */
+    /** May the current viewer see this team's domains at all? One ability — a system admin is answered by TeamPolicy::before(). */
     public function canView(): bool
     {
-        if (! DomainPolicy::enabled()) {
-            return false;
-        }
-
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
+        return DomainPolicy::enabled() && Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
-    /** May the current viewer add/verify/remove domains (vs read-only)? */
+    /** May the current viewer add/verify/remove domains? Today the same as viewing; kept separate so a read-only grant can be added without touching call sites. */
     public function canManage(): bool
     {
-        if (! DomainPolicy::enabled()) {
-            return false;
-        }
-
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
+        return $this->canView();
     }
 
     public function addDomainAction(): Action

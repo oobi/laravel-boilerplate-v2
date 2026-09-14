@@ -31,14 +31,21 @@ interface RoleScope
     public function permissions(): array;
 
     /**
-     * Which permissions carry which others with them, for DISPLAY on the Roles
-     * form: an implied option shows as "Included with …", is ticked along with
-     * its implier and can't be unticked while the implier is on. Enforcement
-     * is the scope's own concern at check time — the teams tier declares its
-     * map once on TeamPermission::implies() and enforces it in
-     * Team::memberHasPermission(); this method just derives from that. Keyed
-     * by permission name, each mapping to the names it carries. Return [] for
-     * a scope with none.
+     * Which permissions carry which others with them. The Roles form displays
+     * it (an implied option shows as "Included with …", is ticked along with
+     * its implier and can't be unticked while the implier is on) AND stores it:
+     * a saved role is closed over its implications, so what spatie stores is
+     * the truth and a check asks for exactly one permission. Every other write
+     * path in the scope must close the same way — the teams tier declares its
+     * map once on TeamPermission::implies() and Team::createRole() applies it;
+     * this method derives from that. Because the closure is stored — as
+     * `role_has_permissions` rows, one per implied permission — a scope that
+     * adds an entry to its map owes roles written earlier the rows they now
+     * lack (`bp:roles:sync-implications` inserts them for every scope;
+     * additive, idempotent). Keyed by permission name, each mapping to the
+     * names it carries one hop away — consumers close the chain through
+     * App\Support\Roles\Implications, so "delete users → view users → access
+     * admin panel" is declared as two entries. Return [] for a scope with none.
      *
      * @return array<string, list<string>>
      */

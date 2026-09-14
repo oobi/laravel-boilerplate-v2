@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Enums\SystemPermission;
 use App\Livewire\Admin\Users\ListUsers;
 use App\Models\Role;
 use App\Models\User;
@@ -24,6 +25,39 @@ class ListUsersTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/admin/users')->assertForbidden();
+    }
+
+    public function test_panel_entry_alone_does_not_open_the_users_area(): void
+    {
+        // A stats-only admin reaches the dashboard, not the roster.
+        $panelOnly = User::factory()->withPermission(SystemPermission::ACCESS_ADMIN_PANEL)->create();
+
+        $this->actingAs($panelOnly)->get('/admin/users')->assertForbidden();
+    }
+
+    public function test_a_stats_only_admin_cannot_open_the_users_area(): void
+    {
+        // The reason the users area has its own read floor: `view system analytics`
+        // legitimately reaches the panel, but must not carry the roster with it.
+        $statsAdmin = User::factory()->withPermission(SystemPermission::VIEW_SYSTEM_ANALYTICS)->create();
+
+        $this->actingAs($statsAdmin)->get('/admin/users')->assertForbidden();
+    }
+
+    public function test_view_users_opens_the_list_read_only(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_USERS)->create();
+        $target = User::factory()->create();
+
+        $this->actingAs($viewer)->get('/admin/users')->assertOk();
+
+        Livewire::actingAs($viewer)
+            ->test(ListUsers::class)
+            ->assertCanSeeTableRecords([$target])
+            ->assertTableActionVisible('view', $target)
+            ->assertTableActionHidden('edit', $target)
+            ->assertTableActionHidden('toggleActive', $target)
+            ->assertTableActionHidden('delete', $target);
     }
 
     public function test_admins_can_view_the_users_list(): void

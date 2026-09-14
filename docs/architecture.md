@@ -46,8 +46,10 @@ these choices.
 - **Teams** — not built yet. Planned as an opt-in, install-time-only
   additive layer (see `~BOILERPLATE_v2.md` Phase 5): its own models,
   migrations, and screens, authored so core (`User`, RBAC, admin) never has
-  to be patched to support it. Team-scoped roles reuse spatie/laravel-permission's
-  own teams feature rather than a second bespoke role system.
+  to be patched to support it. Team roles are spatie Role rows (scope `team`)
+  holding permissions, so there is no second role system; a member's assignment
+  is the membership's own pivot (`team_user_role`), and spatie's teams feature
+  stays off so system roles resolve exactly as spatie documents.
 - **Admin page composition (panels)** — Show/Edit admin pages are built
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own

@@ -19,6 +19,7 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         $this->call(PermissionSeeder::class);
+        $this->call(SystemRolesSeeder::class);
 
         // teams:start — teams role seeder (guarded as in DatabaseSeeder; uninstaller strips it)
         if (class_exists(TeamRolesSeeder::class)) {

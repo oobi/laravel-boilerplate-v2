@@ -46,6 +46,49 @@ trait HasTeams
     }
 
     /**
+     * This user's membership row in a team, with its roles, memoised per team
+     * on this instance. The authenticated user is one instance for a whole
+     * request, so every "may I do X in this team?" a page asks — nav items,
+     * buttons, table-row actions, across however many Team instances the
+     * request holds — is answered from one lookup. This is spatie's own
+     * pattern (roles are loadMissing()'d once per user instance; the
+     * role → permission map comes from its cache), applied to the team pivot.
+     * Team's write methods forget the entry; so does refresh().
+     *
+     * @var array<int|string, Membership|null>
+     */
+    protected array $teamMemberships = [];
+
+    public function membershipIn(Team $team): ?Membership
+    {
+        $key = $team->getKey();
+
+        if (! array_key_exists($key, $this->teamMemberships)) {
+            $this->teamMemberships[$key] = Membership::query()
+                ->with('roles')
+                ->where('team_id', $key)
+                ->where('user_id', $this->getKey())
+                ->first();
+        }
+
+        return $this->teamMemberships[$key];
+    }
+
+    /** Drop the memoised membership for a team, so the next question re-reads the row. */
+    public function forgetMembershipIn(Team $team): void
+    {
+        unset($this->teamMemberships[$team->getKey()]);
+    }
+
+    /** Reloading the user also forgets its memoised team memberships. */
+    public function refresh(): static
+    {
+        $this->teamMemberships = [];
+
+        return parent::refresh();
+    }
+
+    /**
      * The teams this user can actually enter: active teams they're an active
      * (unsuspended) member of. What the switcher and /{prefix} entry offer.
      */

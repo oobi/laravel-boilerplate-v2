@@ -15,6 +15,7 @@ enum SystemPermission: string
     case ACCESS_ADMIN_PANEL = 'access admin panel';
     case MANAGE_SYSTEM_SETTINGS = 'manage system settings';
     case VIEW_SYSTEM_ANALYTICS = 'view system analytics';
+    case VIEW_USERS = 'view users';
     case MANAGE_USERS = 'manage users';
     case SUSPEND_USERS = 'suspend users';
     case DELETE_USERS = 'delete users';
@@ -22,8 +23,38 @@ enum SystemPermission: string
 
     public function label(): string { /* ... */ }
     public function category(): string { /* ... */ }
+    public function implies(): array { /* ... */ }
 }
 ```
+
+### Shape: panel entry, a read floor per area, actions on top
+
+`access admin panel` is **entry only** — the admin shell, the dashboard and
+its navigation. It does not open any area's data. Each area has its own read
+floor: `view users` opens the user list and profiles read-only, `view system
+analytics` the analytics module, and an add-on's area brings its own (the teams
+tier's `view teams`). The action permissions of an area sit on top of its
+floor: `manage users`, `suspend users`, `delete users`, `impersonate users`
+each unlock their acts inside the users area.
+
+Why: a role that reaches the panel for one module must not browse another's
+data. A stats-only admin holds `access admin panel` + `view system analytics`
+and never sees a user's name or address; a support desk holds `view users` +
+`manage users` + `suspend users` and nothing about teams.
+
+**Implications keep that shape honest.** `SystemPermission::implies()`
+declares, one hop at a time, that every action carries its area's read floor
+and every read floor carries panel entry. It is applied when a role is
+*written* — the Roles form, `SystemRolesSeeder`, `UserFactory::withPermission()`
+— through `SystemPermission::withImplied()` (transitive, via
+`App\Support\Roles\Implications`), so a stored grant is always reachable and
+`checkPermissionTo()` and the Gate agree. The form shows the chain: tick
+`delete users` and `view users` and `access admin panel` tick and lock with it,
+each saying "Included with …" on hover. Never resolve implications at check
+time; a check asks for exactly one permission. Any new path that grants
+system permissions must call `withImplied()`. Changing the map later is a code
+change plus `php artisan bp:roles:sync-implications` with that deploy (see
+`docs/commands.md`).
 
 This enum is the single source of truth — permission strings are never
 hand-typed at a call site. Each case also declares:
@@ -34,6 +65,12 @@ hand-typed at a call site. Each case also declares:
   groups all cases by this for the roles form; adding a new category is just
   a new string returned from `category()` — a tab for it appears
   automatically, no other wiring needed.
+
+Both `label()` and `category()` read from `lang/en/permissions.php` via `__()`,
+so a localised install translates them without touching authorization — the
+permission *value* (`manage users`, …) is the fixed identifier and never
+changes; only the displayed string does. (The teams tier's own permissions
+relabel through `team_trans` instead — see `.ai/rules/teams.md`.)
 
 Permission strings here are plain, natural-language phrases (`manage users`,
 `access admin panel`), not a `resource.action` convention like Filament
@@ -58,6 +95,24 @@ foreach (SystemPermission::cases() as $permission) {
 (`afterRefreshingDatabase()`), so feature tests never need their own
 `$this->seed()` call for permissions to exist.
 
+### Default roles: `SystemRolesSeeder`
+
+A fresh install also gets two system roles from
+`database/seeders/SystemRolesSeeder.php`: **Administrator** (every
+`SystemPermission` — the gap from a super admin is exactly the acts that
+aren't permissions: managing roles, granting super admin, direct password
+resets) and a limited **Support** (manage and suspend users, impersonate —
+listed as the actions alone; the seeder writes them closed over `implies()`,
+so the role also holds `view users` and `access admin panel`). They are seeded **only into an empty set of system roles**;
+after that the database is the source of truth and renaming, deleting or
+replacing them is safe — nothing resurrects them. Edit the seeder's
+`defaults()` to change what a fresh install ships; `UserFactory::support()`
+reads the same definition so the test fixture can't drift from it. The teams
+tier's `TeamRolesSeeder` does the same for team roles.
+
+`bp:make-admin --administrator` puts the first operator on the Administrator
+role instead of the super-admin flag (see `docs/commands.md`).
+
 ## Checking a permission: `Gate::authorize()` / `checkPermissionTo()`
 
 There's no `Gate::define()` per `SystemPermission` case — spatie/laravel-
@@ -68,10 +123,11 @@ against the acting user's assigned permissions. So a plain:
 Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);
 ```
 
-...inside a Livewire component's `mount()` (see `ListUsers`/`ShowUser`) or a
-route-group `can:` middleware (see `routes/web.php`'s admin group) is enough
-— no extra registration required for a `SystemPermission` case to become
-checkable.
+...in a route-group `can:` middleware (see `routes/web.php`'s admin group,
+which gates the whole shell on panel entry) or a Livewire component's
+`mount()` (`ListUsers`/`ShowUser` authorize the area's read floor,
+`VIEW_USERS`) is enough — no extra registration required for a
+`SystemPermission` case to become checkable.
 
 Inside a Policy or other app code checking a role/user's permission
 directly, always call **`checkPermissionTo()`**, never `hasPermissionTo()` —
@@ -79,6 +135,15 @@ the latter throws `PermissionDoesNotExist` for an unseeded or
 guard-mismatched permission (confirmed to happen even for an already-seeded
 permission inside a Livewire component test) — turning an authorization
 check into a 500 instead of a deny. See `.ai/rules/policies.md`.
+
+On a `User`, ask **`$user->hasSystemPermission(SystemPermission::X)`** rather
+than `checkPermissionTo()` directly: it goes through the Gate, so the
+super-admin bypass applies. System roles are stock spatie with its teams
+feature **off** — a team role is never a spatie assignment on the user; it
+hangs off the membership pivot (`team_user_role`) and is read by
+`Team::memberHasPermission()`. So a `SystemPermission` answers the same inside
+a team route as anywhere else, and a team permission never answers on the
+user at all.
 
 Super admins bypass all of this via a single, hardcoded
 `Gate::before()` in `AppServiceProvider::registerAuthorization()` — it's a
@@ -117,7 +182,7 @@ the extra `attributes()` a role created in it needs, and its tab `order()`.
 
 - Core registers `SystemRoleScope` in `App\Support\Roles\AdminRoleScopes`.
 - An add-on registers its own from its service provider, e.g. the teams tier's
-  `TeamRoleScope` (`TeamPermission` vocabulary, `team_id = NULL` rows). It
+  `TeamRoleScope` (`TeamPermission` vocabulary). It
   gets a "Team" tab without touching the roles components or views.
 - With a single scope registered the screen shows no tabs at all, and its
   URLs stay `/admin/roles` — the default scope never adds a `?scope=`.
@@ -139,11 +204,16 @@ the generic "update a user" ability.
 
 1. Add a case to `SystemPermission` with a `label()` and `category()` (reuse
    an existing category string to land it in an existing tab, or introduce a
-   new one to get a new tab for free).
+   new one to get a new tab for free), and an `implies()` arm: an action
+   carries its area's read floor; a new area's read floor carries
+   `ACCESS_ADMIN_PANEL`.
 2. Re-run `PermissionSeeder` (`php artisan db:seed --class=PermissionSeeder`,
-   or `migrate:fresh --seed` in dev).
+   or `migrate:fresh --seed` in dev). On an install with roles already
+   written, also `php artisan bp:roles:sync-implications` so existing roles
+   gain what the new arm implies.
 3. Check it somewhere with `Gate::authorize()` / `Gate::allows()` /
-   `checkPermissionTo()`, same as any existing case.
+   `checkPermissionTo()`, same as any existing case. A new area's pages
+   authorize its read floor in `mount()`, never `ACCESS_ADMIN_PANEL`.
 
 No route, form, or Manage Roles change is required — the new permission
 appears automatically as a checkbox under its category's tab.

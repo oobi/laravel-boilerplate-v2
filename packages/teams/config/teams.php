@@ -80,6 +80,12 @@ return [
     | team nobody can run; transferring ownership gives the successor this role
     | when they lack it. See Team::defaultOwnerRole().
     |
+    | This binds by role NAME: if you rename the owner role on the Roles screen,
+    | or relabel the tier after seeding (the guess follows the current label, the
+    | seeded row keeps its original name), set this to the current name so it
+    | resolves. The mismatch fails loud at team creation — a one-line fix, never
+    | a silent lockout.
+    |
     */
 
     'default_owner_role' => env('TEAMS_DEFAULT_OWNER_ROLE'),

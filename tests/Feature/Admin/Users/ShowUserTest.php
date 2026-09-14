@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Enums\SystemPermission;
 use App\Enums\UserAbility;
 use App\Livewire\Admin\Users\ShowUser;
 use App\Models\Role;
@@ -24,6 +25,25 @@ class ShowUserTest extends TestCase
         $other = User::factory()->create();
 
         $this->actingAs($user)->get("/admin/users/{$other->id}")->assertForbidden();
+    }
+
+    public function test_view_users_opens_a_profile_without_the_edit_button(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_USERS)->create();
+        $target = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
+
+        $this->actingAs($viewer)->get("/admin/users/{$target->id}")
+            ->assertOk()
+            ->assertSee('Jane Doe')
+            ->assertDontSee(route('users.edit', $target));
+    }
+
+    public function test_panel_entry_alone_does_not_open_a_profile(): void
+    {
+        $panelOnly = User::factory()->withPermission(SystemPermission::ACCESS_ADMIN_PANEL)->create();
+        $target = User::factory()->create();
+
+        $this->actingAs($panelOnly)->get("/admin/users/{$target->id}")->assertForbidden();
     }
 
     public function test_admins_can_view_a_user(): void

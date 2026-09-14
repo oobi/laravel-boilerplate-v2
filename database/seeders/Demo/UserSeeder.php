@@ -2,17 +2,16 @@
 
 namespace Database\Seeders\Demo;
 
-use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\Theme\DaisyColor;
 use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Seed super admin user
+        // Super admin — the flag, the one exception. Every other admin capability
+        // is a role (seeded by SystemRolesSeeder), demonstrated by the two below.
         User::factory()->create([
             'first_name' => 'Super',
             'last_name' => 'Admin',
@@ -21,23 +20,25 @@ class UserSeeder extends Seeder
             'is_super_admin' => true,
         ]);
 
-        // Demo non-super-admin role, showing what an admin-configured role looks like
-        $support = Role::findOrCreate('Support');
-        $support->update(['color' => DaisyColor::WARNING]);
-        $support->givePermissionTo([
-            SystemPermission::ACCESS_ADMIN_PANEL->value,
-            SystemPermission::MANAGE_USERS->value,
-            SystemPermission::SUSPEND_USERS->value,
-            SystemPermission::IMPERSONATE_USERS->value,
-        ]);
+        // A full admin without the master key, on the seeded Administrator role.
+        User::factory()
+            ->create([
+                'first_name' => 'Admin',
+                'last_name' => 'User',
+                'email' => 'administrator@email.com',
+                'password' => bcrypt('password'),
+            ])
+            ->assignRole(Role::systemRoles()->where('name', 'Administrator')->firstOrFail());
 
-        $supportUser = User::factory()->create([
-            'first_name' => 'Support',
-            'last_name' => 'User',
-            'email' => 'support@email.com',
-            'password' => bcrypt('password'),
-        ]);
-        $supportUser->assignRole($support);
+        // A limited desk user, on the seeded Support role.
+        User::factory()
+            ->create([
+                'first_name' => 'Support',
+                'last_name' => 'User',
+                'email' => 'support@email.com',
+                'password' => bcrypt('password'),
+            ])
+            ->assignRole(Role::systemRoles()->where('name', 'Support')->firstOrFail());
 
         // seed 100 additional demo users
         User::factory(100)->create();

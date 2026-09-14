@@ -42,9 +42,8 @@ final class TeamRoleScope implements RoleScope
     }
 
     /**
-     * Derived from the one definition, TeamPermission::implies() — which
-     * Team::memberHasPermission() enforces. Here it only drives the form's
-     * "Included with …" display.
+     * Derived from the one definition, TeamPermission::implies(), which every
+     * write path closes over (Team::createRole(), the Roles form on save).
      *
      * @return array<string, list<string>>
      */
@@ -65,13 +64,10 @@ final class TeamRoleScope implements RoleScope
         return DomainPolicy::enabled() ? [] : [TeamPermission::MANAGE_DOMAINS->value];
     }
 
-    /** A shared team role: `team_id` NULL resolves in every team's spatie scope (TEAMS_TIER_SCOPE.md §5). */
+    /** A shared team role, assignable in every team (members hold it through the membership pivot). */
     public function attributes(): array
     {
-        return [
-            'scope' => Team::ROLE_SCOPE,
-            'team_id' => null,
-        ];
+        return ['scope' => Team::ROLE_SCOPE];
     }
 
     public function order(): int

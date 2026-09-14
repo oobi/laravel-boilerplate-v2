@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Teams\Admin;
 
+use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
@@ -42,6 +43,24 @@ class ShowTeamTest extends TestCase
         foreach (['teams.show', 'teams.members', 'teams.invitations', 'teams.settings'] as $route) {
             $this->actingAs($support)->get(route($route, $this->team))->assertForbidden();
         }
+    }
+
+    public function test_view_teams_opens_every_tab_read_only(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $member = User::factory()->create(['first_name' => 'Mia', 'last_name' => 'Member']);
+        $this->team->addMember($member, 'Member');
+
+        foreach (['teams.show', 'teams.members', 'teams.settings'] as $route) {
+            $this->actingAs($viewer)->get(route($route, $this->team))->assertOk();
+        }
+
+        Livewire::actingAs($viewer)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertSee('Mia Member')
+            ->assertActionHidden('addMember')
+            ->assertTableActionHidden('changeRole', $member)
+            ->assertTableActionHidden('remove', $member);
     }
 
     public function test_the_overview_shows_details_statistics_and_the_tabs(): void

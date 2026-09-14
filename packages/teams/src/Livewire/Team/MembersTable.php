@@ -307,17 +307,15 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         return $this->teamRoles()->map(fn (Role $role): string => $role->name)->all();
     }
 
-    /** May the viewer see the roster at all? (Managing implies viewing; owners always can.) */
+    /** May the viewer see the roster at all? One ability — a system admin is answered by TeamPolicy::before(). */
     private function canView(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::VIEW_MEMBERS, $this->team);
+        return Gate::allows(TeamAbility::VIEW_MEMBERS, $this->team);
     }
 
     private function canManage(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_MEMBERS, $this->team);
+        return Gate::allows(TeamAbility::MANAGE_MEMBERS, $this->team);
     }
 
     /**
@@ -339,28 +337,22 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         return $this->isOwner($member) ? $this->canManageOwners() : $this->canManage();
     }
 
-    /** The primary owner or a system admin — see ManageOwnership for the ownership acts themselves. */
+    /** The primary owner or a system admin (via TeamPolicy::before) — see ManageOwnership for the ownership acts themselves. */
     private function canManageOwners(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value)
-            || Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
+        return Gate::allows(TeamAbility::MANAGE_OWNERS, $this->team);
     }
 
-    /** Members holding the named role in this team (read from the pivot, outside the team scope). */
+    /** Members holding the named role in this team. */
     private function whereHoldsRole(Builder $query, string $role): Builder
     {
-        $roles = (new Role)->getTable();
-        $pivot = config('permission.table_names.model_has_roles');
-        $teamKey = config('permission.column_names.team_foreign_key', 'team_id');
-        $morphKey = config('permission.column_names.model_morph_key', 'model_id');
-
         return $query->whereIn('users.id', fn (QueryBuilder $sub) => $sub
-            ->select("{$pivot}.{$morphKey}")
-            ->from($pivot)
-            ->join($roles, "{$roles}.id", '=', "{$pivot}.role_id")
-            ->where("{$pivot}.{$teamKey}", $this->team->getKey())
-            ->where("{$pivot}.model_type", (new User)->getMorphClass())
-            ->where("{$roles}.name", $role));
+            ->select('team_user.user_id')
+            ->from('team_user_role')
+            ->join('team_user', 'team_user.id', '=', 'team_user_role.team_user_id')
+            ->join('roles', 'roles.id', '=', 'team_user_role.role_id')
+            ->where('team_user.team_id', $this->team->getKey())
+            ->where('roles.name', $role));
     }
 
     private function isOwner(User $member): bool

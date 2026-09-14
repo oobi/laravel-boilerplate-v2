@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Enums;
 
+use App\Support\Roles\Implications;
+
 /**
  * The fixed, code-checked vocabulary of team-level capabilities — the team
  * counterpart of App\Enums\SystemPermission. Each case is a real TeamPolicy
@@ -14,8 +16,28 @@ namespace Concise\Teams\Enums;
  * everything else an owner does comes from their role like any member.
  *
  * Implications ("manage implies view") are declared once, here (implies()),
- * and enforced once, in Team::memberHasPermission(); the Roles form only
- * displays them. A feature-gated case (MANAGE_DOMAINS) is always part of the
+ * and applied when a role is WRITTEN — Team::createRole() and the Roles form
+ * both store the closure (withImplied()) — so what spatie stores is the truth:
+ * `$role->checkPermissionTo()` and the Gate agree, and a check asks for exactly
+ * one permission. The Roles form also displays them ("Included with …").
+ *
+ * What that closure IS in storage: a team role is a `roles` row (scope
+ * `team`), a permission is a `permissions` row named by a case's value, and a
+ * grant is a `role_has_permissions` row joining the two. "Closed" means that
+ * for every grant row whose permission implies another, the role also has a
+ * grant row for the implied one. Adding an entry to implies() later — say
+ * INVITE_MEMBERS => [VIEW_MEMBERS] — leaves every team role that already has a
+ * `role_has_permissions` row for "invite team members" but none for "view team
+ * members" out of closure; the Gate would then refuse them the view. The fix
+ * is those missing `role_has_permissions` rows, and
+ * `php artisan bp:roles:sync-implications` inserts exactly them: for each
+ * team role, the implied permissions it lacks (creating the `permissions` row
+ * first if it doesn't exist yet). It never deletes a row, so REMOVING an
+ * entry from implies() needs no fix — the role keeps its existing grant as an
+ * ordinary one. Idempotent; `--dry-run` lists the roles and rows it would
+ * add. Run it with the deploy that changes this map.
+ *
+ * A feature-gated case (MANAGE_DOMAINS) is always part of the
  * vocabulary; while its feature is off the form doesn't offer it
  * (TeamRoleScope::unavailable()), the seeder doesn't grant it, and a role
  * that already holds it keeps it across a save.
@@ -58,9 +80,9 @@ enum TeamPermission: string
     }
 
     /**
-     * The permissions this one carries with it: you can't meaningfully edit
-     * what you can't see, so a manage/update grants its view counterpart.
-     * Single level — these don't chain.
+     * The permissions this one carries with it, one hop: you can't
+     * meaningfully edit what you can't see, so a manage/update grants its view
+     * counterpart. withImplied() follows the chain if one is ever declared.
      *
      * @return list<self>
      */
@@ -74,17 +96,18 @@ enum TeamPermission: string
     }
 
     /**
-     * Every permission that carries the given one with it — what a check for
-     * `$permission` also accepts.
+     * A grant closed over its implications, transitively — what every write
+     * path stores. Order preserved, no duplicates.
      *
+     * @param  list<self>  $permissions
      * @return list<self>
      */
-    public static function impliedBy(self $permission): array
+    public static function withImplied(array $permissions): array
     {
-        return array_values(array_filter(
-            self::cases(),
-            fn (self $case): bool => in_array($permission, $case->implies(), true),
-        ));
+        return collect(Implications::close(
+            self::implicationMap(),
+            array_map(fn (self $permission): string => $permission->value, $permissions),
+        ))->map(fn (string $name): self => self::from($name))->all();
     }
 
     /**

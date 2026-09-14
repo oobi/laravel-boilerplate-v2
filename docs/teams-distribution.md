@@ -61,7 +61,7 @@ canonical line"** note in the opening comment — those are *replace*, not plain
 |---|---|---|
 | `composer.json` | the `packages/teams` path repository + `require concise-dot-digital/teams` | delete both entries |
 | `app/Models/User.php` | `use HasTeams` import + the trait-composition block (`HasTeams insteadof HasRoles`) | **replace** with the canonical trait line quoted in the fence |
-| `app/Enums/SystemPermission.php` | the `MANAGE_TEAMS` case, its seed-list entry, its category (3 blocks) | delete each block |
+| `app/Enums/SystemPermission.php` | the five team permission cases (`view teams`, `manage teams`, `deactivate teams`, `delete teams`, `manage team ownership`), their `label()` arms, their `category()` arm and their `implies()` arms (4 fenced blocks). The arms call `team_trans()`, a package helper — deliberate, so the labels relabel with the tier; the fence removes the dependency with the tier | delete each block |
 | `database/seeders/DatabaseSeeder.php` | the `TeamRolesSeeder` import + its guarded `$this->call(...)` | delete each block |
 | `database/seeders/DemoSeeder.php` | the `TeamSeeder`/`TeamRolesSeeder` imports + their two guarded `$this->call(...)` blocks | delete each block |
 

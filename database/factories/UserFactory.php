@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -62,28 +63,35 @@ class UserFactory extends Factory
         ]);
     }
 
-    /** Grants the given SystemPermission(s) directly, creating the Permission rows on demand. */
+    /**
+     * Grants the given SystemPermission(s) directly, creating the Permission
+     * rows on demand and closing over their implications like every granting
+     * path — `withPermission(MANAGE_TEAMS)` reaches the teams area because it
+     * also holds `view teams` and `access admin panel`.
+     */
     public function withPermission(SystemPermission ...$permissions): static
     {
         return $this->afterCreating(function (User $user) use ($permissions): void {
             $user->givePermissionTo(array_map(
                 fn (SystemPermission $permission) => Permission::findOrCreate($permission->value),
-                $permissions,
+                SystemPermission::withImplied($permissions),
             ));
         });
     }
 
-    /** A non-super-admin actor with a typical "manage users" role, for exercising the coarse permission checks in tests. */
+    /**
+     * A non-super-admin actor with a typical "manage users" role, for exercising
+     * the coarse permission checks in tests. Built from SystemRolesSeeder's
+     * definition (read, not run — tests don't seed) so the fixture can't drift
+     * from what a fresh install actually ships.
+     */
     public function support(): static
     {
         return $this->afterCreating(function (User $user): void {
             $role = Role::findOrCreate('Support');
-            $role->givePermissionTo([
-                Permission::findOrCreate(SystemPermission::ACCESS_ADMIN_PANEL->value),
-                Permission::findOrCreate(SystemPermission::MANAGE_USERS->value),
-                Permission::findOrCreate(SystemPermission::SUSPEND_USERS->value),
-                Permission::findOrCreate(SystemPermission::IMPERSONATE_USERS->value),
-            ]);
+            $role->givePermissionTo(collect(SystemPermission::withImplied(SystemRolesSeeder::defaults()['Support']['permissions']))
+                ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value))
+                ->all());
 
             $user->assignRole($role);
         });

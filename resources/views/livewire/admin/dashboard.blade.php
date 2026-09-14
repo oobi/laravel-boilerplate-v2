@@ -36,7 +36,8 @@
 
     {{-- A few different card styles, mirroring the variety on Buzz's dashboard (disposable placeholder data beyond the first). --}}
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {{-- Avatar-list card — real data --}}
+        {{-- Avatar-list card — real data, shown only to a viewer who may open the users area --}}
+        @if ($canViewUsers)
         <x-card :title="__('Recent Users')">
             <x-slot:actions>
                 <a href="{{ route('users.index') }}" class="ui-link text-sm">{{ __('View all') }}</a>
@@ -59,6 +60,7 @@
                 @endforelse
             </div>
         </x-card>
+        @endif
 
         {{-- Plain list card — placeholder --}}
         <x-card :title="__('Card Title')">

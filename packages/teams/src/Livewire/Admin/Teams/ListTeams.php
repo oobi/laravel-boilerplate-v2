@@ -35,8 +35,9 @@ use Livewire\Component;
 
 /**
  * System admin: every team on the platform (scope §7 "manage all teams").
- * Gated by the `manage teams` system permission, not team membership — this is
- * where an admin provisions teams (the only entry point under `admin-only` creation).
+ * Opens read-only with the `view teams` system permission, never team
+ * membership; `manage teams` provisions teams here (the only entry point under
+ * `admin-only` creation) and the finer team permissions gate the row actions.
  *
  * Taking a team out of service is a two-step, reversible act: deactivate
  * (members keep their membership, can't enter), then delete (soft — restorable
@@ -52,7 +53,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
     public function mount(): void
     {
-        Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
     }
 
     public function table(Table $table): Table
@@ -123,8 +124,9 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                             ? team_trans('admin.deactivate_confirm', ['name' => $record->name])
                             : team_trans('admin.reactivate_confirm', ['name' => $record->name]))
                         ->hidden(fn (Team $record): bool => $record->trashed())
+                        ->authorize(fn (): bool => Gate::allows(SystemPermission::DEACTIVATE_TEAMS->value))
                         ->action(function (Team $record): void {
-                            Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+                            Gate::authorize(SystemPermission::DEACTIVATE_TEAMS->value);
 
                             $record->update(['active' => ! $record->active]);
 
@@ -138,21 +140,22 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
                     // Only an inactive team can be deleted — deactivate first (see class docblock).
                     DeleteAction::make()
+                        ->authorize(fn (): bool => Gate::allows(SystemPermission::DELETE_TEAMS->value))
                         ->visible(fn (Team $record): bool => ! $record->active)
                         ->modalDescription(fn (Team $record): string => Team::deleteWarning($record))
                         ->using(function (Team $record): void {
-                            Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+                            Gate::authorize(SystemPermission::DELETE_TEAMS->value);
                             abort_if($record->active, 403, team_trans('admin.deactivate_before_delete'));
 
                             $record->delete();
                         }),
 
                     RestoreAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value)),
+                        ->authorize(fn (): bool => Gate::allows(SystemPermission::DELETE_TEAMS->value)),
 
                     ForceDeleteAction::make()
                         ->modalDescription(fn (Team $record): string => Team::deleteWarning($record, permanent: true))
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value)),
+                        ->authorize(fn (): bool => Gate::allows(SystemPermission::DELETE_TEAMS->value)),
                 ]),
             ])
             ->searchPlaceholder(team_trans('admin.search'))
@@ -169,6 +172,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
             ->icon('heroicon-o-plus')
             ->modalHeading(team_trans('admin.add'))
             ->modalWidth(Width::Medium)
+            ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value))
             ->schema([
                 TextInput::make('name')
                     ->label(team_trans('admin.name'))
@@ -230,7 +234,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
     protected function emptyTrashPermission(): ?string
     {
-        return SystemPermission::MANAGE_TEAMS->value;
+        return SystemPermission::DELETE_TEAMS->value;
     }
 
     /** @return array<int, string> */

@@ -56,9 +56,10 @@ Route::middleware(['web', 'signed'])
         Route::post('/register', [RegisterFromInvitation::class, 'store'])->name('register.store');
     });
 
-// The system admin area: "manage all teams", in the admin shell, gated by the
-// `manage teams` system permission (never by membership). Flat `teams.*` route
-// names so Breadcrumbs derives the parent crumb.
+// The system admin area: "all teams", in the admin shell, gated by the `view
+// teams` system permission at each page (never by membership); edits need
+// `manage teams` and the finer team permissions. Flat `teams.*` route names so
+// Breadcrumbs derives the parent crumb.
 Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])
     ->prefix('admin/teams')
     ->name('teams.')
