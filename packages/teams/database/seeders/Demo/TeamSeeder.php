@@ -10,6 +10,7 @@ use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\TeamsServiceProvider;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 /**
  * Demo teams — the team counterpart of Demo\UserSeeder. Five teams, each with
@@ -51,8 +52,13 @@ class TeamSeeder extends Seeder
         $owners = $users->take(self::TEAMS)->values();
         $pool = $users->slice(self::TEAMS)->values();
 
-        $teams = $owners->map(function (User $owner, int $index) use ($pool, $roles, $stride, $adminRole): Team {
+        // Short, memorable slugs so the demo's team hosts read cleanly under host
+        // mode (acme.example.com, not acme-corp-ab12cd.example.com).
+        $slugs = [];
+
+        $teams = $owners->map(function (User $owner, int $index) use ($pool, $roles, $stride, $adminRole, &$slugs): Team {
             $team = Team::factory()->ownedBy($owner)->create();
+            $team->update(['slug' => $this->shortSlug($team->name, $slugs)]);
 
             if ($adminRole !== null) {
                 $team->syncMemberRoles($owner, [$adminRole]);
@@ -73,6 +79,28 @@ class TeamSeeder extends Seeder
         if ($teams->count() > 1) {
             $teams->get(1)->addMember($owners->first(), $roles->first());
         }
+    }
+
+    /**
+     * A short, memorable slug from the first word of the team's name (`Krajcik PLC`
+     * → `krajcik`), deduped within the run so two teams never clash.
+     *
+     * @param  list<string>  $used
+     */
+    private function shortSlug(string $name, array &$used): string
+    {
+        $base = Str::slug((string) Str::of($name)->before(',')->before(' ')->before('-')) ?: 'team';
+
+        $slug = $base;
+        $suffix = 2;
+
+        while (in_array($slug, $used, true)) {
+            $slug = $base.'-'.$suffix++;
+        }
+
+        $used[] = $slug;
+
+        return $slug;
     }
 
     /**
