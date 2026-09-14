@@ -227,7 +227,8 @@ return [
         'base' => env('TEAMS_DOMAINS_BASE'),
 
         'reserved' => [
-            'www', 'admin', 'mail', 'webmail', 'smtp', 'imap', 'pop',
+            'www', 'admin', 'administrator', 'login', 'team', 'teams',
+            'mail', 'webmail', 'smtp', 'imap', 'pop',
             'ftp', 'api', 'app', 'ns1', 'ns2', 'mx', 'cpanel',
             'autodiscover', 'autoconfig', 'localhost',
         ],

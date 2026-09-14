@@ -85,6 +85,28 @@ class TeamHostRoutingTest extends TestCase
         $this->assertNull(TeamHostResolver::resolve('unknown.example.org'));
     }
 
+    public function test_a_reserved_subdomain_never_resolves_even_with_a_matching_slug(): void
+    {
+        $this->enableHostMode();
+        // A row forced onto a reserved slug still doesn't route — infra names belong
+        // to the platform, not a tenant.
+        Team::factory()->create()->forceFill(['slug' => 'www'])->save();
+
+        $this->assertNull(TeamHostResolver::resolve('www.myapp.com'));
+    }
+
+    public function test_unique_slug_avoids_reserved_labels_in_host_mode(): void
+    {
+        $this->enableHostMode();
+        // 'Admin' slugifies to the reserved 'admin', so it must be bumped — otherwise
+        // the team would be stranded (admin.myapp.com never resolves to it).
+        $this->assertSame('admin-2', Team::uniqueSlug('Admin'));
+
+        // Path mode has no subdomains, so the reserved list doesn't apply.
+        config(['teams.domains.enabled' => false]);
+        $this->assertSame('admin', Team::uniqueSlug('Admin'));
+    }
+
     // --- TeamHostResolver::hostFor + team_route() ---------------------------
 
     public function test_host_for_prefers_a_verified_primary_domain_else_the_platform_subdomain(): void

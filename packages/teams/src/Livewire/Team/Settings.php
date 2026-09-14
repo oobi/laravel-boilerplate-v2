@@ -6,6 +6,7 @@ namespace Concise\Teams\Livewire\Team;
 
 use App\Support\Filament\AdminAction;
 use App\Support\Theme\DaisyColor;
+use Closure;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\DomainPolicy;
@@ -105,6 +106,13 @@ class Settings extends Component implements HasActions, HasSchemas
                                 ->required()
                                 ->maxLength(255)
                                 ->alphaDash()
+                                // While the overlay is on the slug is a subdomain, so a reserved
+                                // label can't be used (it would never route — TeamHostResolver).
+                                ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                                    if (DomainPolicy::enabled() && DomainPolicy::isReservedLabel((string) $value)) {
+                                        $fail(team_trans('settings.slug_reserved'));
+                                    }
+                                })
                                 ->unique(table: 'teams', column: 'slug', ignoreRecord: true),
                         ]),
                     ]),

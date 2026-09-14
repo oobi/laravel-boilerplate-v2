@@ -79,6 +79,12 @@ final class TeamHostResolver
             return null;
         }
 
+        // A reserved label (www, mail, …) is never a team, even if a row somehow
+        // carries that slug — it belongs to infra, not a tenant.
+        if (DomainPolicy::isReservedLabel($slug)) {
+            return null;
+        }
+
         return Team::query()->where('slug', $slug)->first();
     }
 }

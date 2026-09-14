@@ -77,6 +77,18 @@ final class DomainPolicy
         }
     }
 
+    /**
+     * Whether a leftmost host label is reserved (`www`, `admin`, `mail`, … from
+     * `teams.domains.reserved`) — infra/system names a team must never occupy,
+     * whether as a custom domain's label or as a `{slug}.base` subdomain.
+     */
+    public static function isReservedLabel(string $label): bool
+    {
+        $reserved = array_map(strtolower(...), (array) config('teams.domains.reserved', []));
+
+        return in_array(Str::lower(trim($label)), $reserved, true);
+    }
+
     /** Normalise a configured host to bare lowercase (no scheme/path), or null when blank. */
     private static function host(mixed $value): ?string
     {

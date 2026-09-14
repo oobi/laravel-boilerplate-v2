@@ -6,6 +6,7 @@ namespace Concise\Teams\Actions;
 
 use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\DomainPolicy;
 use InvalidArgumentException;
 
 /**
@@ -48,10 +49,7 @@ class CreateDomain
      */
     public static function isReserved(string $domain): bool
     {
-        $label = explode('.', $domain)[0];
-        $reserved = array_map(strtolower(...), (array) config('teams.domains.reserved', []));
-
-        if (in_array($label, $reserved, true)) {
+        if (DomainPolicy::isReservedLabel(explode('.', $domain)[0])) {
             return true;
         }
 

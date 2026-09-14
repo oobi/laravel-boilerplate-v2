@@ -156,6 +156,21 @@ class TeamSettingsTest extends TestCase
         $this->assertSame('New', $team->fresh()->name);
     }
 
+    public function test_a_reserved_slug_is_rejected_while_domains_are_on(): void
+    {
+        config(['teams.domains.enabled' => true, 'teams.domains.admin_host' => 'admin.myapp.com', 'teams.domains.base' => 'myapp.com']);
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        Livewire::actingAs($owner)
+            ->test(Settings::class, ['team' => $team])
+            ->set('data.slug', 'mail') // a reserved label — never routes as a subdomain
+            ->call('save')
+            ->assertHasErrors('data.slug');
+
+        $this->assertNotSame('mail', $team->fresh()->slug);
+    }
+
     protected function tearDown(): void
     {
         app(TeamContext::class)->clear();
