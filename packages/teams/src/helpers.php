@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\TeamCache;
 use Concise\Teams\Support\TeamContext;
+use Concise\Teams\Support\TeamHostResolver;
 use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\Support\TeamStorage;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -32,6 +34,28 @@ if (! function_exists('team_trans_choice')) {
     function team_trans_choice(string $key, int $number, array $replace = []): string
     {
         return TeamLabels::transChoice($key, $number, $replace);
+    }
+}
+
+if (! function_exists('team_route')) {
+    /**
+     * A URL for a team-scoped route ({team}/dashboard, /members, …) that works in
+     * either routing mode: in host mode the team is carried by the request host
+     * (its canonical host — verified custom primary, else {slug}.base), so no slug
+     * segment; in path mode by the {team} slug. Use this instead of raw route()
+     * for any team-scoped route so links stay correct when the custom-domain
+     * overlay is on. Entry pages with no team (team.index/select/onboarding) take
+     * plain route() — they carry no team and their host is a literal in host mode.
+     *
+     * @param  array<string, mixed>  $parameters
+     */
+    function team_route(string $name, Team $team, array $parameters = []): string
+    {
+        $key = DomainPolicy::enabled()
+            ? ['teamHost' => TeamHostResolver::hostFor($team)]
+            : ['team' => $team->slug];
+
+        return route($name, [...$key, ...$parameters]);
     }
 }
 

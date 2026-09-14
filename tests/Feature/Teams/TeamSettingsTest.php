@@ -91,17 +91,19 @@ class TeamSettingsTest extends TestCase
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
+        // Driven at the component level: with domains on the app is in host mode,
+        // so a full-page GET by path URL would be an inconsistent state (the team
+        // layout would generate host-mode links). The warning copy is what's under
+        // test, and it lives on the Settings form's slug field.
         config(['teams.domains.enabled' => false]);
-        $this->actingAs($owner)
-            ->get(route('team.settings', ['team' => $team->slug]))
-            ->assertOk()
+        Livewire::actingAs($owner)
+            ->test(Settings::class, ['team' => $team])
             ->assertSee(team_trans('settings.slug_warning'))
             ->assertDontSee('subdomain');
 
         config(['teams.domains.enabled' => true]);
-        $this->actingAs($owner)
-            ->get(route('team.settings', ['team' => $team->slug]))
-            ->assertOk()
+        Livewire::actingAs($owner)
+            ->test(Settings::class, ['team' => $team])
             ->assertSee(team_trans('settings.slug_warning_domains'));
     }
 

@@ -11,7 +11,7 @@
     </div>
 
     <x-nav-item
-        :href="route('team.dashboard', ['team' => $team->slug])"
+        :href="team_route('team.dashboard', $team)"
         icon="heroicon-o-squares-2x2"
         :routes="['team.dashboard']"
     >
@@ -22,13 +22,13 @@
         @if ($node instanceof \App\Support\Navigation\Registry\NavGroup)
             <x-nav-group :label="$node->label" :icon="$node->icon" :routes="$node->activeRoutes()">
                 @foreach (\Concise\Teams\Support\Navigation\TeamNavRegistry::visibleItems($node, $viewer, $team) as $item)
-                    <x-nav-item :href="route($item->route, ['team' => $team->slug])" :icon="$item->icon" :routes="$item->activeRoutes()">
+                    <x-nav-item :href="team_route($item->route, $team)" :icon="$item->icon" :routes="$item->activeRoutes()">
                         {{ $item->label }}
                     </x-nav-item>
                 @endforeach
             </x-nav-group>
         @else
-            <x-nav-item :href="route($node->route, ['team' => $team->slug])" :icon="$node->icon" :routes="$node->activeRoutes()">
+            <x-nav-item :href="team_route($node->route, $team)" :icon="$node->icon" :routes="$node->activeRoutes()">
                 {{ $node->label }}
             </x-nav-item>
         @endif

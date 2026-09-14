@@ -123,7 +123,7 @@ class Settings extends Component implements HasActions, HasSchemas
         Notification::make()->title(team_trans('settings.saved'))->success()->send();
 
         // The slug is the URL — stay on this page even if it changed.
-        $this->redirect(route('team.settings', ['team' => $this->team->slug]));
+        $this->redirect(team_route('team.settings', $this->team));
     }
 
     /**

@@ -34,7 +34,7 @@
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($teams as $team)
             <a
-                href="{{ route('team.dashboard', ['team' => $team->slug]) }}"
+                href="{{ team_route('team.dashboard', $team) }}"
                 @class([
                     'group flex flex-col gap-3 rounded-box border bg-base-100 p-5 transition hover:border-primary hover:shadow-md',
                     'border-primary' => $team->id === $currentTeamId,

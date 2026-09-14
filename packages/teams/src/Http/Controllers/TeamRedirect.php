@@ -23,7 +23,7 @@ class TeamRedirect
         $current = $user->currentTeam;
 
         if ($current !== null && $current->active && $user->belongsToTeam($current)) {
-            return redirect()->route('team.dashboard', ['team' => $current->slug]);
+            return redirect()->to(team_route('team.dashboard', $current));
         }
 
         $teams = $user->accessibleTeams()->orderBy('name')->get();
@@ -33,9 +33,10 @@ class TeamRedirect
         }
 
         if ($teams->count() === 1) {
-            $user->switchTeam($teams->first());
+            $team = $teams->first();
+            $user->switchTeam($team);
 
-            return redirect()->route('team.dashboard', ['team' => $teams->first()->slug]);
+            return redirect()->to(team_route('team.dashboard', $team));
         }
 
         return redirect()->route('team.select');

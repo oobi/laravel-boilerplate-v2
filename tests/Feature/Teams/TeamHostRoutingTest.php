@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Route as RoutingRoute;
+use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
@@ -82,6 +83,45 @@ class TeamHostRoutingTest extends TestCase
 
         $this->assertNull(TeamHostResolver::resolve('admin.myapp.com'));
         $this->assertNull(TeamHostResolver::resolve('unknown.example.org'));
+    }
+
+    // --- TeamHostResolver::hostFor + team_route() ---------------------------
+
+    public function test_host_for_prefers_a_verified_primary_domain_else_the_platform_subdomain(): void
+    {
+        $this->enableHostMode();
+        $team = Team::factory()->create(['slug' => 'acme']);
+
+        // No custom domain yet: the platform subdomain.
+        $this->assertSame('acme.myapp.com', TeamHostResolver::hostFor($team));
+
+        // A verified primary custom domain wins.
+        Domain::factory()->verified()->primary()->for($team)->create(['domain' => 'acme.com']);
+        $this->assertSame('acme.com', TeamHostResolver::hostFor($team->fresh()));
+    }
+
+    public function test_team_route_emits_a_path_url_in_path_mode(): void
+    {
+        config(['teams.domains.enabled' => false]);
+        $team = Team::factory()->create(['slug' => 'acme']);
+
+        $this->assertStringContainsString('/teams/acme/dashboard', team_route('team.dashboard', $team));
+    }
+
+    public function test_team_route_emits_a_host_rooted_url_in_host_mode(): void
+    {
+        $this->enableHostMode();
+        $team = Team::factory()->create(['slug' => 'acme']);
+        Domain::factory()->verified()->primary()->for($team)->create(['domain' => 'acme.com']);
+
+        // A distinct name avoids colliding with the path-mode team.dashboard the app booted with.
+        Route::domain('{teamHost}')->get('/probe-dash', fn () => '')->name('probe.teamdash');
+        $this->app['router']->getRoutes()->refreshNameLookups();
+
+        $url = team_route('probe.teamdash', $team->fresh());
+
+        $this->assertSame('acme.com', parse_url($url, PHP_URL_HOST)); // the team's canonical host
+        $this->assertSame('/probe-dash', parse_url($url, PHP_URL_PATH)); // no path slug segment
     }
 
     // --- DomainPolicy::assertConfigured -------------------------------------

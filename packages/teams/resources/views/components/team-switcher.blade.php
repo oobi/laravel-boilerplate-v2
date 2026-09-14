@@ -29,7 +29,7 @@
         <ul tabindex="0" class="menu dropdown-content z-50 mt-1 w-72 max-w-[calc(100vw-3rem)] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
             @foreach ($teams as $t)
                 <li>
-                    <a href="{{ route('team.dashboard', ['team' => $t->slug]) }}" @class(['font-semibold' => $t->is($team)]) title="{{ $t->name }}">
+                    <a href="{{ team_route('team.dashboard', $t) }}" @class(['font-semibold' => $t->is($team)]) title="{{ $t->name }}">
                         <span class="truncate">{{ $t->name }}</span>
                         @if ($t->is($team))
                             <x-heroicon-o-check class="ml-auto h-4 w-4 shrink-0 text-primary" />

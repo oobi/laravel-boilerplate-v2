@@ -22,6 +22,22 @@ use Illuminate\Support\Str;
  */
 final class TeamHostResolver
 {
+    /**
+     * A team's canonical host in host mode — its verified primary custom domain if
+     * it has one, else the platform subdomain `{slug}.base`. The inverse of
+     * resolve(); used by team_route() to emit host-rooted URLs.
+     */
+    public static function hostFor(Team $team): string
+    {
+        $primary = $team->primaryDomain();
+
+        if ($primary !== null) {
+            return $primary->domain;
+        }
+
+        return $team->slug.'.'.DomainPolicy::base();
+    }
+
     public static function resolve(string $host): ?Team
     {
         $host = Str::lower(trim($host));
