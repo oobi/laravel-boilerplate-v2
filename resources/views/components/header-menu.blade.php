@@ -20,12 +20,7 @@
             <li aria-hidden="true" class="pointer-events-none"><hr class="mx-3 my-1 border-base-200 p-0"></li>
             @foreach ($accountMenuLinks as $item)
                 <li>
-                    <a href="{{ $item->getUrl() }}" class="flex items-center gap-2">
-                        @if ($item->getIcon())
-                            <x-dynamic-component :component="$item->getIcon()" class="h-4 w-4 shrink-0" />
-                        @endif
-                        {{ $item->getLabel() }}
-                    </a>
+                    <a href="{{ $item->getUrl() }}">{{ $item->getLabel() }}</a>
                 </li>
             @endforeach
         @endif
