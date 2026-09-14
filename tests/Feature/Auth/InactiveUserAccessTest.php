@@ -126,7 +126,7 @@ class InactiveUserAccessTest extends TestCase
         $sessionId = $this->startImpersonation($driver, $admin, $target);
         $target->update(['active' => false]);
 
-        $this->resumeSession($sessionId)->get('/admin/profile')
+        $this->resumeSession($sessionId)->get('/profile')
             ->assertRedirect('/login')
             ->assertSessionMissing('impersonated_by')
             ->assertSessionMissing('impersonator_guard')
@@ -214,7 +214,7 @@ class InactiveUserAccessTest extends TestCase
     public function test_livewire_http_update_is_blocked_after_deactivation(): void
     {
         $user = User::factory()->withPermission(SystemPermission::ACCESS_ADMIN_PANEL)->create(['first_name' => 'OriginalName']);
-        $page = $this->actingAs($user)->get('/admin/profile')->assertOk();
+        $page = $this->actingAs($user)->get('/profile')->assertOk();
         $snapshot = Utils::extractAttributeDataFromHtml($page->getContent(), 'wire:snapshot');
         $payload = ['components' => [[
             'snapshot' => json_encode($snapshot),

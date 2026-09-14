@@ -30,9 +30,13 @@ return [
     'prefix' => '',
 
     // teams:start — when the teams tier's custom-domain overlay is in host mode,
-    // auth belongs to the control-plane host only (admin_host), like the rest of
-    // the admin area. Null (path mode, or teams absent) leaves auth unconstrained.
-    'domain' => (bool) env('TEAMS_DOMAINS_ENABLED', false) ? env('TEAMS_DOMAINS_ADMIN_HOST') : null,
+    // auth belongs to the account host (every user needs it), never admin_host —
+    // the admin area is quarantined to admin-only pages (see
+    // ~dev/TEAMS_DOMAINS_HOST_SPLIT.md). account_host defaults to base (the
+    // apex) when unset. Null (path mode, or teams absent) leaves auth unconstrained.
+    'domain' => (bool) env('TEAMS_DOMAINS_ENABLED', false)
+        ? (env('TEAMS_DOMAINS_ACCOUNT_HOST') ?: env('TEAMS_DOMAINS_BASE'))
+        : null,
     // teams:end
 
     'middleware' => ['web'],

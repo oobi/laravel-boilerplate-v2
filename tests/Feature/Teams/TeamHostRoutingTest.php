@@ -20,10 +20,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 /**
- * Host-mode resolution and routing for the custom-domain overlay (5h.4): a
- * request host is mapped to its team (verified custom domain, or {slug}.{base}),
- * the control-plane host and anything else resolve to nothing, and the boot-time
- * config guard fails loud when the overlay is on without its hosts.
+ * Host-mode resolution and routing for the custom-domain overlay (5h.4,
+ * reworked 5h.7 — see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md): a request host is
+ * mapped to its team (verified custom domain, or {slug}.{base}), the admin
+ * host / account host / apex and anything else resolve to nothing, and the
+ * boot-time config guard fails loud when the overlay is on without its
+ * required hosts (admin_host, base — account_host is optional).
  */
 class TeamHostRoutingTest extends TestCase
 {
@@ -75,7 +77,7 @@ class TeamHostRoutingTest extends TestCase
         $this->assertNull(TeamHostResolver::resolve('a.acme.myapp.com')); // two labels deep
     }
 
-    public function test_the_control_plane_host_never_resolves_to_a_team(): void
+    public function test_the_admin_host_never_resolves_to_a_team(): void
     {
         $this->enableHostMode();
         // A team whose slug would otherwise produce the admin host: still not a team.
@@ -83,6 +85,17 @@ class TeamHostRoutingTest extends TestCase
 
         $this->assertNull(TeamHostResolver::resolve('admin.myapp.com'));
         $this->assertNull(TeamHostResolver::resolve('unknown.example.org'));
+    }
+
+    public function test_the_account_host_never_resolves_to_a_team_even_when_overridden(): void
+    {
+        $this->enableHostMode();
+        config(['teams.domains.account_host' => 'app.myapp.com']);
+        // 'app' is on the default reserved list, so this couldn't happen via
+        // Team::uniqueSlug — force it to prove the exclusion isn't relying on that alone.
+        Team::factory()->create()->forceFill(['slug' => 'app'])->save();
+
+        $this->assertNull(TeamHostResolver::resolve('app.myapp.com'));
     }
 
     public function test_a_reserved_subdomain_never_resolves_even_with_a_matching_slug(): void
@@ -167,31 +180,48 @@ class TeamHostRoutingTest extends TestCase
         $this->expectNotToPerformAssertions();
     }
 
-    public function test_control_plane_and_apex_hosts_are_null_in_path_mode(): void
+    public function test_account_and_apex_hosts_are_null_in_path_mode(): void
     {
         // In path mode the route groups bind to null → no host constraint (5h.4b).
+        // adminHost() itself stays a raw accessor (also used for reservation
+        // checks regardless of mode); routes/teams.php gates it at the call site.
         config(['teams.domains.enabled' => false, 'teams.domains.admin_host' => 'admin.myapp.com', 'teams.domains.base' => 'myapp.com']);
 
-        $this->assertNull(DomainPolicy::controlPlaneHost());
+        $this->assertNull(DomainPolicy::accountHost());
         $this->assertNull(DomainPolicy::apexHost());
     }
 
-    public function test_control_plane_and_apex_hosts_resolve_in_host_mode(): void
+    public function test_admin_and_apex_hosts_resolve_in_host_mode(): void
     {
         $this->enableHostMode();
 
-        $this->assertSame('admin.myapp.com', DomainPolicy::controlPlaneHost());
+        $this->assertSame('admin.myapp.com', DomainPolicy::adminHost());
         $this->assertSame('myapp.com', DomainPolicy::apexHost());
     }
 
-    public function test_the_team_host_pattern_excludes_the_control_plane_and_apex(): void
+    public function test_the_account_host_defaults_to_the_apex_and_honours_an_override(): void
     {
-        // Without this, the wildcard {teamHost} team route shadows admin_host and
-        // apex routes and 404s them for a signed-in user (regression guard).
         $this->enableHostMode();
+
+        // Unset: the account layer (login/profile/picker) lives on the apex, so a
+        // Laravel-served public landing also serves /login and /profile.
+        $this->assertSame('myapp.com', DomainPolicy::accountHost());
+
+        // A headless-apex deployment overrides it to its own host.
+        config(['teams.domains.account_host' => 'app.myapp.com']);
+        $this->assertSame('app.myapp.com', DomainPolicy::accountHost());
+    }
+
+    public function test_the_team_host_pattern_excludes_the_admin_account_and_apex_hosts(): void
+    {
+        // Without this, the wildcard {teamHost} team route shadows those hosts and
+        // 404s them for a signed-in user (regression guard).
+        $this->enableHostMode();
+        config(['teams.domains.account_host' => 'app.myapp.com']);
         $pattern = '/^'.DomainPolicy::teamHostPattern().'$/';
 
-        $this->assertSame(0, preg_match($pattern, 'admin.myapp.com')); // control plane
+        $this->assertSame(0, preg_match($pattern, 'admin.myapp.com')); // admin host
+        $this->assertSame(0, preg_match($pattern, 'app.myapp.com'));   // account host (overridden)
         $this->assertSame(0, preg_match($pattern, 'myapp.com'));       // apex
         $this->assertSame(1, preg_match($pattern, 'acme.myapp.com'));  // team subdomain
         $this->assertSame(1, preg_match($pattern, 'acme.com'));        // verified custom domain

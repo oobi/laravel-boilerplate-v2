@@ -23,21 +23,22 @@ class EditPasswordTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/admin/profile/password')->assertRedirect('/login');
+        $this->get('/profile/password')->assertRedirect('/login');
     }
 
-    public function test_users_without_admin_access_are_forbidden(): void
+    /** The profile is not an admin page — any signed-in, verified user reaches it (see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md). */
+    public function test_users_without_admin_access_can_view_the_password_page(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/admin/profile/password')->assertForbidden();
+        $this->actingAs($user)->get('/profile/password')->assertOk();
     }
 
     public function test_admin_users_can_view_the_password_page(): void
     {
         $admin = User::factory()->superAdmin()->create();
 
-        $this->actingAs($admin)->get('/admin/profile/password')->assertOk();
+        $this->actingAs($admin)->get('/profile/password')->assertOk();
     }
 
     public function test_users_can_update_their_password(): void

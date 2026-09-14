@@ -32,20 +32,21 @@ class LoginRedirectTest extends TestCase
         $this->login($admin)->assertRedirect(route('dashboard'));
     }
 
-    public function test_a_non_admin_with_a_team_lands_in_the_team_area(): void
+    public function test_a_non_admin_with_a_team_lands_directly_on_it(): void
     {
+        // One hop, not a bounce through the /teams front door — see TeamDestination.
         $user = User::factory()->create();
-        Team::factory()->ownedBy($user)->create();
+        $team = Team::factory()->ownedBy($user)->create();
 
-        $this->login($user)->assertRedirect(route('team.index'));
+        $this->login($user)->assertRedirect(team_route('team.dashboard', $team));
     }
 
-    public function test_a_non_admin_with_no_team_still_lands_in_the_team_area(): void
+    public function test_a_non_admin_with_no_team_lands_on_onboarding(): void
     {
-        // TeamRedirect then shows the "ask an admin" onboarding — the tier owns that decision.
+        // The tier owns the "ask an admin" onboarding decision — see TeamDestination.
         $user = User::factory()->create();
 
-        $this->login($user)->assertRedirect(route('team.index'));
+        $this->login($user)->assertRedirect(route('team.onboarding'));
     }
 
     public function test_a_user_no_resolver_claims_falls_back_to_the_public_home(): void

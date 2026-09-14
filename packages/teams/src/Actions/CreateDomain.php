@@ -44,8 +44,9 @@ class CreateDomain
 
     /**
      * Reserved when the leftmost label is on the blacklist
-     * (`teams.domains.reserved`), or the whole domain is the app's own host or
-     * the control-plane host — a team must never be able to claim those.
+     * (`teams.domains.reserved`), or the whole domain is the app's own host,
+     * the admin host, or the account host — a team must never be able to claim
+     * those.
      */
     public static function isReserved(string $domain): bool
     {
@@ -55,6 +56,6 @@ class CreateDomain
 
         $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
 
-        return in_array($domain, array_filter([$appHost, config('teams.domains.admin_host')]), true);
+        return in_array($domain, array_filter([$appHost, DomainPolicy::adminHost(), DomainPolicy::accountHost()]), true);
     }
 }

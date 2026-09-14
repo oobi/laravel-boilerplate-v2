@@ -65,6 +65,37 @@ class DomainManagementTest extends TestCase
         app(CreateDomain::class)(Team::factory()->create(), 'myapp.test');
     }
 
+    /**
+     * admin_host and account_host must never be claimable as a custom domain
+     * either — checked as whole-host equality (not just the leftmost-label
+     * blacklist), so a non-reserved label still can't be used to squat on
+     * either host (~dev/TEAMS_DOMAINS_HOST_SPLIT.md D-DOM-5).
+     */
+    public function test_it_rejects_the_admin_host(): void
+    {
+        config([
+            'teams.domains.enabled' => true,
+            'teams.domains.admin_host' => 'portal.myapp.test',
+            'teams.domains.base' => 'myapp.test',
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+        app(CreateDomain::class)(Team::factory()->create(), 'portal.myapp.test');
+    }
+
+    public function test_it_rejects_the_account_host(): void
+    {
+        config([
+            'teams.domains.enabled' => true,
+            'teams.domains.admin_host' => 'admin.myapp.test',
+            'teams.domains.account_host' => 'members.myapp.test',
+            'teams.domains.base' => 'myapp.test',
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+        app(CreateDomain::class)(Team::factory()->create(), 'members.myapp.test');
+    }
+
     public function test_it_rejects_a_duplicate_regardless_of_casing(): void
     {
         $team = Team::factory()->create();

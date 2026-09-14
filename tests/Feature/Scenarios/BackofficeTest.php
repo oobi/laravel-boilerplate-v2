@@ -92,7 +92,7 @@ class BackofficeTest extends TestCase
         // fallback is the safety net for a teams-less build, not this path.)
         $user = User::factory()->create();
         $this->post('/login', ['email' => $user->email, 'password' => 'password'])
-            ->assertRedirect(route('team.index'));
+            ->assertRedirect(route('team.onboarding'));
 
         $this->actingAs($user)->get(route('team.onboarding'))
             ->assertOk()

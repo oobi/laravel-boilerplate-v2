@@ -24,20 +24,27 @@ use Illuminate\Support\Facades\Route;
 $prefix = config('teams.route_prefix', 'teams');
 
 $hostMode = DomainPolicy::enabled();
-$controlPlaneHost = DomainPolicy::controlPlaneHost();
+$accountHost = DomainPolicy::accountHost();
+// adminHost() itself is a raw, ungated accessor (also used for reservation
+// checks regardless of mode — see CreateDomain::isReserved); gate it here so
+// path mode never picks up a stray admin_host env value as a route constraint.
+$adminHost = $hostMode ? DomainPolicy::adminHost() : null;
 
-// In host mode the control plane IS the app host, so the path prefixes are dropped:
-// the team entry pages become the control-plane root (admin_host/, /select,
-// /onboarding), invitation links live at /invitations/…, and the system "all
-// teams" area drops its redundant `admin/` segment (admin_host/teams). Path mode
-// keeps every prefix (/{prefix}, /{prefix}/invitations, /admin/teams).
-$entryPrefix = $hostMode ? '' : $prefix;
-$invitationPrefix = ($hostMode ? '' : $prefix.'/').'invitations/{invitation}';
+// The entry pages and invitation links keep their `{prefix}` segment in BOTH
+// modes now (`/teams`, `/teams/select`, `/teams/invitations/…`) — in host mode
+// they bind to account_host, which is a real page-serving host (default the
+// apex), not a bare control-plane root, so the prefix still reads. Only the
+// system "all teams" admin area drops its redundant `admin/` segment in host
+// mode, since admin_host IS the admin area (admin_host/teams, not
+// admin_host/admin/teams).
+$entryPrefix = $prefix;
+$invitationPrefix = $prefix.'/invitations/{invitation}';
 $adminTeamsPrefix = $hostMode ? 'teams' : 'admin/teams';
 
-// A team host is a full dotted hostname, excluding the control-plane host and the
-// apex (a domain parameter otherwise defaults to a single dotless label; and an
-// unexcluded wildcard would shadow admin_host/apex routes — see DomainPolicy).
+// A team host is a full dotted hostname, excluding the admin host, the account
+// host, and the apex (a domain parameter otherwise defaults to a single
+// dotless label; an unexcluded wildcard would shadow those routes — see
+// DomainPolicy).
 Route::pattern('teamHost', DomainPolicy::teamHostPattern());
 
 // The team-scoped pages (members-only, one team's context at a time — scope §6/§7).
@@ -49,12 +56,11 @@ $teamPages = function (): void {
     Route::get('/settings', Settings::class)->name('settings');
 };
 
-// Entry point + zero-team onboarding: no team context. On the control-plane host
-// (admin_host) in host mode, the app host otherwise. team.index is the front door
-// — behind auth, so a guest is sent to login and a member on to their team; in
-// host mode it is the control-plane root (admin_host/), the landing being on the apex.
+// Entry point + zero-team onboarding: no team context. On the account host in
+// host mode, the app host otherwise. team.index is the front door — behind
+// auth, so a guest is sent to login and a member on to their team.
 Route::middleware(['web', 'auth', 'verified'])
-    ->domain($controlPlaneHost)
+    ->domain($accountHost)
     ->prefix($entryPrefix)
     ->name('team.')
     ->group(function () {
@@ -88,7 +94,7 @@ if ($hostMode) {
 // a guest to sign in or to register through the invitation, and holds a
 // signed-in account to the invited email.
 Route::middleware(['web', 'signed'])
-    ->domain($controlPlaneHost)
+    ->domain($accountHost)
     ->prefix($invitationPrefix)
     ->name('team.invitations.')
     ->group(function () {
@@ -102,7 +108,7 @@ Route::middleware(['web', 'signed'])
 // `manage teams` and the finer team permissions. Flat `teams.*` route names so
 // Breadcrumbs derives the parent crumb.
 Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])
-    ->domain($controlPlaneHost)
+    ->domain($adminHost)
     ->prefix($adminTeamsPrefix)
     ->name('teams.')
     ->group(function () {

@@ -28,6 +28,7 @@ use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
+use Concise\Teams\Support\TeamDestination;
 use Concise\Teams\Support\TeamLabels;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -185,15 +186,18 @@ class TeamsServiceProvider extends ServiceProvider
     }
 
     /**
-     * After login, a user without a system role is sent to the team area — their
-     * team, the picker, or the "ask an admin" onboarding, as TeamRedirect decides.
-     * Contributed to core's LoginRedirectRegistry so core auth stays teams-agnostic;
-     * a system role is resolved by core before this resolver is ever consulted.
+     * After login, a user without a system role is sent straight to where they
+     * belong — their team, the picker, or the "ask an admin" onboarding, via
+     * TeamDestination (the same resolver the `/{prefix}` front door uses) —
+     * rather than through the front door itself, so login is one hop, not two.
+     * Contributed to core's LoginRedirectRegistry so core auth stays
+     * teams-agnostic; a system role is resolved by core before this resolver is
+     * ever consulted.
      */
     private function registerLoginRedirect(): void
     {
         LoginRedirectRegistry::register(
-            fn (User $user): ?string => $user->canAccessAdmin() ? null : route('team.index'),
+            fn (User $user): ?string => $user->canAccessAdmin() ? null : TeamDestination::resolve($user),
         );
     }
 

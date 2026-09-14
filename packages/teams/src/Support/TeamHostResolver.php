@@ -46,8 +46,8 @@ final class TeamHostResolver
             return null;
         }
 
-        // The control plane is never a team, even if a slug happens to collide.
-        if ($host === DomainPolicy::adminHost()) {
+        // The admin host and the account host are never a team, even if a slug happens to collide.
+        if ($host === DomainPolicy::adminHost() || $host === DomainPolicy::accountHost()) {
             return null;
         }
 

@@ -61,10 +61,16 @@ these choices.
 
 ## Scope: staff back-office, not a customer frontend
 
-This is an **admin/back-office** boilerplate. The people who authenticate here
-are staff, so self-service account management (profile, password, two-factor)
-lives **inside the admin shell** (`layouts.admin`, under the `/admin` gate) — a
-user without `ACCESS_ADMIN_PANEL` gets a 403, not a half-styled public page.
+This is an **admin/back-office** boilerplate, but not everyone who signs in is
+admin staff (an add-on like the teams tier gives ordinary users their own
+area). Self-service account management (profile, password, two-factor) is
+therefore **not** an admin page: it renders in the neutral `layouts.account`
+shell, reachable by any signed-in, verified user via `/profile` — admin or
+not. Only the admin area proper (dashboard, users, roles, …) sits behind
+`ACCESS_ADMIN_PANEL`. In the teams tier's host mode this also means the
+account routes (auth, profile, the team picker) are quarantined onto their
+own host, separate from the admin-only host — see
+`~dev/TEAMS_DOMAINS_HOST_SPLIT.md`.
 
 A **customer-facing frontend is deliberately out of scope**: a real app's public
 UI is unpredictable (Blade, Livewire, Inertia, or a headless Nuxt/SPA), so the

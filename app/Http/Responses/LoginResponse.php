@@ -6,7 +6,7 @@ namespace App\Http\Responses;
 
 use App\Enums\LoginFallback;
 use App\Models\User;
-use App\Support\Auth\LoginRedirectRegistry;
+use App\Support\Auth\Destination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -42,11 +42,7 @@ class LoginResponse implements LoginResponseContract
     /** The post-login URL for this user, or null when they should be rejected. */
     private function destinationFor(User $user): ?string
     {
-        if ($user->canAccessAdmin()) {
-            return route('dashboard');
-        }
-
-        if ($url = LoginRedirectRegistry::resolve($user)) {
+        if ($url = Destination::claimed($user)) {
             return $url;
         }
 

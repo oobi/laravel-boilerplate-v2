@@ -11,12 +11,17 @@ use Illuminate\Support\Str;
  * The custom-domain overlay's feature flag and its host configuration. Whether
  * it's active at all is config (infra-tied: wildcard DNS/TLS); *who* may manage a
  * team's domains is runtime authorization — the MANAGE_DOMAINS team permission
- * (held via a role) and system admins — not config. See ~dev/TEAMS_DOMAINS_SCOPE.md.
+ * (held via a role) and system admins — not config. See ~dev/TEAMS_DOMAINS_SCOPE.md
+ * and ~dev/TEAMS_DOMAINS_HOST_SPLIT.md.
  *
  * When enabled, the overlay switches routing from path mode (/{prefix}/{slug})
- * to host mode: the control plane on `admin_host`, teams on `{slug}.base` and
- * their verified custom domains. `admin_host` and `base` are therefore required
- * whenever it's on — assertConfigured() enforces that at boot (fail-loud).
+ * to host mode: three hosts, not one. `admin_host` is the admin area ONLY —
+ * dashboard, users, roles, the system "all teams" area, impersonation — and
+ * `admin_host`/`base` are therefore required whenever it's on
+ * (assertConfigured() enforces that at boot, fail-loud). `account_host` is the
+ * account layer everyone needs (auth, profile, team picker/onboarding,
+ * invitations) — optional, defaulting to `base` (the apex). Teams live on
+ * `{slug}.base` and their verified custom domains.
  */
 final class DomainPolicy
 {
@@ -25,20 +30,29 @@ final class DomainPolicy
         return (bool) config('teams.domains.enabled', false);
     }
 
-    /** The explicit host the control plane is served from in host mode (never derived from APP_URL). */
+    /**
+     * The explicit host the admin area — and ONLY the admin area — is served
+     * from in host mode (never derived from APP_URL). Nothing outside
+     * `ACCESS_ADMIN_PANEL` (or the impersonation leave route, deliberately
+     * exempted from that gate) may ever bind here; that's what makes the host
+     * safe to fence to a VPN/IP range later. See ~dev/TEAMS_DOMAINS_HOST_SPLIT.md.
+     */
     public static function adminHost(): ?string
     {
         return self::host(config('teams.domains.admin_host'));
     }
 
     /**
-     * The host the control plane (admin, auth, team picker) binds to, or null in
-     * path mode (no host constraint). Route groups pass this straight to
-     * ->domain(); null leaves them unconstrained.
+     * The host the account layer (auth, profile, the team
+     * picker/onboarding, invitation links) binds to in host mode: the
+     * configured override, else `base` (the apex) — a Laravel-served public
+     * landing can also serve `/login` and `/profile` with no extra DNS/TLS.
+     * Null in path mode (no host constraint). Route groups pass this straight
+     * to ->domain(); the admin area binds to adminHost() instead, never this.
      */
-    public static function controlPlaneHost(): ?string
+    public static function accountHost(): ?string
     {
-        return self::enabled() ? self::adminHost() : null;
+        return self::enabled() ? (self::host(config('teams.domains.account_host')) ?? self::base()) : null;
     }
 
     /** The apex/base host the public landing binds to in host mode, or null in path mode. */
@@ -49,13 +63,16 @@ final class DomainPolicy
 
     /**
      * The route pattern for the `{teamHost}` domain parameter: a full dotted host,
-     * excluding the control-plane host and the apex. Without the exclusion the
-     * wildcard team route would shadow `admin_host/dashboard` (and the apex) and
-     * 404 them for a signed-in user (~dev/TEAMS_DOMAINS_SCOPE.md §5).
+     * excluding the admin host, the account host, and the apex. Without the
+     * exclusion the wildcard team route would shadow those and 404 them for a
+     * signed-in user (~dev/TEAMS_DOMAINS_SCOPE.md §5).
      */
     public static function teamHostPattern(): string
     {
-        $excluded = array_map(preg_quote(...), array_filter([self::adminHost(), self::base()]));
+        $excluded = array_unique(array_map(
+            preg_quote(...),
+            array_filter([self::adminHost(), self::accountHost(), self::base()]),
+        ));
 
         return ($excluded === [] ? '' : '(?!(?:'.implode('|', $excluded).')$)').'[A-Za-z0-9.\-]+';
     }
