@@ -23,9 +23,22 @@ use Illuminate\Support\Facades\Route;
 
 $prefix = config('teams.route_prefix', 'teams');
 
-// A team host is a full dotted hostname. A domain parameter otherwise defaults to
-// a single dotless label, which would never match a host like `acme.com`.
-Route::pattern('teamHost', '[A-Za-z0-9.\-]+');
+$hostMode = DomainPolicy::enabled();
+$controlPlaneHost = DomainPolicy::controlPlaneHost();
+
+// In host mode the control plane IS the app host, so the path prefixes are dropped:
+// the team entry pages become the control-plane root (admin_host/, /select,
+// /onboarding), invitation links live at /invitations/…, and the system "all
+// teams" area drops its redundant `admin/` segment (admin_host/teams). Path mode
+// keeps every prefix (/{prefix}, /{prefix}/invitations, /admin/teams).
+$entryPrefix = $hostMode ? '' : $prefix;
+$invitationPrefix = ($hostMode ? '' : $prefix.'/').'invitations/{invitation}';
+$adminTeamsPrefix = $hostMode ? 'teams' : 'admin/teams';
+
+// A team host is a full dotted hostname, excluding the control-plane host and the
+// apex (a domain parameter otherwise defaults to a single dotless label; and an
+// unexcluded wildcard would shadow admin_host/apex routes — see DomainPolicy).
+Route::pattern('teamHost', DomainPolicy::teamHostPattern());
 
 // The team-scoped pages (members-only, one team's context at a time — scope §6/§7).
 // The {team}/{teamHost} parameter is resolved + authorized by ResolveTeamContext.
@@ -37,11 +50,12 @@ $teamPages = function (): void {
 };
 
 // Entry point + zero-team onboarding: no team context. On the control-plane host
-// (admin_host) in host mode, the app host otherwise; the {prefix} path is kept in
-// both so it never collides with the apex landing at `/`.
+// (admin_host) in host mode, the app host otherwise. team.index is the front door
+// — behind auth, so a guest is sent to login and a member on to their team; in
+// host mode it is the control-plane root (admin_host/), the landing being on the apex.
 Route::middleware(['web', 'auth', 'verified'])
-    ->domain(DomainPolicy::controlPlaneHost())
-    ->prefix($prefix)
+    ->domain($controlPlaneHost)
+    ->prefix($entryPrefix)
     ->name('team.')
     ->group(function () {
         Route::get('/', TeamRedirect::class)->name('index');
@@ -49,14 +63,18 @@ Route::middleware(['web', 'auth', 'verified'])
         Route::get('/select', SelectTeam::class)->name('select');
     });
 
-if (DomainPolicy::enabled()) {
+if ($hostMode) {
     // Host mode: the team is implied by the request host — same route names, no
     // {team} path segment (~dev/TEAMS_DOMAINS_SCOPE.md §5). {teamHost} matches a
     // full dotted host via the Route::pattern above.
     Route::middleware(['web', 'auth', 'verified', ResolveTeamContext::class])
         ->domain('{teamHost}')
         ->name('team.')
-        ->group($teamPages);
+        ->group(function () use ($teamPages) {
+            // The team-host root is the team's dashboard (team1.bp.test/ → its dashboard).
+            Route::get('/', fn () => redirect('/dashboard'));
+            $teamPages();
+        });
 } else {
     // Path mode (default): team pages under /{prefix}/{team}.
     Route::middleware(['web', 'auth', 'verified', ResolveTeamContext::class])
@@ -70,8 +88,8 @@ if (DomainPolicy::enabled()) {
 // a guest to sign in or to register through the invitation, and holds a
 // signed-in account to the invited email.
 Route::middleware(['web', 'signed'])
-    ->domain(DomainPolicy::controlPlaneHost())
-    ->prefix($prefix.'/invitations/{invitation}')
+    ->domain($controlPlaneHost)
+    ->prefix($invitationPrefix)
     ->name('team.invitations.')
     ->group(function () {
         Route::get('/accept', AcceptTeamInvitation::class)->name('accept');
@@ -84,8 +102,8 @@ Route::middleware(['web', 'signed'])
 // `manage teams` and the finer team permissions. Flat `teams.*` route names so
 // Breadcrumbs derives the parent crumb.
 Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])
-    ->domain(DomainPolicy::controlPlaneHost())
-    ->prefix('admin/teams')
+    ->domain($controlPlaneHost)
+    ->prefix($adminTeamsPrefix)
     ->name('teams.')
     ->group(function () {
         Route::get('/', ListTeams::class)->name('index');

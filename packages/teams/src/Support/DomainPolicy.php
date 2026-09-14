@@ -47,6 +47,19 @@ final class DomainPolicy
         return self::enabled() ? self::base() : null;
     }
 
+    /**
+     * The route pattern for the `{teamHost}` domain parameter: a full dotted host,
+     * excluding the control-plane host and the apex. Without the exclusion the
+     * wildcard team route would shadow `admin_host/dashboard` (and the apex) and
+     * 404 them for a signed-in user (~dev/TEAMS_DOMAINS_SCOPE.md §5).
+     */
+    public static function teamHostPattern(): string
+    {
+        $excluded = array_map(preg_quote(...), array_filter([self::adminHost(), self::base()]));
+
+        return ($excluded === [] ? '' : '(?!(?:'.implode('|', $excluded).')$)').'[A-Za-z0-9.\-]+';
+    }
+
     /** The registrable base each team's default subdomain hangs off ({slug}.base) in host mode. */
     public static function base(): ?string
     {

@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Route;
 $hostMode = (bool) config('teams.domains.enabled', false);
 $apexHost = $hostMode ? config('teams.domains.base') : null;
 $adminHost = $hostMode ? config('teams.domains.admin_host') : null;
+// In host mode the admin_host IS the admin area, so the `/admin` path segment is
+// redundant (admin.example.com/dashboard, not /admin/dashboard); path mode keeps it.
+$adminPath = $hostMode ? '' : 'admin';
 // teams:end
 
 // Public landing page — reachable by guests and authenticated users alike (see layouts.public).
@@ -29,8 +32,8 @@ Route::domain($apexHost)->group(function (): void {
     Route::get('/', Home::class)->name('home');
 });
 
-// Everything under /admin requires an active system role (e.g. /admin/dashboard, /admin/users) — route names keep their existing flat prefixes.
-Route::domain($adminHost)->prefix('admin')->group(function (): void {
+// The admin area requires an active system role (e.g. dashboard, users) — route names keep their existing flat prefixes regardless of the URL path.
+Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
     Route::middleware(['auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])->group(function (): void {
         Route::get('/dashboard', Dashboard::class)->name('dashboard');
 

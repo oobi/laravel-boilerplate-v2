@@ -20,6 +20,14 @@ class TeamRedirect
     public function __invoke(Request $request): RedirectResponse
     {
         $user = $request->user();
+
+        // The control-plane root is the admin front door: a system user belongs on
+        // the admin dashboard, not in a team. (Team members reach their team below;
+        // to *enter* a team, admins use the picker — the account menu links there.)
+        if ($user->canAccessAdmin()) {
+            return redirect()->route('dashboard');
+        }
+
         $current = $user->currentTeam;
 
         if ($current !== null && $current->active && $user->belongsToTeam($current)) {

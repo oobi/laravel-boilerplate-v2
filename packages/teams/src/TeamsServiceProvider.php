@@ -166,7 +166,10 @@ class TeamsServiceProvider extends ServiceProvider
     {
         AccountMenuRegistry::item('teams')
             ->label(fn (): string => team_trans('nav.my_teams'))
-            ->url(fn (): string => route('team.index'))
+            // The picker, not the front door (team.index): the front door sends a
+            // system user to the dashboard, but "My teams" must let anyone — admins
+            // included — choose a team to enter.
+            ->url(fn (): string => route('team.select'))
             ->icon('heroicon-o-user-group')
             ->order(10)
             ->visibleWhen(fn (?User $user): bool => $user !== null

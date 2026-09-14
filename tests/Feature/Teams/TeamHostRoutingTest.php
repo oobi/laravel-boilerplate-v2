@@ -162,6 +162,19 @@ class TeamHostRoutingTest extends TestCase
         $this->assertSame('myapp.com', DomainPolicy::apexHost());
     }
 
+    public function test_the_team_host_pattern_excludes_the_control_plane_and_apex(): void
+    {
+        // Without this, the wildcard {teamHost} team route shadows admin_host and
+        // apex routes and 404s them for a signed-in user (regression guard).
+        $this->enableHostMode();
+        $pattern = '/^'.DomainPolicy::teamHostPattern().'$/';
+
+        $this->assertSame(0, preg_match($pattern, 'admin.myapp.com')); // control plane
+        $this->assertSame(0, preg_match($pattern, 'myapp.com'));       // apex
+        $this->assertSame(1, preg_match($pattern, 'acme.myapp.com'));  // team subdomain
+        $this->assertSame(1, preg_match($pattern, 'acme.com'));        // verified custom domain
+    }
+
     // --- ResolveTeamContext (host branch) -----------------------------------
     //
     // Exercised at the middleware level (the {teamHost} route is bound directly);
