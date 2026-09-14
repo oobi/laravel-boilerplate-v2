@@ -84,22 +84,45 @@ class SystemPermissionScopeTest extends TestCase
         $this->assertTrue(Gate::forUser($user)->allows(TeamAbility::MANAGE_MEMBERS, $team), 'held in its team');
     }
 
-    public function test_a_system_admin_holds_every_team_ability_without_being_a_member(): void
+    public function test_manage_teams_grants_day_to_day_abilities_but_not_the_destructive_or_ownership_acts(): void
     {
-        $admin = $this->systemAdmin();
+        $admin = $this->systemAdmin(); // access admin panel + manage teams
         $team = Team::factory()->create();
         $this->assertFalse($team->hasUser($admin));
 
-        foreach (TeamAbility::cases() as $ability) {
-            if ($ability === TeamAbility::CREATE) {
-                continue; // class-level: self-service creation is its own rule
-            }
-
+        // The floor: day-to-day management of any team, member or not.
+        foreach ([TeamAbility::VIEW, TeamAbility::VIEW_MEMBERS, TeamAbility::MANAGE_MEMBERS, TeamAbility::INVITE, TeamAbility::UPDATE, TeamAbility::VIEW_SETTINGS, TeamAbility::MANAGE_DOMAINS] as $ability) {
             $this->assertTrue(Gate::forUser($admin)->allows($ability, $team), $ability->value);
         }
 
-        // Still true from inside the team's own context.
-        $this->assertTrue(app(TeamContext::class)->run($team, fn (): bool => Gate::forUser($admin)->allows(TeamAbility::MANAGE_OWNERS, $team)));
+        // The destructive and ownership acts each need their own finer permission.
+        foreach ([TeamAbility::DELETE, TeamAbility::MANAGE_OWNERS, TeamAbility::TRANSFER_OWNERSHIP] as $ability) {
+            $this->assertFalse(Gate::forUser($admin)->allows($ability, $team), $ability->value);
+        }
+
+        // The floor holds from inside the team's own context too.
+        $this->assertTrue(app(TeamContext::class)->run($team, fn (): bool => Gate::forUser($admin)->allows(TeamAbility::MANAGE_MEMBERS, $team)));
+    }
+
+    public function test_delete_teams_grants_delete_and_nothing_else_in_the_policy(): void
+    {
+        $admin = User::factory()->withPermission(SystemPermission::DELETE_TEAMS)->create();
+        $team = Team::factory()->create();
+
+        $this->assertTrue(Gate::forUser($admin)->allows(TeamAbility::DELETE, $team));
+        $this->assertFalse(Gate::forUser($admin)->allows(TeamAbility::MANAGE_MEMBERS, $team));
+        $this->assertFalse(Gate::forUser($admin)->allows(TeamAbility::TRANSFER_OWNERSHIP, $team));
+    }
+
+    public function test_manage_team_ownership_grants_the_two_ownership_abilities_and_nothing_else(): void
+    {
+        $admin = User::factory()->withPermission(SystemPermission::MANAGE_TEAM_OWNERSHIP)->create();
+        $team = Team::factory()->create();
+
+        $this->assertTrue(Gate::forUser($admin)->allows(TeamAbility::MANAGE_OWNERS, $team));
+        $this->assertTrue(Gate::forUser($admin)->allows(TeamAbility::TRANSFER_OWNERSHIP, $team));
+        $this->assertFalse(Gate::forUser($admin)->allows(TeamAbility::DELETE, $team));
+        $this->assertFalse(Gate::forUser($admin)->allows(TeamAbility::MANAGE_MEMBERS, $team));
     }
 
     public function test_a_plain_system_user_holds_no_team_ability(): void

@@ -36,12 +36,26 @@ class TeamPolicy
             return null;
         }
 
-        // A system admin (`manage teams`, answered at the system scope even
-        // inside a team route) may do anything to any team, member or not — the
-        // one place that authority is expressed, so components check a single
-        // TeamAbility and never OR the system permission themselves. The
-        // super-admin bypass has already run before this.
-        if ($user->hasSystemPermission(SystemPermission::MANAGE_TEAMS)) {
+        // System-admin authority over any team, member or not — expressed once
+        // here so components check a single TeamAbility and never OR the system
+        // permission themselves. `manage teams` is the floor: day-to-day
+        // management of any team. The destructive and ownership acts each need
+        // their own finer permission (mirroring the user side: manage / suspend /
+        // delete), so a support tier can manage memberships without being able to
+        // delete teams or hand ownership around. The super-admin bypass has
+        // already run before this.
+        if ($user->hasSystemPermission(SystemPermission::MANAGE_TEAMS)
+            && ! in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
+            return true;
+        }
+
+        if ($ability === TeamAbility::DELETE->value
+            && $user->hasSystemPermission(SystemPermission::DELETE_TEAMS)) {
+            return true;
+        }
+
+        if (in_array($ability, [TeamAbility::MANAGE_OWNERS->value, TeamAbility::TRANSFER_OWNERSHIP->value], true)
+            && $user->hasSystemPermission(SystemPermission::MANAGE_TEAM_OWNERSHIP)) {
             return true;
         }
 
@@ -62,8 +76,8 @@ class TeamPolicy
         if ($team->isPrimaryOwner($user) && in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
             // Whether an owner may delete their own team is deferred to site policy
             // via a config switch — some businesses reserve deletion to admins —
-            // independent of who may create teams. A system admin always can, via
-            // the admin area's `manage teams` gate.
+            // independent of who may create teams. A system admin with `delete
+            // teams` always can (granted above, not subject to this switch).
             if ($ability === TeamAbility::DELETE->value) {
                 return (bool) config('teams.owner_can_delete', true);
             }

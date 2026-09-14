@@ -109,12 +109,13 @@ class TeamSettings extends Component implements HasActions, HasSchemas
             ->icon(fn (): string => $this->team->active ? 'heroicon-o-pause-circle' : 'heroicon-o-check-circle')
             ->soft()
             ->color(fn (): string => ($this->team->active ? DaisyColor::WARNING : DaisyColor::SUCCESS)->toFilamentColor())
+            ->authorize(fn (): bool => Gate::allows(SystemPermission::DEACTIVATE_TEAMS->value))
             ->requiresConfirmation()
             ->modalDescription(fn (): string => $this->team->active
                 ? team_trans('admin.deactivate_confirm', ['name' => $this->team->name])
                 : team_trans('admin.reactivate_confirm', ['name' => $this->team->name]))
             ->action(function (): void {
-                Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+                Gate::authorize(SystemPermission::DEACTIVATE_TEAMS->value);
 
                 $this->team->update(['active' => ! $this->team->active]);
                 $this->form->fill([...$this->data, 'active' => $this->team->active]);
@@ -135,12 +136,13 @@ class TeamSettings extends Component implements HasActions, HasSchemas
             ->icon('heroicon-o-trash')
             ->soft()
             ->color(DaisyColor::ERROR->toFilamentColor())
+            ->authorize(fn (): bool => Gate::allows(SystemPermission::DELETE_TEAMS->value))
             ->disabled(fn (): bool => $this->team->active)
             ->tooltip(fn (): ?string => $this->team->active ? team_trans('admin.deactivate_first') : null)
             ->requiresConfirmation()
             ->modalDescription(fn (): string => Team::deleteWarning($this->team))
             ->action(function (): void {
-                Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+                Gate::authorize(SystemPermission::DELETE_TEAMS->value);
                 abort_if($this->team->active, 403, team_trans('admin.deactivate_before_delete'));
 
                 $this->team->delete();

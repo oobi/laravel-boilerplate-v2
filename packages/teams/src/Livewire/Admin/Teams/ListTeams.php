@@ -123,8 +123,9 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                             ? team_trans('admin.deactivate_confirm', ['name' => $record->name])
                             : team_trans('admin.reactivate_confirm', ['name' => $record->name]))
                         ->hidden(fn (Team $record): bool => $record->trashed())
+                        ->authorize(fn (): bool => Gate::allows(SystemPermission::DEACTIVATE_TEAMS->value))
                         ->action(function (Team $record): void {
-                            Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+                            Gate::authorize(SystemPermission::DEACTIVATE_TEAMS->value);
 
                             $record->update(['active' => ! $record->active]);
 
@@ -141,18 +142,18 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                         ->visible(fn (Team $record): bool => ! $record->active)
                         ->modalDescription(fn (Team $record): string => Team::deleteWarning($record))
                         ->using(function (Team $record): void {
-                            Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+                            Gate::authorize(SystemPermission::DELETE_TEAMS->value);
                             abort_if($record->active, 403, team_trans('admin.deactivate_before_delete'));
 
                             $record->delete();
                         }),
 
                     RestoreAction::make()
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value)),
+                        ->authorize(fn (): bool => Gate::allows(SystemPermission::DELETE_TEAMS->value)),
 
                     ForceDeleteAction::make()
                         ->modalDescription(fn (Team $record): string => Team::deleteWarning($record, permanent: true))
-                        ->authorize(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value)),
+                        ->authorize(fn (): bool => Gate::allows(SystemPermission::DELETE_TEAMS->value)),
                 ]),
             ])
             ->searchPlaceholder(team_trans('admin.search'))
@@ -230,7 +231,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
     protected function emptyTrashPermission(): ?string
     {
-        return SystemPermission::MANAGE_TEAMS->value;
+        return SystemPermission::DELETE_TEAMS->value;
     }
 
     /** @return array<int, string> */

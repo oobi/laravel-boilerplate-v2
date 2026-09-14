@@ -21,21 +21,29 @@ enum SystemPermission: string
     case DELETE_USERS = 'delete users';
     case IMPERSONATE_USERS = 'impersonate users';
     // teams:start — contributed by the teams tier (packages/teams): the system-level "manage all teams" area. Removed on uninstall.
+    // `manage teams` is the floor (admin entry, create, settings, members, roles, invitations, domains);
+    // the destructive/ownership acts split off into their own finer permissions, mirroring the user set.
     case MANAGE_TEAMS = 'manage teams';
+    case DEACTIVATE_TEAMS = 'deactivate teams';
+    case DELETE_TEAMS = 'delete teams';
+    case MANAGE_TEAM_OWNERSHIP = 'manage team ownership';
     // teams:end
 
     public function label(): string
     {
         return match ($this) {
-            self::ACCESS_ADMIN_PANEL => 'Access Admin Panel',
-            self::MANAGE_SYSTEM_SETTINGS => 'Manage System Settings',
-            self::VIEW_SYSTEM_ANALYTICS => 'View System Analytics',
-            self::MANAGE_USERS => 'Manage Users',
-            self::SUSPEND_USERS => 'Suspend Users',
-            self::DELETE_USERS => 'Delete Users',
-            self::IMPERSONATE_USERS => 'Impersonate Users',
-            // teams:start
-            self::MANAGE_TEAMS => 'Manage Teams',
+            self::ACCESS_ADMIN_PANEL => __('permissions.labels.access_admin_panel'),
+            self::MANAGE_SYSTEM_SETTINGS => __('permissions.labels.manage_system_settings'),
+            self::VIEW_SYSTEM_ANALYTICS => __('permissions.labels.view_system_analytics'),
+            self::MANAGE_USERS => __('permissions.labels.manage_users'),
+            self::SUSPEND_USERS => __('permissions.labels.suspend_users'),
+            self::DELETE_USERS => __('permissions.labels.delete_users'),
+            self::IMPERSONATE_USERS => __('permissions.labels.impersonate_users'),
+            // teams:start — labels relabel with the tier (values above stay fixed identifiers).
+            self::MANAGE_TEAMS => team_trans('permissions.system_manage_teams'),
+            self::DEACTIVATE_TEAMS => team_trans('permissions.system_deactivate_teams'),
+            self::DELETE_TEAMS => team_trans('permissions.system_delete_teams'),
+            self::MANAGE_TEAM_OWNERSHIP => team_trans('permissions.system_manage_team_ownership'),
             // teams:end
         };
     }
@@ -46,14 +54,17 @@ enum SystemPermission: string
             self::MANAGE_USERS,
             self::SUSPEND_USERS,
             self::DELETE_USERS,
-            self::IMPERSONATE_USERS => 'User Management',
+            self::IMPERSONATE_USERS => __('permissions.categories.user_management'),
 
             self::MANAGE_SYSTEM_SETTINGS,
             self::VIEW_SYSTEM_ANALYTICS,
-            self::ACCESS_ADMIN_PANEL => 'System Administration',
+            self::ACCESS_ADMIN_PANEL => __('permissions.categories.system_administration'),
 
-            // teams:start
-            self::MANAGE_TEAMS => 'System Administration',
+            // teams:start — the teams tier's own group on the Roles screen (relabels with the tier).
+            self::MANAGE_TEAMS,
+            self::DEACTIVATE_TEAMS,
+            self::DELETE_TEAMS,
+            self::MANAGE_TEAM_OWNERSHIP => team_trans('permissions.category_teams'),
             // teams:end
         };
     }

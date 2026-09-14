@@ -259,6 +259,15 @@ return [
         'manage_domains' => 'Manage Domains',
         'category_members' => ':Members',
         'category_settings' => ':Team Settings',
+        // The system-level team-admin permissions' group on the system Roles screen
+        // (parallel to "User Management"). Relabels with the tier, e.g. "Salon Management".
+        'category_teams' => ':Team Management',
+        // Display labels for the four system-level team permissions (App\Enums\SystemPermission).
+        // The underlying permission NAMES ('manage teams', …) stay fixed — only the label relabels.
+        'system_manage_teams' => 'Manage :Teams',
+        'system_deactivate_teams' => 'Deactivate :Teams',
+        'system_delete_teams' => 'Delete :Teams',
+        'system_manage_team_ownership' => 'Manage :Team Ownership',
     ],
 
 ];

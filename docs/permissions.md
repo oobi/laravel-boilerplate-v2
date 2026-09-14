@@ -35,6 +35,12 @@ hand-typed at a call site. Each case also declares:
   a new string returned from `category()` — a tab for it appears
   automatically, no other wiring needed.
 
+Both `label()` and `category()` read from `lang/en/permissions.php` via `__()`,
+so a localised install translates them without touching authorization — the
+permission *value* (`manage users`, …) is the fixed identifier and never
+changes; only the displayed string does. (The teams tier's own permissions
+relabel through `team_trans` instead — see `.ai/rules/teams.md`.)
+
 Permission strings here are plain, natural-language phrases (`manage users`,
 `access admin panel`), not a `resource.action` convention like Filament
 Shield's `view_users`/`create_users`. Renaming any of them to a different
