@@ -39,7 +39,7 @@ class TeamMembershipsPanelTest extends TestCase
             ->get(route('users.show', $user))
             ->assertOk()
             ->assertSee('Team memberships')
-            ->assertSee('Not a member of any team');
+            ->assertSee('Does not belong to any team.');
     }
 
     protected function tearDown(): void

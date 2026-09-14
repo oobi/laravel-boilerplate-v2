@@ -9,6 +9,7 @@ return [
     'users_description' => 'Manage system users and their roles.',
     'list' => 'List',
     'create' => 'Create',
+    // Also the row-action label on the users table — one definition, not two.
     'edit' => 'Edit',
     'add_user' => 'Add User',
     'edit_user' => 'Edit User',
@@ -45,7 +46,6 @@ return [
     'user_information' => 'User Information',
     'actions' => 'Actions',
     'view' => 'View',
-    'edit' => 'Edit',
     'impersonate' => 'Impersonate',
     'impersonate_user' => 'Impersonate User',
     'impersonating' => 'Impersonating',

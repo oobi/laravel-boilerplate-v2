@@ -32,6 +32,27 @@ class TeamRelabelTest extends TestCase
         Team::createRole('Salon Admin', [TeamPermission::MANAGE_MEMBERS]);
     }
 
+    public function test_no_string_puts_an_article_before_a_label_placeholder(): void
+    {
+        // A label is substituted verbatim, so "a :team" reads "a organisation" on
+        // a relabelled install and "Add a :member" reads "Add a staff". Articles
+        // must be reworded around the placeholder, never written in front of one.
+        // ("every :team", "this :team", "any :team" are invariant and fine.)
+        $offenders = [];
+        $strings = (array) __('teams::teams');
+
+        array_walk_recursive(
+            $strings,
+            function (string $line, string $key) use (&$offenders): void {
+                if (preg_match('/\b(an?)\s+(:[A-Za-z]+)/i', $line, $match)) {
+                    $offenders[] = "{$key}: \"{$match[1]} {$match[2]}\"";
+                }
+            },
+        );
+
+        $this->assertSame([], $offenders, 'Reword these around the placeholder: '.implode('; ', $offenders));
+    }
+
     public function test_the_admin_team_pages_use_the_configured_word(): void
     {
         $team = Team::factory()->create(['name' => 'Chez Claude']);
@@ -60,7 +81,7 @@ class TeamRelabelTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->get(route('team.onboarding'))
             ->assertOk()
-            ->assertSee('You’re not part of a salon yet');
+            ->assertSee('You’re not part of any salon yet');
     }
 
     public function test_the_roles_screen_and_permission_vocabulary_use_the_configured_word(): void
@@ -68,7 +89,7 @@ class TeamRelabelTest extends TestCase
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->withQueryParams(['scope' => Team::ROLE_SCOPE])
             ->test(ManageRoles::class)
-            ->assertSee('Define what members of a salon can do')
+            ->assertSee('Define what members can do')
             ->assertSee('Update Salon Settings')
             ->assertSee('Salon Settings');
     }

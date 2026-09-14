@@ -32,19 +32,19 @@ return [
     ],
 
     'onboarding' => [
-        'title' => 'You’re not part of a :team yet',
+        'title' => 'You’re not part of any :team yet',
         'can_create' => 'Create one to get started, or ask an admin to invite you.',
-        'ask_admin' => 'Ask an administrator to add you to a :team.',
+        'ask_admin' => 'Ask an administrator to add you to one.',
     ],
 
     'create' => [
         'action' => 'Create :Team',
-        'heading' => 'Create a :team',
+        'heading' => 'New :Team',
         'submit' => 'Create',
         'name' => 'Name',
         'name_help' => 'You can change this later.',
         'created' => ':name created',
-        'not_allowed' => 'You can’t create a :team right now.',
+        'not_allowed' => 'You can’t create :teams right now.',
         'throttled' => 'You’ve created several :teams just now — try again shortly.',
         'owner_role_missing' => 'No “:role” role exists to give the new :owner. Ask an administrator to set one up on the Roles screen.',
     ],
@@ -98,7 +98,7 @@ return [
         'remove_confirm' => 'Remove :person from :name?',
         'removed' => ':Member removed',
         'add' => 'Add :member',
-        'add_heading' => 'Add a :member to :name',
+        'add_heading' => 'Add :member to :name',
         'added' => ':person added to :name',
     ],
 
@@ -140,7 +140,7 @@ return [
         'sent' => 'Sent',
         'invite' => 'Invite',
         'invite_heading' => 'Invite someone to :name',
-        'already_member' => 'That person is already a :member.',
+        'already_member' => 'That person already belongs to this :team.',
         'sent_to' => 'Invitation sent to :email',
         'resend' => 'Resend',
         'resent_to' => 'Invitation re-sent to :email',
@@ -242,11 +242,11 @@ return [
 
     'memberships' => [
         'title' => ':Team memberships',
-        'none' => 'Not a :member of any :team.',
+        'none' => 'Does not belong to any :team.',
     ],
 
     'roles' => [
-        'scope_description' => 'Define what :members of a :team can do. These roles are shared by every :team, and :owners hold one too.',
+        'scope_description' => 'Define what :members can do. These roles are shared by every :team, and :owners hold one too.',
     ],
 
     'permissions' => [
