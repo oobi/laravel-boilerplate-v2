@@ -169,6 +169,27 @@ class TeamHostRoutingTest extends TestCase
         DomainPolicy::assertConfigured();
     }
 
+    public function test_the_admin_host_must_be_isolated_from_the_apex_and_account_host(): void
+    {
+        $throws = function (array $config): bool {
+            config($config + ['teams.domains.enabled' => true, 'teams.domains.base' => 'myapp.com']);
+
+            try {
+                DomainPolicy::assertConfigured();
+
+                return false;
+            } catch (DomainsMisconfigured) {
+                return true;
+            }
+        };
+
+        // Sharing the admin host with the apex or the account host defeats the quarantine.
+        $this->assertTrue($throws(['teams.domains.admin_host' => 'myapp.com', 'teams.domains.account_host' => null]));
+        $this->assertTrue($throws(['teams.domains.admin_host' => 'app.myapp.com', 'teams.domains.account_host' => 'app.myapp.com']));
+        // A distinct admin host is fine.
+        $this->assertFalse($throws(['teams.domains.admin_host' => 'admin.myapp.com', 'teams.domains.account_host' => null]));
+    }
+
     public function test_a_configured_overlay_and_a_disabled_overlay_both_pass(): void
     {
         $this->enableHostMode();

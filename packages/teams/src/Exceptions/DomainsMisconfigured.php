@@ -22,4 +22,15 @@ class DomainsMisconfigured extends RuntimeException
             .'overlay off (TEAMS_DOMAINS_ENABLED=false).'
         );
     }
+
+    public static function adminHostNotIsolated(): self
+    {
+        return new self(
+            'teams.domains.admin_host must be a distinct host — not the apex (base) '
+            .'or the account host. Sharing it puts auth/profile/invitations back on '
+            .'the admin host, which defeats quarantining it (see '
+            .'~dev/TEAMS_DOMAINS_HOST_SPLIT.md). Give TEAMS_DOMAINS_ADMIN_HOST its '
+            .'own hostname (e.g. admin.{base}).'
+        );
+    }
 }

@@ -4,6 +4,8 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Laravel\Fortify\Contracts\VerifyEmailResponse;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -28,12 +30,28 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect('/');
+        // A fresh registrant is sent to where they belong (Destination::home), not the
+        // public landing — with the teams tier active and no team yet, that's onboarding
+        // (the verified middleware then prompts them to confirm their email).
+        $response->assertRedirect(route('team.onboarding'));
 
         $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
             'active' => true,
         ]);
+    }
+
+    public function test_verifying_email_lands_the_user_in_the_app_not_the_landing(): void
+    {
+        // The bound VerifyEmailResponse sends the (now verified) user to where they
+        // belong (Destination::home) — for a no-team user, onboarding — not fortify.home.
+        $user = User::factory()->create();
+        $request = Request::create('/email/verify');
+        $request->setUserResolver(fn () => $user);
+
+        $target = app(VerifyEmailResponse::class)->toResponse($request)->getTargetUrl();
+
+        $this->assertStringStartsWith(route('team.onboarding'), $target);
     }
 
     public function test_registering_with_a_taken_email_fails_validation_regardless_of_casing(): void

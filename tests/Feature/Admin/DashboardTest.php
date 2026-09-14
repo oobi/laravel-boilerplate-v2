@@ -16,6 +16,21 @@ class DashboardTest extends TestCase
         $this->get('/admin/dashboard')->assertRedirect('/login');
     }
 
+    public function test_the_admin_root_redirects_an_admin_to_the_dashboard(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get('/admin')->assertRedirect(route('dashboard'));
+    }
+
+    public function test_the_admin_root_is_gated_like_the_dashboard(): void
+    {
+        // A guest goes to login (never a form on the admin host in host mode); a
+        // signed-in non-admin is forbidden — the root is never an open door.
+        $this->get('/admin')->assertRedirect('/login');
+        $this->actingAs(User::factory()->create())->get('/admin')->assertForbidden();
+    }
+
     public function test_users_without_a_system_role_cannot_view_the_dashboard(): void
     {
         $user = User::factory()->create();

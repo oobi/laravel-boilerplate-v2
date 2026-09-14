@@ -49,6 +49,10 @@ Route::domain($accountHost)->middleware(['auth', 'verified'])->group(function ()
 // The admin area requires an active system role (e.g. dashboard, users) — route names keep their existing flat prefixes regardless of the URL path.
 Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
     Route::middleware(['auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])->group(function (): void {
+        // The admin root (host mode: admin_host/; path mode: /admin) sends admins to
+        // the dashboard rather than 404ing. Gated like the rest, so a guest bounces
+        // to login (on the account host) — the admin host never shows a form.
+        Route::get('/', fn () => redirect()->route('dashboard'));
         Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
         Route::prefix('users')->name('users.')->group(function (): void {

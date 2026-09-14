@@ -89,8 +89,18 @@ final class DomainPolicy
      */
     public static function assertConfigured(): void
     {
-        if (self::enabled() && (self::adminHost() === null || self::base() === null)) {
+        if (! self::enabled()) {
+            return;
+        }
+
+        if (self::adminHost() === null || self::base() === null) {
             throw DomainsMisconfigured::missingHosts();
+        }
+
+        // The admin host is only fenceable if it's a host of its own — sharing it
+        // with the apex or the account host would silently put auth/profile there.
+        if (self::adminHost() === self::base() || self::adminHost() === self::accountHost()) {
+            throw DomainsMisconfigured::adminHostNotIsolated();
         }
     }
 
