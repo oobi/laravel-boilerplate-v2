@@ -23,6 +23,7 @@ use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Dns\DnsResolver;
 use Concise\Teams\Support\Dns\SystemDnsResolver;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
@@ -66,6 +67,9 @@ class TeamsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Host mode needs admin_host + base; fail loud before routes register (5h.4).
+        DomainPolicy::assertConfigured();
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'teams');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'teams');

@@ -202,6 +202,17 @@ return [
     | the whole overlay on/off — a setup-time/per-environment decision, not a live
     | runtime flip (host mode switches every team from path to host URLs).
     |
+    | When enabled, `admin_host` and `base` are both REQUIRED (the app fails loud
+    | at boot otherwise — see DomainPolicy::assertConfigured):
+    |  - `admin_host` the explicit host the control plane (login, admin, team
+    |    picker) is served from, e.g. `admin.myapp.com`. Never derived from
+    |    APP_URL — it is stated so a team can never claim it.
+    |  - `base`       the registrable base every team's default subdomain hangs
+    |    off, e.g. `myapp.com` → a team is reachable at `{slug}.myapp.com` with no
+    |    per-domain verification (the platform owns `*.base` via wildcard DNS).
+    | A team's canonical host is its verified custom primary domain if it has one,
+    | else `{slug}.base`.
+    |
     | `reserved` is a blacklist of leftmost labels a team may never claim as a
     | domain (infra/system names). Matched case-insensitively against the first
     | label, so it blocks e.g. `admin.acme.com` and `mail.acme.com`. Extend it
@@ -211,6 +222,9 @@ return [
 
     'domains' => [
         'enabled' => (bool) env('TEAMS_DOMAINS_ENABLED', false),
+
+        'admin_host' => env('TEAMS_DOMAINS_ADMIN_HOST'),
+        'base' => env('TEAMS_DOMAINS_BASE'),
 
         'reserved' => [
             'www', 'admin', 'mail', 'webmail', 'smtp', 'imap', 'pop',
