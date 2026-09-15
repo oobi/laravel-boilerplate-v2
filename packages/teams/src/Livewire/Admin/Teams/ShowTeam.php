@@ -8,15 +8,18 @@ use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\InvitationPolicy;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Filament\Support\Enums\IconPosition;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Livewire\Component;
 
 /**
@@ -25,8 +28,9 @@ use Livewire\Component;
  * per page like the profile screens. Gated by the `view teams` system
  * permission, never by membership.
  */
-class ShowTeam extends Component implements HasSchemas
+class ShowTeam extends Component implements HasActions, HasSchemas
 {
+    use InteractsWithActions;
     use InteractsWithSchemas;
 
     public Team $team;
@@ -55,14 +59,6 @@ class ShowTeam extends Component implements HasSchemas
                                     ->url(fn (Team $record): ?string => $record->owner ? route('users.show', $record->owner) : null)
                                     ->helperText(fn (Team $record): ?string => $record->owner?->email),
 
-                                TextEntry::make('url')
-                                    ->label(team_trans('admin.url'))
-                                    ->state(fn (Team $record): string => team_route('team.dashboard', $record))
-                                    ->url(fn (Team $record): string => team_route('team.dashboard', $record))
-                                    ->openUrlInNewTab()
-                                    ->icon('heroicon-o-arrow-top-right-on-square')
-                                    ->iconPosition(IconPosition::After),
-
                                 TextEntry::make('active')
                                     ->label(__('admin.status'))
                                     ->badge()
@@ -79,6 +75,61 @@ class ShowTeam extends Component implements HasSchemas
                             ]),
                     ]),
             ]);
+    }
+
+    /**
+     * The team URL is members-only, so opening it from the admin screen adapts to
+     * the viewer: a member goes straight in; a non-member who may impersonate the
+     * owner is offered that (confirm → impersonate → land in the team as them);
+     * anyone else is told, plainly, that they can't. Direct navigation to the team
+     * host still just 403s — this is the sanctioned way in, from where you're looking.
+     */
+    public function openTeamAction(): Action
+    {
+        $team = $this->team;
+        $viewer = auth()->user();
+        $owner = $team->owner;
+
+        $action = Action::make('openTeam')
+            ->iconButton()
+            ->icon('heroicon-o-arrow-top-right-on-square')
+            ->tooltip(team_trans('admin.open'));
+
+        if ($viewer !== null && $viewer->belongsToTeam($team)) {
+            return $action
+                ->url(team_route('team.dashboard', $team))
+                ->openUrlInNewTab();
+        }
+
+        $action
+            ->requiresConfirmation()
+            ->modalIcon('heroicon-o-lock-closed')
+            ->modalHeading(team_trans('open_team.private'));
+
+        if ($owner !== null && Gate::allows('impersonate', $owner)) {
+            // Land in *this* team as the owner, not their generic post-login home
+            // (which, for an admin-capable owner, is the dashboard). The team URL
+            // rides along as a signed `next` so the impersonation controller can
+            // trust it. The redirect must go through successRedirectUrl — a
+            // redirect() returned from the action closure is dropped by
+            // callMountedAction. Param MUST be named $action: Filament injects the
+            // submit action by name; another name type-resolves to the parent
+            // (icon) action, and only the confirm button is warning-tinted.
+            return $action
+                ->modalDescription(team_trans('open_team.impersonate_body', ['owner_name' => $owner->name]))
+                ->modalSubmitAction(fn (Action $action) => $action
+                    ->label(team_trans('open_team.impersonate'))
+                    ->color(DaisyColor::WARNING->toFilamentColor()))
+                ->action(fn () => null)
+                ->successRedirectUrl(URL::signedRoute('users.impersonate', [
+                    'id' => $owner->getKey(),
+                    'next' => team_route('team.dashboard', $team),
+                ]));
+        }
+
+        return $action
+            ->modalDescription(team_trans('open_team.not_member'))
+            ->modalSubmitAction(false);
     }
 
     public function render(): View

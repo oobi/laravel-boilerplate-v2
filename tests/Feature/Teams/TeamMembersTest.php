@@ -219,6 +219,32 @@ class TeamMembersTest extends TestCase
         $this->assertTrue($team->fresh()->hasUser($owner));
     }
 
+    public function test_a_system_admin_can_impersonate_a_member_from_the_roster(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $member = User::factory()->create();
+        $this->addMember($team, $member);
+
+        Livewire::actingAs($admin)
+            ->test(MembersTable::class, ['team' => $team])
+            ->assertTableActionVisible('impersonate', $member);
+    }
+
+    public function test_the_roster_impersonate_action_needs_impersonation_permission(): void
+    {
+        // The owner can manage members but isn't a system admin — no impersonation.
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+        $member = User::factory()->create();
+        $this->addMember($team, $member);
+
+        Livewire::actingAs($owner)
+            ->test(MembersTable::class, ['team' => $team])
+            ->assertTableActionHidden('impersonate', $member);
+    }
+
     public function test_a_regular_member_cannot_use_the_members_table(): void
     {
         $owner = User::factory()->create();

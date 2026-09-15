@@ -5,6 +5,7 @@ namespace Tests\Feature\Teams\Admin;
 use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Livewire\Admin\Teams\ShowTeam;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
@@ -79,6 +80,30 @@ class ShowTeamTest extends TestCase
             ->assertSee(route('teams.settings', $this->team))
             ->assertSeeInOrder([__('Members'), '2'])
             ->assertSeeInOrder([__('Pending invitations'), '3']);
+    }
+
+    public function test_opening_a_private_team_offers_to_impersonate_its_owner(): void
+    {
+        // The admin isn't a member; opening the team's URL offers the way in:
+        // impersonate the owner and land in *this* team (the signed `next`),
+        // not the owner's generic post-login home.
+        $this->assertFalse($this->team->hasUser($this->admin));
+
+        Livewire::actingAs($this->admin)
+            ->test(ShowTeam::class, ['team' => $this->team])
+            ->callAction('openTeam')
+            ->assertRedirectContains(route('users.impersonate', $this->owner->id))
+            ->assertRedirectContains(urlencode(team_route('team.dashboard', $this->team)));
+    }
+
+    public function test_a_viewer_who_cannot_impersonate_is_not_offered_it(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+
+        Livewire::actingAs($viewer)
+            ->test(ShowTeam::class, ['team' => $this->team])
+            ->callAction('openTeam')
+            ->assertNoRedirect();
     }
 
     public function test_the_members_tab_lists_members_with_their_standing(): void
