@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Database\Factories\TeamFactory;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamLabels;
 use Illuminate\Database\Eloquent\Builder;
@@ -121,12 +122,26 @@ class Team extends Model
         $candidate = $slug;
         $suffix = 2;
 
-        while (static::withTrashed()->where('slug', $candidate)->exists()) {
+        while (static::slugUnavailable($candidate)) {
             $candidate = "{$slug}-{$suffix}";
             $suffix++;
         }
 
         return $candidate;
+    }
+
+    /**
+     * A slug is unavailable if it's already taken, or — while the custom-domain
+     * overlay is on — a reserved label, since `{reserved}.base` never routes to a
+     * team (TeamHostResolver), so generating such a slug would strand the team.
+     */
+    private static function slugUnavailable(string $slug): bool
+    {
+        if (DomainPolicy::enabled() && DomainPolicy::isReservedLabel($slug)) {
+            return true;
+        }
+
+        return static::withTrashed()->where('slug', $slug)->exists();
     }
 
     /** The user who owns the team. Distinct from membership — the owner is also a member. */

@@ -47,7 +47,7 @@ class TeamNavigationTest extends TestCase
         $this->assertSame([], $this->menuNamesFor($user));
     }
 
-    public function test_the_teams_link_points_at_the_entry_point_and_follows_the_label(): void
+    public function test_the_teams_link_points_at_the_picker_and_follows_the_label(): void
     {
         config(['teams.labels.team.singular' => 'Salon', 'teams.labels.team.plural' => 'Salons']);
         $user = User::factory()->create();
@@ -55,7 +55,9 @@ class TeamNavigationTest extends TestCase
 
         $teams = AccountMenuRegistry::visible($user)->firstWhere('name', 'teams');
 
-        $this->assertSame(route('team.index'), $teams->getUrl());
+        // The picker (team.select), not the front door (team.index): the front door
+        // sends an admin to the dashboard, but "My teams" must let anyone pick a team.
+        $this->assertSame(route('team.select'), $teams->getUrl());
         // "My Salons" — distinct from the admin sidebar's "Salons" (manage all).
         $this->assertSame('My Salons', $teams->getLabel());
     }

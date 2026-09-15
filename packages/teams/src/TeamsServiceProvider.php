@@ -23,10 +23,12 @@ use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Dns\DnsResolver;
 use Concise\Teams\Support\Dns\SystemDnsResolver;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
+use Concise\Teams\Support\TeamDestination;
 use Concise\Teams\Support\TeamLabels;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -66,6 +68,9 @@ class TeamsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Host mode needs admin_host + base; fail loud before routes register (5h.4).
+        DomainPolicy::assertConfigured();
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'teams');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'teams');
@@ -162,7 +167,10 @@ class TeamsServiceProvider extends ServiceProvider
     {
         AccountMenuRegistry::item('teams')
             ->label(fn (): string => team_trans('nav.my_teams'))
-            ->url(fn (): string => route('team.index'))
+            // The picker, not the front door (team.index): the front door sends a
+            // system user to the dashboard, but "My teams" must let anyone — admins
+            // included — choose a team to enter.
+            ->url(fn (): string => route('team.select'))
             ->icon('heroicon-o-user-group')
             ->order(10)
             ->visibleWhen(fn (?User $user): bool => $user !== null
@@ -178,15 +186,18 @@ class TeamsServiceProvider extends ServiceProvider
     }
 
     /**
-     * After login, a user without a system role is sent to the team area — their
-     * team, the picker, or the "ask an admin" onboarding, as TeamRedirect decides.
-     * Contributed to core's LoginRedirectRegistry so core auth stays teams-agnostic;
-     * a system role is resolved by core before this resolver is ever consulted.
+     * After login, a user without a system role is sent straight to where they
+     * belong — their team, the picker, or the "ask an admin" onboarding, via
+     * TeamDestination (the same resolver the `/{prefix}` front door uses) —
+     * rather than through the front door itself, so login is one hop, not two.
+     * Contributed to core's LoginRedirectRegistry so core auth stays
+     * teams-agnostic; a system role is resolved by core before this resolver is
+     * ever consulted.
      */
     private function registerLoginRedirect(): void
     {
         LoginRedirectRegistry::register(
-            fn (User $user): ?string => $user->canAccessAdmin() ? null : route('team.index'),
+            fn (User $user): ?string => $user->canAccessAdmin() ? null : TeamDestination::resolve($user),
         );
     }
 

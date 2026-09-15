@@ -12,6 +12,7 @@ use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 use Laravel\Fortify\Features;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
@@ -19,8 +20,10 @@ use Livewire\Component;
  * action that sets up or tears down a second factor — enabling, disabling,
  * regenerating recovery codes, or revealing the existing codes — is guarded by
  * an inline password prompt (see the ConfirmsPassword trait); the current user
- * must re-enter their password each time.
+ * must re-enter their password each time. See EditProfile for why this renders
+ * in the neutral account layout rather than the admin shell.
  */
+#[Layout('layouts.account')]
 class TwoFactorAuthentication extends Component
 {
     use ConfirmsPassword;

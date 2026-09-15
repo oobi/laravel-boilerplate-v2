@@ -15,8 +15,10 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Livewire/Profile/EditPassword.php | .ai/rules/profile.md |
 | app/Providers/AppServiceProvider.php | .ai/rules/providers.md |
 | app/Http/Responses/** | .ai/rules/responses.md |
+| routes/web.php | .ai/rules/routes.md |
 | tests/Feature/Scenarios/** | .ai/rules/scenarios.md |
 | app/Livewire/**, packages/*/src/Livewire/**, resources/views/filament/tables/**, packages/*/resources/views/filament/tables/** | .ai/rules/tables.md |
 | packages/teams/lang/** | .ai/rules/teams-lang.md |
+| packages/teams/routes/teams.php | .ai/rules/teams-routes.md |
 | packages/teams/** | .ai/rules/teams.md |
 | tests/** | .ai/rules/tests.md |

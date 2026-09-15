@@ -202,6 +202,29 @@ return [
     | the whole overlay on/off — a setup-time/per-environment decision, not a live
     | runtime flip (host mode switches every team from path to host URLs).
     |
+    | When enabled, `admin_host` and `base` are both REQUIRED (the app fails loud
+    | at boot otherwise — see DomainPolicy::assertConfigured):
+    |  - `admin_host`   the explicit host the ADMIN AREA ONLY is served from,
+    |    e.g. `admin.myapp.com` — dashboard, users, roles, the system "all teams"
+    |    area, impersonation. Never derived from APP_URL — it is stated so a team
+    |    can never claim it. Nothing else routes here: no login form, no profile,
+    |    no invitation link — see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md for why (it's
+    |    what makes the host safe to fence to a VPN/IP range later).
+    |  - `base`         the registrable base every team's default subdomain hangs
+    |    off, e.g. `myapp.com` → a team is reachable at `{slug}.myapp.com` with no
+    |    per-domain verification (the platform owns `*.base` via wildcard DNS).
+    | A team's canonical host is its verified custom primary domain if it has one,
+    | else `{slug}.base`.
+    |
+    | `account_host` (OPTIONAL) is the account layer every user needs — auth
+    | (login/register/reset/verify/2FA), profile, the team picker/onboarding,
+    | invitation links. Unset (the default) resolves to `base` (the apex), so a
+    | Laravel-served public landing also serves `/login` and `/profile` with no
+    | extra DNS/TLS. Set it (e.g. `app.myapp.com`) only when the apex is owned by
+    | a separate headless/marketing front end and Laravel can't serve `/login`
+    | there. Whichever value it resolves to is reserved the same way `admin_host`
+    | is — a team can never claim it as a domain or `{slug}.base`.
+    |
     | `reserved` is a blacklist of leftmost labels a team may never claim as a
     | domain (infra/system names). Matched case-insensitively against the first
     | label, so it blocks e.g. `admin.acme.com` and `mail.acme.com`. Extend it
@@ -212,8 +235,13 @@ return [
     'domains' => [
         'enabled' => (bool) env('TEAMS_DOMAINS_ENABLED', false),
 
+        'admin_host' => env('TEAMS_DOMAINS_ADMIN_HOST'),
+        'account_host' => env('TEAMS_DOMAINS_ACCOUNT_HOST'),
+        'base' => env('TEAMS_DOMAINS_BASE'),
+
         'reserved' => [
-            'www', 'admin', 'mail', 'webmail', 'smtp', 'imap', 'pop',
+            'www', 'admin', 'administrator', 'login', 'team', 'teams',
+            'mail', 'webmail', 'smtp', 'imap', 'pop',
             'ftp', 'api', 'app', 'ns1', 'ns2', 'mx', 'cpanel',
             'autodiscover', 'autoconfig', 'localhost',
         ],

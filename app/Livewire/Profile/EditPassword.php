@@ -8,13 +8,16 @@ use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
  * "Password" — the Password tab of the self-service account area. Two-factor
  * authentication lives on its own sibling tab ({@see TwoFactorAuthentication})
- * so neither pushes the other down on small screens.
+ * so neither pushes the other down on small screens. See EditProfile for why
+ * this renders in the neutral account layout rather than the admin shell.
  */
+#[Layout('layouts.account')]
 class EditPassword extends Component
 {
     public string $current_password = '';

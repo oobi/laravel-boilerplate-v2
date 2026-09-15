@@ -85,6 +85,17 @@ class TeamAreaTest extends TestCase
         $this->assertSame($team->id, $user->fresh()->current_team_id);
     }
 
+    public function test_the_index_sends_a_system_user_to_the_admin_dashboard(): void
+    {
+        // The team entry point is the admin front door: a system user belongs on
+        // the dashboard, not a team area (they enter a team via the picker).
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('team.index'))
+            ->assertRedirect(route('dashboard'));
+    }
+
     public function test_a_user_with_no_team_is_sent_to_onboarding(): void
     {
         $user = User::factory()->create();

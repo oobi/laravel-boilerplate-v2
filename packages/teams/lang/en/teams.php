@@ -70,6 +70,8 @@ return [
         'slug_warning' => 'Changing this changes your :team’s URL — existing links will break.',
         // Shown instead of slug_warning while the custom-domain overlay is on (the slug is then the subdomain too).
         'slug_warning_domains' => 'Changing this changes your :team’s URL and subdomain — existing links will break.',
+        // Rejected while the overlay is on: a reserved label can never route to a team.
+        'slug_reserved' => 'That name is reserved and can’t be used as a subdomain.',
     ],
 
     'members' => [

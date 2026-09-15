@@ -8,6 +8,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -16,8 +17,11 @@ use Livewire\WithFileUploads;
  * logged-in user's own name/email/photo by delegating to the app's registered
  * Fortify actions (same validation/rules a real Fortify update-profile request
  * would run). Password and two-factor management live on their own sibling tabs
- * ({@see EditPassword}, {@see TwoFactorAuthentication}).
+ * ({@see EditPassword}, {@see TwoFactorAuthentication}). Open to any signed-in,
+ * verified user — not admin-gated — so it renders in the neutral account
+ * layout rather than the default admin shell.
  */
+#[Layout('layouts.account')]
 class EditProfile extends Component
 {
     use WithFileUploads;

@@ -36,7 +36,7 @@ class AcceptTeamInvitation
             ->success()
             ->send();
 
-        return redirect()->route('team.dashboard', ['team' => $team->slug]);
+        return redirect()->to(team_route('team.dashboard', $team));
     }
 
     private function routeGuest(Request $request, TeamInvitation $invitation): RedirectResponse

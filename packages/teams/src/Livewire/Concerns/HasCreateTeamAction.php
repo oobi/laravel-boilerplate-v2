@@ -65,7 +65,7 @@ trait HasCreateTeamAction
                     ->success()
                     ->send();
 
-                $this->redirect(route('team.dashboard', ['team' => $team->slug]));
+                $this->redirect(team_route('team.dashboard', $team));
             });
     }
 }

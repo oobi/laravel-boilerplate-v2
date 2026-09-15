@@ -18,37 +18,84 @@ use Concise\Teams\Livewire\Team\ListMembers;
 use Concise\Teams\Livewire\Team\Onboarding;
 use Concise\Teams\Livewire\Team\SelectTeam;
 use Concise\Teams\Livewire\Team\Settings;
+use Concise\Teams\Support\DomainPolicy;
 use Illuminate\Support\Facades\Route;
 
 $prefix = config('teams.route_prefix', 'teams');
 
-// The team area: members-only, one team's context at a time (scope §6/§7).
+$hostMode = DomainPolicy::enabled();
+$accountHost = DomainPolicy::accountHost();
+// adminHost() itself is a raw, ungated accessor (also used for reservation
+// checks regardless of mode — see CreateDomain::isReserved); gate it here so
+// path mode never picks up a stray admin_host env value as a route constraint.
+$adminHost = $hostMode ? DomainPolicy::adminHost() : null;
+
+// The entry pages and invitation links keep their `{prefix}` segment in BOTH
+// modes now (`/teams`, `/teams/select`, `/teams/invitations/…`) — in host mode
+// they bind to account_host, which is a real page-serving host (default the
+// apex), not a bare control-plane root, so the prefix still reads. Only the
+// system "all teams" admin area drops its redundant `admin/` segment in host
+// mode, since admin_host IS the admin area (admin_host/teams, not
+// admin_host/admin/teams).
+$entryPrefix = $prefix;
+$invitationPrefix = $prefix.'/invitations/{invitation}';
+$adminTeamsPrefix = $hostMode ? 'teams' : 'admin/teams';
+
+// A team host is a full dotted hostname, excluding the admin host, the account
+// host, and the apex (a domain parameter otherwise defaults to a single
+// dotless label; an unexcluded wildcard would shadow those routes — see
+// DomainPolicy).
+Route::pattern('teamHost', DomainPolicy::teamHostPattern());
+
+// The team-scoped pages (members-only, one team's context at a time — scope §6/§7).
+// The {team}/{teamHost} parameter is resolved + authorized by ResolveTeamContext.
+$teamPages = function (): void {
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/members', ListMembers::class)->name('members');
+    Route::get('/invitations', ListInvitations::class)->name('invitations');
+    Route::get('/settings', Settings::class)->name('settings');
+};
+
+// Entry point + zero-team onboarding: no team context. On the account host in
+// host mode, the app host otherwise. team.index is the front door — behind
+// auth, so a guest is sent to login and a member on to their team.
 Route::middleware(['web', 'auth', 'verified'])
-    ->prefix($prefix)
+    ->domain($accountHost)
+    ->prefix($entryPrefix)
     ->name('team.')
     ->group(function () {
-        // Entry point + zero-team onboarding (no {team}, so no team context).
         Route::get('/', TeamRedirect::class)->name('index');
         Route::get('/onboarding', Onboarding::class)->name('onboarding');
         Route::get('/select', SelectTeam::class)->name('select');
-
-        // Team-scoped pages: {team} slug is resolved + authorized by the middleware.
-        Route::middleware(ResolveTeamContext::class)
-            ->prefix('{team}')
-            ->group(function () {
-                Route::get('/dashboard', Dashboard::class)->name('dashboard');
-                Route::get('/members', ListMembers::class)->name('members');
-                Route::get('/invitations', ListInvitations::class)->name('invitations');
-                Route::get('/settings', Settings::class)->name('settings');
-            });
     });
+
+if ($hostMode) {
+    // Host mode: the team is implied by the request host — same route names, no
+    // {team} path segment (~dev/TEAMS_DOMAINS_SCOPE.md §5). {teamHost} matches a
+    // full dotted host via the Route::pattern above.
+    Route::middleware(['web', 'auth', 'verified', ResolveTeamContext::class])
+        ->domain('{teamHost}')
+        ->name('team.')
+        ->group(function () use ($teamPages) {
+            // The team-host root is the team's dashboard (team1.bp.test/ → its dashboard).
+            Route::get('/', fn () => redirect('/dashboard'));
+            $teamPages();
+        });
+} else {
+    // Path mode (default): team pages under /{prefix}/{team}.
+    Route::middleware(['web', 'auth', 'verified', ResolveTeamContext::class])
+        ->prefix($prefix.'/{team}')
+        ->name('team.')
+        ->group($teamPages);
+}
 
 // Invitation links: signed, and deliberately NOT behind auth. The signature is
 // what authorizes them (it's the emailed link); AcceptTeamInvitation then routes
 // a guest to sign in or to register through the invitation, and holds a
 // signed-in account to the invited email.
 Route::middleware(['web', 'signed'])
-    ->prefix($prefix.'/invitations/{invitation}')
+    ->domain($accountHost)
+    ->prefix($invitationPrefix)
     ->name('team.invitations.')
     ->group(function () {
         Route::get('/accept', AcceptTeamInvitation::class)->name('accept');
@@ -61,7 +108,8 @@ Route::middleware(['web', 'signed'])
 // `manage teams` and the finer team permissions. Flat `teams.*` route names so
 // Breadcrumbs derives the parent crumb.
 Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])
-    ->prefix('admin/teams')
+    ->domain($adminHost)
+    ->prefix($adminTeamsPrefix)
     ->name('teams.')
     ->group(function () {
         Route::get('/', ListTeams::class)->name('index');
