@@ -6,6 +6,7 @@ namespace Concise\Teams\Livewire\Team;
 
 use App\Enums\SystemPermission;
 use App\Enums\UserAbility;
+use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
@@ -103,6 +104,15 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     ->getStateUsing(fn (User $record): array => $this->badgesFor($record))
                     ->badge()
                     ->color(fn (string $state): string => $this->badgeColor($state)),
+
+                // A member's effective standing as one badge — see statusLabel()
+                // for the precedence. Its own column, not a badge tacked onto the
+                // role, so "Suspended"/"Inactive" read as status, not as a role.
+                Tables\Columns\TextColumn::make('status')
+                    ->label(__('admin.status'))
+                    ->getStateUsing(fn (User $record): string => $this->statusLabel($record))
+                    ->badge()
+                    ->color(fn (User $record): string => $this->statusColor($record)),
             ])
             ->filters([
                 // Mirrors the Users list: a "role" filter (with owners as the structural entry, like
@@ -117,13 +127,23 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         default => $this->whereHoldsRole($query, (string) $data['value']),
                     }),
 
+                // Kept in lockstep with the status column's precedence (statusLabel):
+                // a deactivated account is Inactive whatever its membership; only an
+                // active account can read Suspended, then Pending, then Active.
                 Tables\Filters\SelectFilter::make('status')
                     ->label(__('admin.status'))
                     ->options(self::statusOptions())
                     ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
                     ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
-                        'active' => $query->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNull('team_user.suspended_at')),
-                        'suspended' => $query->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNotNull('team_user.suspended_at')),
+                        UserStatus::ACTIVE->value => $query->where('users.active', true)
+                            ->whereNotNull('users.email_verified_at')
+                            ->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNull('team_user.suspended_at')),
+                        'suspended' => $query->where('users.active', true)
+                            ->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNotNull('team_user.suspended_at')),
+                        UserStatus::PENDING->value => $query->where('users.active', true)
+                            ->whereNull('users.email_verified_at')
+                            ->whereHas('teams', fn (Builder $q) => $q->whereKey($this->team->getKey())->whereNull('team_user.suspended_at')),
+                        UserStatus::INACTIVE->value => $query->where('users.active', false),
                         default => $query,
                     }),
             ])
@@ -290,14 +310,18 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
 
     /**
      * Options for the status filter (shared with the Blade header's select).
+     * The account statuses reuse UserStatus (as the Users list does); "suspended"
+     * is the team-membership state that sits between them by precedence.
      *
      * @return array<string, string>
      */
     public static function statusOptions(): array
     {
         return [
-            'active' => team_trans('members.active'),
+            UserStatus::ACTIVE->value => UserStatus::ACTIVE->getLabel(),
             'suspended' => team_trans('members.suspended'),
+            UserStatus::PENDING->value => UserStatus::PENDING->getLabel(),
+            UserStatus::INACTIVE->value => UserStatus::INACTIVE->getLabel(),
         ];
     }
 
@@ -403,7 +427,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     }
 
     /**
-     * The badges for a member: their standing (ownership, else roles, else "No role"), plus "Suspended" when they are.
+     * The badges for a member's role column: their standing — ownership, else
+     * roles, else "No role". Suspension/deactivation are the Status column's job.
      *
      * @return list<string>
      */
@@ -428,23 +453,44 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             $badges[] = team_trans('members.no_role');
         }
 
-        if ($this->isSuspended($member)) {
-            $badges[] = team_trans('members.suspended');
-        }
-
         return $badges;
     }
 
     private function badgeColor(string $badge): string
     {
-        if ($badge === team_trans('members.suspended')) {
-            return DaisyColor::WARNING->toFilamentColor();
-        }
-
         if (in_array($badge, [team_trans('members.primary_owner'), team_trans('members.owner')], true)) {
             return DaisyColor::SUCCESS->toFilamentColor();
         }
 
         return ($this->teamRoles()->get($badge)?->badgeColor() ?? DaisyColor::NEUTRAL)->toFilamentColor();
+    }
+
+    /**
+     * A member's effective standing as a single label, by precedence: a
+     * deactivated account (Inactive) can't reach the team at all, so it outranks
+     * a team-level Suspension; below those sit the account's own Pending/Active.
+     * One badge, never two competing "Active"s (account status vs membership).
+     */
+    private function statusLabel(User $member): string
+    {
+        return match (true) {
+            ! $member->active => UserStatus::INACTIVE->getLabel(),
+            $this->isSuspended($member) => team_trans('members.suspended'),
+            default => $member->status->getLabel(),
+        };
+    }
+
+    /**
+     * Distinct colours for each standing so the column doesn't lean on the label
+     * alone: Inactive is neutral (a dormant account), Suspended amber (an active
+     * caution), matching Active/Pending's own palette below them.
+     */
+    private function statusColor(User $member): string
+    {
+        return match (true) {
+            ! $member->active => DaisyColor::NEUTRAL->toFilamentColor(),
+            $this->isSuspended($member) => DaisyColor::WARNING->toFilamentColor(),
+            default => $member->status->getColor(),
+        };
     }
 }

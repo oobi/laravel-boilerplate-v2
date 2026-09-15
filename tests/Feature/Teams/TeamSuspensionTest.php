@@ -136,6 +136,52 @@ class TeamSuspensionTest extends TestCase
         $this->assertTrue($this->team->isSuspended($this->member));
     }
 
+    public function test_the_status_column_shows_active_suspended_and_inactive(): void
+    {
+        $inactive = User::factory()->inactive()->create();
+        $this->team->addMember($inactive, 'Member');
+        $this->team->suspendMember($this->member);
+
+        Livewire::actingAs($this->teamAdmin)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertSee('Active')     // the owner / team admin
+            ->assertSee('Suspended')  // the suspended member
+            ->assertSee('Inactive');  // the deactivated account
+    }
+
+    public function test_a_deactivated_account_reads_inactive_even_when_also_suspended(): void
+    {
+        // Inactive outranks Suspended: a deactivated account can't reach the team at all.
+        $this->member->update(['active' => false]);
+        $this->team->suspendMember($this->member);
+
+        Livewire::actingAs($this->teamAdmin)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->filterTable('status', 'inactive')
+            ->assertCanSeeTableRecords([$this->member])
+            ->filterTable('status', 'suspended')
+            ->assertCanNotSeeTableRecords([$this->member]);
+    }
+
+    public function test_the_status_filter_separates_active_suspended_and_inactive(): void
+    {
+        $inactive = User::factory()->inactive()->create();
+        $this->team->addMember($inactive, 'Member');
+        $this->team->suspendMember($this->member);
+
+        Livewire::actingAs($this->teamAdmin)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->filterTable('status', 'active')
+            ->assertCanSeeTableRecords([$this->owner, $this->teamAdmin])
+            ->assertCanNotSeeTableRecords([$this->member, $inactive])
+            ->filterTable('status', 'suspended')
+            ->assertCanSeeTableRecords([$this->member])
+            ->assertCanNotSeeTableRecords([$this->owner, $this->teamAdmin, $inactive])
+            ->filterTable('status', 'inactive')
+            ->assertCanSeeTableRecords([$inactive])
+            ->assertCanNotSeeTableRecords([$this->owner, $this->teamAdmin, $this->member]);
+    }
+
     public function test_the_memberships_panel_shows_the_suspension(): void
     {
         $this->team->suspendMember($this->member);

@@ -51,6 +51,30 @@ class TeamDemoSeederTest extends TestCase
         $this->assertNull($team->roleFor($team->users->last()));
     }
 
+    public function test_it_seeds_a_suspended_and_a_deactivated_member_for_each_team(): void
+    {
+        Team::createRole('Team Admin', [TeamPermission::MANAGE_MEMBERS]);
+        Team::createRole('Member');
+
+        (new TeamSeeder)->run();
+
+        foreach (Team::query()->with('users')->get() as $team) {
+            $members = $team->users->reject(fn (User $user) => $user->is($team->owner));
+
+            $this->assertTrue(
+                $members->contains(fn (User $member) => $team->isSuspended($member)),
+                "team {$team->slug} should have a suspended member for the Status column",
+            );
+            $this->assertTrue(
+                $members->contains(fn (User $member) => ! $member->active),
+                "team {$team->slug} should have a deactivated member for the Status column",
+            );
+        }
+
+        // Owners are never deactivated — the demo logins must stay usable.
+        $this->assertTrue(Team::query()->with('owner')->get()->every(fn (Team $team) => $team->owner->active));
+    }
+
     public function test_it_seeds_short_slugs_from_the_first_word_of_the_name(): void
     {
         (new TeamSeeder)->run();

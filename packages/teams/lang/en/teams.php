@@ -24,6 +24,7 @@ return [
         'overview' => 'Overview',
         'members' => ':Members',
         'invitations' => 'Invitations',
+        'domains' => 'Domains',
         'settings' => 'Settings',
         // Account-menu cross-area links. "My :Teams" distinguishes this (enter my workspace)
         // from the admin sidebar's ":Teams" (manage every team). "Admin" stays literal.
@@ -94,7 +95,6 @@ return [
         'no_role' => 'No role',
         'no_roles' => 'No roles',
         'owners' => ':Owners',
-        'active' => 'Active',
         'suspended' => 'Suspended',
         'primary_owner' => 'Primary :Owner',
         'owner' => ':Owner',

@@ -64,11 +64,14 @@ class TeamSeeder extends Seeder
                 $team->syncMemberRoles($owner, [$adminRole]);
             }
 
-            $pool->slice($index * $stride, self::MEMBERS_PER_TEAM)->values()
-                ->each(fn (User $member, int $position) => $team->addMember(
-                    $member,
-                    $roles->get($position % max($roles->count(), 1)),
-                ));
+            $members = $pool->slice($index * $stride, self::MEMBERS_PER_TEAM)->values();
+
+            $members->each(fn (User $member, int $position) => $team->addMember(
+                $member,
+                $roles->get($position % max($roles->count(), 1)),
+            ));
+
+            $this->seedNonActiveStatuses($team, $members);
 
             return $team;
         });
@@ -78,6 +81,30 @@ class TeamSeeder extends Seeder
         // is one login away.
         if ($teams->count() > 1) {
             $teams->get(1)->addMember($owners->first(), $roles->first());
+        }
+    }
+
+    /**
+     * Give each team's roster a couple of non-"Active" members so the Members
+     * table's Status column shows its full range: one member suspended from this
+     * team (a team-level withholding) and one whose account is deactivated
+     * (a global standing that outranks suspension in the column). Owners are
+     * drawn from a separate pool, so nothing here can touch a team's owner.
+     *
+     * @param  Collection<int, User>  $members
+     */
+    private function seedNonActiveStatuses(Team $team, Collection $members): void
+    {
+        $suspended = $members->get(1);
+
+        if ($suspended !== null) {
+            $team->suspendMember($suspended);
+        }
+
+        $deactivated = $members->get(2);
+
+        if ($deactivated !== null && $deactivated->active) {
+            $deactivated->update(['active' => false]);
         }
     }
 
