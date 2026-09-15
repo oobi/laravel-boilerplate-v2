@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Users;
 
 use App\Models\User;
+use Concise\Teams\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -16,12 +17,29 @@ class UserImpersonationTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->create();
 
+        // Impersonation lands on the target's own post-login destination — a
+        // team-less user's is onboarding, not the admin dashboard.
         $this->actingAs($admin)
             ->get(route('users.impersonate', $target->id))
-            ->assertRedirect('/admin/dashboard');
+            ->assertRedirect(route('team.onboarding'));
 
         $this->assertAuthenticatedAs($target);
         $this->assertEquals($admin->id, session('impersonated_by'));
+    }
+
+    public function test_impersonation_lands_on_the_targets_own_team(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        $team = Team::factory()->create();
+        $team->addMember($target);
+
+        // You see what they'd see after login: straight into their team.
+        $this->actingAs($admin)
+            ->get(route('users.impersonate', $target->id))
+            ->assertRedirect(route('team.dashboard', ['team' => $team->slug]));
+
+        $this->assertAuthenticatedAs($target);
     }
 
     public function test_support_can_impersonate_a_regular_user(): void
@@ -111,13 +129,29 @@ class UserImpersonationTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->create();
 
+        // No referer to remember → leave returns to the impersonated user's page.
         $this->actingAs($admin)->get(route('users.impersonate', $target->id));
         $this->assertAuthenticatedAs($target);
 
         $this->get(route('users.impersonate.leave'))
-            ->assertRedirect('/admin/users');
+            ->assertRedirect(route('users.show', $target));
 
         $this->assertAuthenticatedAs($admin);
         $this->assertNull(session('impersonated_by'));
+    }
+
+    public function test_leaving_returns_to_where_impersonation_was_started(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        // Started from the user list → leave returns there, not the target's page.
+        $this->actingAs($admin)->from(route('users.index'))
+            ->get(route('users.impersonate', $target->id));
+
+        $this->get(route('users.impersonate.leave'))
+            ->assertRedirect(route('users.index'));
+
+        $this->assertAuthenticatedAs($admin);
     }
 }
