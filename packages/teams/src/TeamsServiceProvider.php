@@ -24,7 +24,6 @@ use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Dns\DnsResolver;
 use Concise\Teams\Support\Dns\SystemDnsResolver;
 use Concise\Teams\Support\DomainPolicy;
-use Concise\Teams\Support\InvitationPolicy;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
@@ -113,53 +112,44 @@ class TeamsServiceProvider extends ServiceProvider
     }
 
     /**
-     * The team area's default sidebar sections. Add-ons extend it via
-     * TeamNavRegistry the same way they extend the system nav; abilities resolve
-     * against the current team (see the team-sidebar-nav partial). Dashboard is
-     * rendered directly by the partial, so it isn't registered here.
+     * The team area's default sidebar sections. Mirrors the system admin shell:
+     * Dashboard stands alone (rendered directly by the partial), and everything
+     * else lives under one collapsible "Management" group, so the sidebar stays
+     * two curated sections instead of a flat list. The two secondary surfaces —
+     * Invitations (beside Members) and Domains (beside Settings) — are tabs on
+     * their sibling page rather than their own nav items, so the group holds just
+     * Members and Settings; each item stays active on its sibling tab's route.
+     * Add-ons extend the group via TeamNavRegistry the same way they extend the
+     * system nav; abilities resolve against the current team.
      */
     private function registerTeamNavigation(): void
     {
-        TeamNavRegistry::item('team-members')
-            ->label(team_trans('nav.members'))
-            ->route('team.members')
-            ->icon('heroicon-o-users')
-            ->active('team.members')
-            ->can(TeamAbility::VIEW_MEMBERS)
-            ->order(10);
+        TeamNavRegistry::group('management')
+            ->label(__('Management'))
+            ->order(10)
+            ->add(
+                // The tier's :Members label (e.g. "Staff"). Invitations is a tab
+                // on this page now, so the item stays active there too.
+                NavItem::make('team-members')
+                    ->label(team_trans('nav.members'))
+                    ->route('team.members')
+                    ->icon('heroicon-o-users')
+                    ->active('team.members', 'team.invitations')
+                    ->can(TeamAbility::VIEW_MEMBERS)
+                    ->order(10),
 
-        // With member invitations off there's no page and no nav item (see InvitationPolicy).
-        if (InvitationPolicy::membersMayInvite()) {
-            TeamNavRegistry::item('team-invitations')
-                ->label(team_trans('nav.invitations'))
-                ->route('team.invitations')
-                ->icon('heroicon-o-envelope')
-                ->active('team.invitations')
-                ->can(TeamAbility::INVITE)
-                ->order(20);
-        }
-
-        // Custom domains get their own page once that tier is on; the item is
-        // shown to holders of manageDomains (a system admin via TeamPolicy::before).
-        if (DomainPolicy::customDomainsEnabled()) {
-            TeamNavRegistry::item('team-domains')
-                ->label(team_trans('nav.domains'))
-                ->route('team.domains')
-                ->icon('heroicon-o-globe-alt')
-                ->active('team.domains')
-                ->can(TeamAbility::MANAGE_DOMAINS)
-                ->order(25);
-        }
-
-        // The team-area Settings page (team details + ownership). Shown to whoever
-        // can view it — owners (read-only floor) or holders of update/manageDomains.
-        TeamNavRegistry::item('team-settings')
-            ->label(team_trans('nav.settings'))
-            ->route('team.settings')
-            ->icon('heroicon-o-cog-6-tooth')
-            ->active('team.settings')
-            ->can(TeamAbility::VIEW_SETTINGS)
-            ->order(30);
+                // Team details + ownership. Shown to whoever can view it — owners
+                // (read-only floor) or holders of update/manageDomains. Custom
+                // domains, when that tier is on, live as a tab here, so the item
+                // stays active on the domains route too.
+                NavItem::make('team-settings')
+                    ->label(team_trans('nav.settings'))
+                    ->route('team.settings')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->active('team.settings', 'team.domains')
+                    ->can(TeamAbility::VIEW_SETTINGS)
+                    ->order(30),
+            );
     }
 
     /**

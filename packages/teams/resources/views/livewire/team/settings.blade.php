@@ -1,42 +1,25 @@
 <div class="flex flex-col gap-6">
-    <x-page-header :title="team_trans('nav.settings')" />
+    <x-page-header
+        :title="team_trans('settings.heading')"
+        :description="team_trans('settings.description', ['name' => $team->name])"
+    />
 
     @php($showOwnership = $this->canManageOwnership() || $this->canDelete())
+    {{-- Domains is a sibling tab here once the custom-domains tier is on and the viewer may manage
+         them; otherwise Settings stands alone and the tab bar would be a lone tab, so drop it. --}}
+    @php($showDomainsTab = \Concise\Teams\Support\DomainPolicy::customDomainsEnabled() && \Illuminate\Support\Facades\Gate::allows(\Concise\Teams\Enums\TeamAbility::MANAGE_DOMAINS, $team))
 
-    {{-- Same shape as the admin Settings tab: details on the left, the ownership acts beside them. --}}
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <form wire:submit="save" @class(['lg:col-span-2' => $showOwnership, 'lg:col-span-3' => ! $showOwnership])>
-            {{ $this->form }}
+    @if ($showDomainsTab)
+        <x-tabs-nav :scrollable="false">
+            @include('teams::livewire.team.partials.settings-tabs', ['team' => $team, 'current' => 'settings'])
 
-            @if ($this->canUpdate())
-                <div class="mt-6">
-                    <x-button.action type="submit">{{ team_trans('settings.save') }}</x-button.action>
-                </div>
-            @endif
-        </form>
-
-        @if ($showOwnership)
-            <x-card :title="team_trans('ownership.title')" type="panel">
-                <p class="text-sm text-base-content/60">
-                    {{ team_trans('ownership.description', ['name' => $team->name]) }}
-                </p>
-
-                @if ($this->canManageOwnership())
-                    <livewire:teams-manage-ownership :team="$team" :key="'ownership-'.$team->id" />
-                @endif
-
-                @if ($this->canDelete())
-                    <div @class(['border-t border-base-300 pt-4', 'mt-4' => $this->canManageOwnership()])>
-                        <p class="mb-3 text-sm text-base-content/60">{{ team_trans('ownership.delete_help') }}</p>
-
-                        <x-action-list>
-                            {{ $this->deleteTeamAction }}
-                        </x-action-list>
-                    </div>
-                @endif
-            </x-card>
-        @endif
-    </div>
+            <x-slot:content>
+                @include('teams::livewire.team.partials.settings-body', ['team' => $team, 'showOwnership' => $showOwnership])
+            </x-slot:content>
+        </x-tabs-nav>
+    @else
+        @include('teams::livewire.team.partials.settings-body', ['team' => $team, 'showOwnership' => $showOwnership])
+    @endif
 
     <x-filament-actions::modals />
 </div>
