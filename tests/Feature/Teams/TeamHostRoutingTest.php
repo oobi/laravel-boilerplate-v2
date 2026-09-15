@@ -135,6 +135,23 @@ class TeamHostRoutingTest extends TestCase
         $this->assertSame('acme.com', TeamHostResolver::hostFor($team->fresh()));
     }
 
+    public function test_relabelling_a_team_moves_its_canonical_host(): void
+    {
+        $this->enableHostMode();
+        $team = Team::factory()->create(['slug' => 'acme']);
+
+        $this->assertSame('acme.myapp.com', TeamHostResolver::hostFor($team));
+        $this->assertTrue(TeamHostResolver::resolve('acme.myapp.com')->is($team));
+
+        // A relabel (slug change) moves the team to its new subdomain; the old
+        // host stops resolving — no team is stranded on a name it no longer owns.
+        $team->update(['slug' => 'acme-co']);
+
+        $this->assertSame('acme-co.myapp.com', TeamHostResolver::hostFor($team->fresh()));
+        $this->assertTrue(TeamHostResolver::resolve('acme-co.myapp.com')->is($team->fresh()));
+        $this->assertNull(TeamHostResolver::resolve('acme.myapp.com'));
+    }
+
     public function test_team_route_emits_a_path_url_in_path_mode(): void
     {
         config(['teams.domains.enabled' => false]);
