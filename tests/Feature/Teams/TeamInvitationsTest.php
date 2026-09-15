@@ -145,7 +145,6 @@ class TeamInvitationsTest extends TestCase
         $this->assertTrue($team->fresh()->hasUser($invitee));
         $this->assertSame('Team Admin', $team->roleFor($invitee));
         $this->assertModelMissing($invitation);
-        $this->assertSame($team->id, $invitee->fresh()->current_team_id);
     }
 
     public function test_an_invitation_cannot_be_accepted_by_a_different_account(): void

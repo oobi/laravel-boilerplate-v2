@@ -73,7 +73,7 @@ class TeamAreaTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_the_index_redirects_a_member_to_their_current_team(): void
+    public function test_the_index_redirects_a_single_team_member_to_their_team(): void
     {
         $user = User::factory()->create();
         $team = $this->teamWithMember($user);
@@ -81,8 +81,6 @@ class TeamAreaTest extends TestCase
         $this->actingAs($user)
             ->get(route('team.index'))
             ->assertRedirect(route('team.dashboard', ['team' => $team->slug]));
-
-        $this->assertSame($team->id, $user->fresh()->current_team_id);
     }
 
     public function test_the_index_sends_a_system_user_to_the_admin_dashboard(): void

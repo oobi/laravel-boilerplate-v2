@@ -5,42 +5,31 @@ declare(strict_types=1);
 namespace Concise\Teams\Support;
 
 use App\Models\User;
-use Concise\Teams\Http\Controllers\TeamRedirect;
 
 /**
- * Where a non-admin user belongs right now: their current team if they can
- * still enter it, their only team if they have exactly one (switching them
- * into it), the picker when they have several, or onboarding when they have
- * none — "first alphabetically" was a guess, and picking for someone is
- * confusing when their current team was deactivated or they were suspended
- * from it (OQ1 for the zero-team case). Shared by {@see TeamRedirect}
- * (the `/{prefix}` front door) and the post-login resolver registered on
- * App\Support\Auth\LoginRedirectRegistry, so a team member reaches their team
- * in one hop after login instead of bouncing through the front door.
+ * Where a non-admin user belongs right now, resolved purely from membership —
+ * their only team if they have exactly one, the picker when they have several,
+ * onboarding when they have none (OQ1). Stateless by design: there is no stored
+ * "current team" (see HasTeams), so this writes nothing — which also makes it
+ * safe to ask "where would this user land?" while impersonating. Shared by
+ * {@see TeamRedirect} (the `/{prefix}` front door) and the post-login resolver
+ * on App\Support\Auth\LoginRedirectRegistry, so a member reaches their team in
+ * one hop after login instead of bouncing through the front door.
+ *
+ * "Resume my last team" for a multi-team user is intentionally not here: that's
+ * a per-device preference (cookie/session), not shared user state, and isn't
+ * built yet — a multi-team user picks each session.
  */
 final class TeamDestination
 {
     public static function resolve(User $user): string
     {
-        $current = $user->currentTeam;
-
-        if ($current !== null && $current->active && $user->belongsToTeam($current)) {
-            return team_route('team.dashboard', $current);
-        }
-
         $teams = $user->accessibleTeams()->orderBy('name')->get();
 
-        if ($teams->isEmpty()) {
-            return route('team.onboarding');
-        }
-
-        if ($teams->count() === 1) {
-            $team = $teams->first();
-            $user->switchTeam($team);
-
-            return team_route('team.dashboard', $team);
-        }
-
-        return route('team.select');
+        return match (true) {
+            $teams->isEmpty() => route('team.onboarding'),
+            $teams->count() === 1 => team_route('team.dashboard', $teams->first()),
+            default => route('team.select'),
+        };
     }
 }

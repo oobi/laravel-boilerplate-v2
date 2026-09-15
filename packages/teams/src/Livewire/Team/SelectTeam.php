@@ -66,7 +66,6 @@ class SelectTeam extends Component implements HasActions, HasSchemas
 
         return view('teams::livewire.team.select', [
             'teams' => $this->query($user)->withCount('users')->orderBy('name')->get(),
-            'currentTeamId' => $user->current_team_id,
             'allCount' => $allCount,
             'ownedCount' => $ownedCount,
             // A toggle that would change nothing (or empty the page) is just noise.

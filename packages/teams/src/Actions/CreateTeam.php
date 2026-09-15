@@ -58,8 +58,6 @@ class CreateTeam
             'active' => true,
         ]);
 
-        $owner->switchTeam($team);
-
         return $team;
     }
 }

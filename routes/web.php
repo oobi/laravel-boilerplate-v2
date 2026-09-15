@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\SystemPermission;
+use App\Http\Controllers\ImpersonationController;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Roles\CreateRole;
 use App\Livewire\Admin\Roles\ManageRoles;
@@ -69,10 +70,19 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
         });
     });
 
-    // Leaving impersonation must stay reachable while masquerading as a user without a system role, so it sits outside the
-    // ACCESS_ADMIN_PANEL gate above. Starting impersonation is still guarded by canImpersonate()/canBeImpersonated() inside
-    // the package's own controller. Registers users.impersonate / users.impersonate.leave (lab404/laravel-impersonate).
+    // Start impersonation: staff only (ImpersonationController enforces
+    // canImpersonate/canBeImpersonated), `auth` — not ACCESS_ADMIN_PANEL — so it
+    // composes with that guard; the link only ever appears on admin pages. Lands
+    // the impersonator on the target's own post-login destination.
     Route::middleware('auth')->prefix('users')->name('users.')->group(function (): void {
-        Route::impersonate();
+        Route::get('impersonate/take/{id}/{guardName?}', [ImpersonationController::class, 'take'])->name('impersonate');
     });
+});
+
+// Leaving impersonation lives on the ACCOUNT host, never the (fenceable) admin
+// host, so an impersonator can always exit — even off the admin network
+// (~dev/TEAMS_DOMAINS_HOST_SPLIT.md §5). Behind `auth` only: the masqueraded
+// user may be a non-admin. $accountHost is null in path mode (unconstrained).
+Route::domain($accountHost)->middleware('auth')->prefix('users')->name('users.')->group(function (): void {
+    Route::get('impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
 });

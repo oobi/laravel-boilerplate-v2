@@ -25,17 +25,18 @@ return [
     /**
      * The URI to redirect after taking an impersonation.
      *
-     * Only used in the built-in controller.
-     * * Use 'back' to redirect to the previous page
+     * A route name (resolved to the right URL in either routing mode); overridden
+     * per-target by App\Http\Controllers\ImpersonationController::take(), so this
+     * is only a fallback.
      */
-    'take_redirect_to' => '/admin/dashboard',
+    'take_redirect_to' => 'dashboard',
 
     /**
      * The URI to redirect after leaving an impersonation.
      *
-     * Only used in the built-in controller.
-     * Use 'back' to redirect to the previous page
+     * A route name. The ultimate fallback: leave() prefers the per-session origin
+     * ImpersonationController::take() records; this is used only when that's absent.
      */
-    'leave_redirect_to' => '/admin/users',
+    'leave_redirect_to' => 'users.index',
 
 ];

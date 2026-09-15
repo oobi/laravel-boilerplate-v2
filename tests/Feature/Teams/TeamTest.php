@@ -55,36 +55,4 @@ class TeamTest extends TestCase
         $this->assertSame('acme-studio', $first->slug);
         $this->assertSame('acme-studio-2', $second->slug);
     }
-
-    public function test_switch_team_sets_the_current_team_for_a_member(): void
-    {
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-        $user->teams()->attach($team);
-
-        $this->assertTrue($user->switchTeam($team));
-        $this->assertTrue($user->fresh()->isCurrentTeam($team));
-        $this->assertTrue($user->currentTeam->is($team));
-    }
-
-    public function test_switch_team_is_rejected_for_a_non_member(): void
-    {
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-
-        $this->assertFalse($user->switchTeam($team));
-        $this->assertNull($user->fresh()->current_team_id);
-    }
-
-    public function test_current_team_id_is_nulled_when_the_team_is_deleted(): void
-    {
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-        $user->teams()->attach($team);
-        $user->switchTeam($team);
-
-        $team->forceDelete();
-
-        $this->assertNull($user->fresh()->current_team_id);
-    }
 }

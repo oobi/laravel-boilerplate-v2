@@ -35,11 +35,7 @@
         @foreach ($teams as $team)
             <a
                 href="{{ team_route('team.dashboard', $team) }}"
-                @class([
-                    'group flex flex-col gap-3 rounded-box border bg-base-100 p-5 transition hover:border-primary hover:shadow-md',
-                    'border-primary' => $team->id === $currentTeamId,
-                    'border-base-300' => $team->id !== $currentTeamId,
-                ])
+                class="group flex flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-5 transition hover:border-primary hover:shadow-md"
                 wire:key="team-{{ $team->id }}"
             >
                 <div class="flex items-start justify-between gap-2">

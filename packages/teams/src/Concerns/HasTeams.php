@@ -6,7 +6,6 @@ namespace Concise\Teams\Concerns;
 
 use Concise\Teams\Models\Membership;
 use Concise\Teams\Models\Team;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -15,7 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Added by the teams tier and fenced in User.php so an uninstall can strip it
  * cleanly; core stays teams-agnostic without it.
  *
- * @property-read Team|null $currentTeam
+ * There is deliberately no "current team" pointer on the user: the active team
+ * is always resolved from the request (the {team} slug in path mode, the host in
+ * host mode) into the request-scoped TeamContext, never stored. A per-user column
+ * would be a single shared value that couldn't represent one person working in
+ * different teams in different tabs/devices. "Remember my last team" is a
+ * per-device concern (cookie/session), not database state — see TeamDestination.
  */
 trait HasTeams
 {
@@ -31,12 +35,6 @@ trait HasTeams
     public function ownedTeams(): HasMany
     {
         return $this->hasMany(Team::class, 'user_id');
-    }
-
-    /** The user's active team context, if any (users may belong to zero teams). */
-    public function currentTeam(): BelongsTo
-    {
-        return $this->belongsTo(Team::class, 'current_team_id');
     }
 
     /** Active membership — the access check. A suspended member is still listed in teams() but not "belonging" for access. */
@@ -95,23 +93,5 @@ trait HasTeams
     public function accessibleTeams(): BelongsToMany
     {
         return $this->teams()->active()->wherePivotNull('suspended_at');
-    }
-
-    public function isCurrentTeam(Team $team): bool
-    {
-        return $this->current_team_id === $team->getKey();
-    }
-
-    /** Point the user at a team they belong to. Returns false if they don't. */
-    public function switchTeam(Team $team): bool
-    {
-        if (! $this->belongsToTeam($team)) {
-            return false;
-        }
-
-        $this->forceFill(['current_team_id' => $team->getKey()])->save();
-        $this->setRelation('currentTeam', $team);
-
-        return true;
     }
 }

@@ -56,7 +56,6 @@ class TeamCreationTest extends TestCase
         $this->assertTrue($team->hasUser($user), 'and is its first member');
         $this->assertSame(self::TEAM_ADMIN, $team->roleFor($user), 'and holds the default owner role — their authority comes from it');
         $this->assertNotEmpty($team->slug);
-        $this->assertSame($team->id, $user->fresh()->current_team_id);
     }
 
     public function test_creation_is_refused_loudly_when_no_default_owner_role_exists(): void

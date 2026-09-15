@@ -24,12 +24,13 @@ class TeamActiveStateTest extends TestCase
         $this->assertTrue($team->hasUser($user), 'membership survives deactivation');
     }
 
-    public function test_the_entry_point_skips_an_inactive_current_team(): void
+    public function test_the_entry_point_skips_an_inactive_team(): void
     {
+        // Inactive teams aren't accessible, so a user with one inactive + one active
+        // team resolves to the active one (not the picker).
         $user = User::factory()->create();
-        $inactive = Team::factory()->ownedBy($user)->inactive()->create();
+        Team::factory()->ownedBy($user)->inactive()->create();
         $active = Team::factory()->ownedBy($user)->create();
-        $user->switchTeam($inactive);
 
         $this->actingAs($user)
             ->get(route('team.index'))
