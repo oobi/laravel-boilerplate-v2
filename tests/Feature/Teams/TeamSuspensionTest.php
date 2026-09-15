@@ -79,7 +79,6 @@ class TeamSuspensionTest extends TestCase
     {
         $other = Team::factory()->create(['name' => 'Other Co']);
         $other->addMember($this->member);
-        $this->member->switchTeam($this->team);
         $this->team->suspendMember($this->member);
 
         $this->actingAs($this->member)

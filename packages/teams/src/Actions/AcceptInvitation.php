@@ -40,7 +40,6 @@ class AcceptInvitation
 
         $team->addMember($user, $role);
         $invitation->delete();
-        $user->switchTeam($team);
 
         if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();

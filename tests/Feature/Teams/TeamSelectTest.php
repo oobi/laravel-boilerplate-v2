@@ -26,20 +26,20 @@ class TeamSelectTest extends TestCase
         $this->actingAs($user)->get(route('team.index'))->assertRedirect(route('team.select'));
     }
 
-    public function test_the_entry_point_skips_the_picker_for_a_current_or_single_team(): void
+    public function test_the_entry_point_skips_the_picker_for_a_single_team_and_shows_it_for_many(): void
     {
         $user = User::factory()->create();
         $only = Team::factory()->ownedBy($user)->create();
 
+        // One team: straight in, no picker.
         $this->actingAs($user)->get(route('team.index'))
             ->assertRedirect(route('team.dashboard', ['team' => $only->slug]));
 
-        $second = Team::factory()->create();
-        $second->addMember($user);
-        $user->switchTeam($second);
+        // A second team: the picker, since there's no stored "current team" to prefer.
+        Team::factory()->create()->addMember($user);
 
         $this->actingAs($user)->get(route('team.index'))
-            ->assertRedirect(route('team.dashboard', ['team' => $second->slug]));
+            ->assertRedirect(route('team.select'));
     }
 
     public function test_the_picker_lists_every_team_the_user_can_enter_with_context(): void
