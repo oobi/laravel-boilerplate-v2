@@ -64,6 +64,16 @@ return [
         'placeholder' => 'This :team’s content will live here.',
     ],
 
+    // The "open team" modal on the admin team-view screen: the area is members-only,
+    // so for someone who can impersonate the owner we offer the way in. :owner_name is
+    // the owner's name; :team/:owner are the tier's labels.
+    'open_team' => [
+        'private' => 'This :team is members-only',
+        'impersonate_body' => 'You’re not a member. View it as its :owner by impersonating :owner_name.',
+        'impersonate' => 'Impersonate',
+        'not_member' => 'You’re not a member of this :team, so you can’t open it directly.',
+    ],
+
     'settings' => [
         'save' => 'Save changes',
         'saved' => 'Settings saved',
@@ -219,6 +229,7 @@ return [
         'slug' => 'Slug',
         'slug_help' => 'The :team’s URL segment.',
         'url' => 'URL',
+        'open' => 'Open :team',
         'active' => 'Active',
         'inactive' => 'Inactive',
         'add' => 'Add :Team',

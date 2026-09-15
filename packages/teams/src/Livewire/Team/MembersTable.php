@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Concise\Teams\Livewire\Team;
 
 use App\Enums\SystemPermission;
+use App\Enums\UserAbility;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
@@ -129,6 +130,18 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ->deferFilters(false)
             ->recordActions([
                 ActionGroup::make([
+                    // Impersonation is a system capability (UserAbility::IMPERSONATE),
+                    // independent of team-management — the action authorizes itself per
+                    // row, and the group's ->visible below also opens the menu for a
+                    // viewer who can *only* impersonate, so it lives in the ⋮ menu with
+                    // the rest (see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md).
+                    Action::make('impersonate')
+                        ->label(__('admin.impersonate'))
+                        ->icon('heroicon-o-finger-print')
+                        ->color(DaisyColor::WARNING->toFilamentColor())
+                        ->url(fn (User $record): string => route('users.impersonate', $record->id))
+                        ->authorize(UserAbility::IMPERSONATE),
+
                     Action::make('changeRole')
                         ->label(Team::allowsMultipleRoles() ? team_trans('members.change_roles') : team_trans('members.change_role'))
                         ->icon('heroicon-o-shield-check')
@@ -207,7 +220,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
 
                             Notification::make()->title(team_trans('members.removed'))->success()->send();
                         }),
-                ])->visible(fn (): bool => $this->canManage() || $this->canManageOwners()),
+                ])->visible(fn (): bool => $this->canManage() || $this->canManageOwners() || (bool) auth()->user()?->canImpersonate()),
             ])
             ->searchPlaceholder(team_trans('members.search'))
             ->emptyStateHeading(team_trans('members.empty'))

@@ -15,7 +15,11 @@ use Lab404\Impersonate\Controllers\ImpersonateController;
  *
  *  - `take` lands the impersonator on the *target's* own post-login destination
  *    ({@see Destination::home} — read-only, thanks to the stateless TeamDestination),
- *    so you immediately see what they'd see, instead of a fixed admin URL.
+ *    so you immediately see what they'd see, instead of a fixed admin URL. A caller
+ *    with a specific place in mind (e.g. "open this team as its owner") may override
+ *    that with a *signed* `next` URL — signed so we can trust an arbitrary
+ *    destination without an open-redirect check; an unsigned or tampered `next` is
+ *    ignored and the default destination stands.
  *  - `leave` returns to where impersonation was started (remembered per session
  *    via lab404's own `leave_redirect_to` key), falling back to the impersonated
  *    user's page, then the user list (config `leave_redirect_to`).
@@ -44,7 +48,23 @@ class ImpersonationController extends ImpersonateController
 
         $request->session()->put(self::LEAVE_REDIRECT_KEY, $origin);
 
-        return redirect()->to(Destination::home($request->user()));
+        return redirect()->to($this->requestedDestination($request) ?? Destination::home($request->user()));
+    }
+
+    /**
+     * A caller-supplied landing URL, honoured only when the whole request URL
+     * carries a valid signature — so an arbitrary (cross-host) destination is
+     * trusted because we minted it, not because the host passed an allowlist.
+     */
+    private function requestedDestination(Request $request): ?string
+    {
+        $next = $request->query('next');
+
+        if (! is_string($next) || $next === '' || ! $request->hasValidSignature()) {
+            return null;
+        }
+
+        return $next;
     }
 
     /**

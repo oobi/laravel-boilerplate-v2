@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin\Users;
 use App\Models\User;
 use Concise\Teams\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -38,6 +39,39 @@ class UserImpersonationTest extends TestCase
         $this->actingAs($admin)
             ->get(route('users.impersonate', $target->id))
             ->assertRedirect(route('team.dashboard', ['team' => $team->slug]));
+
+        $this->assertAuthenticatedAs($target);
+    }
+
+    public function test_a_signed_next_overrides_the_default_landing(): void
+    {
+        // The "open team" flow wants to land in a specific team as its owner,
+        // not the owner's generic home — carried as a signed `next`.
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        $url = URL::signedRoute('users.impersonate', [
+            'id' => $target->id,
+            'next' => 'https://acme.example.test/somewhere',
+        ]);
+
+        $this->actingAs($admin)
+            ->get($url)
+            ->assertRedirect('https://acme.example.test/somewhere');
+
+        $this->assertAuthenticatedAs($target);
+    }
+
+    public function test_an_unsigned_next_is_ignored(): void
+    {
+        // An open-redirect attempt with no signature falls back to the default
+        // destination (a team-less target → onboarding).
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->get(route('users.impersonate', $target->id).'?next='.urlencode('https://evil.example/phish'))
+            ->assertRedirect(route('team.onboarding'));
 
         $this->assertAuthenticatedAs($target);
     }
