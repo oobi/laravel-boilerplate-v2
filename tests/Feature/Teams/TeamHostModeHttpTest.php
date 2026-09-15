@@ -3,8 +3,10 @@
 namespace Tests\Feature\Teams;
 
 use App\Models\User;
+use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Env;
 use ReflectionProperty;
@@ -42,6 +44,7 @@ class TeamHostModeHttpTest extends TestCase
     {
         $this->forceEnv([
             'TEAMS_DOMAINS_ENABLED' => 'true',
+            'TEAMS_DOMAINS_CUSTOM' => 'true', // exercise the custom-domain path too
             'TEAMS_DOMAINS_ADMIN_HOST' => self::ADMIN_HOST,
             'TEAMS_DOMAINS_BASE' => self::BASE,
             'TEAMS_DOMAINS_ACCOUNT_HOST' => false, // → defaults to the apex (base)
@@ -58,6 +61,10 @@ class TeamHostModeHttpTest extends TestCase
         $this->restoreEnv();
         // Drop the cached host-mode env so the next test re-reads its own.
         $this->resetEnvRepository();
+        // We booted with the custom-domains tier on, which registered the Domains
+        // nav item into a process-wide static; clear it so a later path-mode test
+        // doesn't inherit a stale link.
+        TeamNavRegistry::flush();
     }
 
     // --- Team hosts ---------------------------------------------------------
@@ -149,6 +156,21 @@ class TeamHostModeHttpTest extends TestCase
     public function test_the_public_landing_is_served_from_the_apex(): void
     {
         $this->get('http://'.self::BASE.'/')->assertOk();
+    }
+
+    public function test_the_team_sidebar_links_to_the_domains_tab(): void
+    {
+        // With the custom-domains tier on, a member holding MANAGE_DOMAINS gets a
+        // Domains item in the team-area sidebar (its own tab, not under Settings).
+        Team::createRole('Domain Admin', [TeamPermission::MANAGE_DOMAINS]);
+        $user = User::factory()->create();
+        $team = Team::factory()->create(['slug' => 'acme']);
+        $team->addMember($user, 'Domain Admin');
+
+        $this->actingAs($user)
+            ->get('http://acme.'.self::BASE.'/dashboard')
+            ->assertOk()
+            ->assertSee('http://acme.'.self::BASE.'/domains');
     }
 
     /**

@@ -50,5 +50,6 @@
         <env name="TEAMS_MULTIPLE_ROLES" value="false"/>
         <env name="TEAMS_PERSONAL_TEAMS" value="false"/>
         <env name="TEAMS_DOMAINS_ENABLED" value="false"/>
+        <env name="TEAMS_DOMAINS_CUSTOM" value="false"/>
     </php>
 </phpunit>

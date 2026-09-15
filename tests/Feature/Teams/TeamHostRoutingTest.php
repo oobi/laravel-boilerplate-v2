@@ -40,11 +40,18 @@ class TeamHostRoutingTest extends TestCase
         ]);
     }
 
+    /** Host mode plus the custom-domains tier — needed for a verified domain to route. */
+    private function enableCustomDomains(): void
+    {
+        $this->enableHostMode();
+        config(['teams.domains.custom_domains' => true]);
+    }
+
     // --- TeamHostResolver ---------------------------------------------------
 
     public function test_a_verified_custom_domain_resolves_to_its_team(): void
     {
-        $this->enableHostMode();
+        $this->enableCustomDomains();
         $team = Team::factory()->create();
         Domain::factory()->verified()->for($team)->create(['domain' => 'acme.com']);
 
@@ -53,11 +60,25 @@ class TeamHostRoutingTest extends TestCase
 
     public function test_a_pending_custom_domain_never_resolves(): void
     {
-        $this->enableHostMode();
+        $this->enableCustomDomains();
         $team = Team::factory()->create();
         Domain::factory()->for($team)->create(['domain' => 'acme.com']); // unverified
 
         $this->assertNull(TeamHostResolver::resolve('acme.com'));
+    }
+
+    public function test_a_verified_custom_domain_is_inert_when_only_subdomains_are_on(): void
+    {
+        // Host mode on, custom-domains tier off: a verified domain does not route,
+        // and the team's canonical host stays its `{slug}.base` subdomain.
+        $this->enableHostMode();
+        $team = Team::factory()->create(['slug' => 'acme']);
+        Domain::factory()->verified()->primary()->for($team)->create(['domain' => 'acme.com']);
+
+        $this->assertNull(TeamHostResolver::resolve('acme.com'));
+        $this->assertSame('acme.myapp.com', TeamHostResolver::hostFor($team->fresh()));
+        // The subdomain still resolves — dropping custom domains doesn't touch host mode.
+        $this->assertTrue(TeamHostResolver::resolve('acme.myapp.com')->is($team));
     }
 
     public function test_a_platform_subdomain_resolves_by_slug(): void
@@ -124,7 +145,7 @@ class TeamHostRoutingTest extends TestCase
 
     public function test_host_for_prefers_a_verified_primary_domain_else_the_platform_subdomain(): void
     {
-        $this->enableHostMode();
+        $this->enableCustomDomains();
         $team = Team::factory()->create(['slug' => 'acme']);
 
         // No custom domain yet: the platform subdomain.
@@ -162,7 +183,7 @@ class TeamHostRoutingTest extends TestCase
 
     public function test_team_route_emits_a_host_rooted_url_in_host_mode(): void
     {
-        $this->enableHostMode();
+        $this->enableCustomDomains();
         $team = Team::factory()->create(['slug' => 'acme']);
         Domain::factory()->verified()->primary()->for($team)->create(['domain' => 'acme.com']);
 
@@ -177,6 +198,22 @@ class TeamHostRoutingTest extends TestCase
     }
 
     // --- DomainPolicy::assertConfigured -------------------------------------
+
+    public function test_custom_domains_require_both_switches(): void
+    {
+        // Custom domains only light up over host mode — the switch alone isn't enough.
+        config(['teams.domains.enabled' => false, 'teams.domains.custom_domains' => true]);
+        $this->assertFalse(DomainPolicy::customDomainsEnabled());
+
+        // Host mode on, switch off: subdomains only.
+        $this->enableHostMode();
+        config(['teams.domains.custom_domains' => false]);
+        $this->assertFalse(DomainPolicy::customDomainsEnabled());
+
+        // Both on.
+        config(['teams.domains.custom_domains' => true]);
+        $this->assertTrue(DomainPolicy::customDomainsEnabled());
+    }
 
     public function test_enabling_the_overlay_without_hosts_fails_loud(): void
     {
@@ -272,7 +309,7 @@ class TeamHostRoutingTest extends TestCase
 
     public function test_a_member_reaches_a_team_by_its_host_and_the_context_is_set(): void
     {
-        $this->enableHostMode();
+        $this->enableCustomDomains();
         $team = Team::factory()->create();
         $user = User::factory()->create();
         $team->addMember($user);
@@ -294,7 +331,7 @@ class TeamHostRoutingTest extends TestCase
 
     public function test_a_non_member_is_forbidden_on_a_team_host(): void
     {
-        $this->enableHostMode();
+        $this->enableCustomDomains();
         $team = Team::factory()->create();
         Domain::factory()->verified()->for($team)->create(['domain' => 'acme.com']);
 

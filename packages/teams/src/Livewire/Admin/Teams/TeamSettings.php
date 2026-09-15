@@ -9,7 +9,6 @@ use App\Support\Filament\AdminAction;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
-use Concise\Teams\Support\DomainPolicy;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -85,12 +84,6 @@ class TeamSettings extends Component implements HasActions, HasSchemas
     public function showDangerZone(): bool
     {
         return $this->canManageOwnership() || $this->canDeactivate() || $this->canDelete();
-    }
-
-    /** Whether to render the domains section: the feature on and `manage teams`, via TeamPolicy::before. The child aborts otherwise. */
-    public function canViewDomains(): bool
-    {
-        return DomainPolicy::enabled() && Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
     public function form(Schema $schema): Schema

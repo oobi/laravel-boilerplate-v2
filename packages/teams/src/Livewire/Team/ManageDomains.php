@@ -32,11 +32,11 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
- * A team's custom domains — the shared section rendered in both the system
- * admin's team Settings tab and the team-area Settings page. Access is runtime
+ * A team's custom domains — the shared table rendered by the team-area Domains
+ * page and the system admin's team Settings tab. Access is runtime
  * authorization: a system admin always manages; otherwise the `MANAGE_DOMAINS`
  * team permission (held via a role — ownership grants no bypass). Only active
- * when `teams.domains.enabled`. See ~dev/TEAMS_DOMAINS_SCOPE.md.
+ * when `teams.domains.custom_domains` (over host mode). See ~dev/TEAMS_DOMAINS_SCOPE.md.
  *
  * @property Team $team
  */
@@ -59,7 +59,7 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
     /** May the current viewer see this team's domains at all? One ability — a system admin is answered by TeamPolicy::before(). */
     public function canView(): bool
     {
-        return DomainPolicy::enabled() && Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
+        return DomainPolicy::customDomainsEnabled() && Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
     /** May the current viewer add/verify/remove domains? Today the same as viewing; kept separate so a read-only grant can be added without touching call sites. */
@@ -116,6 +116,7 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
                 Tables\Columns\TextColumn::make('domain')
                     ->label(team_trans('domains.domain'))
                     ->weight('medium')
+                    ->searchable()
                     ->icon(fn (Domain $record): ?string => $record->is_primary ? 'heroicon-s-star' : null)
                     ->iconColor(DaisyColor::WARNING->toFilamentColor())
                     ->tooltip(fn (Domain $record): ?string => $record->is_primary ? team_trans('domains.primary') : null),
@@ -126,6 +127,20 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
                     ->getStateUsing(fn (Domain $record): string => $record->isVerified() ? team_trans('domains.verified') : team_trans('domains.pending'))
                     ->color(fn (Domain $record): string => ($record->isVerified() ? DaisyColor::SUCCESS : DaisyColor::WARNING)->toFilamentColor()),
             ])
+            ->searchPlaceholder(team_trans('domains.search'))
+            ->filters([
+                // Verified vs pending — the same two states the status badge shows.
+                Tables\Filters\SelectFilter::make('status')
+                    ->label(team_trans('domains.status'))
+                    ->options(self::statusOptions())
+                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        'verified' => $query->whereNotNull('verified_at'),
+                        'pending' => $query->whereNull('verified_at'),
+                        default => $query,
+                    }),
+            ])
+            ->deferFilters(false)
             ->recordActions([
                 ActionGroup::make([
                     $this->verifyAction(),
@@ -135,6 +150,19 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
             ])
             ->emptyStateHeading(team_trans('domains.empty'))
             ->paginated(false);
+    }
+
+    /**
+     * Options for the status filter, shared with the Blade header's select.
+     *
+     * @return array<string, string>
+     */
+    public static function statusOptions(): array
+    {
+        return [
+            'verified' => team_trans('domains.verified'),
+            'pending' => team_trans('domains.pending'),
+        ];
     }
 
     public function render(): View

@@ -6,6 +6,8 @@ use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Admin\Teams\ShowTeam;
+use Concise\Teams\Livewire\Admin\Teams\TeamDomains;
+use Concise\Teams\Livewire\Admin\Teams\TeamSettings;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
@@ -104,6 +106,43 @@ class ShowTeamTest extends TestCase
             ->test(ShowTeam::class, ['team' => $this->team])
             ->callAction('openTeam')
             ->assertNoRedirect();
+    }
+
+    public function test_the_domains_tab_404s_when_the_tier_is_off(): void
+    {
+        // The route is always registered, but the tab is inert unless custom domains are on.
+        Livewire::actingAs($this->admin)
+            ->test(TeamDomains::class, ['team' => $this->team])
+            ->assertNotFound();
+    }
+
+    public function test_a_system_admin_opens_the_domains_tab_when_custom_domains_are_on(): void
+    {
+        config(['teams.domains.enabled' => true, 'teams.domains.custom_domains' => true]);
+
+        Livewire::actingAs($this->admin)
+            ->test(TeamDomains::class, ['team' => $this->team])
+            ->assertOk()
+            ->assertSee(team_trans('domains.title'));
+    }
+
+    public function test_the_settings_tab_moves_domains_out_to_their_own_tab(): void
+    {
+        config(['teams.domains.enabled' => true, 'teams.domains.custom_domains' => true]);
+
+        Livewire::actingAs($this->admin)
+            ->test(TeamSettings::class, ['team' => $this->team])
+            // The Domains tab is offered…
+            ->assertSee(route('teams.domains', $this->team))
+            // …but the section no longer lives inside Settings.
+            ->assertDontSee(team_trans('domains.description', ['name' => $this->team->name]));
+    }
+
+    public function test_the_admin_tabs_hide_domains_when_the_tier_is_off(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(TeamSettings::class, ['team' => $this->team])
+            ->assertDontSee(route('teams.domains', $this->team));
     }
 
     public function test_the_members_tab_lists_members_with_their_standing(): void

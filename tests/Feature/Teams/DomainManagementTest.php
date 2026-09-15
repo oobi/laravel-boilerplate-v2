@@ -5,7 +5,9 @@ namespace Tests\Feature\Teams;
 use App\Models\User;
 use Concise\Teams\Actions\CreateDomain;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Livewire\Team\Domains;
 use Concise\Teams\Livewire\Team\ManageDomains;
+use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -118,11 +120,24 @@ class DomainManagementTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_the_domains_component_is_forbidden_when_only_subdomains_are_on(): void
+    {
+        // Host mode (subdomains) on, but the custom-domains tier off: the domains
+        // surface stays closed even for an owner who holds MANAGE_DOMAINS.
+        config(['teams.domains.enabled' => true, 'teams.domains.custom_domains' => false]);
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        Livewire::actingAs($owner)
+            ->test(ManageDomains::class, ['team' => $team])
+            ->assertForbidden();
+    }
+
     public function test_an_owner_with_the_permission_manages_domains(): void
     {
         // The default owner role ('Team Admin', seeded in setUp) carries MANAGE_DOMAINS,
         // so the owner it's given at setup can manage — authority via role, not ownership.
-        config(['teams.domains.enabled' => true]);
+        $this->enableCustomDomains();
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
@@ -134,7 +149,7 @@ class DomainManagementTest extends TestCase
     public function test_an_owner_without_the_permission_cannot_manage_domains(): void
     {
         // Ownership grants no bypass: an owner whose role lacks MANAGE_DOMAINS can't view or act.
-        config(['teams.domains.enabled' => true]);
+        $this->enableCustomDomains();
         Team::createRole('Staff', [TeamPermission::UPDATE_TEAM]); // no manage-domains
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
@@ -147,7 +162,7 @@ class DomainManagementTest extends TestCase
 
     public function test_a_system_admin_always_manages(): void
     {
-        config(['teams.domains.enabled' => true]);
+        $this->enableCustomDomains();
         $team = Team::factory()->create();
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
@@ -155,7 +170,90 @@ class DomainManagementTest extends TestCase
             ->assertActionVisible('addDomain');
     }
 
+    public function test_domains_can_be_searched_and_filtered_by_status(): void
+    {
+        $this->enableCustomDomains();
+        $team = Team::factory()->create();
+        $verified = Domain::factory()->verified()->for($team)->create(['domain' => 'verified.example.com']);
+        $pending = Domain::factory()->for($team)->create(['domain' => 'pending.example.org']); // unverified
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageDomains::class, ['team' => $team])
+            ->assertCanSeeTableRecords([$verified, $pending])
+            ->searchTable('verified.example')
+            ->assertCanSeeTableRecords([$verified])
+            ->assertCanNotSeeTableRecords([$pending])
+            ->searchTable('')
+            ->filterTable('status', 'pending')
+            ->assertCanSeeTableRecords([$pending])
+            ->assertCanNotSeeTableRecords([$verified])
+            ->filterTable('status', 'verified')
+            ->assertCanSeeTableRecords([$verified])
+            ->assertCanNotSeeTableRecords([$pending]);
+    }
+
     // Team-area Settings page access (view vs edit) lives in TeamSettingsTest.
+
+    // --- the team-area Domains page (its own tab) ---
+    //
+    // Driven as the component (not a full-page GET): enabling custom domains
+    // turns host mode on, and host URLs can't be generated against path-mode
+    // routes in one booted app (see the 5h.5 runtime note). The full host-mode
+    // path is covered by TeamHostModeHttpTest.
+
+    public function test_the_domains_page_404s_when_the_tier_is_off(): void
+    {
+        // The route is always registered, but the page is inert unless custom domains are on.
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        Livewire::actingAs($owner)
+            ->test(Domains::class, ['team' => $team])
+            ->assertNotFound();
+    }
+
+    public function test_a_manage_domains_holder_opens_the_domains_page(): void
+    {
+        $this->enableCustomDomains();
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        Livewire::actingAs($owner)
+            ->test(Domains::class, ['team' => $team])
+            ->assertOk()
+            ->assertSee(team_trans('nav.domains'));
+    }
+
+    public function test_a_member_without_the_permission_cannot_open_the_domains_page(): void
+    {
+        $this->enableCustomDomains();
+        Team::createRole('Staff', [TeamPermission::UPDATE_TEAM]); // no manage-domains
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+        $team->syncMemberRoles($owner, ['Staff']);
+
+        Livewire::actingAs($owner)
+            ->test(Domains::class, ['team' => $team])
+            ->assertForbidden();
+    }
+
+    public function test_the_sidebar_offers_no_domains_link_when_the_tier_is_off(): void
+    {
+        // The nav item is registered at boot only when custom domains are on (off here).
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        $this->actingAs($owner)
+            ->get(route('team.dashboard', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertDontSee(route('team.domains', ['team' => $team->slug]));
+    }
+
+    /** Host mode plus the custom-domains tier — what makes the domains surface live. */
+    private function enableCustomDomains(): void
+    {
+        config(['teams.domains.enabled' => true, 'teams.domains.custom_domains' => true]);
+    }
 
     protected function tearDown(): void
     {

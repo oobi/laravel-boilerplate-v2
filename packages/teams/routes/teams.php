@@ -9,10 +9,12 @@ use Concise\Teams\Http\Controllers\TeamRedirect;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
 use Concise\Teams\Livewire\Admin\Teams\ListTeams;
 use Concise\Teams\Livewire\Admin\Teams\ShowTeam;
+use Concise\Teams\Livewire\Admin\Teams\TeamDomains;
 use Concise\Teams\Livewire\Admin\Teams\TeamInvitations;
 use Concise\Teams\Livewire\Admin\Teams\TeamMembers;
 use Concise\Teams\Livewire\Admin\Teams\TeamSettings;
 use Concise\Teams\Livewire\Team\Dashboard;
+use Concise\Teams\Livewire\Team\Domains;
 use Concise\Teams\Livewire\Team\ListInvitations;
 use Concise\Teams\Livewire\Team\ListMembers;
 use Concise\Teams\Livewire\Team\Onboarding;
@@ -53,6 +55,8 @@ $teamPages = function (): void {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/members', ListMembers::class)->name('members');
     Route::get('/invitations', ListInvitations::class)->name('invitations');
+    // Custom domains, when that tier is on (the page 404s otherwise).
+    Route::get('/domains', Domains::class)->name('domains');
     Route::get('/settings', Settings::class)->name('settings');
 };
 
@@ -117,5 +121,7 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_AD
         Route::get('/{team}', ShowTeam::class)->name('show');
         Route::get('/{team}/members', TeamMembers::class)->name('members');
         Route::get('/{team}/invitations', TeamInvitations::class)->name('invitations');
+        // Custom domains, when that tier is on (the page 404s otherwise).
+        Route::get('/{team}/domains', TeamDomains::class)->name('domains');
         Route::get('/{team}/settings', TeamSettings::class)->name('settings');
     });

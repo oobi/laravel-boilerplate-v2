@@ -27,13 +27,12 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * The team area's Settings page: team details (name/slug), custom domains
- * when the overlay is on, and the Ownership section — co-owners, transfer and
- * delete, the acts reserved to the primary owner. Open to anyone holding
- * VIEW_SETTINGS or a section's edit permission, and always to the primary
- * owner (TeamPolicy::viewSettings — a responsibility floor, not a bypass: the
- * details form is still read-only without `update`). Editing is gated
- * per-section: `update` for details, `manageDomains` for domains.
+ * The team area's Settings page: team details (name/slug) and the Ownership
+ * section — co-owners, transfer and delete, the acts reserved to the primary
+ * owner. Open to anyone holding VIEW_SETTINGS or a section's edit permission,
+ * and always to the primary owner (TeamPolicy::viewSettings — a responsibility
+ * floor, not a bypass: the details form is still read-only without `update`).
+ * Custom domains, when that tier is on, are their own page ({@see Domains}).
  * See ~dev/TEAMS_DOMAINS_SCOPE.md.
  */
 #[Layout('teams::layouts.team')]
@@ -66,12 +65,6 @@ class Settings extends Component implements HasActions, HasSchemas
     public function canUpdate(): bool
     {
         return Gate::allows(TeamAbility::UPDATE, $this->team);
-    }
-
-    /** Whether to render the domains section (manage-domains permission; a system admin via TeamPolicy::before). */
-    public function canViewDomains(): bool
-    {
-        return DomainPolicy::enabled() && Gate::allows(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
     /** Whether to render the ownership section: the primary owner, or a system admin via TeamPolicy::before. */

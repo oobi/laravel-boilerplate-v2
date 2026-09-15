@@ -19,6 +19,12 @@
     </x-tabs-item>
 @endif
 
+@if (\Concise\Teams\Support\DomainPolicy::customDomainsEnabled() && \Illuminate\Support\Facades\Gate::allows(\Concise\Teams\Enums\TeamAbility::MANAGE_DOMAINS, $team))
+    <x-tabs-item :active="$current === 'domains'" :href="route('teams.domains', $team)" icon="heroicon-o-globe-alt">
+        {{ team_trans('nav.domains') }}
+    </x-tabs-item>
+@endif
+
 <x-tabs-item :active="$current === 'settings'" :href="route('teams.settings', $team)" icon="heroicon-o-cog-6-tooth">
     {{ team_trans('nav.settings') }}
 </x-tabs-item>

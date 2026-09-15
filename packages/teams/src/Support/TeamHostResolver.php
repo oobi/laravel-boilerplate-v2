@@ -12,7 +12,8 @@ use Illuminate\Support\Str;
  * Maps a request host to the team it stands for, in host mode (the domains
  * overlay, 5h). Two hosts resolve to a team, in order:
  *
- *   1. a verified custom domain (the row's team) — pending/unverified never match;
+ *   1. a verified custom domain (the row's team) — only when the custom-domains
+ *      tier is on; pending/unverified never match;
  *   2. the platform subdomain `{slug}.base` — no verification, the platform owns
  *      `*.base` via wildcard DNS.
  *
@@ -29,10 +30,12 @@ final class TeamHostResolver
      */
     public static function hostFor(Team $team): string
     {
-        $primary = $team->primaryDomain();
+        if (DomainPolicy::customDomainsEnabled()) {
+            $primary = $team->primaryDomain();
 
-        if ($primary !== null) {
-            return $primary->domain;
+            if ($primary !== null) {
+                return $primary->domain;
+            }
         }
 
         return $team->slug.'.'.DomainPolicy::base();
@@ -51,13 +54,17 @@ final class TeamHostResolver
             return null;
         }
 
-        $domain = Domain::query()
-            ->where('domain', $host)
-            ->whereNotNull('verified_at')
-            ->first();
+        // A verified custom domain only routes when that tier is switched on;
+        // otherwise a team is reachable only at its `{slug}.base` subdomain.
+        if (DomainPolicy::customDomainsEnabled()) {
+            $domain = Domain::query()
+                ->where('domain', $host)
+                ->whereNotNull('verified_at')
+                ->first();
 
-        if ($domain !== null) {
-            return $domain->team;
+            if ($domain !== null) {
+                return $domain->team;
+            }
         }
 
         return self::resolveSubdomain($host);

@@ -139,7 +139,19 @@ class TeamsServiceProvider extends ServiceProvider
                 ->order(20);
         }
 
-        // The team-area Settings page (team details + domains). Shown to whoever
+        // Custom domains get their own page once that tier is on; the item is
+        // shown to holders of manageDomains (a system admin via TeamPolicy::before).
+        if (DomainPolicy::customDomainsEnabled()) {
+            TeamNavRegistry::item('team-domains')
+                ->label(team_trans('nav.domains'))
+                ->route('team.domains')
+                ->icon('heroicon-o-globe-alt')
+                ->active('team.domains')
+                ->can(TeamAbility::MANAGE_DOMAINS)
+                ->order(25);
+        }
+
+        // The team-area Settings page (team details + ownership). Shown to whoever
         // can view it — owners (read-only floor) or holders of update/manageDomains.
         TeamNavRegistry::item('team-settings')
             ->label(team_trans('nav.settings'))

@@ -38,15 +38,5 @@
         @endif
     </div>
 
-    @if ($this->canViewDomains())
-        <x-card :title="team_trans('domains.title')" type="panel">
-            <p class="mb-4 text-sm text-base-content/60">
-                {{ team_trans('domains.description', ['name' => $team->name]) }}
-            </p>
-
-            <livewire:teams-manage-domains :team="$team" :key="'domains-'.$team->id" />
-        </x-card>
-    @endif
-
     <x-filament-actions::modals />
 </div>

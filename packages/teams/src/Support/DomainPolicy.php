@@ -8,8 +8,10 @@ use Concise\Teams\Exceptions\DomainsMisconfigured;
 use Illuminate\Support\Str;
 
 /**
- * The custom-domain overlay's feature flag and its host configuration. Whether
- * it's active at all is config (infra-tied: wildcard DNS/TLS); *who* may manage a
+ * The host-routing overlay's feature flags and host configuration — `enabled()`
+ * (host mode: teams at `{slug}.base`) and, over it, `customDomainsEnabled()`
+ * (per-team verified custom domains). Whether either is active is config
+ * (infra-tied: wildcard DNS/TLS); *who* may manage a
  * team's domains is runtime authorization — the MANAGE_DOMAINS team permission
  * (held via a role) and system admins — not config. See ~dev/TEAMS_DOMAINS_SCOPE.md
  * and ~dev/TEAMS_DOMAINS_HOST_SPLIT.md.
@@ -28,6 +30,18 @@ final class DomainPolicy
     public static function enabled(): bool
     {
         return (bool) config('teams.domains.enabled', false);
+    }
+
+    /**
+     * Whether per-team verified custom domains are active: host mode AND the
+     * custom-domains switch. The master `enabled()` gate alone gives every team
+     * its `{slug}.base` subdomain; this second tier adds routing on a team's own
+     * verified domain (and its management UI). Off, the Domain model is dormant
+     * and only `{slug}.base` resolves. See config/teams.php + ~dev/TEAMS_DOMAINS_HOST_SPLIT.md §4.
+     */
+    public static function customDomainsEnabled(): bool
+    {
+        return self::enabled() && (bool) config('teams.domains.custom_domains', false);
     }
 
     /**

@@ -207,7 +207,7 @@ class TeamRolesScopeTest extends TestCase
 
     public function test_the_roles_form_ticks_an_implied_permission_with_its_implier_and_keeps_it_while_ticked(): void
     {
-        config(['teams.domains.enabled' => true]);
+        config(['teams.domains.enabled' => true, 'teams.domains.custom_domains' => true]);
         $role = Team::createRole('Manager');
 
         $component = Livewire::actingAs(User::factory()->superAdmin()->create())
@@ -302,7 +302,7 @@ class TeamRolesScopeTest extends TestCase
         $this->assertTrue($role->checkPermissionTo(TeamPermission::UPDATE_TEAM->value));
 
         // With the feature on it's an ordinary option again.
-        config(['teams.domains.enabled' => true]);
+        config(['teams.domains.enabled' => true, 'teams.domains.custom_domains' => true]);
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ManageRoles::class, ['role' => $role])
@@ -324,7 +324,7 @@ class TeamRolesScopeTest extends TestCase
         $this->assertTrue($admin->hasPermissionTo(TeamPermission::UPDATE_TEAM->value));
 
         Team::availableRoles()->get()->each->delete();
-        config(['teams.domains.enabled' => true]);
+        config(['teams.domains.enabled' => true, 'teams.domains.custom_domains' => true]);
         $this->runSeeder();
 
         $admin = Team::availableRoles()->where('name', 'Team Admin')->firstOrFail();

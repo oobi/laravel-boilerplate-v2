@@ -189,18 +189,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Custom domains
+    | Domain routing (subdomains + custom domains)
     |--------------------------------------------------------------------------
     |
-    | The optional custom-domain overlay. Off by default — teams are reached via
-    | the path prefix above. Only verified domains ever route (OQ3).
+    | The optional host-routing overlay, in two tiers:
+    |
+    |  - `enabled` (env TEAMS_DOMAINS_ENABLED) is the master gate. Off by default:
+    |    teams are reached via the path prefix above (`/{prefix}/{slug}`). On: host
+    |    mode — every team is reached at its subdomain `{slug}.{base}`. This is a
+    |    setup-time/per-environment decision, not a live runtime flip (it switches
+    |    every team from path to host URLs, and needs wildcard DNS/TLS).
+    |
+    |  - `custom_domains` (env TEAMS_DOMAINS_CUSTOM) additionally lets a team route
+    |    on its own verified domain (e.g. `acme.com`). Off by default, and only
+    |    has effect when `enabled` is on. A verified custom domain on a *different*
+    |    registrable domain can't share the `.{base}` session cookie, so a member
+    |    there can't yet hold a session (the session-handoff work is deferred — see
+    |    ~dev/TEAMS_DOMAINS_HOST_SPLIT.md §4); leave it off unless teams live on the
+    |    same registrable domain as `base`. With it off, the Domain model and its
+    |    UI/verification are dormant and no host but `{slug}.{base}` resolves.
     |
     | Who may manage a team's domains is runtime authorization, not config: the
     | `MANAGE_DOMAINS` team permission (Roles screen) and system admins. Ownership
     | grants no bypass, so an owner manages domains only through a role that
-    | carries it. This flag (env TEAMS_DOMAINS_ENABLED) only turns
-    | the whole overlay on/off — a setup-time/per-environment decision, not a live
-    | runtime flip (host mode switches every team from path to host URLs).
+    | carries it.
     |
     | When enabled, `admin_host` and `base` are both REQUIRED (the app fails loud
     | at boot otherwise — see DomainPolicy::assertConfigured):
@@ -234,6 +246,9 @@ return [
 
     'domains' => [
         'enabled' => (bool) env('TEAMS_DOMAINS_ENABLED', false),
+
+        // Custom domains (per-team verified domains) — a second tier over `enabled`.
+        'custom_domains' => (bool) env('TEAMS_DOMAINS_CUSTOM', false),
 
         'admin_host' => env('TEAMS_DOMAINS_ADMIN_HOST'),
         'account_host' => env('TEAMS_DOMAINS_ACCOUNT_HOST'),

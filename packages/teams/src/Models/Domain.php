@@ -14,7 +14,8 @@ use Illuminate\Support\Str;
 
 /**
  * A custom domain that routes to a team — the optional overlay (5h), inert
- * unless config('teams.domains.enabled'). A domain is `pending` until it proves
+ * unless config('teams.domains.custom_domains') (over host mode). A domain is
+ * `pending` until it proves
  * control via a DNS TXT record carrying its verification token; only a verified
  * domain (verified_at set) ever resolves (OQ3). See ~dev/TEAMS_DOMAINS_SCOPE.md.
  *

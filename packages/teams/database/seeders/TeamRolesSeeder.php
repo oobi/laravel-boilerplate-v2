@@ -43,10 +43,10 @@ class TeamRolesSeeder extends Seeder
                     TeamPermission::MANAGE_MEMBERS,
                     TeamPermission::INVITE_MEMBERS,
                     TeamPermission::UPDATE_TEAM,
-                    // Only while the custom-domain overlay is on: a seeder sets up the
+                    // Only while the custom-domains tier is on: a seeder sets up the
                     // base scenario, it doesn't pre-grant a feature that's switched off.
-                    // Enabling domains later is an explicit grant on the Roles screen.
-                    ...(DomainPolicy::enabled() ? [TeamPermission::MANAGE_DOMAINS] : []),
+                    // Enabling it later is an explicit grant on the Roles screen.
+                    ...(DomainPolicy::customDomainsEnabled() ? [TeamPermission::MANAGE_DOMAINS] : []),
                 ],
             ],
             TeamLabels::member() => [

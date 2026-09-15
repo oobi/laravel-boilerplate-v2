@@ -53,15 +53,15 @@ final class TeamRoleScope implements RoleScope
     }
 
     /**
-     * Manage Domains doesn't apply while the custom-domain overlay is off, so
-     * the form doesn't offer it; a role that holds it (granted while the
-     * feature was on) keeps it.
+     * Manage Domains doesn't apply while the custom-domains tier is off, so the
+     * form doesn't offer it; a role that holds it (granted while the feature was
+     * on) keeps it.
      *
      * @return list<string>
      */
     public function unavailable(): array
     {
-        return DomainPolicy::enabled() ? [] : [TeamPermission::MANAGE_DOMAINS->value];
+        return DomainPolicy::customDomainsEnabled() ? [] : [TeamPermission::MANAGE_DOMAINS->value];
     }
 
     /** A shared team role, assignable in every team (members hold it through the membership pivot). */
