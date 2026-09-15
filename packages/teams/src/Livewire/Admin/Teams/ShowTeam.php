@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\IconPosition;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -54,8 +55,13 @@ class ShowTeam extends Component implements HasSchemas
                                     ->url(fn (Team $record): ?string => $record->owner ? route('users.show', $record->owner) : null)
                                     ->helperText(fn (Team $record): ?string => $record->owner?->email),
 
-                                TextEntry::make('slug')
-                                    ->label(team_trans('admin.slug')),
+                                TextEntry::make('url')
+                                    ->label(team_trans('admin.url'))
+                                    ->state(fn (Team $record): string => team_route('team.dashboard', $record))
+                                    ->url(fn (Team $record): string => team_route('team.dashboard', $record))
+                                    ->openUrlInNewTab()
+                                    ->icon('heroicon-o-arrow-top-right-on-square')
+                                    ->iconPosition(IconPosition::After),
 
                                 TextEntry::make('active')
                                     ->label(__('admin.status'))

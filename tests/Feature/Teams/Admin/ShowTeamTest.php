@@ -73,6 +73,7 @@ class ShowTeamTest extends TestCase
             ->assertOk()
             ->assertSee('Northwind')
             ->assertSee('Olive Owner')
+            ->assertSee(team_route('team.dashboard', $this->team))
             ->assertSee(route('teams.members', $this->team))
             ->assertSee(route('teams.invitations', $this->team))
             ->assertSee(route('teams.settings', $this->team))

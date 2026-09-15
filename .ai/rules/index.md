@@ -8,6 +8,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/views/components/** | .ai/rules/components.md |
 | .env, .env.example | .ai/rules/env.md |
 | tests/Feature/** | .ai/rules/feature.md |
+| app/Livewire/**, packages/*/src/Livewire/** | .ai/rules/infolists.md |
 | lang/** | .ai/rules/lang.md |
 | app/Livewire/** | .ai/rules/livewire.md |
 | app/Models/** | .ai/rules/models.md |

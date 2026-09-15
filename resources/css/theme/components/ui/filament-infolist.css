@@ -1,0 +1,42 @@
+/*
+|--------------------------------------------------------------------------
+| Infolist entries that are links — read as links
+|--------------------------------------------------------------------------
+| A `TextEntry->url(...)` wraps its content in a bare `<a class="fi-in-entry-
+| content">`, and Filament's own entry.css gives that anchor layout only, no
+| colour — so a linked entry renders as plain black text with an invisible
+| link on it, the same trap `.ai/rules/tables.md` calls out for table cells.
+| Colour it like every other link in the app (`.ui-link` / daisyUI's `.link`
+| in typography.css).
+|
+| Colouring the anchor alone is NOT enough: the state sits in a nested
+| `.fi-in-text-item`, which text.css paints `text-gray-950 dark:text-white`
+| outright, and a trailing `->icon()` is painted `text-gray-400` — both
+| descendants, so both beat anything inherited from the `<a>`. Hence the
+| deeper selectors here.
+|
+| Scoped to the anchor: an entry with no `->url()` is untouched. An explicit
+| `->color()` (`.fi-color*`) still wins, as does a badge's own colour.
+*/
+.fi-in-entry a.fi-in-entry-content {
+    color: var(--color-info);
+
+    & .fi-in-text-item:not([class*="fi-color"]) {
+        color: var(--color-info);
+
+        /* The "opens in a new tab" arrow and friends ride along with the text. */
+        & > .fi-icon {
+            color: inherit;
+        }
+    }
+
+    &:hover {
+        @apply underline;
+
+        color: --alpha(var(--color-info) / 70%);
+
+        & .fi-in-text-item:not([class*="fi-color"]) {
+            color: --alpha(var(--color-info) / 70%);
+        }
+    }
+}

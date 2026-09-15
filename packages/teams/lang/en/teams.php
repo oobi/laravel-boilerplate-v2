@@ -218,6 +218,7 @@ return [
         'updated' => 'Last updated',
         'slug' => 'Slug',
         'slug_help' => 'The :team’s URL segment.',
+        'url' => 'URL',
         'active' => 'Active',
         'inactive' => 'Inactive',
         'add' => 'Add :Team',
