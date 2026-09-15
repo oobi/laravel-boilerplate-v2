@@ -47,6 +47,14 @@ class ResolveTeamContext
         $context = app(TeamContext::class);
         $context->set($team);
 
+        // In host mode the team is implied by the request host, so the route has a
+        // {teamHost} parameter but no {team} one — a page component's
+        // mount(Team $team) would then receive a blank model and every
+        // membership-gated check would fail. Expose the resolved team as the
+        // `team` route parameter so mount() gets it in both modes (path mode
+        // already binds it; re-setting the same instance is a no-op).
+        $request->route()?->setParameter('team', $team);
+
         try {
             return $next($request);
         } finally {

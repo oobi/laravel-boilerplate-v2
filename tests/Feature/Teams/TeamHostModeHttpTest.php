@@ -9,6 +9,7 @@ use Concise\Teams\Models\Team;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\URL;
 use ReflectionProperty;
 use Tests\TestCase;
 
@@ -112,6 +113,44 @@ class TeamHostModeHttpTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->get('http://acme.'.self::BASE.'/dashboard')
             ->assertForbidden();
+    }
+
+    public function test_an_authorised_member_can_open_the_membership_gated_pages(): void
+    {
+        // Regression: in host mode the team is implied by the host, not a {team}
+        // route parameter, so a page component's mount(Team $team) has no binding
+        // to resolve — it must still receive the resolved team, or every
+        // membership-gated page 403s even for a fully authorised member while the
+        // ungated dashboard works. (Reported via impersonation: an impersonated
+        // owner could see the dashboard but 403'd on members/settings.)
+        Team::createRole('Manager', [TeamPermission::MANAGE_MEMBERS, TeamPermission::UPDATE_TEAM]);
+        $user = User::factory()->create();
+        $team = Team::factory()->create(['slug' => 'acme']);
+        $team->addMember($user, 'Manager');
+
+        $this->actingAs($user)->get('http://acme.'.self::BASE.'/members')->assertOk();
+        $this->actingAs($user)->get('http://acme.'.self::BASE.'/settings')->assertOk();
+    }
+
+    public function test_impersonating_an_owner_lands_them_able_to_use_the_team(): void
+    {
+        // The reported scenario end to end: a system admin impersonates a team
+        // owner who holds a roster-managing role, landing on the members page —
+        // which must open, not 403.
+        Team::createRole('Manager', [TeamPermission::MANAGE_MEMBERS]);
+        $owner = User::factory()->create();
+        $team = Team::factory()->create(['slug' => 'acme']);
+        $team->addMember($owner, 'Manager');
+        $admin = User::factory()->superAdmin()->create();
+
+        $membersUrl = 'http://acme.'.self::BASE.'/members';
+
+        $this->actingAs($admin)
+            ->get(URL::signedRoute('users.impersonate', ['id' => $owner->id, 'next' => $membersUrl]))
+            ->assertRedirect($membersUrl);
+
+        // Now acting as the impersonated owner, the members page opens.
+        $this->get($membersUrl)->assertOk();
     }
 
     public function test_an_unknown_team_host_is_not_found(): void
