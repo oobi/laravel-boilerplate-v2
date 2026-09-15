@@ -188,6 +188,10 @@ return [
     'domains' => [
         'title' => 'Domains',
         'description' => 'Custom domains that point to :name.',
+        // Shown as a persistent warning banner at the top of the domains screen: the
+        // feature is a placeholder until the cross-domain session handoff is built.
+        'placeholder_title' => 'Custom domains aren’t finished yet',
+        'placeholder_body' => 'This is an incomplete placeholder for future development. :Teams reached on their own registrable domain (e.g. acme.com) can’t yet establish a session — sign-in loops and members can’t use them. Only the platform subdomain ({slug}.base) works end to end. Don’t rely on this in production; see the deployment docs (docs/teams-domains.md) for what’s still needed.',
         'search' => 'Search domains…',
         'empty' => 'No domains yet',
         'domain' => 'Domain',

@@ -170,6 +170,16 @@ class DomainManagementTest extends TestCase
             ->assertActionVisible('addDomain');
     }
 
+    public function test_the_domains_screen_warns_that_custom_domains_are_incomplete(): void
+    {
+        // No ambiguity for anyone who switches the tier on: the view says so.
+        $this->enableCustomDomains();
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageDomains::class, ['team' => Team::factory()->create()])
+            ->assertSee(team_trans('domains.placeholder_title'));
+    }
+
     public function test_domains_can_be_searched_and_filtered_by_status(): void
     {
         $this->enableCustomDomains();
