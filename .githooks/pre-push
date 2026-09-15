@@ -17,7 +17,7 @@
 require_php
 
 echo "Running tests before push..."
-composer test:summary
+composer test
 
 if [ $? -ne 0 ]; then
     echo ""
