@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
 /**
  * A thin cache wrapper that namespaces every key to one team
  * (`teams:{team_id}:…`), so no team can read or clobber another team's cached
- * data (~dev/TEAMS_TIER_SCOPE.md §5.5). Key-prefixing (not cache tags) is used so
+ * data. Key-prefixing (not cache tags) is used so
  * it works on every cache driver, including file and database.
  */
 class TeamCache

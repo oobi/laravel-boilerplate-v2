@@ -22,7 +22,7 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
         $this->get('/profile/two-factor')->assertRedirect('/login');
     }
 
-    /** The profile is not an admin page — any signed-in, verified user reaches it (see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md). */
+    /** The profile is not an admin page — any signed-in, verified user reaches it. */
     public function test_users_without_admin_access_can_view_the_two_factor_page(): void
     {
         $user = User::factory()->create();

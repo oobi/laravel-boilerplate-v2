@@ -9,10 +9,9 @@ use Concise\Teams\Models\Team;
 use Illuminate\Contracts\Filesystem\Filesystem;
 
 /**
- * The single source of truth for "which team are we acting as" (see
- * ~dev/TEAMS_TIER_SCOPE.md §5.5): the scope for team-confined filesystem and
- * cache access, and for any query scoping a project adds. Bound as a
- * singleton; reached via the CurrentTeam facade.
+ * The single source of truth for "which team are we acting as": the scope for
+ * team-confined filesystem and cache access, and for any query scoping a project
+ * adds. Bound as a singleton; reached via the CurrentTeam facade.
  *
  * Permissions are NOT scoped by this context. A member's team role is read
  * from the membership pivot (Team::memberHasPermission), and system roles are

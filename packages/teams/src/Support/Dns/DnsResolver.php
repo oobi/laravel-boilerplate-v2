@@ -6,8 +6,7 @@ namespace Concise\Teams\Support\Dns;
 
 /**
  * The DNS boundary domain verification depends on. Injected so verification is
- * testable without real network lookups — bind FakeDnsResolver in tests. See
- * ~dev/TEAMS_DOMAINS_SCOPE.md (5h.2).
+ * testable without real network lookups — bind FakeDnsResolver in tests.
  */
 interface DnsResolver
 {

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
  * but reusing the same NavItem/NavGroup builders so add-ons contribute team nav
  * the identical way. It differs only in resolution: abilities are evaluated
  * against the CURRENT team (`can($ability, $team)`), and item routes are rendered
- * with the team slug by the team sidebar partial. See ~dev/TEAMS_TIER_SCOPE.md §7 / OQ2.
+ * with the team slug by the team sidebar partial. See .ai/rules/teams.md.
  */
 class TeamNavRegistry
 {

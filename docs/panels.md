@@ -1,8 +1,9 @@
 # Panels
 
 How the Users Show/Edit admin pages are composed, and how to add to them
-without editing core files. See `~BOILERPLATE_v2.md` for why this exists
-(Teams must be able to add to these pages as an opt-in, additive layer).
+without editing core files. This composition exists so opt-in additive layers
+like the teams tier can add their own cards/fields to these pages without
+patching core.
 
 ## The idea
 

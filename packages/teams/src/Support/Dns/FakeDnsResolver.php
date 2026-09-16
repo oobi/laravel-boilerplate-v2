@@ -7,7 +7,7 @@ namespace Concise\Teams\Support\Dns;
 /**
  * An in-memory DnsResolver for tests: seed it with host => TXT values and bind
  * it in place of SystemDnsResolver. Shipped with the tier so a consuming app's
- * tests can drive domain verification the same way. See ~dev/TEAMS_DOMAINS_SCOPE.md.
+ * tests can drive domain verification the same way. See docs/teams-domains.md.
  */
 class FakeDnsResolver implements DnsResolver
 {

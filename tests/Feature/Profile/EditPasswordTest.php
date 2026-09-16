@@ -26,7 +26,7 @@ class EditPasswordTest extends TestCase
         $this->get('/profile/password')->assertRedirect('/login');
     }
 
-    /** The profile is not an admin page — any signed-in, verified user reaches it (see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md). */
+    /** The profile is not an admin page — any signed-in, verified user reaches it. */
     public function test_users_without_admin_access_can_view_the_password_page(): void
     {
         $user = User::factory()->create();

@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
  * unless config('teams.domains.custom_domains') (over host mode). A domain is
  * `pending` until it proves
  * control via a DNS TXT record carrying its verification token; only a verified
- * domain (verified_at set) ever resolves (OQ3). See ~dev/TEAMS_DOMAINS_SCOPE.md.
+ * domain (verified_at set) ever resolves. See docs/teams-domains.md.
  *
  * @property int $id
  * @property int $team_id

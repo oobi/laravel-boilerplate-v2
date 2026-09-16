@@ -36,7 +36,7 @@ use Livewire\Component;
  * page and the system admin's team Settings tab. Access is runtime
  * authorization: a system admin always manages; otherwise the `MANAGE_DOMAINS`
  * team permission (held via a role — ownership grants no bypass). Only active
- * when `teams.domains.custom_domains` (over host mode). See ~dev/TEAMS_DOMAINS_SCOPE.md.
+ * when `teams.domains.custom_domains` (over host mode). See docs/teams-domains.md.
  *
  * @property Team $team
  */

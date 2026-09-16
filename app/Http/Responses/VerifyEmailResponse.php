@@ -13,8 +13,7 @@ use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract
 /**
  * After verifying their email, land the (now verified) user in the app — their
  * team, the admin dashboard, or onboarding ({@see Destination::home}) — not on
- * the public landing that `config('fortify.home')` would give. See
- * ~dev/TEAMS_DOMAINS_HOST_SPLIT.md §3.1.
+ * the public landing that `config('fortify.home')` would give.
  */
 class VerifyEmailResponse implements VerifyEmailResponseContract
 {

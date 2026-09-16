@@ -27,7 +27,7 @@ use Lab404\Impersonate\Controllers\ImpersonateController;
  * The two routes are split across hosts in routes/web.php: `take` on the admin
  * host (staff only), `leave` on the account host — always reachable, so an
  * impersonator can exit even when off the fenceable admin network
- * (~dev/TEAMS_DOMAINS_HOST_SPLIT.md §5). `leave` itself is lab404's, unchanged.
+ * (see docs/teams-domains.md). `leave` itself is lab404's, unchanged.
  */
 class ImpersonationController extends ImpersonateController
 {

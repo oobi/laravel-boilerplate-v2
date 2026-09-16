@@ -13,8 +13,7 @@ use Illuminate\Support\Str;
  * (per-team verified custom domains). Whether either is active is config
  * (infra-tied: wildcard DNS/TLS); *who* may manage a
  * team's domains is runtime authorization — the MANAGE_DOMAINS team permission
- * (held via a role) and system admins — not config. See ~dev/TEAMS_DOMAINS_SCOPE.md
- * and ~dev/TEAMS_DOMAINS_HOST_SPLIT.md.
+ * (held via a role) and system admins — not config. See docs/teams-domains.md.
  *
  * When enabled, the overlay switches routing from path mode (/{prefix}/{slug})
  * to host mode: three hosts, not one. `admin_host` is the admin area ONLY —
@@ -37,7 +36,7 @@ final class DomainPolicy
      * custom-domains switch. The master `enabled()` gate alone gives every team
      * its `{slug}.base` subdomain; this second tier adds routing on a team's own
      * verified domain (and its management UI). Off, the Domain model is dormant
-     * and only `{slug}.base` resolves. See config/teams.php + ~dev/TEAMS_DOMAINS_HOST_SPLIT.md §4.
+     * and only `{slug}.base` resolves. See config/teams.php + docs/teams-domains.md.
      */
     public static function customDomainsEnabled(): bool
     {
@@ -49,7 +48,7 @@ final class DomainPolicy
      * from in host mode (never derived from APP_URL). Nothing outside
      * `ACCESS_ADMIN_PANEL` (or the impersonation leave route, deliberately
      * exempted from that gate) may ever bind here; that's what makes the host
-     * safe to fence to a VPN/IP range later. See ~dev/TEAMS_DOMAINS_HOST_SPLIT.md.
+     * safe to fence to a VPN/IP range later. See docs/teams-domains.md.
      */
     public static function adminHost(): ?string
     {
@@ -79,7 +78,7 @@ final class DomainPolicy
      * The route pattern for the `{teamHost}` domain parameter: a full dotted host,
      * excluding the admin host, the account host, and the apex. Without the
      * exclusion the wildcard team route would shadow those and 404 them for a
-     * signed-in user (~dev/TEAMS_DOMAINS_SCOPE.md §5).
+     * signed-in user.
      */
     public static function teamHostPattern(): string
     {

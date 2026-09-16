@@ -48,7 +48,7 @@ tab/UI are dormant, and only `{slug}.{base}` resolves.
 > Who may manage a team's domains is a separate, runtime question — the
 > `MANAGE_DOMAINS` team permission, granted through a role — not configuration.
 > It (and the Domains tab) only appears while the custom-domains tier is on. See
-> the team/admin **Domains** tab and `~dev/TEAMS_DOMAINS_SCOPE.md §7`.
+> the team/admin **Domains** tab and `.ai/rules/teams.md`.
 
 ## The three control hosts (+ team hosts)
 
@@ -135,8 +135,8 @@ is the crux of why custom domains are unfinished.
 ## Completing custom domains
 
 To make a team usable on its own registrable domain, a **cross-domain session
-handoff** has to be built (tracked as 5h.8 in `~dev/TEAMS_DOMAINS_HOST_SPLIT.md`
-§4). Because it extends the authentication boundary onto tenant-controlled
+handoff** has to be built (a deferred item). Because it extends the
+authentication boundary onto tenant-controlled
 domains, it must be built to the security bar below or not at all — a half-built
 version is worse than none, since every project inherits it:
 

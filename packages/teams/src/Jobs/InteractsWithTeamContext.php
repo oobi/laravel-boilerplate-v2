@@ -11,7 +11,7 @@ use Concise\Teams\Support\TeamContext;
 /**
  * Makes a queued job carry its team scope explicitly and re-establish it when it
  * runs, instead of trusting ambient context to survive serialization — the queue
- * being the classic cross-team leakage vector (~dev/TEAMS_TIER_SCOPE.md §5.5).
+ * being the classic cross-team leakage vector.
  *
  * Capture the scope at dispatch (in the job's constructor):
  *

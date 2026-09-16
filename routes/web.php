@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 // account_host (default the apex, overridable for a headless-apex deployment)
 // is the account layer everyone needs (auth, profile, team picker/onboarding,
 // invitations — see routes/teams.php); admin_host is the admin area ONLY —
-// nothing else may ever link to it (see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md).
+// nothing else may ever link to it (see docs/teams-domains.md).
 // config() is null-safe when the teams package is absent, so every host is
 // null in path mode and the groups below carry no host constraint — the default.
 $hostMode = (bool) config('teams.domains.enabled', false);
@@ -81,7 +81,7 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
 
 // Leaving impersonation lives on the ACCOUNT host, never the (fenceable) admin
 // host, so an impersonator can always exit — even off the admin network
-// (~dev/TEAMS_DOMAINS_HOST_SPLIT.md §5). Behind `auth` only: the masqueraded
+// (see docs/teams-domains.md). Behind `auth` only: the masqueraded
 // user may be a non-admin. $accountHost is null in path mode (unconstrained).
 Route::domain($accountHost)->middleware('auth')->prefix('users')->name('users.')->group(function (): void {
     Route::get('impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');

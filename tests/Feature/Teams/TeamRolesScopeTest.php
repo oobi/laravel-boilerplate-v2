@@ -25,7 +25,7 @@ use Tests\TestCase;
 
 /**
  * Team roles are centrally defined and scoped apart from system roles, so the
- * two schemes never bleed into each other (~dev/TEAMS_TIER_SCOPE.md §5). The
+ * two schemes never bleed into each other (see docs/permissions.md). The
  * seeder tests below invoke TeamRolesSeeder directly because it is the unit
  * under test — not as fixture setup (see tests.md).
  */

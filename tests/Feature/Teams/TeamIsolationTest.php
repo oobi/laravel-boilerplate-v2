@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * Safety-critical: a team must never reach another team's files or cache, and
- * scoped primitives fail loud without a team (~dev/TEAMS_TIER_SCOPE.md §5.5).
+ * scoped primitives fail loud without a team.
  */
 class TeamIsolationTest extends TestCase
 {

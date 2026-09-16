@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
  * binding in path mode. The team area is members-only by design — system admins
  * manage teams from the separate system "manage all teams" area, not by entering
  * a team they don't belong to (mirrors Buzz's EnsureTeamMember). See
- * ~dev/TEAMS_TIER_SCOPE.md §6/§7 and ~dev/TEAMS_DOMAINS_SCOPE.md §4.
+ * docs/teams-domains.md and .ai/rules/teams-routes.md.
  */
 class ResolveTeamContext
 {

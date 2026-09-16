@@ -1,8 +1,7 @@
 # Architecture overview
 
 A quick orientation for a new developer — what's installed and what it's for.
-Not exhaustive; see `~BOILERPLATE_v2.md` for the full rationale/history behind
-these choices.
+Not exhaustive.
 
 ## Core stack
 
@@ -43,13 +42,16 @@ these choices.
   is spatie/laravel-permission (above); this in-house layer is only the
   super-admin bypass and the relationship-aware Policy rules (self-checks,
   "can't touch a super admin") that a permission table alone can't express.
-- **Teams** — not built yet. Planned as an opt-in, install-time-only
-  additive layer (see `~BOILERPLATE_v2.md` Phase 5): its own models,
-  migrations, and screens, authored so core (`User`, RBAC, admin) never has
-  to be patched to support it. Team roles are spatie Role rows (scope `team`)
-  holding permissions, so there is no second role system; a member's assignment
-  is the membership's own pivot (`team_user_role`), and spatie's teams feature
-  stays off so system roles resolve exactly as spatie documents.
+- **Teams** — an opt-in, in-repo additive layer, shipped as the
+  `packages/teams` path package (namespace `Concise\Teams`) and active by
+  default: its own models, migrations, and screens, authored so core (`User`,
+  RBAC, admin) never has to be patched to support it. Team roles are spatie
+  Role rows (scope `team`) holding permissions, so there is no second role
+  system; a member's assignment is the membership's own pivot (`team_user_role`),
+  and spatie's teams feature stays off so system roles resolve exactly as spatie
+  documents. Removing or ejecting the tier is driven by `// teams:start/end`
+  markers — see `docs/teams-distribution.md`; its subdomain/custom-domain
+  routing is in `docs/teams-domains.md`.
 - **Admin page composition (panels)** — Show/Edit admin pages are built
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own
@@ -69,8 +71,7 @@ shell, reachable by any signed-in, verified user via `/profile` — admin or
 not. Only the admin area proper (dashboard, users, roles, …) sits behind
 `ACCESS_ADMIN_PANEL`. In the teams tier's host mode this also means the
 account routes (auth, profile, the team picker) are quarantined onto their
-own host, separate from the admin-only host — see
-`~dev/TEAMS_DOMAINS_HOST_SPLIT.md`.
+own host, separate from the admin-only host — see `docs/teams-domains.md`.
 
 A **customer-facing frontend is deliberately out of scope**: a real app's public
 UI is unpredictable (Blade, Livewire, Inertia, or a headless Nuxt/SPA), so the

@@ -71,7 +71,7 @@ class DomainManagementTest extends TestCase
      * admin_host and account_host must never be claimable as a custom domain
      * either — checked as whole-host equality (not just the leftmost-label
      * blacklist), so a non-reserved label still can't be used to squat on
-     * either host (~dev/TEAMS_DOMAINS_HOST_SPLIT.md D-DOM-5).
+     * either host (see docs/teams-domains.md).
      */
     public function test_it_rejects_the_admin_host(): void
     {

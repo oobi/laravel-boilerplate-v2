@@ -14,7 +14,7 @@ return [
     | the UI and lang lines (as :team / :member / :owner placeholders, plus their
     | plural and capitalised forms), so a project can call a team a "salon", its
     | members "stylists" and its owner a "manager" without renaming any class or
-    | table. See ~dev/TEAMS_TIER_SCOPE.md §8.
+    | table. See docs/config-recipes.md.
     |
     */
 
@@ -160,7 +160,7 @@ return [
     |
     | When true, every user is given a personal team on registration. Off by
     | default: users may belong to zero teams and onboarding handles the empty
-    | state (see ~dev/TEAMS_TIER_SCOPE.md OQ1).
+    | state.
     |
     */
 
@@ -171,9 +171,9 @@ return [
     | Isolation
     |--------------------------------------------------------------------------
     |
-    | Per-team filesystem and cache isolation (safety-critical — see
-    | ~dev/TEAMS_TIER_SCOPE.md §5.5). Team files are confined to
-    | `teams/{team_id}` on the base disk; cache keys are namespaced per team.
+    | Per-team filesystem and cache isolation (safety-critical). Team files are
+    | confined to `teams/{team_id}` on the base disk; cache keys are namespaced
+    | per team.
     | Both are fail-loud: a scoped call without a resolved team throws.
     |
     */
@@ -205,7 +205,7 @@ return [
     |    has effect when `enabled` is on. A verified custom domain on a *different*
     |    registrable domain can't share the `.{base}` session cookie, so a member
     |    there can't yet hold a session (the session-handoff work is deferred — see
-    |    ~dev/TEAMS_DOMAINS_HOST_SPLIT.md §4); leave it off unless teams live on the
+    |    docs/teams-domains.md); leave it off unless teams live on the
     |    same registrable domain as `base`. With it off, the Domain model and its
     |    UI/verification are dormant and no host but `{slug}.{base}` resolves.
     |
@@ -220,7 +220,7 @@ return [
     |    e.g. `admin.myapp.com` — dashboard, users, roles, the system "all teams"
     |    area, impersonation. Never derived from APP_URL — it is stated so a team
     |    can never claim it. Nothing else routes here: no login form, no profile,
-    |    no invitation link — see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md for why (it's
+    |    no invitation link — see docs/teams-domains.md for why (it's
     |    what makes the host safe to fence to a VPN/IP range later).
     |  - `base`         the registrable base every team's default subdomain hangs
     |    off, e.g. `myapp.com` → a team is reachable at `{slug}.myapp.com` with no

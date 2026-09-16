@@ -33,7 +33,6 @@ use Livewire\Component;
  * and always to the primary owner (TeamPolicy::viewSettings — a responsibility
  * floor, not a bypass: the details form is still read-only without `update`).
  * Custom domains, when that tier is on, are their own page ({@see Domains}).
- * See ~dev/TEAMS_DOMAINS_SCOPE.md.
  */
 #[Layout('teams::layouts.team')]
 class Settings extends Component implements HasActions, HasSchemas

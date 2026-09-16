@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
 
         // teams:start — teams tier role seeder (packages/teams). The class_exists
         // guard keeps this safe if the fence is ever left in place after removal;
-        // the uninstaller strips the whole block. See ~dev/TEAMS_TIER_SCOPE.md §11.5.
+        // the uninstaller strips the whole block. See docs/teams-distribution.md.
         if (class_exists(TeamRolesSeeder::class)) {
             $this->call(TeamRolesSeeder::class);
         }

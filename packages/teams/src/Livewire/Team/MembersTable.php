@@ -154,7 +154,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     // independent of team-management — the action authorizes itself per
                     // row, and the group's ->visible below also opens the menu for a
                     // viewer who can *only* impersonate, so it lives in the ⋮ menu with
-                    // the rest (see ~dev/TEAMS_DOMAINS_HOST_SPLIT.md).
+                    // the rest.
                     Action::make('impersonate')
                         ->label(__('admin.impersonate'))
                         ->icon('heroicon-o-finger-print')
