@@ -116,7 +116,7 @@ class TeamRelabelTest extends TestCase
         $this->actingAs($owner)
             ->get(route('team.members', ['team' => $team->slug]))
             ->assertOk()
-            ->assertSee('Stylists')          // the ":Members" page heading
+            ->assertSee('stylists')          // the ":members" word in the page description
             ->assertSee('Primary Manager');  // the ":Owner" badge
     }
 

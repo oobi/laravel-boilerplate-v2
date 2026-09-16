@@ -72,6 +72,27 @@ class TeamInvitationsTest extends TestCase
             ->assertDontSee(route('team.invitations', ['team' => $team->slug]));
     }
 
+    public function test_the_members_page_offers_invitations_as_a_tab_to_an_inviter(): void
+    {
+        // Invitations is a tab beside Members, not its own sidebar item: the
+        // Members page surfaces the Invitations tab for an INVITE holder (the
+        // owner's default role carries it).
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+
+        // No standalone Invitations item in the sidebar on the dashboard…
+        $this->actingAs($owner)
+            ->get(route('team.dashboard', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertDontSee(route('team.invitations', ['team' => $team->slug]));
+
+        // …it appears as a tab on the Members page instead.
+        $this->actingAs($owner)
+            ->get(route('team.members', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee(route('team.invitations', ['team' => $team->slug]), false);
+    }
+
     public function test_invitations_are_unavailable_when_member_invitations_are_off(): void
     {
         config(['teams.invitations.members' => false]);

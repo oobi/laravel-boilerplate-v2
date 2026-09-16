@@ -111,6 +111,21 @@ class TeamMembersTest extends TestCase
             ->assertOk();
     }
 
+    public function test_the_sidebar_groups_pages_under_a_management_section(): void
+    {
+        // The team sidebar mirrors the admin shell: Dashboard stands alone and
+        // the rest live under one "Management" group (Members + Settings).
+        $owner = User::factory()->create();
+        $team = $this->team($owner);
+
+        $this->actingAs($owner)
+            ->get(route('team.dashboard', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertSee('Management')
+            ->assertSee(route('team.members', ['team' => $team->slug]), false)
+            ->assertSee(route('team.settings', ['team' => $team->slug]), false);
+    }
+
     public function test_a_regular_member_cannot_manage_members(): void
     {
         $owner = User::factory()->create();

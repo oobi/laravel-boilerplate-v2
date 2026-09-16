@@ -222,17 +222,9 @@ class DomainManagementTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_a_manage_domains_holder_opens_the_domains_page(): void
-    {
-        $this->enableCustomDomains();
-        $owner = User::factory()->create();
-        $team = Team::factory()->ownedBy($owner)->create();
-
-        Livewire::actingAs($owner)
-            ->test(Domains::class, ['team' => $team])
-            ->assertOk()
-            ->assertSee(team_trans('nav.domains'));
-    }
+    // A holder opening the full Domains page (which now renders the Settings/Domains
+    // tab bar, and so host URLs) is covered end-to-end by TeamHostModeHttpTest —
+    // the page's own tabs can't generate host links against path-mode routes here.
 
     public function test_a_member_without_the_permission_cannot_open_the_domains_page(): void
     {
@@ -247,14 +239,21 @@ class DomainManagementTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_the_sidebar_offers_no_domains_link_when_the_tier_is_off(): void
+    public function test_no_domains_tab_or_link_is_offered_when_the_tier_is_off(): void
     {
-        // The nav item is registered at boot only when custom domains are on (off here).
+        // Domains is a tab on the Settings page, shown only when the tier is on
+        // (off here) — so neither the dashboard sidebar nor the Settings page
+        // links to it.
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
         $this->actingAs($owner)
             ->get(route('team.dashboard', ['team' => $team->slug]))
+            ->assertOk()
+            ->assertDontSee(route('team.domains', ['team' => $team->slug]));
+
+        $this->actingAs($owner)
+            ->get(route('team.settings', ['team' => $team->slug]))
             ->assertOk()
             ->assertDontSee(route('team.domains', ['team' => $team->slug]));
     }

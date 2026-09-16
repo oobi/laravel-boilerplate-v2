@@ -197,18 +197,47 @@ class TeamHostModeHttpTest extends TestCase
         $this->get('http://'.self::BASE.'/')->assertOk();
     }
 
-    public function test_the_team_sidebar_links_to_the_domains_tab(): void
+    public function test_the_settings_page_offers_domains_as_a_tab(): void
     {
-        // With the custom-domains tier on, a member holding MANAGE_DOMAINS gets a
-        // Domains item in the team-area sidebar (its own tab, not under Settings).
+        // Domains is now a tab beside Settings, not its own sidebar item: the
+        // sidebar carries Settings (not Domains), and the Settings page surfaces
+        // the Domains tab for a member holding MANAGE_DOMAINS. (MANAGE_DOMAINS
+        // implies VIEW_SETTINGS, so the holder can open the Settings page.)
+        Team::createRole('Domain Admin', [TeamPermission::MANAGE_DOMAINS]);
+        $user = User::factory()->create();
+        $team = Team::factory()->create(['slug' => 'acme']);
+        $team->addMember($user, 'Domain Admin');
+
+        // The sidebar links to Settings, not Domains, from the dashboard.
+        $this->actingAs($user)
+            ->get('http://acme.'.self::BASE.'/dashboard')
+            ->assertOk()
+            ->assertSee('http://acme.'.self::BASE.'/settings')
+            ->assertDontSee('http://acme.'.self::BASE.'/domains');
+
+        // The Domains tab appears once on the Settings page.
+        $this->actingAs($user)
+            ->get('http://acme.'.self::BASE.'/settings')
+            ->assertOk()
+            ->assertSee('http://acme.'.self::BASE.'/domains');
+    }
+
+    public function test_a_manage_domains_holder_opens_the_domains_page(): void
+    {
+        // The full Domains page (which renders the Settings/Domains tab bar) opens
+        // for a member holding MANAGE_DOMAINS — covered here, in real host mode,
+        // since its tabs generate host URLs (see DomainManagementTest's note).
         Team::createRole('Domain Admin', [TeamPermission::MANAGE_DOMAINS]);
         $user = User::factory()->create();
         $team = Team::factory()->create(['slug' => 'acme']);
         $team->addMember($user, 'Domain Admin');
 
         $this->actingAs($user)
-            ->get('http://acme.'.self::BASE.'/dashboard')
+            ->get('http://acme.'.self::BASE.'/domains')
             ->assertOk()
+            ->assertSee(team_trans('domains.title'))
+            // Both sibling tabs are present, linking back to Settings and to Domains.
+            ->assertSee('http://acme.'.self::BASE.'/settings')
             ->assertSee('http://acme.'.self::BASE.'/domains');
     }
 

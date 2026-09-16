@@ -76,6 +76,9 @@ return [
     ],
 
     'settings' => [
+        // The Settings section heading (Settings + Domains tabs) — relabels with the tier, e.g. "Salon Settings".
+        'heading' => ':Team Settings',
+        'description' => 'Manage :name’s details and ownership.',
         'save' => 'Save changes',
         'saved' => 'Settings saved',
         'slug_warning' => 'Changing this changes your :team’s URL — existing links will break.',
@@ -87,7 +90,9 @@ return [
 
     'members' => [
         'title' => ':Members',
-        'description' => 'Manage who belongs to :name and their roles.',
+        // The Members section heading (Members + Invitations tabs) — relabels with the tier, e.g. "Staff Management".
+        'heading' => ':Member Management',
+        'description' => 'Manage the :members who belong to :name and their roles.',
         'search' => 'Search :members…',
         'empty' => 'No :members found',
         'role' => 'Role',
