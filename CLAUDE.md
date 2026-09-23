@@ -18,3 +18,6 @@ duplicated. Both files below are imported verbatim — edit *them*, not this fil
 - Laravel Boost's MCP server is wired up in `.mcp.json`. If `search-docs`,
   `database-query`, `database-schema`, or `tinker` aren't available, the server
   didn't start — say so rather than falling back to raw SQL or shell guesswork.
+
+## Comment Policy
+- **No em dashes**: never use em dashes in code, docs, or copy. Use periods, commas, colons, or rewrite the sentence.
