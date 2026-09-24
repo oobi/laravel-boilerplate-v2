@@ -6,6 +6,7 @@ namespace Concise\Teams\Livewire\Admin\Teams;
 
 use App\Actions\Impersonation\StartImpersonation;
 use App\Enums\SystemPermission;
+use App\Enums\UserAbility;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\InvitationPolicy;
@@ -106,7 +107,7 @@ class ShowTeam extends Component implements HasActions, HasSchemas
             ->modalIcon('heroicon-o-lock-closed')
             ->modalHeading(team_trans('open_team.private'));
 
-        if ($owner !== null && Gate::allows('impersonate', $owner)) {
+        if ($owner !== null && Gate::allows(UserAbility::IMPERSONATE, $owner)) {
             // Land in *this* team as the owner, not their generic post-login home
             // (which, for an admin-capable owner, is the dashboard). Impersonation
             // happens in the action closure (this is the CSRF-protected Livewire
