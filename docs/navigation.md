@@ -26,10 +26,16 @@ class AdminNav
             ->icon('heroicon-o-squares-2x2')
             ->order(0);
 
-        NavRegistry::group('management')
-            ->label(__('Management'))
+        // Ships empty for add-ons to fill; an empty group is never rendered.
+        NavRegistry::group('business')
+            ->label(__('Business'))
             ->can('access admin panel')
-            ->order(10)
+            ->order(10);
+
+        NavRegistry::group('people-access')
+            ->label(__('People & Access'))
+            ->can('access admin panel')
+            ->order(20)
             ->add(
                 NavItem::make('users')
                     ->label(__('Users'))
@@ -51,7 +57,7 @@ class AdminNav
 - **`NavGroup`** — a collapsible section containing a list of `NavItem`s.
   Fetched-or-created via `NavRegistry::group($name)` — calling this with an
   existing name returns the *same* group, which is how add-ons extend a
-  core section like `management` instead of duplicating it.
+  core section like `business` or `people-access` instead of duplicating it.
 
 Both are plain fluent objects — no interface to implement:
 
@@ -69,8 +75,8 @@ Both are plain fluent objects — no interface to implement:
 
 A group's active state is the **union of all its items' `active()` routes**
 unless you give the group an explicit `active(...)` override. This is what
-lets a "Management" section stay open whether the current route is
-`users.*` or (once added) `teams.*` — you never have to maintain that list
+lets a "People & Access" section stay open whether the current route is
+`users.*` or `roles.*` — you never have to maintain that list
 by hand in more than one place.
 
 ## Where add-ons register
@@ -101,7 +107,7 @@ class ThemeDemoServiceProvider extends ServiceProvider
             );
 
         // ...or extend an existing one:
-        // NavRegistry::group('management')->add(NavItem::make('audit')->label('Audit')->route('audit.index'));
+        // NavRegistry::group('people-access')->add(NavItem::make('audit')->label('Audit')->route('audit.index'));
     }
 }
 ```

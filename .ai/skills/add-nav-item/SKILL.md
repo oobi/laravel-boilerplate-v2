@@ -20,7 +20,7 @@ in detail. This skill is the short procedure.
 2. A single link: `NavRegistry::item($name)->label(...)->route(...)->icon(...)->order(...)`.
 3. A link inside a section: `NavRegistry::group($groupName)->add(NavItem::make($name)->label(...)->route(...)->icon(...))`.
    Calling `group()` with an existing name returns the *same* group — use
-   this to add into `management` etc. rather than creating a duplicate
+   this to add into `business` or `people-access` rather than creating a duplicate
    section.
 4. Gate visibility with `->can('permission-name')` (a `SystemPermission`
    value) on the item or group — omit it entirely for always-visible.

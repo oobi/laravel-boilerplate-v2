@@ -33,11 +33,25 @@ class NavGroupRenderingTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSeeInOrder([
-                'Management',
+                'People &amp; Access',
                 'border-t border-base-300',
                 'Test Group',
                 'Test Item',
             ], false);
+    }
+
+    public function test_core_sections_render_business_before_people_and_access(): void
+    {
+        NavRegistry::group('business')->add(
+            NavItem::make('business-item')->label('Business Item')->route('dashboard')->icon('heroicon-o-home'),
+        );
+
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSeeInOrder(['Business', 'Business Item', 'People &amp; Access', 'Users', 'Roles'], false);
     }
 
     public function test_item_level_permission_hides_only_that_item(): void
@@ -77,7 +91,7 @@ class NavGroupRenderingTest extends TestCase
 
     public function test_addon_can_append_an_item_to_an_existing_group(): void
     {
-        NavRegistry::group('management')->add(
+        NavRegistry::group('people-access')->add(
             NavItem::make('addon-item')->label('Addon Item')->route('dashboard')->icon('heroicon-o-home'),
         );
 

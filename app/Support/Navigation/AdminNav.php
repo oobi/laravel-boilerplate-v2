@@ -20,10 +20,16 @@ class AdminNav
             ->icon('heroicon-o-squares-2x2')
             ->order(0);
 
-        NavRegistry::group('management')
-            ->label(__('Management'))
+        // Ships empty: add-ons (e.g. the teams tier) add to it, and an empty group is never rendered.
+        NavRegistry::group('business')
+            ->label(__('Business'))
             ->can(SystemPermission::ACCESS_ADMIN_PANEL)
-            ->order(10)
+            ->order(10);
+
+        NavRegistry::group('people-access')
+            ->label(__('People & Access'))
+            ->can(SystemPermission::ACCESS_ADMIN_PANEL)
+            ->order(20)
             ->add(
                 NavItem::make('users')
                     ->label(__('Users'))

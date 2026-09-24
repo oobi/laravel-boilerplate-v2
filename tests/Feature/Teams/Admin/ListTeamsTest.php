@@ -198,14 +198,16 @@ class ListTeamsTest extends TestCase
         $this->assertModelExists($kept);
     }
 
-    public function test_the_sidebar_links_to_teams_for_managers_only(): void
+    public function test_the_sidebar_links_to_teams_under_business_for_managers_only(): void
     {
         $this->actingAs($this->teamManager())
             ->get(route('dashboard'))
-            ->assertSee(route('teams.index'));
+            ->assertSeeInOrder(['Business', route('teams.index')], false);
 
+        // Teams is Business's only item, so without it the whole section is dropped.
         $this->actingAs(User::factory()->support()->create())
             ->get(route('dashboard'))
-            ->assertDontSee(route('teams.index'));
+            ->assertDontSee(route('teams.index'))
+            ->assertDontSee('Business');
     }
 }

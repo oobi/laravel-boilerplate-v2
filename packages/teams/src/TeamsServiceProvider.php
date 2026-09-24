@@ -154,7 +154,7 @@ class TeamsServiceProvider extends ServiceProvider
 
     /**
      * The system admin side (scope §7 "manage all teams"): a Teams entry in the
-     * admin sidebar's Management group and the memberships panel on the user
+     * admin sidebar's Business group and the memberships panel on the user
      * Show page — both contributed through core's registries, so no core nav
      * or panel file changes.
      */
@@ -205,7 +205,7 @@ class TeamsServiceProvider extends ServiceProvider
 
     private function registerSystemAdminArea(): void
     {
-        NavRegistry::group('management')->add(
+        NavRegistry::group('business')->add(
             NavItem::make('teams')
                 ->label(TeamLabels::plural())
                 ->route('teams.index')
