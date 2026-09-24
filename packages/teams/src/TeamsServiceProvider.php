@@ -14,6 +14,7 @@ use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Livewire\Admin\UserMemberships;
 use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Livewire\Team\ManageOwnership;
 use Concise\Teams\Livewire\Team\MembersTable;
@@ -87,6 +88,7 @@ class TeamsServiceProvider extends ServiceProvider
         Livewire::component('teams-pending-invitations', PendingInvitations::class);
         Livewire::component('teams-manage-domains', ManageDomains::class);
         Livewire::component('teams-manage-ownership', ManageOwnership::class);
+        Livewire::component('teams-user-memberships', UserMemberships::class);
 
         Gate::policy(Team::class, TeamPolicy::class);
 

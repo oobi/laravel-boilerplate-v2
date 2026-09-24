@@ -133,3 +133,38 @@ th.fi-ta-selection-cell,
 .fi-pagination {
     background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
 }
+
+/*
+| Filament only swaps Previous/Next for page numbers once the pagination bar
+| is 56rem wide (@4xl), so a table in a card (e.g. a Show page panel) never
+| gets page numbers. Switch at 48rem instead; the bar still fits there.
+*/
+@container (min-width: 48rem) {
+    .fi-pagination:not(.fi-simple) .fi-pagination-previous-btn,
+    .fi-pagination:not(.fi-simple) .fi-pagination-next-btn {
+        display: none;
+    }
+
+    .fi-pagination .fi-pagination-overview {
+        display: inline;
+    }
+
+    .fi-pagination .fi-pagination-items {
+        display: flex;
+    }
+}
+
+/*
+| Previous/Next are Filament "gray" buttons, which filament-buttons.css turns
+| solid neutral. In the pagination bar they should match the page-number
+| group beside them instead: a light outlined control.
+*/
+.fi-pagination .fi-btn:not(.fi-outlined):not(.fi-color) {
+    background-color: var(--color-base-100);
+    color: var(--color-base-content);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-base-content) 15%, transparent);
+}
+
+.fi-pagination .fi-btn:not(.fi-outlined):not(.fi-color):hover {
+    background-color: var(--color-base-200);
+}
