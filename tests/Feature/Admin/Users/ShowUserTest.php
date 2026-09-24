@@ -57,6 +57,22 @@ class ShowUserTest extends TestCase
         $response->assertSee('Jane Doe');
     }
 
+    public function test_a_users_name_is_escaped_in_the_page_header(): void
+    {
+        // Regression: names are user-supplied at registration, so the page-header
+        // must escape them rather than render raw HTML (stored XSS otherwise).
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create([
+            'first_name' => '<script>alert(1)</script>',
+            'last_name' => 'Doe',
+        ]);
+
+        $this->actingAs($admin)->get("/admin/users/{$target->id}")
+            ->assertOk()
+            ->assertDontSee('<script>alert(1)</script>', false)
+            ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false);
+    }
+
     public function test_support_sees_edit_button_for_a_regular_user_but_not_a_super_admin(): void
     {
         $support = User::factory()->support()->create();
