@@ -60,7 +60,20 @@ server, database, and `.env` belong to that app. The clone already carries
 boilerplate's conventions. When porting a fix, give the session the other
 repo with `/add-dir` instead of running one session across both.
 
-## 4. Send fixes back to the boilerplate
+## 4. Pull in boilerplate updates
+
+Merge upstream regularly during development so the gap never gets large.
+Start from a clean working tree:
+
+```bash
+git fetch upstream && git merge --no-ff upstream/main
+```
+
+Always use `--no-ff` so each upstream sync is a visible merge commit. After
+merging, resolve any conflicts, then run `composer install`, `npm install`,
+`php artisan migrate`, and the test suite before pushing.
+
+## 5. Send fixes back to the boilerplate
 
 Anything generic found on the client project belongs upstream.
 
@@ -89,13 +102,13 @@ git cherry-pick <sha>
 If one commit mixes a generic fix with client work, it can't be cherry-picked
 cleanly, so keep them apart from the start.
 
-## 5. Migrations: additive only once a project is live
+## 6. Migrations: additive only once a project is live
 
 Before release, the boilerplate edits existing migrations instead of adding
 new ones. That stops being safe once a downstream project has a real
 database: an edited migration never re-runs where it has already been
 applied. From then on, every schema change in the boilerplate goes in a
-**new** migration, so `git merge upstream/main` followed by
+**new** migration, so `git merge --no-ff upstream/main` followed by
 `php artisan migrate` brings the client up to date.
 
 ## Checklist
@@ -104,5 +117,6 @@ applied. From then on, every schema change in the boilerplate goes in a
 - [ ] `composer run setup`, `bp:setup`, `bp:make-admin` run
 - [ ] `.env` configured, theme-demo kept or removed
 - [ ] Client features registered from a client service provider
+- [ ] Upstream merged regularly with `git merge --no-ff upstream/main`
 - [ ] Generic fixes land in the boilerplate and are merged back down
 - [ ] Boilerplate schema changes are new migrations from now on
