@@ -10,12 +10,16 @@ use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
 use App\Support\Panels\Contracts\ShowPanel;
+use App\Support\TwoFactor\GracePeriod;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 
-/** Two-factor authentication status, with an admin "force disable" escape hatch. */
+/**
+ * Two-factor authentication status, with an admin "force disable" escape hatch,
+ * plus the mandatory-2FA grace status and the reset that lifts a lockout.
+ */
 class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
 {
     use HasPanelMetadata;
@@ -58,12 +62,22 @@ class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
                     ->success()
                     ->send();
             },
+            'reset-2fa-grace' => function (Model $subject): void {
+                Gate::authorize(UserAbility::MANAGE_TWO_FACTOR_GRACE, $subject);
+
+                GracePeriod::reset($subject);
+
+                Notification::make()
+                    ->title(__('admin.two_factor_grace_reset'))
+                    ->success()
+                    ->send();
+            },
         ];
     }
 
-    /** Wiping another user's second factor demands the admin re-enter their own password first. */
+    /** Wiping another user's second factor, or lifting their lockout, demands the admin re-enter their own password first. */
     public function guardedActions(): array
     {
-        return ['force-disable-2fa'];
+        return ['force-disable-2fa', 'reset-2fa-grace'];
     }
 }

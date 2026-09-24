@@ -32,6 +32,10 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Pin mandatory 2FA to its defaults, for the same reason as the teams tier below. -->
+        <env name="AUTH_2FA_GRACE_DAYS" value="14"/>
+        <env name="AUTH_2FA_ENFORCEMENT" value="true"/>
+        <env name="AUTH_2FA_SUPER_ADMINS" value="false"/>
         <!-- Pin the teams tier to its defaults so the suite is deterministic regardless of a
              developer's .env (relabelling, creation mode, invitations). Tests that exercise a
              non-default value override it at runtime with config(). -->

@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Support\Roles\RoleScope;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Theme\DaisyColor;
+use App\Support\TwoFactor\GracePeriod;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -76,6 +77,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
         $this->form->fill([
             'name' => $this->role->name,
             'color' => $this->role->badgeColor()->value,
+            'requires_two_factor' => $this->role->requires_two_factor,
             ...$this->permissionsStateForRole($this->role),
         ]);
     }
@@ -110,6 +112,12 @@ class ManageRoles extends Component implements HasActions, HasSchemas
                                     ->view('filament.forms.components.role-color-swatches')
                                     ->required(),
                             ]),
+
+                        // Only system roles are assigned to users directly, so only they can carry the mandate.
+                        Forms\Components\Toggle::make('requires_two_factor')
+                            ->label(__('admin.require_two_factor'))
+                            ->helperText(trans_choice('admin.require_two_factor_help', GracePeriod::graceDays()))
+                            ->visible(fn (): bool => $this->scopeKey === Role::SYSTEM_SCOPE),
                     ]),
 
                 Section::make(__('admin.permissions'))
@@ -129,6 +137,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
         $this->role->update([
             'name' => $data['name'],
             'color' => $data['color'],
+            'requires_two_factor' => $this->scopeKey === Role::SYSTEM_SCOPE && ($data['requires_two_factor'] ?? false),
         ]);
 
         $this->role->syncPermissions(collect($this->resolvePermissionsFromState($data, $this->role))

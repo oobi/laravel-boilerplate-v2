@@ -61,4 +61,29 @@ class CreateRoleTest extends TestCase
 
         $this->assertSame(DaisyColor::WARNING, Role::findByName('Editor')->color);
     }
+
+    public function test_super_admins_can_create_a_role_that_requires_two_factor(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(CreateRole::class)
+            ->set('data.name', 'Editor')
+            ->set('data.requires_two_factor', true)
+            ->call('create')
+            ->assertHasNoErrors();
+
+        $this->assertTrue(Role::findByName('Editor')->requires_two_factor);
+    }
+
+    public function test_the_two_factor_help_text_pluralises_the_grace_period(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        config()->set('auth.two_factor.grace_days', 1);
+        Livewire::actingAs($admin)->test(CreateRole::class)->assertSee('within 1 day of');
+
+        config()->set('auth.two_factor.grace_days', 14);
+        Livewire::actingAs($admin)->test(CreateRole::class)->assertSee('within 14 days of');
+    }
 }

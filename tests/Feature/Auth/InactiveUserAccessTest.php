@@ -106,19 +106,6 @@ class InactiveUserAccessTest extends TestCase
             ->assertOk();
     }
 
-    public function test_middleware_is_skipped_when_block_inactive_users_is_disabled(): void
-    {
-        config()->set('auth.block_inactive_users', false);
-
-        $user = User::factory()->create();
-
-        $this->actingAs($user);
-        $user->update(['active' => false]);
-
-        $this->get('/')
-            ->assertOk();
-    }
-
     #[DataProvider('sessionDrivers')]
     public function test_impersonation_session_is_ended_when_target_is_deactivated(string $driver): void
     {
@@ -279,19 +266,6 @@ class InactiveUserAccessTest extends TestCase
         $this->post('/two-factor-challenge', $credentials)
             ->assertRedirect('/')
             ->assertSessionMissing('login.id');
-
-        $this->assertAuthenticatedAs($user);
-    }
-
-    public function test_two_factor_challenge_can_complete_when_suspension_blocking_is_disabled(): void
-    {
-        $user = User::factory()->twoFactorEnabled()->create();
-        $this->beginTwoFactorChallenge($user);
-        $user->update(['active' => false]);
-        config()->set('auth.block_inactive_users', false);
-
-        $this->post('/two-factor-challenge', ['recovery_code' => 'test-recovery-code'])
-            ->assertRedirect('/');
 
         $this->assertAuthenticatedAs($user);
     }

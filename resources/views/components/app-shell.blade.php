@@ -167,6 +167,8 @@
                     <div class="py-6">
                         {{-- No sidebar → cap the width so content isn't spread across the whole viewport (roughly the admin content width). --}}
                         <div @class(['ui-page flex flex-col gap-4', 'max-w-6xl' => ! $hasNav])>
+                            <x-two-factor-banner />
+
                             @session('status')
                                 <x-alert color="success">{{ $value }}</x-alert>
                             @endsession

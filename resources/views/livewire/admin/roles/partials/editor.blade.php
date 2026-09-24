@@ -8,7 +8,9 @@
         class="mb-6 max-w-sm"
     >
         @foreach ($roles as $option)
-            <option value="{{ $option->id }}">{{ $option->name }}</option>
+            <option value="{{ $option->id }}">
+                {{ $option->name }}@if ($option->requires_two_factor) ({{ __('admin.two_factor_required_suffix') }})@endif
+            </option>
         @endforeach
     </x-form-select>
 

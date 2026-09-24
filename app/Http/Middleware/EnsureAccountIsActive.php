@@ -25,10 +25,6 @@ class EnsureAccountIsActive
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (! config('auth.block_inactive_users', true)) {
-            return $next($request);
-        }
-
         $user = $request->user();
 
         if ($user && ! $user->active) {

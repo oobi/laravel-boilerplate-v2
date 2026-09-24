@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Support\Roles\RoleScope;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Theme\DaisyColor;
+use App\Support\TwoFactor\GracePeriod;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
@@ -45,6 +46,7 @@ class CreateRole extends Component implements HasSchemas
 
         $this->form->fill([
             'color' => DaisyColor::NEUTRAL->value,
+            'requires_two_factor' => false,
             ...$this->permissionsStateForRole(null),
         ]);
     }
@@ -73,6 +75,12 @@ class CreateRole extends Component implements HasSchemas
                                     ->view('filament.forms.components.role-color-swatches')
                                     ->required(),
                             ]),
+
+                        // Only system roles are assigned to users directly, so only they can carry the mandate.
+                        Forms\Components\Toggle::make('requires_two_factor')
+                            ->label(__('admin.require_two_factor'))
+                            ->helperText(trans_choice('admin.require_two_factor_help', GracePeriod::graceDays()))
+                            ->visible(fn (): bool => $this->scopeKey === Role::SYSTEM_SCOPE),
                     ]),
 
                 Section::make(__('admin.permissions'))
@@ -90,6 +98,7 @@ class CreateRole extends Component implements HasSchemas
         $role = Role::create([
             'name' => $data['name'],
             'color' => $data['color'],
+            'requires_two_factor' => $this->scopeKey === Role::SYSTEM_SCOPE && ($data['requires_two_factor'] ?? false),
             ...$this->roleScope()->attributes(),
         ]);
 

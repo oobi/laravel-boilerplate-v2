@@ -14,6 +14,8 @@ return new class extends Migration
             $table->text('two_factor_secret')->after('password')->nullable();
             $table->text('two_factor_recovery_codes')->after('two_factor_secret')->nullable();
             $table->timestamp('two_factor_confirmed_at')->after('two_factor_recovery_codes')->nullable();
+            // When this user's mandatory-2FA grace period began (App\Support\TwoFactor\GracePeriod).
+            $table->timestamp('two_factor_grace_started_at')->after('two_factor_confirmed_at')->nullable();
         });
     }
 
@@ -24,6 +26,7 @@ return new class extends Migration
                 'two_factor_secret',
                 'two_factor_recovery_codes',
                 'two_factor_confirmed_at',
+                'two_factor_grace_started_at',
             ]);
         });
     }

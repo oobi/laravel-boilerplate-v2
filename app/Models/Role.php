@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Support\Theme\DaisyColor;
+use App\Support\TwoFactor\GracePeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role as SpatieRole;
 
@@ -19,6 +20,7 @@ use Spatie\Permission\Models\Role as SpatieRole;
  *
  * @property DaisyColor|null $color
  * @property string $scope
+ * @property bool $requires_two_factor
  */
 class Role extends SpatieRole
 {
@@ -26,14 +28,15 @@ class Role extends SpatieRole
     public const SYSTEM_SCOPE = 'system';
 
     /**
-     * Default to the system scope in memory as well as in the DB — a freshly
-     * created model doesn't reflect the column default back, so without this
-     * `$role->scope` would be null until re-fetched.
+     * Default to the system scope (and no 2FA mandate) in memory as well as
+     * in the DB. A freshly created model doesn't reflect the column defaults
+     * back, so without this `$role->scope` would be null until re-fetched.
      *
      * @var array<string, mixed>
      */
     protected $attributes = [
         'scope' => self::SYSTEM_SCOPE,
+        'requires_two_factor' => false,
     ];
 
     /** @return array<string, string> */
@@ -42,7 +45,18 @@ class Role extends SpatieRole
         return [
             ...parent::casts(),
             'color' => DaisyColor::class,
+            'requires_two_factor' => 'boolean',
         ];
+    }
+
+    /**
+     * GracePeriod caches which role names require 2FA; any role write can
+     * change that set (flag toggled, role renamed or deleted), so drop it.
+     */
+    protected static function booted(): void
+    {
+        static::saved(fn () => GracePeriod::forgetRequiredRoleNames());
+        static::deleted(fn () => GracePeriod::forgetRequiredRoleNames());
     }
 
     /** Falls back to neutral for roles created before the color field existed. */
@@ -69,5 +83,15 @@ class Role extends SpatieRole
     public function scopeSystemRoles(Builder $query): void
     {
         $query->ofScope(self::SYSTEM_SCOPE);
+    }
+
+    /**
+     * System roles whose members must set up two-factor authentication.
+     *
+     * @param  Builder<Role>  $query
+     */
+    public function scopeRequiringTwoFactor(Builder $query): void
+    {
+        $query->systemRoles()->where('requires_two_factor', true);
     }
 }

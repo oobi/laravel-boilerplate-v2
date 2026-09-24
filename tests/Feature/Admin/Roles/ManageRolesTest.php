@@ -260,6 +260,21 @@ class ManageRolesTest extends TestCase
             ->assertSee('Editor');
     }
 
+    public function test_super_admins_can_require_two_factor_for_a_role(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSet('data.requires_two_factor', false)
+            ->set('data.requires_two_factor', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertTrue($role->fresh()->requires_two_factor);
+    }
+
     public function test_super_admins_can_delete_a_role(): void
     {
         $admin = User::factory()->superAdmin()->create();

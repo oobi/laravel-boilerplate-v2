@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\EnsureRememberedUserIsNotLockedOut;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,9 +26,15 @@ return Application::configure(basePath: dirname(__DIR__))
         //
         // EnsureAccountIsActive enforces active-account status on every web
         // request — covers authenticated sessions AND pending 2FA challenges.
+        //
+        // EnsureRememberedUserIsNotLockedOut refuses a "remember me" login for
+        // a user locked out by the mandatory-2FA grace period (password logins
+        // are refused in AuthenticateUser). It only acts on the request where
+        // the cookie logged the user in.
         $middleware->web(append: [
             AuthenticateSession::class,
             EnsureAccountIsActive::class,
+            EnsureRememberedUserIsNotLockedOut::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
