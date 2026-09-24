@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Actions\Users\ToggleUserActive;
 use App\Enums\SystemPermission;
 use App\Enums\UserAbility;
@@ -11,6 +12,7 @@ use App\Enums\UserStatus;
 use App\Livewire\Concerns\ManagesTrashedRecords;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Auth\Destination;
 use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -151,7 +153,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->label(__('admin.impersonate'))
                         ->icon('heroicon-o-finger-print')
                         ->color(DaisyColor::WARNING->toFilamentColor())
-                        ->url(fn (User $record): string => route('users.impersonate', $record->id))
+                        ->action(fn (User $record) => app(StartImpersonation::class)->handle($record, route('users.index')))
+                        ->successRedirectUrl(fn (User $record): string => Destination::home($record))
                         ->authorize(UserAbility::IMPERSONATE)
                         ->hidden(fn (User $record): bool => $record->trashed()),
 

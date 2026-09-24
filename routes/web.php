@@ -69,20 +69,16 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
             Route::get('/{role}/edit', ManageRoles::class)->name('edit');
         });
     });
-
-    // Start impersonation: staff only (ImpersonationController enforces
-    // canImpersonate/canBeImpersonated), `auth` — not ACCESS_ADMIN_PANEL — so it
-    // composes with that guard; the link only ever appears on admin pages. Lands
-    // the impersonator on the target's own post-login destination.
-    Route::middleware('auth')->prefix('users')->name('users.')->group(function (): void {
-        Route::get('impersonate/take/{id}/{guardName?}', [ImpersonationController::class, 'take'])->name('impersonate');
-    });
 });
 
-// Leaving impersonation lives on the ACCOUNT host, never the (fenceable) admin
-// host, so an impersonator can always exit — even off the admin network
-// (see docs/teams-domains.md). Behind `auth` only: the masqueraded
-// user may be a non-admin. $accountHost is null in path mode (unconstrained).
+// Starting impersonation is NOT a route: it runs inside the CSRF-protected
+// Livewire/Filament action that offers it (App\Actions\Impersonation\StartImpersonation),
+// so no plain navigation can trigger it (GitHub #11). Leaving is a POST — never
+// GET — driven by the banner's CSRF-protected "stop impersonating" form. It lives
+// on the ACCOUNT host, never the (fenceable) admin host, so an impersonator can
+// always exit even off the admin network (see docs/teams-domains.md). Behind
+// `auth` only: the masqueraded user may be a non-admin. $accountHost is null in
+// path mode (unconstrained).
 Route::domain($accountHost)->middleware('auth')->prefix('users')->name('users.')->group(function (): void {
-    Route::get('impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
+    Route::post('impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
 });

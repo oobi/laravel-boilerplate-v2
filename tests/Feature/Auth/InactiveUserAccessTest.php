@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Enums\SystemPermission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -164,7 +165,7 @@ class InactiveUserAccessTest extends TestCase
         $sessionId = $this->startImpersonation($driver, $admin, $target);
         $admin->delete();
 
-        $this->resumeSession($sessionId)->get(route('users.impersonate.leave'))
+        $this->resumeSession($sessionId)->post(route('users.impersonate.leave'))
             ->assertRedirect('/login')
             ->assertSessionMissing('impersonated_by');
 
@@ -197,8 +198,19 @@ class InactiveUserAccessTest extends TestCase
             'remember' => true,
         ])->assertRedirect();
         $cookieName = Auth::guard('web')->getRecallerName();
-        $this->withCookie($cookieName, $login->getCookie($cookieName)->getValue())
-            ->get(route('users.impersonate', $target))->assertRedirect();
+        $rememberCookie = $login->getCookie($cookieName)->getValue();
+
+        // Impersonation now runs in the CSRF-protected admin action, not a GET
+        // route (GitHub #11). That action's request carries the impersonator's
+        // remember cookie, which lab404 stashes into the session so a forced
+        // logout can later clear it. Put it on the current request (so the stash
+        // happens during take) and keep it on the following requests (so the
+        // forced-logout response can expire it).
+        $this->withCookie($cookieName, $rememberCookie);
+        request()->cookies->set($cookieName, $rememberCookie);
+        app(StartImpersonation::class)->handle($target);
+        session()->save();
+
         $this->assertTrue(session()->has('remember_web'));
         $sessionId = session()->getId();
         $target->update(['active' => false]);
@@ -299,7 +311,12 @@ class InactiveUserAccessTest extends TestCase
         config()->set('session.driver', $driver);
         $this->post('/login', ['email' => $admin->email, 'password' => 'password'])
             ->assertRedirect();
-        $this->get(route('users.impersonate', $target))->assertRedirect();
+
+        // Impersonation runs in the CSRF-protected admin action, not a GET route
+        // (GitHub #11); start it directly and persist the session so it can be
+        // resumed as a returning browser would.
+        app(StartImpersonation::class)->handle($target);
+        session()->save();
         $this->assertAuthenticatedAs($target);
 
         return session()->getId();

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Teams;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Domain;
@@ -9,7 +10,6 @@ use Concise\Teams\Models\Team;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\URL;
 use ReflectionProperty;
 use Tests\TestCase;
 
@@ -145,11 +145,13 @@ class TeamHostModeHttpTest extends TestCase
 
         $membersUrl = 'http://acme.'.self::BASE.'/members';
 
-        $this->actingAs($admin)
-            ->get(URL::signedRoute('users.impersonate', ['id' => $owner->id, 'next' => $membersUrl]))
-            ->assertRedirect($membersUrl);
+        // Impersonation now runs inside the admin screen's CSRF-protected action,
+        // not a GET route (GitHub #11); drive it directly, then the members page
+        // must open for the impersonated owner over real HTTP.
+        $this->actingAs($admin);
+        app(StartImpersonation::class)->handle($owner);
+        $this->assertAuthenticatedAs($owner);
 
-        // Now acting as the impersonated owner, the members page opens.
         $this->get($membersUrl)->assertOk();
     }
 

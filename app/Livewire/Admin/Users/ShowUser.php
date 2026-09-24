@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Users;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Enums\SystemPermission;
 use App\Enums\UserAbility;
 use App\Livewire\Concerns\ConfirmsPassword;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Auth\Destination;
 use App\Support\Filament\AdminAction;
 use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
@@ -120,7 +122,8 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->soft()
             ->color(DaisyColor::WARNING->toFilamentColor())
             ->visible(fn (): bool => Gate::allows(UserAbility::IMPERSONATE, $this->user))
-            ->url(fn (): string => route('users.impersonate', $this->user->id));
+            ->action(fn () => app(StartImpersonation::class)->handle($this->user))
+            ->successRedirectUrl(fn (): string => Destination::home($this->user));
     }
 
     /**

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Team;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Enums\SystemPermission;
 use App\Enums\UserAbility;
 use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Auth\Destination;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
@@ -159,7 +161,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->label(__('admin.impersonate'))
                         ->icon('heroicon-o-finger-print')
                         ->color(DaisyColor::WARNING->toFilamentColor())
-                        ->url(fn (User $record): string => route('users.impersonate', $record->id))
+                        ->action(fn (User $record) => app(StartImpersonation::class)->handle($record))
+                        ->successRedirectUrl(fn (User $record): string => Destination::home($record))
                         ->authorize(UserAbility::IMPERSONATE),
 
                     Action::make('changeRole')

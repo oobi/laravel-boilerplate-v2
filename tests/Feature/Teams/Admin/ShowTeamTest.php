@@ -87,15 +87,16 @@ class ShowTeamTest extends TestCase
     public function test_opening_a_private_team_offers_to_impersonate_its_owner(): void
     {
         // The admin isn't a member; opening the team's URL offers the way in:
-        // impersonate the owner and land in *this* team (the signed `next`),
-        // not the owner's generic post-login home.
+        // impersonate the owner (in the action's own CSRF-protected request) and
+        // land in *this* team, not the owner's generic post-login home.
         $this->assertFalse($this->team->hasUser($this->admin));
 
         Livewire::actingAs($this->admin)
             ->test(ShowTeam::class, ['team' => $this->team])
             ->callAction('openTeam')
-            ->assertRedirectContains(route('users.impersonate', $this->owner->id))
-            ->assertRedirectContains(urlencode(team_route('team.dashboard', $this->team)));
+            ->assertRedirect(team_route('team.dashboard', $this->team));
+
+        $this->assertAuthenticatedAs($this->owner);
     }
 
     public function test_a_viewer_who_cannot_impersonate_is_not_offered_it(): void

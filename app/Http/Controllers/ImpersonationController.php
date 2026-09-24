@@ -4,79 +4,29 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Support\Auth\Destination;
+use App\Actions\Impersonation\StartImpersonation;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Lab404\Impersonate\Controllers\ImpersonateController;
+use Lab404\Impersonate\Services\ImpersonateManager;
 
 /**
- * Impersonation start/leave, wrapping lab404's controller with two changes over
- * its config-driven defaults:
+ * Leaving impersonation. A POST endpoint (never GET) so the CSRF-protected
+ * "stop impersonating" form in the banner is the only way to trigger it —
+ * see GitHub #11. Starting impersonation is not a route at all: it happens
+ * inside the CSRF-protected Livewire/Filament action via
+ * {@see StartImpersonation}.
  *
- *  - `take` lands the impersonator on the *target's* own post-login destination
- *    ({@see Destination::home} — read-only, thanks to the stateless TeamDestination),
- *    so you immediately see what they'd see, instead of a fixed admin URL. A caller
- *    with a specific place in mind (e.g. "open this team as its owner") may override
- *    that with a *signed* `next` URL — signed so we can trust an arbitrary
- *    destination without an open-redirect check; an unsigned or tampered `next` is
- *    ignored and the default destination stands.
- *  - `leave` returns to where impersonation was started (remembered per session
- *    via lab404's own `leave_redirect_to` key), falling back to the impersonated
- *    user's page, then the user list (config `leave_redirect_to`).
- *
- * The two routes are split across hosts in routes/web.php: `take` on the admin
- * host (staff only), `leave` on the account host — always reachable, so an
- * impersonator can exit even when off the fenceable admin network
- * (see docs/teams-domains.md). `leave` itself is lab404's, unchanged.
+ * The destination is lab404's own per-session `leave_redirect_to` (recorded by
+ * StartImpersonation as the page the impersonator started from), falling back
+ * to the config route when absent.
  */
-class ImpersonationController extends ImpersonateController
+class ImpersonationController extends Controller
 {
-    /** lab404's session key for a one-off leave redirect (read + forgotten by leave()). */
-    private const LEAVE_REDIRECT_KEY = 'laravel-impersonate:leave_redirect_to';
-
-    public function take(Request $request, $id, $guardName = null): RedirectResponse
+    public function leave(ImpersonateManager $manager): RedirectResponse
     {
-        // Capture the initiating page before the auth user is swapped.
-        $origin = $this->originUrl($request, $id);
+        abort_unless($manager->isImpersonating(), 403);
 
-        $response = parent::take($request, $id, $guardName);
+        $manager->leave();
 
-        // A guard failed (self / nested / not impersonatable): keep lab404's response.
-        if (! $this->manager->isImpersonating()) {
-            return $response;
-        }
-
-        $request->session()->put(self::LEAVE_REDIRECT_KEY, $origin);
-
-        return redirect()->to($this->requestedDestination($request) ?? Destination::home($request->user()));
-    }
-
-    /**
-     * A caller-supplied landing URL, honoured only when the whole request URL
-     * carries a valid signature — so an arbitrary (cross-host) destination is
-     * trusted because we minted it, not because the host passed an allowlist.
-     */
-    private function requestedDestination(Request $request): ?string
-    {
-        $next = $request->query('next');
-
-        if (! is_string($next) || $next === '' || ! $request->hasValidSignature()) {
-            return null;
-        }
-
-        return $next;
-    }
-
-    /**
-     * Where "leave" should return the impersonator: the page they started from,
-     * else — when there's no usable referer — the impersonated user's own page.
-     */
-    private function originUrl(Request $request, mixed $id): string
-    {
-        $previous = url()->previous();
-
-        return ($previous === '' || $previous === url()->to('/'))
-            ? route('users.show', $id)
-            : $previous;
+        return redirect()->to($manager->getLeaveRedirectTo());
     }
 }

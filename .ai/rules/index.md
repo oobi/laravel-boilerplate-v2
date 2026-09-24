@@ -6,6 +6,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | --- | --- |
 | app/** | .ai/rules/app.md |
 | resources/views/components/** | .ai/rules/components.md |
+| app/Actions/Impersonation/**,app/Http/Controllers/ImpersonationController.php,routes/web.php | .ai/rules/controllers.md |
 | .env, .env.example | .ai/rules/env.md |
 | tests/Feature/** | .ai/rules/feature.md |
 | app/Livewire/**, packages/*/src/Livewire/** | .ai/rules/infolists.md |

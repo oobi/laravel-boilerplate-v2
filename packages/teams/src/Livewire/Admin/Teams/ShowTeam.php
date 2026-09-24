@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Admin\Teams;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Models\Team;
@@ -19,7 +20,6 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\URL;
 use Livewire\Component;
 
 /**
@@ -108,23 +108,21 @@ class ShowTeam extends Component implements HasActions, HasSchemas
 
         if ($owner !== null && Gate::allows('impersonate', $owner)) {
             // Land in *this* team as the owner, not their generic post-login home
-            // (which, for an admin-capable owner, is the dashboard). The team URL
-            // rides along as a signed `next` so the impersonation controller can
-            // trust it. The redirect must go through successRedirectUrl — a
-            // redirect() returned from the action closure is dropped by
-            // callMountedAction. Param MUST be named $action: Filament injects the
-            // submit action by name; another name type-resolves to the parent
-            // (icon) action, and only the confirm button is warning-tinted.
+            // (which, for an admin-capable owner, is the dashboard). Impersonation
+            // happens in the action closure (this is the CSRF-protected Livewire
+            // request), then the redirect goes straight to the team — decided here
+            // in trusted code, never carried in a URL. The redirect must go through
+            // successRedirectUrl — a redirect() returned from the action closure is
+            // dropped by callMountedAction. Param MUST be named $action: Filament
+            // injects the submit action by name; another name type-resolves to the
+            // parent (icon) action, and only the confirm button is warning-tinted.
             return $action
                 ->modalDescription(team_trans('open_team.impersonate_body', ['owner_name' => $owner->name]))
                 ->modalSubmitAction(fn (Action $action) => $action
                     ->label(team_trans('open_team.impersonate'))
                     ->color(DaisyColor::WARNING->toFilamentColor()))
-                ->action(fn () => null)
-                ->successRedirectUrl(URL::signedRoute('users.impersonate', [
-                    'id' => $owner->getKey(),
-                    'next' => team_route('team.dashboard', $team),
-                ]));
+                ->action(fn () => app(StartImpersonation::class)->handle($owner, route('teams.show', $team)))
+                ->successRedirectUrl(fn (): string => team_route('team.dashboard', $team));
         }
 
         return $action

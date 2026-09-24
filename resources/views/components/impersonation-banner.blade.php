@@ -15,8 +15,13 @@
             @endif
         </div>
 
-        <x-button href="{{ route('users.impersonate.leave') }}" color="neutral" size="xs" variant="outline">
-            {{ __('admin.stop_impersonating') }}
-        </x-button>
+        {{-- POST, not a link: leaving impersonation is a state change, so it goes
+             through a CSRF-protected form rather than a navigable GET (GitHub #11). --}}
+        <form method="POST" action="{{ route('users.impersonate.leave') }}">
+            @csrf
+            <x-button type="submit" color="neutral" size="xs" variant="outline">
+                {{ __('admin.stop_impersonating') }}
+            </x-button>
+        </form>
     </div>
 @endImpersonating
