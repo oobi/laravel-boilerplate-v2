@@ -20,7 +20,7 @@ class ResetUserPassword implements ResetsUserPasswords
             'password' => $this->passwordRules(),
             'email' => [
                 function ($attribute, $value, $fail) use ($user): void {
-                    if (config('auth.block_inactive_users', true) && ! $user->active) {
+                    if (! $user->active) {
                         $fail(__('auth.inactive'));
                     }
                 },

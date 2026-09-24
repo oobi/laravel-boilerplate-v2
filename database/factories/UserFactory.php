@@ -97,6 +97,14 @@ class UserFactory extends Factory
         });
     }
 
+    /** The mandatory-2FA grace clock started this many days ago (see GracePeriod). */
+    public function graceStartedDaysAgo(int $days): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_grace_started_at' => now()->subDays($days),
+        ]);
+    }
+
     public function twoFactorEnabled(): static
     {
         return $this->state(fn (array $attributes) => [

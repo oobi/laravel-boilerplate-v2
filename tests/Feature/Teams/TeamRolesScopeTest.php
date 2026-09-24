@@ -188,6 +188,20 @@ class TeamRolesScopeTest extends TestCase
         $this->assertFalse($teamRole->checkPermissionTo(TeamPermission::INVITE_MEMBERS->value));
     }
 
+    public function test_a_team_role_cannot_require_two_factor(): void
+    {
+        $teamRole = Team::createRole('Team Admin');
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageRoles::class, ['role' => $teamRole])
+            ->assertDontSee(__('admin.require_two_factor'))
+            ->set('data.requires_two_factor', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertFalse($teamRole->fresh()->requires_two_factor);
+    }
+
     public function test_saving_a_manage_permission_auto_grants_its_view_counterpart(): void
     {
         $role = Team::createRole('Manager');

@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\Schema;
 /**
  * The app's own additions to spatie's roles table, kept together so spatie's
  * published create_permission_tables migration stays pristine: a badge `color`,
- * and a `scope` (`system` by default — see App\Models\Role::SYSTEM_SCOPE;
- * add-ons such as the teams tier contribute their own scope values).
+ * a `scope` (`system` by default, see App\Models\Role::SYSTEM_SCOPE;
+ * add-ons such as the teams tier contribute their own scope values), and
+ * `requires_two_factor` (members must set up 2FA, see GracePeriod).
  */
 return new class extends Migration
 {
@@ -19,13 +20,14 @@ return new class extends Migration
         Schema::table(config('permission.table_names')['roles'], function (Blueprint $table): void {
             $table->string('color')->nullable()->after('name');
             $table->string('scope')->default('system')->after('name');
+            $table->boolean('requires_two_factor')->default(false);
         });
     }
 
     public function down(): void
     {
         Schema::table(config('permission.table_names')['roles'], function (Blueprint $table): void {
-            $table->dropColumn(['color', 'scope']);
+            $table->dropColumn(['color', 'scope', 'requires_two_factor']);
         });
     }
 };

@@ -61,4 +61,18 @@ class CreateRoleTest extends TestCase
 
         $this->assertSame(DaisyColor::WARNING, Role::findByName('Editor')->color);
     }
+
+    public function test_super_admins_can_create_a_role_that_requires_two_factor(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(CreateRole::class)
+            ->set('data.name', 'Editor')
+            ->set('data.requires_two_factor', true)
+            ->call('create')
+            ->assertHasNoErrors();
+
+        $this->assertTrue(Role::findByName('Editor')->requires_two_factor);
+    }
 }

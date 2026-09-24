@@ -10,7 +10,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Lab404\Impersonate\Services\ImpersonateManager;
 use Livewire\Livewire;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class UserImpersonationTest extends TestCase
@@ -78,11 +77,8 @@ class UserImpersonationTest extends TestCase
         );
     }
 
-    #[DataProvider('inactiveUserBlockingSettings')]
-    public function test_inactive_users_cannot_be_impersonated(bool $blockInactiveUsers): void
+    public function test_inactive_users_cannot_be_impersonated(): void
     {
-        config()->set('auth.block_inactive_users', $blockInactiveUsers);
-
         $this->assertImpersonationDenied(
             User::factory()->superAdmin()->create(),
             User::factory()->inactive()->create(),
@@ -115,15 +111,6 @@ class UserImpersonationTest extends TestCase
         }
 
         $this->assertAuthenticatedAs($target);
-    }
-
-    /** @return array<string, array{bool}> */
-    public static function inactiveUserBlockingSettings(): array
-    {
-        return [
-            'suspension enforced' => [true],
-            'suspension disabled' => [false],
-        ];
     }
 
     // --- Leaving impersonation: POST only, returns to where it began ---

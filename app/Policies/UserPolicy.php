@@ -79,6 +79,12 @@ class UserPolicy
         return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && ! $target->isSuperAdmin();
     }
 
+    /** Resetting a user's mandatory-2FA grace period, which also lifts a lockout (see GracePeriod). */
+    public function manageTwoFactorGrace(User $actor, User $target): bool
+    {
+        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && ! $target->isSuperAdmin();
+    }
+
     /** Nobody may delete their own account, including a super admin. */
     public function delete(User $actor, User $target): bool
     {

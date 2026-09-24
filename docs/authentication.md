@@ -7,9 +7,10 @@ from this app's own Livewire components, not Fortify's stock Blade views. The
 custom action classes live in `app/Actions/Fortify/` and are wired up in
 `AppServiceProvider::registerFortify()`.
 
-This doc focuses on the two flows that are easy to get subtly wrong: **password
-changes** (who can change whose password, and how other sessions are cut off)
-and **account inactivation** (how access is revoked mid-session). See
+This doc focuses on the flows that are easy to get subtly wrong: **password
+changes** (who can change whose password, and how other sessions are cut off),
+**account inactivation** (how access is revoked mid-session), and **mandatory
+two-factor** (per-role 2FA with a grace period). See
 `docs/permissions.md` and `.ai/rules/policies.md` for the RBAC model these
 build on.
 
@@ -104,9 +105,8 @@ in-between state of a **pending 2FA challenge** (a user who passed the password
 step but hasn't entered their code yet) and, during **impersonation**, requires
 both the impersonated user and the original impersonator to remain active.
 
-The check can be globally disabled with `AUTH_BLOCK_INACTIVE_USERS=false`
-(config key `auth.block_inactive_users`) — useful for local debugging, never in
-production.
+Blocking is unconditional: there is deliberately no setting to turn it off,
+since a deactivation that can be switched off by config means nothing.
 
 **Toggling active status** is a per-instance policy ability, `toggleActive` in
 `UserPolicy`: it requires the `suspend users` permission, forbids toggling a
@@ -114,3 +114,31 @@ super admin, and forbids toggling **yourself** (including a super admin — nobo
 can lock themselves out). It's surfaced on the admin Users list and edit
 screens (`app/Livewire/Admin/Users/*`) and the
 `UserInformationFormSection` panel.
+
+## Mandatory two-factor
+
+2FA can be made mandatory **per role**. Turn on **Require two factor
+authentication** on a system role (Admin > Roles). No role ships with it on, so
+the feature does nothing until an admin flags one.
+
+A member of a flagged role who hasn't confirmed 2FA (and has a verified email):
+
+1. **Is warned.** Their grace clock starts at their next login, and every page
+   shows a banner counting down the days, linking to the profile 2FA page.
+2. **Is locked out** once the grace period ends: login is refused with a
+   "contact an administrator" message. This is a login-time check (in
+   `AuthenticateUser`, plus `EnsureRememberedUserIsNotLockedOut` for
+   remember-me logins), so a session already open at the deadline runs until
+   it ends.
+3. **Is let back in** only by an admin: **Reset Grace Period** on the Users >
+   Security panel gives them a fresh window. It needs `manage users` and
+   password re-entry.
+
+Enabling 2FA, or leaving the flagged role, lifts the mandate at once.
+
+**Super admins** are reminded whenever any role is flagged but are **never
+locked out**, so there is always someone who can reset everyone else.
+
+Config (`auth.two_factor`): `AUTH_2FA_GRACE_DAYS` (default 14), and
+`AUTH_2FA_ENFORCEMENT=false` as an emergency switch that disables all of it.
+The rules live in one place, `App\Support\TwoFactor\GracePeriod`.

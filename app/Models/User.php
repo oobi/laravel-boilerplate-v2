@@ -83,6 +83,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'active' => 'boolean',
             'is_super_admin' => 'boolean',
             'last_login_at' => 'datetime',
+            'two_factor_grace_started_at' => 'datetime',
         ];
     }
 

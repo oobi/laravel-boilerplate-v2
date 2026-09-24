@@ -116,13 +116,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Account suspension
+    | Mandatory two-factor authentication
     |--------------------------------------------------------------------------
-    | When true, AuthenticateUser/ResetUserPassword refuse users whose `active`
-    | column is false, with the same vague error as a wrong password (so a
-    | login attempt can't be used to tell suspended accounts from wrong
-    | credentials).
+    | Which users must set up 2FA is decided per role (`requires_two_factor`,
+    | toggled on the Roles screen), not here; no role ships flagged, so the
+    | feature is dormant until an admin turns it on. A subject user is nagged
+    | for `grace_days` from their first login, then refused at login until an
+    | admin resets their grace period. Super admins are nagged, never refused.
+    | See App\Support\TwoFactor\GracePeriod.
+    |
+    | `enforcement_enabled` is an emergency kill-switch that disables all of it
+    | without unflagging roles.
     */
-    'block_inactive_users' => env('AUTH_BLOCK_INACTIVE_USERS', true),
+    'two_factor' => [
+        'enforcement_enabled' => env('AUTH_2FA_ENFORCEMENT', true),
+        'grace_days' => (int) env('AUTH_2FA_GRACE_DAYS', 14),
+    ],
 
 ];

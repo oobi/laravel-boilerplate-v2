@@ -7,6 +7,7 @@ use App\Enums\UserAbility;
 use App\Livewire\Admin\Users\ShowUser;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\TwoFactor\GracePeriod;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -190,6 +191,65 @@ class ShowUserTest extends TestCase
 
         $target->refresh();
         $this->assertNotNull($target->two_factor_secret);
+    }
+
+    public function test_a_locked_out_user_shows_as_locked_out_with_a_reset_button(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->graceStartedDaysAgo(20)->create();
+        $target->assignRole(Role::create(['name' => 'Admin', 'requires_two_factor' => true]));
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.two_factor_grace_locked_out'))
+            ->assertSee(__('admin.reset_two_factor_grace'));
+    }
+
+    public function test_resetting_the_grace_period_after_confirming_the_password_lifts_the_lockout(): void
+    {
+        $admin = User::factory()->withPermission(SystemPermission::VIEW_USERS, SystemPermission::MANAGE_USERS)->create();
+        $target = User::factory()->graceStartedDaysAgo(20)->create();
+        $target->assignRole(Role::create(['name' => 'Admin', 'requires_two_factor' => true]));
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->call('callPanelAction', 'security', 'reset-2fa-grace')
+            ->assertSet('confirmingPassword', true)
+            ->set('confirmablePassword', 'password')
+            ->call('confirmPassword');
+
+        $target->refresh();
+        $this->assertTrue($target->two_factor_grace_started_at->isToday());
+        $this->assertFalse(GracePeriod::locksOut($target));
+    }
+
+    public function test_resetting_the_grace_period_is_forbidden_without_manage_users(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_USERS)->create();
+        $target = User::factory()->graceStartedDaysAgo(20)->create();
+        $target->assignRole(Role::create(['name' => 'Admin', 'requires_two_factor' => true]));
+
+        Livewire::actingAs($viewer)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertDontSee(__('admin.reset_two_factor_grace'))
+            ->call('callPanelAction', 'security', 'reset-2fa-grace')
+            ->set('confirmablePassword', 'password')
+            ->call('confirmPassword')
+            ->assertForbidden();
+
+        $this->assertTrue(GracePeriod::locksOut($target->fresh()));
+    }
+
+    public function test_a_super_admin_without_two_factor_shows_as_never_locked_out_with_no_reset(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        Role::create(['name' => 'Admin', 'requires_two_factor' => true]);
+        $target = User::factory()->superAdmin()->graceStartedDaysAgo(20)->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.two_factor_grace_super_admin'))
+            ->assertDontSee(__('admin.reset_two_factor_grace'));
     }
 
     public function test_the_impersonate_action_is_hidden_when_not_permitted(): void
