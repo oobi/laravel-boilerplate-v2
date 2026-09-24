@@ -12,17 +12,40 @@
 # Failures print as a compact summary rather than PHPUnit's full assertion
 # diffs — a blocked push with a dozen failures should stay readable. Re-run a
 # single one with `php artisan test --filter=<name>` to see the detail.
+#
+# Git runs this hook once per push URL, so a remote with several (e.g. a mirror)
+# would run the suite repeatedly. A passing run is stamped with the refs being
+# pushed plus the working tree state; an identical push within 5 minutes skips.
 
 . "$(dirname "$0")/php-path.sh"
 require_php
+
+stamp_file="$(git rev-parse --git-dir)/pre-push-tested"
+stamp_ttl=300
+now=$(date +%s)
+
+pushed_refs=$(awk '{ print $1, $2 }')
+tree_state=$( { git rev-parse HEAD; git diff HEAD; git ls-files --others --exclude-standard; } | git hash-object --stdin)
+stamp_key=$(printf '%s\n%s\n' "$pushed_refs" "$tree_state" | git hash-object --stdin)
+
+if [ -f "$stamp_file" ]; then
+    read -r stamped_key stamped_at < "$stamp_file"
+    if [ "$stamped_key" = "$stamp_key" ] && [ $((now - stamped_at)) -lt $stamp_ttl ]; then
+        echo "Tests already passed for this push, skipping."
+        exit 0
+    fi
+fi
 
 echo "Running tests before push..."
 composer test
 
 if [ $? -ne 0 ]; then
+    rm -f "$stamp_file"
     echo ""
     echo "Push aborted: tests failed. Fix the failures or use --no-verify to skip this check."
     exit 1
 fi
+
+echo "$stamp_key $now" > "$stamp_file"
 
 exit 0
