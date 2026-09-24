@@ -19,31 +19,38 @@ export class TabScrollController {
             ...options
         };
 
+        // Bind once and keep the references: add/removeEventListener only match on
+        // identical references, so binding again at removal time (as this used to)
+        // silently leaves every listener attached.
+        this.handleScroll = this.handleScroll.bind(this);
+        this.handleResize = this.handleResize.bind(this);
+        this.scrollLeft = this.scrollLeft.bind(this);
+        this.scrollRight = this.scrollRight.bind(this);
+
         this.init();
     }
 
     init() {
         if (!this.nav) return;
 
-        // Bind event listeners
-        this.element.addEventListener('scroll', this.handleScroll.bind(this));
+        this.element.addEventListener('scroll', this.handleScroll);
 
         if (this.leftIndicator) {
-            this.leftIndicator.addEventListener('click', this.scrollLeft.bind(this));
+            this.leftIndicator.addEventListener('click', this.scrollLeft);
         }
 
         if (this.rightIndicator) {
-            this.rightIndicator.addEventListener('click', this.scrollRight.bind(this));
+            this.rightIndicator.addEventListener('click', this.scrollRight);
         }
 
         // Wait for the tab layout before revealing the active tab and indicators.
-        setTimeout(() => {
+        this.initTimeout = setTimeout(() => {
             this.scrollActiveTabIntoView();
             this.updateScrollIndicators();
         }, this.options.updateDelay);
 
         // Update on window resize
-        window.addEventListener('resize', this.handleResize.bind(this));
+        window.addEventListener('resize', this.handleResize);
     }
 
     handleScroll() {
@@ -137,37 +144,48 @@ export class TabScrollController {
     }
 
     destroy() {
-        // Clean up event listeners
-        if (this.nav) {
-            this.element.removeEventListener('scroll', this.handleScroll.bind(this));
-        }
+        // Same bound references used at init(), so these actually detach —
+        // in particular the window resize handler, which otherwise keeps this
+        // controller (and its detached DOM) alive after the tabs are replaced.
+        this.element.removeEventListener('scroll', this.handleScroll);
 
         if (this.leftIndicator) {
-            this.leftIndicator.removeEventListener('click', this.scrollLeft.bind(this));
+            this.leftIndicator.removeEventListener('click', this.scrollLeft);
         }
 
         if (this.rightIndicator) {
-            this.rightIndicator.removeEventListener('click', this.scrollRight.bind(this));
+            this.rightIndicator.removeEventListener('click', this.scrollRight);
         }
 
-        window.removeEventListener('resize', this.handleResize.bind(this));
+        window.removeEventListener('resize', this.handleResize);
 
-        if (this.scrollTimeout) {
-            clearTimeout(this.scrollTimeout);
-        }
-
-        if (this.resizeTimeout) {
-            clearTimeout(this.resizeTimeout);
-        }
+        clearTimeout(this.initTimeout);
+        clearTimeout(this.scrollTimeout);
+        clearTimeout(this.resizeTimeout);
     }
 }
 
+/** Controllers from the current render, tracked so re-init can tear them down. */
+let activeControllers = [];
+
 /**
- * Initialize tab scroll controllers for all tab navigation elements
+ * Destroy any live controllers. Called before re-initialising so a fresh render
+ * (e.g. livewire:navigated) doesn't stack a second set of listeners on top of
+ * the old ones and leak the detached nodes their window handlers retain.
+ */
+export function destroyTabScrollControllers() {
+    activeControllers.forEach(controller => controller.destroy());
+    activeControllers = [];
+}
+
+/**
+ * Initialize tab scroll controllers for all tab navigation elements. Idempotent:
+ * repeated calls replace the previous controllers rather than accumulate.
  */
 export function initTabScrollControllers() {
+    destroyTabScrollControllers();
+
     const tabContainers = document.querySelectorAll('[data-tab-scroll]');
-    const controllers = [];
 
     tabContainers.forEach(container => {
         const options = {};
@@ -181,9 +199,8 @@ export function initTabScrollControllers() {
             options.rightThreshold = parseInt(container.dataset.rightThreshold, 10);
         }
 
-        const controller = new TabScrollController(container, options);
-        controllers.push(controller);
+        activeControllers.push(new TabScrollController(container, options));
     });
 
-    return controllers;
+    return activeControllers;
 }
