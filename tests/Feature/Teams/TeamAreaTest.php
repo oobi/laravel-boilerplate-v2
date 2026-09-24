@@ -44,11 +44,15 @@ class TeamAreaTest extends TestCase
         $team = Team::factory()->create(['name' => 'Northwind', 'slug' => 'northwind']);
         $team->users()->attach($user);
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->get(route('team.dashboard', ['team' => $team->slug]))
             ->assertOk()
-            ->assertSee('Northwind')
-            ->assertDontSee(__('admin.breadcrumb_root'));
+            ->assertSee('Northwind');
+
+        // Strip the app name first: one like "Salon Admin" contains the root label legitimately.
+        $html = str_replace(e(config('app.name')), '', $response->getContent());
+
+        $this->assertStringNotContainsString(e(__('admin.breadcrumb_root')), $html);
     }
 
     public function test_a_non_member_is_forbidden_from_the_team_area(): void
