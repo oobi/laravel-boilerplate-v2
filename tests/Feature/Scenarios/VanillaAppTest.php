@@ -5,6 +5,7 @@ namespace Tests\Feature\Scenarios;
 use App\Models\User;
 use App\Support\Auth\LoginRedirectRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,8 @@ class VanillaAppTest extends TestCase
 
     public function test_public_registration_is_available(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         $this->get('/register')->assertOk();
     }
 

@@ -4,6 +4,7 @@ namespace Tests;
 
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Laravel\Fortify\Features;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -16,5 +17,17 @@ abstract class TestCase extends BaseTestCase
     protected function afterRefreshingDatabase()
     {
         $this->seed(PermissionSeeder::class);
+    }
+
+    /**
+     * Skip the current test when the given Fortify feature (e.g.
+     * Features::registration()) is switched off in config/fortify.php, so a
+     * project that disables it keeps a green suite.
+     */
+    protected function skipUnlessFortifyFeature(string $feature): void
+    {
+        if (! Features::enabled($feature)) {
+            $this->markTestSkipped("Fortify feature [{$feature}] is disabled in config/fortify.php.");
+        }
     }
 }

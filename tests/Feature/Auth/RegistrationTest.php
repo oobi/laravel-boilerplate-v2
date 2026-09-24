@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Contracts\VerifyEmailResponse;
+use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -14,6 +15,8 @@ class RegistrationTest extends TestCase
 
     public function test_registration_screen_can_be_rendered(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         $response = $this->get('/register');
 
         $response->assertStatus(200);
@@ -21,6 +24,8 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         $response = $this->post('/register', [
             'first_name' => 'Test',
             'last_name' => 'User',
@@ -56,6 +61,8 @@ class RegistrationTest extends TestCase
 
     public function test_registering_with_a_taken_email_fails_validation_regardless_of_casing(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         User::factory()->create(['email' => 'taken@example.com']);
 
         $this->post('/register', [
@@ -72,6 +79,8 @@ class RegistrationTest extends TestCase
 
     public function test_a_mixed_case_email_is_stored_lowercased(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         $this->post('/register', [
             'first_name' => 'Test',
             'last_name' => 'User',

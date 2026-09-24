@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 class HomeTest extends TestCase
@@ -14,6 +15,8 @@ class HomeTest extends TestCase
 
     public function test_guests_see_login_and_register_links(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         $response = $this->get('/');
 
         $response->assertStatus(200);
