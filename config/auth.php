@@ -122,15 +122,22 @@ return [
     | toggled on the Roles screen), not here; no role ships flagged, so the
     | feature is dormant until an admin turns it on. A subject user is nagged
     | for `grace_days` from their first login, then refused at login until an
-    | admin resets their grace period. Super admins are nagged, never refused.
+    | admin resets their grace period. Super admins are never refused; they
+    | are nagged if they hold a flagged role or `super_admins` is on.
     | See App\Support\TwoFactor\GracePeriod.
     |
     | `enforcement_enabled` is an emergency kill-switch that disables all of it
     | without unflagging roles.
     */
     'two_factor' => [
-        'enforcement_enabled' => env('AUTH_2FA_ENFORCEMENT', true),
+        // Normalized here because GracePeriod reads it as a strict boolean. An
+        // unrecognised value keeps enforcement on rather than failing open.
+        'enforcement_enabled' => filter_var(env('AUTH_2FA_ENFORCEMENT', true), FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? true,
         'grace_days' => (int) env('AUTH_2FA_GRACE_DAYS', 14),
+
+        // Nag super admins without 2FA too (super admin is a flag, not a role,
+        // so no role toggle can reach them). Nag only: never locked out.
+        'super_admins' => filter_var(env('AUTH_2FA_SUPER_ADMINS', false), FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? false,
     ],
 
 ];

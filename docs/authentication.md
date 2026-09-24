@@ -136,9 +136,11 @@ A member of a flagged role who hasn't confirmed 2FA (and has a verified email):
 
 Enabling 2FA, or leaving the flagged role, lifts the mandate at once.
 
-**Super admins** are reminded whenever any role is flagged but are **never
-locked out**, so there is always someone who can reset everyone else.
+**Super admins** are **never locked out**, so there is always someone who can
+reset everyone else. Super admin is a flag, not a role, so they are nagged only
+if they also hold a flagged role, or if `AUTH_2FA_SUPER_ADMINS=true`.
 
-Config (`auth.two_factor`): `AUTH_2FA_GRACE_DAYS` (default 14), and
-`AUTH_2FA_ENFORCEMENT=false` as an emergency switch that disables all of it.
+Config (`auth.two_factor`): `AUTH_2FA_GRACE_DAYS` (default 14),
+`AUTH_2FA_SUPER_ADMINS` (default false), and `AUTH_2FA_ENFORCEMENT=false` as an
+emergency switch that disables all of it.
 The rules live in one place, `App\Support\TwoFactor\GracePeriod`.

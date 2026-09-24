@@ -240,11 +240,11 @@ class ShowUserTest extends TestCase
         $this->assertTrue(GracePeriod::locksOut($target->fresh()));
     }
 
-    public function test_a_super_admin_without_two_factor_shows_as_never_locked_out_with_no_reset(): void
+    public function test_a_super_admin_in_a_flagged_role_shows_as_never_locked_out_with_no_reset(): void
     {
         $admin = User::factory()->superAdmin()->create();
-        Role::create(['name' => 'Admin', 'requires_two_factor' => true]);
         $target = User::factory()->superAdmin()->graceStartedDaysAgo(20)->create();
+        $target->assignRole(Role::create(['name' => 'Admin', 'requires_two_factor' => true]));
 
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])

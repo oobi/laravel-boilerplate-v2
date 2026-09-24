@@ -15,11 +15,12 @@ use Illuminate\Support\Facades\Cache;
  * always agree.
  *
  * A user is subject (nagged) when they lack confirmed 2FA, have a verified
- * email, and hold a role flagged `requires_two_factor`, or are a super admin
- * while any role is flagged. The grace clock starts at their first login while
- * subject; once it runs out a subject user is refused at login until an admin
- * resets it. Super admins are never refused, so someone can always get in to
- * reset everyone else.
+ * email, and hold a role flagged `requires_two_factor`. Super admin is not a
+ * role, so a super admin is subject only if they also hold a flagged role or
+ * `auth.two_factor.super_admins` is on.
+ * The grace clock starts at their first login while subject; once it runs out
+ * a subject user is refused at login until an admin resets it. Super admins
+ * are never refused, so someone can always get in to reset everyone else.
  */
 final class GracePeriod
 {
@@ -44,16 +45,20 @@ final class GracePeriod
         Cache::forget(self::REQUIRED_ROLES_CACHE_KEY);
     }
 
-    /** No flagged role means the feature is dormant for everyone, super admins included. */
+    /** A flagged role, or for a super admin, the separate super-admin switch. */
     public static function subjectByRole(User $user): bool
     {
+        if ($user->isSuperAdmin() && config()->boolean('auth.two_factor.super_admins')) {
+            return true;
+        }
+
         $required = self::requiredRoleNames();
 
         if ($required === []) {
             return false;
         }
 
-        return $user->isSuperAdmin() || $user->getRoleNames()->intersect($required)->isNotEmpty();
+        return $user->getRoleNames()->intersect($required)->isNotEmpty();
     }
 
     /** Whether the user is subject to the mandate at all, and so sees the nag. */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -101,6 +102,17 @@ class TwoFactorGracePeriodTest extends TestCase
             ->assertSee(__('auth.two_factor_grace_ended'));
     }
 
+    public function test_an_impersonating_admin_sees_the_users_banner_without_starting_their_clock(): void
+    {
+        $target = $this->subjectUser();
+        $this->actingAs(User::factory()->superAdmin()->twoFactorEnabled()->create());
+        app(StartImpersonation::class)->handle($target);
+
+        $this->get('/profile')->assertSee(trans_choice('auth.two_factor_grace_warning', 14));
+
+        $this->assertNull($target->fresh()->two_factor_grace_started_at);
+    }
+
     public function test_login_succeeds_up_to_the_deadline_and_is_refused_from_it(): void
     {
         $user = $this->subjectUser();
@@ -186,10 +198,10 @@ class TwoFactorGracePeriodTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_super_admins_are_nagged_but_never_locked_out(): void
+    public function test_a_super_admin_holding_a_flagged_role_is_nagged_but_never_locked_out(): void
     {
-        $this->flaggedRole();
         $admin = User::factory()->superAdmin()->graceStartedDaysAgo(60)->create();
+        $admin->assignRole($this->flaggedRole());
 
         $this->login($admin)->assertSessionHasNoErrors();
 
@@ -199,11 +211,23 @@ class TwoFactorGracePeriodTest extends TestCase
             ->assertDontSee(__('auth.two_factor_grace_ended'));
     }
 
-    public function test_super_admins_are_not_nagged_while_no_role_requires_two_factor(): void
+    public function test_the_super_admin_switch_nags_super_admins_without_locking_them_out(): void
     {
+        config()->set('auth.two_factor.super_admins', true);
+        $admin = User::factory()->superAdmin()->graceStartedDaysAgo(60)->create();
+        $regular = User::factory()->create();
+
+        $this->login($admin)->assertSessionHasNoErrors();
+        $this->get('/profile')->assertSee(__('auth.two_factor_required_super_admin'));
+        $this->actingAs($regular)->get('/profile')->assertDontSee(__('auth.two_factor_setup_cta'));
+    }
+
+    public function test_a_super_admin_without_a_flagged_role_is_not_nagged(): void
+    {
+        $this->flaggedRole();
         $admin = User::factory()->superAdmin()->create();
 
-        $this->actingAs($admin)->get('/profile')->assertDontSee(__('auth.two_factor_required_super_admin'));
+        $this->actingAs($admin)->get('/profile')->assertDontSee(__('auth.two_factor_setup_cta'));
     }
 
     public function test_unflagging_the_role_lets_a_locked_out_user_back_in(): void
