@@ -266,6 +266,7 @@ return [
     'memberships' => [
         'title' => ':Team memberships',
         'none' => 'Does not belong to any :team.',
+        'member_since' => ':Member since',
     ],
 
     'roles' => [
