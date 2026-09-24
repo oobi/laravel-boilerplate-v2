@@ -1,6 +1,6 @@
 <div class="mx-auto flex max-w-2xl flex-col gap-6 text-center">
     @auth
-        <x-page-header :title="__('Welcome, :name!', ['name' => auth()->user()->first_name])" />
+        <h1 class="ui-page-title">{{ __('Welcome, :name!', ['name' => auth()->user()->first_name]) }}</h1>
         <p class="ui-subtle">{{ __("You're logged in.") }}</p>
 
         @if (auth()->user()->canAccessAdmin())
@@ -11,8 +11,10 @@
             </div>
         @endif
     @else
-        <x-page-header :title="__('Welcome to :app', ['app' => config('app.name')])" />
-        <p class="ui-subtle">{{ __('Log in or register to get started.') }}</p>
+        <h1 class="ui-page-title">{{ __('Welcome to :app', ['app' => config('app.name')]) }}</h1>
+        <p class="ui-subtle">
+            {{ Route::has('register') ? __('Log in or register to get started.') : __('Log in to get started.') }}
+        </p>
 
         <div class="flex justify-center gap-3">
             <x-button href="{{ route('login') }}" color="primary">

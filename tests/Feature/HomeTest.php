@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\RouteCollection;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class HomeTest extends TestCase
@@ -17,6 +19,27 @@ class HomeTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee(__('Log in'));
         $response->assertSee(route('login'), false);
+        $response->assertSee(__('Log in or register to get started.'));
+        $response->assertSee(route('register'), false);
+    }
+
+    public function test_guests_are_not_invited_to_register_when_registration_is_disabled(): void
+    {
+        $routes = new RouteCollection;
+
+        foreach (Route::getRoutes() as $route) {
+            if ($route->getName() !== 'register') {
+                $routes->add($route);
+            }
+        }
+
+        Route::setRoutes($routes);
+
+        $response = $this->get('/');
+
+        $response->assertStatus(200);
+        $response->assertSee(__('Log in to get started.'));
+        $response->assertDontSee(__('Log in or register to get started.'));
     }
 
     public function test_authenticated_users_see_a_welcome_message_and_logout(): void
