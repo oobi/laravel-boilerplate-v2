@@ -95,7 +95,7 @@ return [
     'select_all_in' => 'Select all :group',
     'included_with' => 'Included with :permissions',
     'require_two_factor' => 'Require two factor authentication',
-    'require_two_factor_help' => 'Members must set up two factor authentication within :days days of their next login, or they will be unable to log in until an administrator restores access. Super admins are reminded but never locked out.',
+    'require_two_factor_help' => '{1} Members must set up two factor authentication within :count day of their next login, or they will be unable to log in until an administrator restores access. Super admins are reminded but never locked out.|[0,*] Members must set up two factor authentication within :count days of their next login, or they will be unable to log in until an administrator restores access. Super admins are reminded but never locked out.',
     'two_factor_required_suffix' => '2FA required',
     'select_role' => 'Select Role',
     'manage_roles' => 'Manage Roles',

@@ -79,7 +79,7 @@ class CreateRole extends Component implements HasSchemas
                         // Only system roles are assigned to users directly, so only they can carry the mandate.
                         Forms\Components\Toggle::make('requires_two_factor')
                             ->label(__('admin.require_two_factor'))
-                            ->helperText(__('admin.require_two_factor_help', ['days' => GracePeriod::graceDays()]))
+                            ->helperText(trans_choice('admin.require_two_factor_help', GracePeriod::graceDays()))
                             ->visible(fn (): bool => $this->scopeKey === Role::SYSTEM_SCOPE),
                     ]),
 
