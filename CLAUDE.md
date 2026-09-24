@@ -21,3 +21,9 @@ duplicated. Both files below are imported verbatim — edit *them*, not this fil
 
 ## Comment Policy
 - **No em dashes**: never use em dashes in code, docs, or copy. Use periods, commas, colons, or rewrite the sentence.
+
+
+## Git
+Keep comments brief and to the point.
+
+When merging branches back to main, use --no-ff flag
