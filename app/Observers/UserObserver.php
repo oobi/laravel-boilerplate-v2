@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class UserObserver
 {
@@ -24,6 +25,21 @@ class UserObserver
         $this->purgeDatabaseSessions($user);
 
         $user->forceFill(['remember_token' => null])->saveQuietly();
+    }
+
+    /**
+     * Permanent deletion removes the row but not the uploaded file, so clean the
+     * profile photo from storage here — the one place both individual force-delete
+     * and bulk "empty trash" (which force-deletes each record so this fires) share.
+     * Failure is reported, never thrown: one unreadable file must not abort a purge.
+     */
+    public function forceDeleted(User $user): void
+    {
+        try {
+            $user->deleteProfilePhotoFile();
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     /**

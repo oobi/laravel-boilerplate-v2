@@ -34,9 +34,23 @@ trait HasProfilePhoto
             return;
         }
 
-        Storage::disk($this->profilePhotoDisk())->delete($this->profile_photo_path);
+        $this->deleteProfilePhotoFile();
 
         $this->forceFill(['profile_photo_path' => null])->save();
+    }
+
+    /**
+     * Delete only the stored file, without touching the model row — for when the
+     * row is already gone (a force-delete), where saving it back would be wrong.
+     * Callers that also need the column cleared use deleteProfilePhoto().
+     */
+    public function deleteProfilePhotoFile(): void
+    {
+        if (is_null($this->profile_photo_path)) {
+            return;
+        }
+
+        Storage::disk($this->profilePhotoDisk())->delete($this->profile_photo_path);
     }
 
     protected function profilePhotoUrl(): Attribute

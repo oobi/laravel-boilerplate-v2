@@ -7,8 +7,13 @@ use App\Livewire\Admin\Users\ListUsers;
 use App\Models\Role;
 use App\Models\User;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Mockery;
+use RuntimeException;
 use Tests\TestCase;
 
 class ListUsersTest extends TestCase
@@ -218,6 +223,68 @@ class ListUsersTest extends TestCase
         $this->assertModelMissing($trashed->first());
         $this->assertModelMissing($trashed->last());
         $this->assertNotNull($admin->fresh());
+    }
+
+    public function test_emptying_trash_deletes_purged_users_profile_photos(): void
+    {
+        // Regression for GitHub #12: the bulk purge must not leave uploaded photos
+        // orphaned in storage.
+        Storage::fake('public');
+
+        $admin = User::factory()->superAdmin()->create();
+        $trashed = User::factory()->count(2)->create();
+        $paths = $trashed->map(function (User $user): string {
+            $user->updateProfilePhoto(UploadedFile::fake()->image('avatar.jpg'));
+
+            return $user->profile_photo_path;
+        });
+        $trashed->each->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callAction('emptyTrash');
+
+        $this->assertModelMissing($trashed->first());
+        $this->assertModelMissing($trashed->last());
+        Storage::disk('public')->assertMissing($paths->first());
+        Storage::disk('public')->assertMissing($paths->last());
+    }
+
+    public function test_force_deleting_a_user_deletes_their_profile_photo(): void
+    {
+        // Individual force-delete and empty-trash share this cleanup through the
+        // forceDeleted model event.
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $user->updateProfilePhoto(UploadedFile::fake()->image('avatar.jpg'));
+        $path = $user->profile_photo_path;
+
+        $user->forceDelete();
+
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_emptying_trash_completes_even_when_a_photo_cannot_be_deleted(): void
+    {
+        // A storage failure on one file must not abort the whole purge.
+        Storage::fake('public');
+
+        $admin = User::factory()->superAdmin()->create();
+        $trashed = User::factory()->count(2)->create();
+        $trashed->each(fn (User $user) => $user->updateProfilePhoto(UploadedFile::fake()->image('avatar.jpg')));
+        $trashed->each->delete();
+
+        $throwing = Mockery::mock(Filesystem::class);
+        $throwing->shouldReceive('delete')->andThrow(new RuntimeException('storage down'));
+        Storage::set('public', $throwing);
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->callAction('emptyTrash');
+
+        $this->assertModelMissing($trashed->first());
+        $this->assertModelMissing($trashed->last());
     }
 
     public function test_a_non_privileged_admin_cannot_empty_the_trash(): void

@@ -61,9 +61,13 @@ trait ManagesTrashedRecords
             ->modalDescription(__('admin.empty_trash_confirm'))
             ->authorize(fn (): bool => is_null($this->emptyTrashPermission()) || Gate::allows($this->emptyTrashPermission()))
             ->action(function (): void {
-                $count = $this->emptyTrashQuery()->count();
+                // Force-delete each record rather than a bulk query delete: a bulk
+                // delete skips model events, so per-model deletion cleanup (e.g. a
+                // User's stored profile photo) would never run — see GitHub #12.
+                $records = $this->emptyTrashQuery()->get();
+                $count = $records->count();
 
-                $this->emptyTrashQuery()->forceDelete();
+                $records->each->forceDelete();
 
                 $this->tableFilters[$this->trashedFilterName()]['value'] = '';
 
