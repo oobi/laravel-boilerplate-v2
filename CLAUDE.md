@@ -24,6 +24,10 @@ duplicated. Both files below are imported verbatim — edit *them*, not this fil
 
 
 ## Git
-Keep comments brief and to the point.
 
-When merging branches back to main, use --no-ff flag
+- Keep comments brief and to the point.
+- **ALWAYS merge with `--no-ff`.** Never fast-forward a branch into `main` (or
+  any shared branch): every merge MUST create a merge commit, *even when a
+  fast-forward is possible*. Always run `git merge --no-ff <branch>` — never a
+  bare `git merge` or `--ff-only`. If you catch yourself about to fast-forward,
+  stop and re-merge with `--no-ff`.
