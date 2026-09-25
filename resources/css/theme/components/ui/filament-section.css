@@ -36,3 +36,29 @@
     border: 1px solid var(--color-base-300);
     background-color: var(--ui-inset-bg);
 }
+
+/*
+|--------------------------------------------------------------------------
+| A table as a section's only content: flush, not a card in a card
+|--------------------------------------------------------------------------
+| A section whose body is just a table (an EmbeddedTable, e.g. the Merge
+| duplicates tab) would otherwise show the table as a second island inside
+| the first: padded in, with its own border, shadow and corners. Instead the
+| table fills the section edge to edge: the section's padding goes, the table
+| drops its border, shadow and top corners, and its bottom corners follow the
+| section's. The line under the section header then divides the heading from
+| the column headers. The table keeps its own overflow clipping (see
+| filament-table.css) rather than clipping the whole section, so dropdowns
+| inside it aren't cut off. Applies automatically: nothing to opt into.
+*/
+.fi-section:not(.fi-section-not-contained)
+    > .fi-section-content-ctn
+    > .fi-section-content:has(> .fi-grid-col:only-child > .fi-sc-component > .fi-ta) {
+    padding: 0;
+
+    & .fi-ta-ctn {
+        border: 0;
+        box-shadow: none;
+        border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    }
+}

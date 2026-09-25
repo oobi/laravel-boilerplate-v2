@@ -11,8 +11,11 @@ use App\Support\Theme\DaisyColor;
 use Concise\Teams\Models\Team;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -51,6 +54,15 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
         Gate::authorize(SystemPermission::VIEW_USERS->value);
 
         $this->user = $user;
+    }
+
+    /** The table in a section, titled like the page's other sections (User Information). */
+    public function panelSchema(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(team_trans('memberships.title'))
+                ->schema([EmbeddedTable::make()]),
+        ]);
     }
 
     public function table(Table $table): Table

@@ -24,3 +24,30 @@
     box-shadow: none;
     background-color: var(--ui-inset-bg);
 }
+
+/*
+|--------------------------------------------------------------------------
+| A table as a card's last content: flush, not a card in a card
+|--------------------------------------------------------------------------
+| The card counterpart of the flush-table rule in filament-section.css (e.g.
+| the Users Show page's Salon memberships panel: a titled <x-card> whose body
+| ends in a Livewire component that renders only a Filament table). Instead
+| of a second island padded inside the card, the table runs to the card's
+| sides and bottom under a divider below the title, and drops its own border,
+| shadow and top corners; its bottom corners follow the card's. Applies
+| automatically when the card body's last child wraps nothing but a table.
+*/
+.card-body:has(> :last-child > .fi-ta:only-child) {
+    padding-bottom: 0;
+
+    & > :last-child {
+        margin-inline: calc(var(--card-p, 1.5rem) * -1);
+        border-top: 1px solid var(--color-base-300);
+    }
+
+    & .fi-ta-ctn {
+        border: 0;
+        box-shadow: none;
+        border-radius: 0 0 var(--radius-box) var(--radius-box);
+    }
+}
