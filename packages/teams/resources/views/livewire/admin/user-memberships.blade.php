@@ -1,3 +1,3 @@
 <div>
-    {{ $this->table }}
+    {{ $this->panelSchema }}
 </div>

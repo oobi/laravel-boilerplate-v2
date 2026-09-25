@@ -55,3 +55,22 @@
 .fi-grid.fi-fo-checkbox-list-options.ui-option-grid {
     grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
 }
+
+/*
+| Field height: Filament sizes single-line fields by padding (36px), daisyUI
+| to a fixed `--size-field` step (40px), and filament-buttons.css already pins
+| Filament's buttons to daisyUI's scale. Pin the fields the same way so a
+| Filament field, a daisyUI field and a button of either kind line up side by
+| side. Textareas and rich editors keep their own padding.
+*/
+.fi-input-wrp input.fi-input,
+.fi-input-wrp select.fi-select-input,
+.fi-select-input .fi-select-input-btn,
+.fi-fo-date-time-picker .fi-fo-date-time-picker-display-text-input {
+    padding-block: calc((var(--size-field, 0.25rem) * 10 - 1.5rem) / 2);
+}
+
+.fi-select-input div[x-ref='select'],
+.fi-select-input .fi-select-input-btn {
+    min-height: calc(var(--size-field, 0.25rem) * 10);
+}

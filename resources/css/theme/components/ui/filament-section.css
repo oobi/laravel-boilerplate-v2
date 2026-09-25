@@ -36,3 +36,54 @@
     border: 1px solid var(--color-base-300);
     background-color: var(--ui-inset-bg);
 }
+
+/*
+| Opt-out for a nested section that holds the live form beside a recessed
+| read-only one (e.g. a form to act on above a recessed preview of the
+| result). Keeps the outline, restores base-100.
+| Filament puts a schema Section's extraAttributes on its wrapper
+| (`.fi-sc-section`), not the `.fi-section` inside, so match either.
+*/
+.card .fi-section.ui-section-raised:not(.fi-aside),
+.card .ui-section-raised > .fi-section:not(.fi-aside),
+.tabs-connected__content .fi-section.ui-section-raised:not(.fi-aside),
+.tabs-connected__content .ui-section-raised > .fi-section:not(.fi-aside) {
+    background-color: var(--color-base-100);
+}
+
+/*
+|--------------------------------------------------------------------------
+| A table as a section's only content: flush, not a card in a card
+|--------------------------------------------------------------------------
+| A section whose body is just a table (e.g. an EmbeddedTable) would
+| otherwise show the table as a second island inside
+| the first: padded in, with its own border, shadow and corners. Instead the
+| table fills the section edge to edge: the section's padding goes, the table
+| drops its border, shadow and top corners, and its bottom corners follow the
+| section's. The line under the section header then divides the heading from
+| the column headers. The table keeps its own overflow clipping (see
+| filament-table.css) rather than clipping the whole section, so dropdowns
+| inside it aren't cut off. Applies automatically: nothing to opt into.
+*/
+.fi-section:not(.fi-section-not-contained)
+    > .fi-section-content-ctn
+    > .fi-section-content:has(> .fi-grid-col:only-child > .fi-sc-component > .fi-ta) {
+    padding: 0;
+
+    & .fi-ta-ctn {
+        border: 0;
+        box-shadow: none;
+        border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Tabs inside a section: part of the section, not a second floating island
+|--------------------------------------------------------------------------
+| An <x-tabs-nav> nested in a section keeps its border but drops the island
+| shadow, like a nested section.
+*/
+.fi-section .tabs-connected {
+    box-shadow: none;
+}

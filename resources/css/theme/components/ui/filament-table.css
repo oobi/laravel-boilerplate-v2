@@ -168,3 +168,18 @@ th.fi-ta-selection-cell,
 .fi-pagination .fi-btn:not(.fi-outlined):not(.fi-color):hover {
     background-color: var(--color-base-200);
 }
+
+/*
+|--------------------------------------------------------------------------
+| Flush content: a table that fills its panel edge to edge
+|--------------------------------------------------------------------------
+| For a table that sits directly in a panel with no padding (e.g. a tab
+| panel: <x-tabs-nav flush>, which adds this class).
+| The panel's border frames it, so the table drops its own border, shadow and
+| corners. Sections do this automatically (filament-section.css).
+*/
+.ui-flush-content .fi-ta-ctn {
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+}

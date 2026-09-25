@@ -10,14 +10,19 @@
     among ALL tabs in the DOM, which doesn't hold for us (one tab per page
     load) and showed as a stray seam between the tabs and the panel.
 
+    flush: content that runs edge to edge, e.g. a table as a tab's panel.
+    Drops the panel's padding, runs the line under the tabs the
+    full width, and lets a table inside drop its own border and corners
+    (`.ui-flush-content`, filament-table.css) so the panel's border frames it.
+
     Optional scrollable tabs on mobile:
     - Use scrollable="true" attribute to enable horizontal scroll/swipe behavior
     - On mobile: tabs scroll horizontally with "Swipe for more tabs" hint
     - On desktop: all tabs visible with optional scroll indicators
     - Example: <x-tabs-nav scrollable="true">{{ $slot }}</x-tabs-nav>
 --}}
-@props(['scrollable' => true])
-<div class="tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100 ui-island-shadow">
+@props(['scrollable' => true, 'flush' => false])
+<div {{ $attributes->class(['tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
     @if ($scrollable)
         {{-- Mobile swipe hint --}}
         <div class="block sm:hidden text-center text-xs text-base-content/50 pt-3 px-4">
@@ -61,14 +66,21 @@
             @endif
         </div>
 
-        <div class="tabs-connected__divider border-b border-base-300"></div>
+        @unless ($flush)
+            <div class="tabs-connected__divider border-b border-base-300"></div>
+        @endunless
     </div>
+
+    @if ($flush)
+        {{-- Full width, so it meets the edges like the flush content below. --}}
+        <div class="tabs-connected__divider border-b border-base-300"></div>
+    @endif
 
     @isset($content)
         {{-- Forces display regardless of which tab is "active" — daisyUI's own
              show/hide-on-checked wiring is for co-located panels; ours are
              separate pages, so there's always exactly one panel to show. --}}
-        <div class="tab-content tabs-connected__content bg-base-100 p-6" style="display: block">
+        <div @class(['tab-content tabs-connected__content bg-base-100', 'p-6' => ! $flush, 'ui-flush-content' => $flush]) style="display: block">
             {{ $content }}
         </div>
     @endisset
