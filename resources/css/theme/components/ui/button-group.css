@@ -20,6 +20,8 @@
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
+        /* daisyUI's field height, so the group lines up with the selects and buttons beside it. */
+        min-height: calc(var(--size-field, 0.25rem) * 10);
         padding: 0.5rem 0.75rem;
         font-size: 0.875rem;
         font-weight: 500;
