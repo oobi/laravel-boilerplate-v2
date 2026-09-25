@@ -29,9 +29,9 @@
 |--------------------------------------------------------------------------
 | A table as a card's last content: flush, not a card in a card
 |--------------------------------------------------------------------------
-| The card counterpart of the flush-table rule in filament-section.css (e.g.
-| the Users Show page's Salon memberships panel: a titled <x-card> whose body
-| ends in a Livewire component that renders only a Filament table). Instead
+| The card counterpart of the flush-table rule in filament-section.css: a
+| titled <x-card> whose body ends in a Livewire component that renders only a
+| Filament table. Instead
 | of a second island padded inside the card, the table runs to the card's
 | sides and bottom under a divider below the title, and drops its own border,
 | shadow and top corners; its bottom corners follow the card's. Applies
