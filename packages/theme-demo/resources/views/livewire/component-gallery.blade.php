@@ -48,9 +48,7 @@
         {{-- A needs-attention card: accent, an icon tile, inset items and a footer of actions. --}}
         <x-card accent="warning" bodyClass="gap-6">
             <div class="flex items-start gap-4">
-                <span class="flex size-10 shrink-0 items-center justify-center rounded-field bg-warning/20 text-warning-content">
-                    <x-heroicon-o-exclamation-triangle class="size-5" />
-                </span>
+                <x-avatar icon="heroicon-o-exclamation-triangle" color="warning" square class="shrink-0" />
                 <div class="flex flex-col gap-1">
                     <h3 class="text-lg font-semibold">{{ __('2 invoices need attention') }}</h3>
                     <p class="text-base-content/70">{{ __('These were returned by the payment provider. Check the details, then retry or cancel them.') }}</p>
@@ -205,6 +203,19 @@
             <div class="flex flex-wrap items-center gap-2">
                 @foreach (['xs', 'sm', 'md', 'lg', 'xl'] as $size)
                     <x-avatar name="Jane Doe" :size="$size" />
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Icon: an icon tile for a card or banner header, in the same colours, variants and sizes. --}}
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Icon') }} (<code>icon="heroicon-o-…" square</code>)</div>
+            <div class="flex flex-wrap items-center gap-2">
+                @foreach (['info' => 'heroicon-o-information-circle', 'success' => 'heroicon-o-check-circle', 'warning' => 'heroicon-o-exclamation-triangle', 'error' => 'heroicon-o-x-circle'] as $color => $icon)
+                    <x-avatar :icon="$icon" :color="$color" square />
+                @endforeach
+                @foreach (['xs', 'sm', 'md', 'lg', 'xl'] as $size)
+                    <x-avatar icon="heroicon-o-users" color="primary" :size="$size" square />
                 @endforeach
             </div>
         </div>

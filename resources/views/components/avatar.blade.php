@@ -14,6 +14,10 @@
     - variant: solid, soft, ghost, outline (default: soft)
     - color: primary, secondary, accent, neutral, info, success, warning, error (default: neutral)
     - square: bool — rounded-box instead of a circle (default: false)
+    - icon: a heroicon component name (e.g. 'heroicon-o-users') shown instead
+      of initials or a photo, sized to the avatar: an icon tile for a card or
+      banner header, in the same colours and variants. Decorative; pass a
+      `name` for a tooltip
 --}}
 @props([
     'user' => null,
@@ -24,6 +28,7 @@
     'variant' => 'soft',
     'color' => 'neutral',
     'square' => false,
+    'icon' => null,
 ])
 
 @php
@@ -45,8 +50,10 @@
 @endphp
 
 <div {{ $attributes->merge(['class' => $outerClasses]) }}>
-    <div class="avatar-{{ $color }} avatar-{{ $variant }}" title="{{ $title }}">
-        @if ($src)
+    <div class="avatar-{{ $color }} avatar-{{ $variant }}" @if ($title) title="{{ $title }}" @endif>
+        @if ($icon)
+            <x-dynamic-component :component="$icon" class="avatar-icon" aria-hidden="true" />
+        @elseif ($src)
             <img
                 src="{{ $src }}"
                 alt="{{ $name }}"
