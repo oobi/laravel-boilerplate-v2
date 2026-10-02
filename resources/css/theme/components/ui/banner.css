@@ -13,6 +13,7 @@
 @layer components {
     .ui-banner {
         display: flex;
+        flex-wrap: wrap;
         align-items: flex-start;
         gap: 0.75rem;
         /* Soft border on all sides (shared --soft-ring-strength, like the
@@ -37,16 +38,21 @@
         color: var(--ui-banner-color, var(--color-base-content));
     }
 
+    /* The body keeps a readable width; when the actions no longer fit beside
+       it they wrap onto their own row underneath (narrow screens). */
     .ui-banner-body {
         min-width: 0;
-        flex: 1 1 0%;
+        flex: 1 1 16rem;
+        align-self: center;
     }
 
     .ui-banner-actions {
         display: flex;
         flex-shrink: 0;
+        flex-wrap: wrap;
         align-items: center;
         gap: 0.5rem;
+        margin-inline-start: auto;
     }
 
     .ui-banner-close {

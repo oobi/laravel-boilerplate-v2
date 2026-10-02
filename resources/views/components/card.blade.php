@@ -29,6 +29,10 @@
       the title, right-aligned
     - footer: optional row below the body, under a divider, for the card's
       actions; its attributes merge onto the row
+    - href: makes the whole card a link (an <a>, not a link wrapped around a
+      card), with a hover border and keyboard focus ring; the card is a
+      `group`, so content can react with group-hover:. Nothing interactive
+      inside it: a link can't hold buttons (default: none)
     - stickyFooter: keep the footer in view at the bottom of the screen while
       a long card scrolls past (default: false). It sticks within the nearest
       scrolling ancestor, so nothing between the card and the page may set
@@ -43,6 +47,7 @@
     'inset' => false,
     'accent' => null,
     'stickyFooter' => false,
+    'href' => null,
 ])
 
 @php
@@ -64,10 +69,11 @@
         'warning' => 'border-t-4 border-t-warning',
         'error' => 'border-t-4 border-t-error',
     ];
+    $tag = $href ? 'a' : 'div';
     $accentClass = $accent === null ? null : $accentClasses[\App\Support\Theme\DaisyColor::fromFilamentColor($accent)->value];
 @endphp
 
-<div {{ $attributes->class(['card', 'bg-base-100' => ! $inset, 'card-inset' => $inset, 'border border-base-300' => $bordered, $accentClass]) }}>
+<{{ $tag }}@if ($href) href="{{ $href }}"@endif {{ $attributes->class(['card', 'group ui-card-link' => $href, 'bg-base-100' => ! $inset, 'card-inset' => $inset, 'border border-base-300' => $bordered, $accentClass]) }}>
     <div class="card-body {{ $bodyClass }}">
         @if (isset($title) || isset($actions))
             <div class="flex items-center justify-between">
@@ -93,4 +99,4 @@
             {{ $footer }}
         </div>
     @endisset
-</div>
+</{{ $tag }}>

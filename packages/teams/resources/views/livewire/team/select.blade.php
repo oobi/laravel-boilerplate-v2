@@ -10,34 +10,22 @@
 
     @if ($showFilter)
         {{-- Everything here is enterable, so the useful axis is ownership: which of these am I responsible for. --}}
-        <div class="ui-button-group self-start" role="group">
-            <button
-                type="button"
-                wire:click="$set('filter', '{{ $selectAll }}')"
-                @class(['ui-button-group-btn', 'ui-button-group-btn-active-primary' => $filter === $selectAll])
-            >
+        <x-button-group :label="team_trans('select.title')" class="self-start">
+            <x-button-group.item :active="$filter === $selectAll" wire:click="$set('filter', '{{ $selectAll }}')">
                 {{ team_trans('select.all') }}
                 <x-badge color="info" size="xs">{{ $allCount }}</x-badge>
-            </button>
+            </x-button-group.item>
 
-            <button
-                type="button"
-                wire:click="$set('filter', '{{ \Concise\Teams\Livewire\Team\SelectTeam::FILTER_OWNED }}')"
-                @class(['ui-button-group-btn', 'ui-button-group-btn-active-primary' => $filter !== $selectAll])
-            >
+            <x-button-group.item :active="$filter !== $selectAll" wire:click="$set('filter', '{{ \Concise\Teams\Livewire\Team\SelectTeam::FILTER_OWNED }}')">
                 {{ team_trans('select.mine') }}
                 <x-badge color="info" size="xs">{{ $ownedCount }}</x-badge>
-            </button>
-        </div>
+            </x-button-group.item>
+        </x-button-group>
     @endif
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($teams as $team)
-            <a
-                href="{{ team_route('team.dashboard', $team) }}"
-                class="group flex flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-5 transition hover:border-primary hover:shadow-md"
-                wire:key="team-{{ $team->id }}"
-            >
+            <x-card :href="team_route('team.dashboard', $team)" wire:key="team-{{ $team->id }}">
                 <div class="flex items-start justify-between gap-2">
                     {{-- Cards are wide, so long names wrap here rather than truncating as they must in the sidebar. --}}
                     <h2 class="font-semibold text-base-content group-hover:text-primary">{{ $team->name }}</h2>
@@ -54,7 +42,7 @@
                         {{ team_trans_choice('select.members', $team->users_count, ['count' => $team->users_count]) }}
                     </span>
                 </div>
-            </a>
+            </x-card>
         @endforeach
     </div>
 

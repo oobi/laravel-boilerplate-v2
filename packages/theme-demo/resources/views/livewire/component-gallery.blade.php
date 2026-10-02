@@ -72,6 +72,20 @@
             </x-slot:footer>
         </x-card>
 
+        {{-- A whole card as a link, and the dashed "nothing here yet" panel. --}}
+        <div class="grid gap-4 sm:grid-cols-2">
+            <x-card href="#" :title="__('Linked card')" type="panel">
+                <p class="text-sm text-base-content/70">{{ __('`href` makes the whole card the link: a hover border and a keyboard focus ring. No buttons inside it.') }}</p>
+            </x-card>
+
+            <x-empty-state icon="heroicon-o-inbox" :title="__('No projects yet')">
+                {{ __('The empty state: for an empty list, a page still to come or a search that found nothing.') }}
+                <x-slot:actions>
+                    <x-button.action size="sm">{{ __('Add a project') }}</x-button.action>
+                </x-slot:actions>
+            </x-empty-state>
+        </div>
+
         {{-- Sticky footer: a long card keeps its action row in view while it scrolls past. --}}
         <p class="ui-subtle text-sm">{{ __('`sticky-footer` keeps the footer at the bottom of the screen until the card\'s end scrolls into view, so a confirm button below a long list stays in reach. Scroll past this card to see it.') }}</p>
 

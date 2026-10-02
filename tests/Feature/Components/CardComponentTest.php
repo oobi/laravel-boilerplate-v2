@@ -42,4 +42,14 @@ class CardComponentTest extends TestCase
         $this->blade('<x-card>Body<x-slot:footer>Actions</x-slot:footer></x-card>')->assertDontSee('sticky bottom-0', false);
         $this->blade('<x-card sticky-footer>Body<x-slot:footer>Actions</x-slot:footer></x-card>')->assertSee('sticky bottom-0', false);
     }
+
+    public function test_a_card_with_href_is_the_link_itself(): void
+    {
+        $this->blade('<x-card href="/teams/1" title="Aspley">Body</x-card>')
+            ->assertSee('<a href="/teams/1"', false)
+            ->assertSee('ui-card-link', false)
+            ->assertDontSee('<div class="card ', false);
+
+        $this->blade('<x-card>Body</x-card>')->assertDontSee('ui-card-link', false);
+    }
 }
