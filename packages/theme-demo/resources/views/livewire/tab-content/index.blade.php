@@ -65,7 +65,7 @@
                     </label>
 
                     <div class="flex justify-end md:col-span-2">
-                        <button type="button" class="btn btn-primary">{{ __('theme-demo::messages.tab_content_form_save') }}</button>
+                        <x-button.action>{{ __('theme-demo::messages.tab_content_form_save') }}</x-button.action>
                     </div>
                 </form>
             @elseif ($variant === 'panels')

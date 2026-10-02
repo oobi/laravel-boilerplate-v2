@@ -64,6 +64,14 @@ currently registered.
 
 - Tests are PHPUnit classes only (not Pest) — `php artisan make:test --phpunit`.
 - Run `vendor/bin/pint --dirty --format agent` before finalizing PHP changes.
+- **Views use the Blade components, never hand-rolled copies of them.** Before
+  writing any markup, check the component table in
+  [the design-system skill](../.ai/skills/design-system/SKILL.md) and use
+  `<x-banner>`, `<x-alert>`, `<x-card>` (`inset`, `accent`, `footer`),
+  `<x-badge>` and the `<x-button.*>` intents. No raw daisyUI `btn` / `alert` /
+  `card` / `badge` classes, and no status strips built from a coloured border or
+  tint. If a component almost fits, extend it. See
+  [.ai/rules/views.md](../.ai/rules/views.md); `ComponentUsageTest` enforces it.
 - Route names for panel/nav-linked pages must be flat (`resource.action`, not
   `resource.sub.action`) — `App\Support\Breadcrumbs` derives the parent
   crumb from `Str::beforeLast($routeName, '.')`.
@@ -94,6 +102,10 @@ still apply:
   GET route. Destructive commands need a confirmation prompt + `--dry-run`.
 - One PR = one concern, aim under ~400 lines diff; log bugs as GitHub issues
   before fixing, reference them in the commit.
+- Branch names say what kind of work they hold: `feature/<name>` for new
+  functionality, `task/<name>` for chores, refactors, docs and reviews, and
+  `bug/<name>` for fixes (e.g. `feature/client-merge`, `bug/phone-validation`).
+  Short, lowercase, hyphenated.
 - Don't commit code unless explicitly asked. Make the change and leave it
   uncommitted for review; only run `git commit` (or push, or open a PR) when
   the user asks for it in so many words.

@@ -16,13 +16,13 @@
 
                 {{-- Profile now lives inside the admin shell, so only panel users get these links. --}}
                 @if (auth()->user()->canAccessAdmin())
-                    <a href="{{ route('profile.edit') }}" class="btn btn-ghost btn-sm">
+                    <x-button color="neutral" variant="ghost" size="sm" :href="route('profile.edit')">
                         {{ __('Profile') }}
-                    </a>
+                    </x-button>
 
-                    <a href="{{ route('dashboard') }}" class="btn btn-ghost btn-sm">
+                    <x-button color="neutral" variant="ghost" size="sm" :href="route('dashboard')">
                         {{ __('Admin Dashboard') }}
-                    </a>
+                    </x-button>
                 @endif
 
                 <form method="POST" action="{{ route('logout') }}">
@@ -33,14 +33,14 @@
                     </x-button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="btn btn-ghost btn-sm">
+                <x-button color="neutral" variant="ghost" size="sm" :href="route('login')">
                     {{ __('Log in') }}
-                </a>
+                </x-button>
 
                 @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn btn-primary btn-sm">
+                    <x-button size="sm" :href="route('register')">
                         {{ __('Register') }}
-                    </a>
+                    </x-button>
                 @endif
             @endauth
         </div>

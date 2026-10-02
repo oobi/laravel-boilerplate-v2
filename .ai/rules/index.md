@@ -24,3 +24,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | packages/teams/routes/teams.php | .ai/rules/teams-routes.md |
 | packages/teams/** | .ai/rules/teams.md |
 | tests/** | .ai/rules/tests.md |
+| resources/views/**, packages/*/resources/views/** | .ai/rules/views.md |

@@ -60,13 +60,19 @@ hand-write the equivalent markup when nothing here covers the need (and
 consider adding a component if the same markup would repeat more than twice,
 per the Blade instructions).
 
+This is enforced: `tests/Feature/Components/ComponentUsageTest.php` fails on
+raw `btn` / `alert` / `card` / `badge` / `ui-banner` classes and on status
+strips built from a coloured border or tint, outside
+`resources/views/components`. A deliberate exception goes in its `ALLOWED`
+list with the reason. See `.ai/rules/views.md`.
+
 ### Content
 
 | Component | Use instead of | Key props |
 |---|---|---|
 | `<x-card>` | `<div class="card bg-base-100 border border-base-300">…` section wrapper | `title`, `type` (`default` bold title / `panel` smaller muted heading — Users Show page panel cards; picks `titleClass` for you, don't guess a heading class), `bordered` (default true — every card should have a border; only false when nesting a card inside another card), `bodyClass` (default `gap-3`), `accent` (a daisyUI colour for a thick top edge marking status, e.g. `warning` on a needs-attention card; text stays body colour); slots: `actions` (e.g. a "View all" link, rendered inline with the title), `footer` (an action row under a divider; add `sticky-footer` to keep it in view while a long card scrolls) |
 | `<x-alert>` | `<div class="alert ...">` — short-lived flash/inline message | `color` (default `info`), `variant` (default `soft`) |
-| `<x-banner>` | persistent contextual banner (announcements, "trial ending") — not for flash messages, use `<x-alert>` for those | `variant` (default `info`), `dismissible`; slots: default (body), `actions` |
+| `<x-banner>` | persistent contextual banner (announcements, "trial ending") **and any in-page status or warning strip that stays on screen, with or without buttons** ("Check these are the same person", "Not merged yet" with Back and Merge, "No email address" with Add details). Never hand-build one from a coloured border or tint. Not for flash messages, use `<x-alert>` for those | `variant` (default `info`), `dismissible`; slots: default (body), `actions` (wrap under the body on narrow screens) |
 | `<x-badge>` | `<span class="badge ...">`; pass a Filament enum (`HasColor`/`HasLabel`) as `value` to skip color/label | `value`, `color`, `variant` (default `soft`), `size` |
 | `<x-avatar>` | `<div class="avatar">…` initials/photo circle | `user` (model with `->name`/`->profile_photo_url`), `name`, `src`, `size`, `variant` (default `soft`), `color`, `square` |
 | `<x-button>` | `<button class="btn ...">` / `<a class="btn ...">` | `color` (default `primary`), `variant` (default `solid`), `size`, `href`, `disabled`, `type`, `surface` (fills an outline/dash button with base-100 at rest, for a tinted panel such as an inset card) |
