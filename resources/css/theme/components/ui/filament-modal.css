@@ -24,3 +24,18 @@
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
 }
+
+/*
+|--------------------------------------------------------------------------
+| .ui-modal-footer-split: a "More actions" menu apart, on the left
+|--------------------------------------------------------------------------
+| Form modals lay their footer out right to left (cancel-left, action-right;
+| see AppServiceProvider), so an extra footer menu would land between them.
+| On a modal window with this class, a dropdown in the footer moves to the
+| far left, leaving Close and Save together on the right: what you can do
+| with the record, apart from finishing the dialog.
+*/
+.ui-modal-footer-split .fi-modal-footer-actions > .fi-dropdown {
+    order: 99;
+    margin-inline-end: auto;
+}
