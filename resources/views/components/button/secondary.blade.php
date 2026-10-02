@@ -6,4 +6,6 @@
     <x-button.cancel> (neutral outline). Passes everything through.
     See docs/design-system.md.
 --}}
-<x-button color="secondary" {{ $attributes }}>{{ $slot }}</x-button>
+@props(['href' => null])
+
+<x-button color="secondary" :href="$href" {{ $attributes }}>{{ $slot }}</x-button>

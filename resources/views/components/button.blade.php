@@ -12,6 +12,9 @@
     - href: renders an <a> instead of a <button> when given
     - disabled: bool (default: false)
     - type: button, submit, reset (default: button — ignored when href is given)
+    - surface: fill an outline/dash button with base-100 at rest, so it stands
+      out on a tinted panel such as an inset card (default: false). Hover and
+      press keep their usual fills.
 --}}
 @props([
     'color' => 'primary',
@@ -20,6 +23,7 @@
     'href' => null,
     'disabled' => false,
     'type' => 'button',
+    'surface' => false,
 ])
 
 @php
@@ -30,6 +34,7 @@
     $classes = collect(['btn', "btn-{$daisyColor}"])
         ->when($variant !== 'solid', fn ($classes) => $classes->push("btn-{$variant}"))
         ->when($size, fn ($classes) => $classes->push("btn-{$size}"))
+        ->when($surface, fn ($classes) => $classes->push('btn-surface'))
         ->implode(' ');
 @endphp
 

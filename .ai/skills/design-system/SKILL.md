@@ -69,7 +69,7 @@ per the Blade instructions).
 | `<x-banner>` | persistent contextual banner (announcements, "trial ending") — not for flash messages, use `<x-alert>` for those | `variant` (default `info`), `dismissible`; slots: default (body), `actions` |
 | `<x-badge>` | `<span class="badge ...">`; pass a Filament enum (`HasColor`/`HasLabel`) as `value` to skip color/label | `value`, `color`, `variant` (default `soft`), `size` |
 | `<x-avatar>` | `<div class="avatar">…` initials/photo circle | `user` (model with `->name`/`->profile_photo_url`), `name`, `src`, `size`, `variant` (default `soft`), `color`, `square` |
-| `<x-button>` | `<button class="btn ...">` / `<a class="btn ...">` | `color` (default `primary`), `variant` (default `solid`), `size`, `href`, `disabled`, `type` |
+| `<x-button>` | `<button class="btn ...">` / `<a class="btn ...">` | `color` (default `primary`), `variant` (default `solid`), `size`, `href`, `disabled`, `type`, `surface` (fills an outline/dash button with base-100 at rest, for a tinted panel such as an inset card) |
 | `<x-stats-card>` | dashboard label/value block | `label`, `value`, `color`, `footerColor`; slots: `icon`, `footer` |
 | `<x-page-header>` | title + description + right-aligned actions row at the top of a page | `title`, `description`; slot: `actions` |
 | `<x-form-input>` | labelled `<input>` (text/email/password/number/date/...) | `name` (id/for/@error key), `label`, `floating` (default true — floating label vs plain label above); rest of attrs (`type`, `wire:model`, ...) pass through to the `<input>`; `class` sizes the wrapper (e.g. `md:col-span-2`), not the input |
