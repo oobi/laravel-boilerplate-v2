@@ -33,6 +33,46 @@
                 <p class="text-sm">{{ __('Recessed into the parent — flat + base-200 surface.') }}</p>
             </x-card>
         </div>
+
+        {{-- Accent: a status edge; the text stays in the body colour, so it stays readable. --}}
+        <p class="ui-subtle text-sm">{{ __('`accent` takes any of the 8 semantic colours and adds a thick top edge to mark status (needs attention, failed, done) without tinting the text. `footer` adds an action row under a divider.') }}</p>
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach (['info', 'success', 'warning', 'error'] as $accentColor)
+                <x-card :title="ucfirst($accentColor)" type="panel" :accent="$accentColor">
+                    <p class="text-sm"><code>accent="{{ $accentColor }}"</code></p>
+                </x-card>
+            @endforeach
+        </div>
+
+        {{-- A needs-attention card: accent, an icon tile, inset items and a footer of actions. --}}
+        <x-card accent="warning" bodyClass="gap-6">
+            <div class="flex items-start gap-4">
+                <span class="flex size-10 shrink-0 items-center justify-center rounded-field bg-warning/20 text-warning-content">
+                    <x-heroicon-o-exclamation-triangle class="size-5" />
+                </span>
+                <div class="flex flex-col gap-1">
+                    <h3 class="text-lg font-semibold">{{ __('2 invoices need attention') }}</h3>
+                    <p class="text-base-content/70">{{ __('These were returned by the payment provider. Check the details, then retry or cancel them.') }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-4">
+                @foreach ([['INV-1042', 'Card declined'], ['INV-1047', 'Expired card']] as [$invoice, $reason])
+                    <x-card :title="$invoice" type="panel" inset>
+                        <p class="text-sm text-base-content/70">{{ $reason }}</p>
+                    </x-card>
+                @endforeach
+            </div>
+
+            <x-slot:footer>
+                <x-button.action>
+                    {{ __('Review invoices') }}
+                    <x-heroicon-o-arrow-right class="size-4" />
+                </x-button.action>
+                <x-button color="neutral" variant="ghost">{{ __('Dismiss') }}</x-button>
+            </x-slot:footer>
+        </x-card>
     </x-card>
 
     {{-- Buttons --}}
