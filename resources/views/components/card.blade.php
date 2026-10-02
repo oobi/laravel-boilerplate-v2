@@ -29,6 +29,10 @@
       the title, right-aligned
     - footer: optional row below the body, under a divider, for the card's
       actions; its attributes merge onto the row
+    - stickyFooter: keep the footer in view at the bottom of the screen while
+      a long card scrolls past (default: false). It sticks within the nearest
+      scrolling ancestor, so nothing between the card and the page may set
+      overflow hidden/auto (use overflow-clip to clip corners instead)
 --}}
 @props([
     'title' => null,
@@ -38,6 +42,7 @@
     'bordered' => true,
     'inset' => false,
     'accent' => null,
+    'stickyFooter' => false,
 ])
 
 @php
@@ -80,7 +85,11 @@
     </div>
 
     @isset($footer)
-        <div {{ $footer->attributes->class('flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-base-300 px-[var(--card-p,1.5rem)] py-4') }}>
+        <div {{ $footer->attributes->class([
+            'flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-base-300 px-[var(--card-p,1.5rem)] py-4',
+            // Solid, rounded like the card's bottom, with a soft edge so content reads as passing under it.
+            'sticky bottom-0 z-10 rounded-b-box bg-inherit shadow-[0_-6px_12px_-10px_rgb(0_0_0/0.25)]' => $stickyFooter,
+        ]) }}>
             {{ $footer }}
         </div>
     @endisset

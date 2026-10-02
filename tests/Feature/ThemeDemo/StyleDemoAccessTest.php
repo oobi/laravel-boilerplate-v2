@@ -42,7 +42,7 @@ class StyleDemoAccessTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/style-demo/tables/empty')
             ->assertOk()
-            ->assertSee('tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100', false)
+            ->assertSee('tabs-connected overflow-clip rounded-box border border-base-300 bg-base-100', false)
             ->assertSee('tabs-connected__header', false)
             ->assertSee('tabs tabs-border gap-2 sm:gap-6', false)
             ->assertSee('tabs-connected__divider', false)

@@ -36,4 +36,10 @@ class CardComponentTest extends TestCase
             ->assertSeeInOrder(['Body', 'border-t border-base-300', 'Actions'], false)
             ->assertSee('justify-end', false);
     }
+
+    public function test_a_sticky_footer_stays_in_view_only_when_asked(): void
+    {
+        $this->blade('<x-card>Body<x-slot:footer>Actions</x-slot:footer></x-card>')->assertDontSee('sticky bottom-0', false);
+        $this->blade('<x-card sticky-footer>Body<x-slot:footer>Actions</x-slot:footer></x-card>')->assertSee('sticky bottom-0', false);
+    }
 }
