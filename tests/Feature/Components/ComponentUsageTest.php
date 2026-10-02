@@ -43,9 +43,8 @@ class ComponentUsageTest extends TestCase
         'resources/views/livewire/profile/edit-profile.blade.php' => ['<x-button'],
         // Clickable colour swatches, a picker built on badge styles, not a badge.
         'resources/views/filament/forms/components/role-color-swatches.blade.php' => ['<x-badge>'],
-        // The gallery: a joined button group (daisyUI join, no component yet) and the
-        // needs-attention card's tinted icon tile (an icon backdrop, not a strip).
-        'packages/theme-demo/resources/views/livewire/component-gallery.blade.php' => ['<x-button', '<x-banner>'],
+        // The gallery: a joined button group (daisyUI join, no component yet).
+        'packages/theme-demo/resources/views/livewire/component-gallery.blade.php' => ['<x-button'],
         // Pagination as a joined button group (daisyUI join, no component yet).
         'packages/theme-demo/resources/views/livewire/tables/maximalist.blade.php' => ['<x-button'],
     ];

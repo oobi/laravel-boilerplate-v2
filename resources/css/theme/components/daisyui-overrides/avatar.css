@@ -37,4 +37,7 @@
     .avatar-xl > div { width: 4rem; font-size: 1.5rem; }
 
     .avatar-square > div { border-radius: var(--radius-box, 0.5rem); }
+
+    /* An icon instead of initials (<x-avatar icon>) scales with the avatar. */
+    .avatar .avatar-icon { width: 50%; height: 50%; }
 }
