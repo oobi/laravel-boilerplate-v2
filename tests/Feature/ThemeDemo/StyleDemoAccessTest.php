@@ -83,6 +83,21 @@ class StyleDemoAccessTest extends TestCase
             ->assertSet('tableSort', 'joined_at:asc');
     }
 
+    public function test_the_custom_header_demo_filters_by_joined_dates(): void
+    {
+        // Demo rows joined 11, 22, 33... days ago.
+        $this->travelTo('2026-10-02 12:00:00');
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        Livewire::test(FilamentTable::class, ['variant' => 'custom-header'])
+            ->set('tableFilters.joined.value', 'last_30')
+            ->assertCountTableRecords(2)
+            ->set('tableFilters.joined.value', '2026-09-08/2026-09-10')
+            ->assertCountTableRecords(1)
+            ->set('tableFilters.joined.value', '')
+            ->assertSeeHtml('class="bg-success size-3');
+    }
+
     public function test_maximalist_daisy_table_uses_filament_pagination_content(): void
     {
         $admin = User::factory()->superAdmin()->create();

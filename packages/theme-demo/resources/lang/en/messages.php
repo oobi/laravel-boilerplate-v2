@@ -47,7 +47,7 @@ return [
     'filament_form_description' => 'The same fields as the daisyUI form, built with Filament form components — plus two Filament-exclusive extras (tags, markdown).',
 
     'components_title' => 'DaisyUI Components',
-    'components_description' => 'Avatars, badges, banners, alerts, buttons and the color matrix at full breadth.',
+    'components_description' => 'Avatars, badges, banners, alerts, buttons, pickers and the color matrix at full breadth.',
     'components_buttons_semantic_hint' => 'Reach for intent, not colour: action (affirmative), secondary (alternative), cancel (dismiss), back (return), warning (sensitive but reversible, e.g. impersonate), danger (destructive/irreversible), plus icon for icon-only chrome.',
 
     'filament_components_title' => 'Filament Components',

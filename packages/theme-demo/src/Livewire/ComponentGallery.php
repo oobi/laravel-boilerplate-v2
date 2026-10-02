@@ -20,6 +20,18 @@ class ComponentGallery extends Component
     /** @var list<string> */
     public array $sizes = ['xs', 'sm', 'md', 'lg', 'xl'];
 
+    // <x-date-picker> demos, each showing the value it sets.
+    public string $period = 'upcoming';
+
+    public string $stay = '';
+
+    public string $appointment = '';
+
+    public string $dueDate = '';
+
+    // <x-listbox> demo.
+    public string $priority = '';
+
     public function mount(): void
     {
         Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);

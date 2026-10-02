@@ -144,6 +144,47 @@
         </div>
     </x-card>
 
+    {{-- Pickers: <x-date-picker> and <x-listbox>, each with the value it sets --}}
+    <x-card :title="__('Date pickers')">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach ([
+                ['period', __('Range with presets'), ['mode' => 'range', 'presets' => ['today' => __('Today'), 'upcoming' => __('Upcoming'), 'all' => __('All dates')]]],
+                ['stay', __('Range only'), ['mode' => 'range', 'clearable' => true]],
+                ['appointment', __('Single with presets'), ['mode' => 'single', 'presets' => ['' => __('Any date'), 'today' => __('Today')]]],
+                ['dueDate', __('Single from today'), ['mode' => 'single', 'min' => now()->toDateString(), 'clearable' => true]],
+            ] as [$property, $title, $props])
+                <div class="flex flex-col gap-2" wire:key="date-picker-demo-{{ $property }}">
+                    <x-date-picker
+                        :id="'date-picker-demo-'.$property"
+                        :model="$property"
+                        :label="$title"
+                        :mode="$props['mode']"
+                        :presets="$props['presets'] ?? []"
+                        :clearable="$props['clearable'] ?? false"
+                        :min="$props['min'] ?? null"
+                        class="w-full"
+                    />
+                    <div class="ui-subtle text-xs">{{ __('Value') }}: <code>{{ $this->{$property} === '' ? __('(empty)') : $this->{$property} }}</code></div>
+                </div>
+            @endforeach
+        </div>
+    </x-card>
+
+    <x-card :title="__('Listbox')">
+        <div class="flex max-w-xs flex-col gap-2">
+            <x-listbox
+                id="listbox-demo"
+                model="priority"
+                :label="__('Priority')"
+                :placeholder="__('Any priority')"
+                :options="['high' => __('High'), 'medium' => __('Medium'), 'low' => __('Low'), 'none' => __('No dot')]"
+                :dots="['high' => 'bg-error', 'medium' => 'bg-warning', 'low' => 'bg-success']"
+                class="w-full"
+            />
+            <div class="ui-subtle text-xs">{{ __('Value') }}: <code>{{ $priority === '' ? __('(empty)') : $priority }}</code></div>
+        </div>
+    </x-card>
+
     {{-- Color matrix — this app has no shade-ramp utilities (see theme/components/ui/colors.css), just solid + soft per semantic color --}}
     <x-card :title="__('Color palette')">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">

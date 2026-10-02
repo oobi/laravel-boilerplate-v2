@@ -55,6 +55,8 @@
     .ui-floating-label:has(input:not(:placeholder-shown)) .ui-floating-label-text,
     .ui-floating-label:has(textarea:not(:placeholder-shown)) .ui-floating-label-text,
     .ui-floating-label:has(select) .ui-floating-label-text,
+    /* A button standing in for a <select> (<x-listbox>, <x-date-picker>) always shows a value too. */
+    .ui-floating-label:has([data-floating-label-up]) .ui-floating-label-text,
     .ui-floating-label:has(:focus) .ui-floating-label-text {
         top: 0;
         left: 0.75rem;

@@ -1,4 +1,6 @@
 import './bootstrap';
+// Cally calendar web components (<calendar-range>, <calendar-date>), styled by daisyUI's .cally.
+import 'cally';
 import { initTabScrollControllers } from './components/tab-scroll.js';
 import { initTableSelectionGuard } from './components/table-selection.js';
 

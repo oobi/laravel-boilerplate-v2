@@ -39,6 +39,14 @@ return [
     'activate' => 'Activate',
     'deactivate' => 'Deactivate',
     'all_statuses' => 'All Statuses',
+
+    // <x-date-picker>
+    'date_picker' => [
+        'choose_dates' => 'Choose dates…',
+        'choose_date' => 'Choose a date…',
+        'any_date' => 'Any date',
+        'clear' => 'Clear',
+    ],
     'all_roles' => 'All Roles',
     'last_login' => 'Last Login',
     'never' => 'Never',

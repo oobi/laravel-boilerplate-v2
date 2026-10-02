@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Concise\ThemeDemo\Livewire\Tables;
 
 use App\Enums\SystemPermission;
+use App\Support\DateRange;
+use App\Support\Theme\DaisyColor;
 use Concise\ThemeDemo\Enums\DemoStatus;
 use Concise\ThemeDemo\Support\DemoRow;
 use Concise\ThemeDemo\Support\DemoRows;
@@ -14,6 +16,7 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Components\Hidden;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -27,6 +30,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
@@ -86,6 +90,28 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
         return DemoStatus::options();
     }
 
+    /**
+     * Each status's badge colour as its <x-listbox> dot.
+     *
+     * @return array<string, string>
+     */
+    public function statusDots(): array
+    {
+        return collect(DemoStatus::cases())
+            ->mapWithKeys(fn (DemoStatus $status): array => [$status->value => 'bg-'.DaisyColor::fromFilamentColor($status->getColor())->value])
+            ->all();
+    }
+
+    /**
+     * The Joined filter's shortcuts; any other value is days picked on its calendar.
+     *
+     * @return array<string, string>
+     */
+    public function joinedPresets(): array
+    {
+        return ['' => __('Any date'), 'last_30' => __('Last 30 days'), 'this_year' => __('This year')];
+    }
+
     public function activeRecordsCount(): int
     {
         return DemoRows::all()->count();
@@ -138,6 +164,18 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                 if ($isFullFeatured) {
                     if (filled($status = data_get($filters, 'status.value'))) {
                         $rows = $rows->filter(fn (DemoRow $row): bool => $row->status->value === $status);
+                    }
+
+                    // A preset, or days picked with <x-date-picker> (DateRange reads them).
+                    $joined = data_get($filters, 'joined.value');
+                    $range = DateRange::parse($joined) ?? match ($joined) {
+                        'last_30' => DateRange::parse(now()->subDays(29)->toDateString().'/'.now()->toDateString()),
+                        'this_year' => DateRange::parse(now()->startOfYear()->toDateString().'/'.now()->endOfYear()->toDateString()),
+                        default => null,
+                    };
+
+                    if ($range !== null) {
+                        $rows = $rows->filter(fn (DemoRow $row): bool => $row->joinedAt >= $range->from && ($range->to === null || $row->joinedAt <= $range->to));
                     }
 
                     if (filled($sortColumn)) {
@@ -214,6 +252,10 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                     ->label(__('Status'))
                     ->options(DemoStatus::options())
                     ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms')),
+
+                // Set by <x-date-picker> in the custom header; applied in records().
+                Filter::make('joined')
+                    ->schema([Hidden::make('value')->default('')]),
             ])
             ->deferFilters(false)
             ->recordActions([
