@@ -68,6 +68,12 @@ optional `title` and `actions`.
   attention, such as records to review.
 - **`footer`** is a slot for the card's actions, rendered as its own row under
   a divider and padded to match the body.
+- **`sticky-footer`** keeps that row at the bottom of the screen while a long
+  card scrolls past, so its action stays in reach (e.g. a review step whose
+  confirm button would otherwise sit below a long table). It sticks within the
+  nearest scrolling ancestor, so nothing between the card and the page may set
+  `overflow: hidden` or `auto`: to clip rounded corners, use `overflow-clip`,
+  which `<x-tabs-nav>` does.
 
 ```blade
 <x-card accent="warning">
@@ -79,7 +85,7 @@ optional `title` and `actions`.
 </x-card>
 ```
 
-Demos of all three are in the style demo's component gallery.
+Demos of all four are in the style demo's component gallery.
 
 ## Modals
 

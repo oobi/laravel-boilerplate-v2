@@ -73,6 +73,28 @@
                 <x-button color="neutral" variant="ghost">{{ __('Dismiss') }}</x-button>
             </x-slot:footer>
         </x-card>
+
+        {{-- Sticky footer: a long card keeps its action row in view while it scrolls past. --}}
+        <p class="ui-subtle text-sm">{{ __('`sticky-footer` keeps the footer at the bottom of the screen until the card\'s end scrolls into view, so a confirm button below a long list stays in reach. Scroll past this card to see it.') }}</p>
+
+        <x-card :title="__('Review 24 items')" type="panel" sticky-footer>
+            <ul class="divide-y divide-base-300 text-sm">
+                @foreach (range(1, 24) as $item)
+                    <li class="flex justify-between py-2">
+                        <span>{{ __('Item :number', ['number' => $item]) }}</span>
+                        <span class="ui-subtle">{{ __('Ready') }}</span>
+                    </li>
+                @endforeach
+            </ul>
+
+            <x-slot:footer>
+                <span class="ui-subtle text-sm">{{ __('Nothing is saved until you confirm.') }}</span>
+                <div class="ml-auto flex gap-2">
+                    <x-button.cancel />
+                    <x-button.action>{{ __('Confirm') }}</x-button.action>
+                </div>
+            </x-slot:footer>
+        </x-card>
     </x-card>
 
     {{-- Buttons --}}

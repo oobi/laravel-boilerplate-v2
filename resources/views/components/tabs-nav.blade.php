@@ -22,7 +22,9 @@
     - Example: <x-tabs-nav scrollable="true">{{ $slot }}</x-tabs-nav>
 --}}
 @props(['scrollable' => true, 'flush' => false])
-<div {{ $attributes->class(['tabs-connected overflow-hidden rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
+{{-- overflow-clip, not overflow-hidden: it clips to the rounded corners the same way, but
+     isn't a scroll container, so sticky content inside (a card's footer) follows the page. --}}
+<div {{ $attributes->class(['tabs-connected overflow-clip rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
     @if ($scrollable)
         {{-- Mobile swipe hint --}}
         <div class="block sm:hidden text-center text-xs text-base-content/50 pt-3 px-4">
