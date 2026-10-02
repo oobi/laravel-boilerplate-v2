@@ -21,5 +21,11 @@
         <div>{{ $this->formModalAction }}</div>
     </x-card>
 
+    {{-- Editing a record: More actions apart, on the left --}}
+    <x-card :title="__('Modal with More actions')" bodyClass="gap-2">
+        <p class="ui-subtle text-sm">{{ __('theme-demo::messages.modals_filament_record_hint') }}</p>
+        <div>{{ $this->recordModalAction }}</div>
+    </x-card>
+
     <x-filament-actions::modals />
 </div>

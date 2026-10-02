@@ -116,6 +116,15 @@ button order.
 with Alpine, `$set` fights the entangled value and the modal flickers open then
 closes.
 
+**Things to do with a record, apart from the dialog's own buttons.** A
+Filament modal that edits a record and also offers other actions on it
+(Duplicate, Cancel booking, Delete…) puts those in one **More actions ▾**
+`ActionGroup` in `extraModalFooterActions()`, and adds
+`->extraModalWindowAttributes(['class' => 'ui-modal-footer-split'])`. The menu
+then sits on the far left, apart from Cancel and Save on the right, so the
+affirmative action never competes with a row of equal buttons. Give each item
+`->cancelParentActions()` so it closes the form before it runs.
+
 **Button order is a house rule the shell enforces: cancel on the left, the
 affirmative action on the right — never mixed.** Modal flavours (five) and
 button intents (four) are intentionally not 1:1, for the same reason there are

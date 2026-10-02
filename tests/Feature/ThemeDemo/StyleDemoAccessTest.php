@@ -3,6 +3,7 @@
 namespace Tests\Feature\ThemeDemo;
 
 use App\Models\User;
+use Concise\ThemeDemo\Livewire\FilamentModalGallery;
 use Concise\ThemeDemo\Livewire\ModalGallery;
 use Concise\ThemeDemo\Livewire\Tables\FilamentTable;
 use Concise\ThemeDemo\Livewire\Tables\MaximalistTable;
@@ -33,6 +34,22 @@ class StyleDemoAccessTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->get($uri)->assertStatus(200);
+    }
+
+    public function test_the_record_modal_keeps_more_actions_apart_from_save(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        Livewire::test(FilamentModalGallery::class)
+            ->mountAction('recordModal')
+            ->assertMountedActionModalSee([
+                __('theme-demo::messages.modals_filament_record_more'),
+                __('theme-demo::messages.modals_filament_record_duplicate'),
+                __('theme-demo::messages.modals_filament_record_delete'),
+            ])
+            ->callMountedAction()
+            ->assertHasNoActionErrors()
+            ->assertNotified(__('theme-demo::messages.modals_filament_confirmed'));
     }
 
     public function test_table_tabs_are_connected_to_their_content_panel(): void

@@ -7,12 +7,14 @@ namespace Concise\ThemeDemo\Livewire;
 use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Support\Enums\IconPosition;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -73,6 +75,57 @@ class FilamentModalGallery extends Component implements HasActions, HasSchemas
                     ->success()
                     ->send();
             });
+    }
+
+    /**
+     * Editing a record: things to do with it (Duplicate, Archive, Delete) in a
+     * More actions menu on the left, apart from Cancel and Save on the right
+     * (ui-modal-footer-split). Each item closes the form first.
+     */
+    public function recordModalAction(): Action
+    {
+        return Action::make('recordModal')
+            ->label(__('theme-demo::messages.modals_filament_record_label'))
+            ->icon('heroicon-o-pencil-square')
+            ->modalHeading(__('theme-demo::messages.modals_filament_record_heading'))
+            ->extraModalWindowAttributes(['class' => 'ui-modal-footer-split'])
+            ->fillForm(['title' => __('theme-demo::messages.modals_filament_record_title_value')])
+            ->schema([
+                Forms\Components\TextInput::make('title')
+                    ->label(__('theme-demo::messages.modals_filament_record_title'))
+                    ->required(),
+            ])
+            ->modalSubmitActionLabel(__('theme-demo::messages.modals_filament_record_save'))
+            ->extraModalFooterActions([
+                ActionGroup::make([
+                    Action::make('duplicateRecord')
+                        ->label(__('theme-demo::messages.modals_filament_record_duplicate'))
+                        ->icon('heroicon-o-document-duplicate')
+                        ->action(fn () => $this->notifyRan())
+                        ->cancelParentActions(),
+                    Action::make('archiveRecord')
+                        ->label(__('theme-demo::messages.modals_filament_record_archive'))
+                        ->icon('heroicon-o-archive-box')
+                        ->color(DaisyColor::WARNING->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->action(fn () => $this->notifyRan())
+                        ->cancelParentActions(),
+                    Action::make('deleteRecord')
+                        ->label(__('theme-demo::messages.modals_filament_record_delete'))
+                        ->icon('heroicon-o-trash')
+                        ->color(DaisyColor::ERROR->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->action(fn () => $this->notifyRan())
+                        ->cancelParentActions(),
+                ])
+                    ->label(__('theme-demo::messages.modals_filament_record_more'))
+                    ->icon('heroicon-m-chevron-down')
+                    ->iconPosition(IconPosition::After)
+                    ->color(DaisyColor::NEUTRAL->toFilamentColor())
+                    ->button()
+                    ->outlined(),
+            ])
+            ->action(fn () => $this->notifyRan());
     }
 
     private function notifyRan(): void
