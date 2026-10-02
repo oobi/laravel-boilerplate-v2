@@ -43,3 +43,18 @@
         --btn-rest-fg: color-mix(in oklab, var(--soft-base) var(--soft-fg-strength), var(--soft-fg-mix));
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| `.btn-surface`: an outline/dash button on a solid surface fill
+|--------------------------------------------------------------------------
+| Outline and dash buttons are transparent at rest, so on a tinted panel (an
+| inset card, a soft alert) they take its colour and read as part of it.
+| `.btn-surface` fills them with base-100 at rest only. Hover, focus, press
+| and disabled keep daisyUI's own fills, so the hover state (the button's
+| colour with its contrasting text) still works. Set via
+| `<x-button variant="outline" surface>`.
+*/
+.btn-surface:is(.btn-outline, .btn-dash):not(:hover, :focus-visible, :active, .btn-active, :disabled, [disabled], .btn-disabled) {
+    --btn-bg: var(--color-base-100);
+}

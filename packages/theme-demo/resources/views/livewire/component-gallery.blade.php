@@ -110,6 +110,19 @@
             </div>
         @endforeach
 
+        {{-- Surface: outline buttons on a tinted panel, transparent vs filled at rest. --}}
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Surface') }}</div>
+            <p class="ui-subtle mb-2 text-sm">{{ __('On a tinted panel such as an inset card, an outline button takes the panel\'s colour. `surface` fills it with base-100 at rest; hover and press look the same as ever.') }}</p>
+            <x-card inset>
+                <div class="flex flex-wrap items-center gap-2">
+                    <x-button color="neutral" variant="outline">{{ __('Outline') }}</x-button>
+                    <x-button color="neutral" variant="outline" surface>{{ __('Outline + surface') }}</x-button>
+                    <x-button color="primary" variant="outline" surface>{{ __('Primary + surface') }}</x-button>
+                </div>
+            </x-card>
+        </div>
+
         <div>
             <div class="ui-subtle mb-1">{{ __('Button group') }}</div>
             <div class="join">

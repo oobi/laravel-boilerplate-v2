@@ -5,7 +5,9 @@
     form" read differently. Defaults its label to "Back"; pass a slot to override.
     Usually given an `href`; passes everything else through. See docs/design-system.md.
 --}}
-<x-button color="neutral" variant="ghost" {{ $attributes }}>
+@props(['href' => null])
+
+<x-button color="neutral" variant="ghost" :href="$href" {{ $attributes }}>
     <x-heroicon-o-arrow-left class="size-4" />
     {{ $slot->isEmpty() ? __('admin.back') : $slot }}
 </x-button>

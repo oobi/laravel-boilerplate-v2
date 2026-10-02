@@ -4,4 +4,6 @@
     See docs/design-system.md for when to reach for each semantic button.
     Passes through everything (wire:click, type, href, disabled, size, ...).
 --}}
-<x-button color="primary" {{ $attributes }}>{{ $slot }}</x-button>
+@props(['href' => null])
+
+<x-button color="primary" :href="$href" {{ $attributes }}>{{ $slot }}</x-button>
