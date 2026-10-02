@@ -71,7 +71,7 @@
                 <x-form-input name="errorExample" type="text" label="{{ __('theme-demo::messages.field_error_example') }}" wire:model="errorExample" :floating="$variant === 'floating'" />
 
                 <div class="flex justify-end md:col-span-2">
-                    <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
+                    <x-button.action type="submit">{{ __('Submit') }}</x-button.action>
                 </div>
             </form>
         </x-slot:content>

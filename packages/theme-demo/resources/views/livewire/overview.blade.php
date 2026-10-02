@@ -16,11 +16,10 @@
             ['route' => 'style-demo.components', 'label' => __('theme-demo::messages.nav_components'), 'description' => __('theme-demo::messages.components_description')],
             ['route' => 'style-demo.tab-content-table', 'label' => __('theme-demo::messages.nav_tab_content'), 'description' => __('theme-demo::messages.tab_content_description')],
         ] as $link)
-            <a href="{{ route($link['route']) }}" class="card bg-base-100 border border-base-300 transition hover:border-primary">
-                <div class="card-body">
-                    <h2 class="card-title">{{ $link['label'] }}</h2>
+            <a href="{{ route($link['route']) }}" class="block">
+                <x-card :title="$link['label']" class="h-full transition hover:border-primary">
                     <p class="text-sm text-base-content/70">{{ $link['description'] }}</p>
-                </div>
+                </x-card>
             </a>
         @endforeach
     </div>
@@ -34,9 +33,9 @@
         <div class="flex flex-wrap gap-2">
             @foreach (['403', '404', '500', '503'] as $status)
                 {{-- Opens in a new tab: the target view has no admin chrome, so this avoids losing the demo page. --}}
-                <a href="{{ route('style-demo.errors-'.$status) }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
+                <x-button color="neutral" variant="outline" size="sm" :href="route('style-demo.errors-'.$status)" target="_blank" rel="noopener">
                     {{ $status }}
-                </a>
+                </x-button>
             @endforeach
         </div>
     </div>
