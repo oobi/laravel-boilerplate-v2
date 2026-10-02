@@ -17,6 +17,7 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -66,6 +67,12 @@ class FilamentForm extends Component implements HasSchemas
                     'y' => 'Option Y',
                     'z' => 'Option Z',
                 ]),
+                // A single choice as a segmented control: drawn to match <x-button-group>.
+                ToggleButtons::make('segmented')->label(__('theme-demo::messages.field_segmented'))->options([
+                    'yes' => 'Yes',
+                    'no' => 'No',
+                    'not_asked' => 'Not asked yet',
+                ])->default('not_asked')->grouped(),
                 Toggle::make('toggle')->label(__('theme-demo::messages.field_toggle')),
                 Slider::make('range')->label(__('theme-demo::messages.field_range'))->default(50),
                 DatePicker::make('date')->label(__('theme-demo::messages.field_date')),

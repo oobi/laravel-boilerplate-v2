@@ -33,26 +33,16 @@
                 document.documentElement.setAttribute('data-theme', (mode === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'boilerplate-dark' : 'boilerplate') : (mode === 'dark' ? 'boilerplate-dark' : 'boilerplate')));
             },
         }" x-init="window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (mode === 'auto') setMode('auto'); })">
-            <div class="join w-full bg-transparent p-0 hover:bg-transparent">
-                <button type="button" @click="setMode('light')"
-                    :class="mode === 'light' ? 'bg-base-200 text-base-content' : 'text-base-content/50 hover:bg-base-200/70 hover:text-base-content'"
-                    class="btn btn-ghost btn-sm join-item flex-1"
-                    title="{{ __('Light') }}">
-                    <x-heroicon-o-sun class="h-4 w-4" />
-                </button>
-                <button type="button" @click="setMode('dark')"
-                    :class="mode === 'dark' ? 'bg-base-200 text-base-content' : 'text-base-content/50 hover:bg-base-200/70 hover:text-base-content'"
-                    class="btn btn-ghost btn-sm join-item flex-1"
-                    title="{{ __('Dark') }}">
-                    <x-heroicon-o-moon class="h-4 w-4" />
-                </button>
-                <button type="button" @click="setMode('auto')"
-                    :class="mode === 'auto' ? 'bg-base-200 text-base-content' : 'text-base-content/50 hover:bg-base-200/70 hover:text-base-content'"
-                    class="btn btn-ghost btn-sm join-item flex-1"
-                    title="{{ __('System') }}">
-                    <x-heroicon-o-computer-desktop class="h-4 w-4" />
-                </button>
-            </div>
+            <x-button-group :label="__('Theme')" block quiet size="sm">
+                @foreach (['light' => ['heroicon-o-sun', __('Light')], 'dark' => ['heroicon-o-moon', __('Dark')], 'auto' => ['heroicon-o-computer-desktop', __('System')]] as $mode => [$icon, $label])
+                    <x-button-group.item color="neutral" :title="$label" :aria-label="$label"
+                        x-on:click="setMode('{{ $mode }}')"
+                        x-bind:class="{ 'ui-button-group-btn-active-neutral': mode === '{{ $mode }}' }"
+                        x-bind:aria-pressed="mode === '{{ $mode }}'">
+                        <x-dynamic-component :component="$icon" class="h-4 w-4" />
+                    </x-button-group.item>
+                @endforeach
+            </x-button-group>
         </li>
 
         <li>

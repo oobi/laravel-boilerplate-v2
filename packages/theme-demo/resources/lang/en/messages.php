@@ -174,6 +174,7 @@ return [
     'field_select' => 'Select',
     'field_checkbox_group' => 'Checkbox group',
     'field_radio_group' => 'Radio group',
+    'field_segmented' => 'Segmented choice (grouped toggle buttons)',
     'field_toggle' => 'Toggle',
     'field_range' => 'Range',
     'field_date' => 'Date',

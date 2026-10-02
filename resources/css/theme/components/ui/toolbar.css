@@ -23,6 +23,16 @@
         box-shadow: var(--ui-island-shadow-xs);
     }
 
+    /* Touch screens: every control in the toolbar (search, selects, the
+       listbox, the date picker, the trash toggle) takes its height from
+       daisyUI's --size-field, so one step up makes them all 44px together,
+       the platforms' comfortable tap size, and they stay lined up. */
+    @media (pointer: coarse) {
+        .ui-toolbar {
+            --size-field: 0.275rem;
+        }
+    }
+
     .ui-toolbar__search {
         flex: 1 1 0%;
         min-width: 14rem;
