@@ -17,12 +17,18 @@
     - inset: recesses the card for nesting inside another card/panel — drops
       the island shadow and shades it to `base-200` so it reads as a well in
       the parent rather than a second floating island (default: false)
+    - accent: optional daisyUI colour (primary, secondary, accent, neutral, info,
+      success, warning, error) for a thick top edge that marks the card's
+      status, e.g. a warning that needs attention, while its text stays in the
+      body colour (default: none)
     - bodyClass: extra classes on `.card-body` (default: gap-3)
 
     Slots:
     - default: card body content
     - actions: optional content (e.g. a "View all" link) rendered inline with
       the title, right-aligned
+    - footer: optional row below the body, under a divider, for the card's
+      actions; its attributes merge onto the row
 --}}
 @props([
     'title' => null,
@@ -31,6 +37,7 @@
     'bodyClass' => 'gap-3',
     'bordered' => true,
     'inset' => false,
+    'accent' => null,
 ])
 
 @php
@@ -40,9 +47,22 @@
     ];
 
     $titleClass ??= $titleClasses[$type] ?? 'card-title';
+
+    // Whole class names, so Tailwind finds them.
+    $accentClasses = [
+        'primary' => 'border-t-4 border-t-primary',
+        'secondary' => 'border-t-4 border-t-secondary',
+        'accent' => 'border-t-4 border-t-accent',
+        'neutral' => 'border-t-4 border-t-neutral',
+        'info' => 'border-t-4 border-t-info',
+        'success' => 'border-t-4 border-t-success',
+        'warning' => 'border-t-4 border-t-warning',
+        'error' => 'border-t-4 border-t-error',
+    ];
+    $accentClass = $accent === null ? null : $accentClasses[\App\Support\Theme\DaisyColor::fromFilamentColor($accent)->value];
 @endphp
 
-<div {{ $attributes->class(['card', 'bg-base-100' => ! $inset, 'card-inset' => $inset, 'border border-base-300' => $bordered]) }}>
+<div {{ $attributes->class(['card', 'bg-base-100' => ! $inset, 'card-inset' => $inset, 'border border-base-300' => $bordered, $accentClass]) }}>
     <div class="card-body {{ $bodyClass }}">
         @if (isset($title) || isset($actions))
             <div class="flex items-center justify-between">
@@ -58,4 +78,10 @@
 
         {{ $slot }}
     </div>
+
+    @isset($footer)
+        <div {{ $footer->attributes->class('flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-base-300 px-[var(--card-p,1.5rem)] py-4') }}>
+            {{ $footer }}
+        </div>
+    @endisset
 </div>
