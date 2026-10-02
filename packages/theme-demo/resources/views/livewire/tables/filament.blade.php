@@ -15,13 +15,24 @@
                     </x-slot:search>
 
                     <x-slot:filters>
-                        <x-table-filter-select
+                        {{-- <x-listbox>: a select whose options carry a dot (here, each status's badge colour). --}}
+                        <x-listbox
                             id="filament-custom-header-status-filter"
                             model="tableFilters.status.value"
                             :label="__('Status')"
                             :placeholder="__('All statuses')"
                             :options="$this->statusOptions()"
+                            :dots="$this->statusDots()"
                             class="min-w-36"
+                        />
+
+                        {{-- <x-date-picker>: presets plus a range calendar. --}}
+                        <x-date-picker
+                            id="filament-custom-header-joined-filter"
+                            model="tableFilters.joined.value"
+                            :label="__('Joined')"
+                            :presets="$this->joinedPresets()"
+                            class="min-w-44"
                         />
                     </x-slot:filters>
 

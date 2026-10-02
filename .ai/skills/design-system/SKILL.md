@@ -83,6 +83,8 @@ per the Blade instructions).
 | `<x-table-header>` | Filament's native table header/search/filter row (hidden via `filament-table.css`) | slots: `search`, `filters`, `counts`, `actions` |
 | `<x-table-search>` | search input inside a `<x-table-header>` `search` slot | `model` (default `tableSearch`), `label`, `debounce` |
 | `<x-table-filter-select>` | filter `<select>` inside a `<x-table-header>` `filters` slot | `model`, `label`, `options`, `placeholder` |
+| `<x-listbox>` | a `<x-table-filter-select>` whose options need a coloured dot (a native `<select>` can't show one); works in any Livewire toolbar | `model`, `label`, `options`, `dots` (value => dot classes, e.g. `bg-primary`), `placeholder` |
+| `<x-date-picker>` | any dropdown date or date-range picker (filters, toolbars): one component, not a variant per screen. Cally calendar; optional shortcut presets; read the value with `App\Support\DateRange::parse()` | `model`, `label`, `mode` (`range`/`single`), `presets` (key => label), `pick-label`, `placeholder`, `clearable`, `today`, `min`, `max` |
 | `<x-table-trash-toggle>` | active/trashed record-count toggle inside a `counts` slot | `model`, `value`, `activeCount`, `trashedCount` |
 | `<x-table-empty-trash-action>` | destructive header action button inside an `actions` slot | `action` (Filament action method name) |
 
