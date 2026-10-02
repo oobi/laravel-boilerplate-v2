@@ -1,9 +1,7 @@
 <div class="mx-auto max-w-lg py-12 text-center">
     @section('page-title', team_trans('onboarding.title'))
 
-    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-base-200">
-        <x-heroicon-o-user-group class="h-6 w-6 text-base-content/60" />
-    </div>
+    <x-avatar icon="heroicon-o-user-group" size="xl" class="mx-auto mb-4" />
 
     <h1 class="text-xl font-semibold text-base-content">
         {{ team_trans('onboarding.title') }}

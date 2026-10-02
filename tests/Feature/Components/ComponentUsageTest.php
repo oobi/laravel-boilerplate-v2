@@ -31,6 +31,9 @@ class ComponentUsageTest extends TestCase
         '/border-l-4 border-(info|success|warning|error)\b/' => '<x-banner> or <x-alert>',
         '/(?<![\w:-])bg-(info|success|warning|error)\/\d+/' => '<x-banner> or <x-alert>',
         '/class="[^"]*(?<![\w-])join(-item)?(?![\w-])/' => '<x-button-group>',
+        '/(?<![\w-])ui-button-group(-btn)?(?![\w-])/' => '<x-button-group>',
+        '/(?<![\w:-])border-dashed(?![\w-])/' => '<x-empty-state>',
+        '/<a\b[^>]*>\s*<x-card\b/' => '<x-card href>',
     ];
 
     /**
@@ -74,6 +77,9 @@ class ComponentUsageTest extends TestCase
             '<div class="card bg-base-100">' => '<x-card>',
             '<span class="badge badge-soft">' => '<x-badge>',
             '<div class="join"><button class="join-item">' => '<x-button-group>',
+            '<button @class([\'ui-button-group-btn\'])>' => '<x-button-group>',
+            '<div class="rounded-box border border-dashed p-8">' => '<x-empty-state>',
+            "<a href=\"/x\" class=\"block\">\n    <x-card>" => '<x-card href>',
             '<div class="flex rounded-box border-l-4 border-warning px-4">' => '<x-banner>',
             '<div class="rounded-box bg-success/8 p-4">' => '<x-banner>',
         ] as $markup => $component) {
@@ -85,6 +91,8 @@ class ComponentUsageTest extends TestCase
             '<x-button class="btn-surface">',
             '<label class="has-checked:bg-primary/8 hover:bg-warning/10">',
             '<x-card class="card-title">',
+            '<x-card href="/x">',
+            '<x-button-group.item active>',
         ] as $markup) {
             $this->assertSame([], self::hits($markup), $markup);
         }

@@ -16,11 +16,9 @@
             ['route' => 'style-demo.components', 'label' => __('theme-demo::messages.nav_components'), 'description' => __('theme-demo::messages.components_description')],
             ['route' => 'style-demo.tab-content-table', 'label' => __('theme-demo::messages.nav_tab_content'), 'description' => __('theme-demo::messages.tab_content_description')],
         ] as $link)
-            <a href="{{ route($link['route']) }}" class="block">
-                <x-card :title="$link['label']" class="h-full transition hover:border-primary">
-                    <p class="text-sm text-base-content/70">{{ $link['description'] }}</p>
-                </x-card>
-            </a>
+            <x-card :href="route($link['route'])" :title="$link['label']" class="h-full">
+                <p class="text-sm text-base-content/70">{{ $link['description'] }}</p>
+            </x-card>
         @endforeach
     </div>
 

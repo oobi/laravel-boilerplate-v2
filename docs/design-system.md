@@ -87,6 +87,9 @@ optional `title` and `actions`.
   attention, such as records to review.
 - **`footer`** is a slot for the card's actions, rendered as its own row under
   a divider and padded to match the body.
+- **`href`** makes the whole card a link (an `<a>`, not a link wrapped round a
+  card), with a primary border on hover and a keyboard focus ring. Keep
+  buttons out of it: a link can't hold them.
 - **`sticky-footer`** keeps that row at the bottom of the screen while a long
   card scrolls past, so its action stays in reach (e.g. a review step whose
   confirm button would otherwise sit below a long table). It sticks within the
@@ -104,7 +107,11 @@ optional `title` and `actions`.
 </x-card>
 ```
 
-Demos of all four are in the style demo's component gallery.
+For an empty list, a page still to come or a search that found nothing, use
+**`<x-empty-state>`**: the dashed panel, with an optional `icon`, a `title`,
+the explanation as its content and an `actions` slot.
+
+Demos of all of these are in the style demo's component gallery.
 
 ## Modals
 
