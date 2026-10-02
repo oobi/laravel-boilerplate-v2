@@ -143,12 +143,36 @@
             </x-card>
         </div>
 
-        <div>
-            <div class="ui-subtle mb-1">{{ __('Button group') }}</div>
-            <div class="join">
-                <button type="button" class="join-item btn btn-sm btn-active">{{ __('All') }}</button>
-                <button type="button" class="join-item btn btn-sm">{{ __('Active') }}</button>
-                <button type="button" class="join-item btn btn-sm">{{ __('Archived') }}</button>
+        {{-- Button group: the one segmented control (never daisyUI join). In a Filament form, ToggleButtons::grouped() is drawn to match. --}}
+        <div class="flex flex-col gap-3">
+            <div class="ui-subtle">{{ __('Button group') }} (&lt;x-button-group&gt;)</div>
+            <div class="flex flex-wrap items-center gap-4">
+                <x-button-group :label="__('Status')">
+                    <x-button-group.item active>{{ __('All') }}</x-button-group.item>
+                    <x-button-group.item>{{ __('Active') }}</x-button-group.item>
+                    <x-button-group.item>{{ __('Archived') }}</x-button-group.item>
+                </x-button-group>
+
+                {{-- With counts, as the table toolbar's active/trashed toggle. --}}
+                <x-button-group :label="__('Records shown')">
+                    <x-button-group.item active>
+                        <x-heroicon-m-check class="h-4 w-4" />
+                        <x-badge color="info" size="xs">156</x-badge>
+                    </x-button-group.item>
+                    <x-button-group.item color="danger">
+                        <x-heroicon-o-trash class="h-4 w-4" />
+                        <x-badge color="error" size="xs">1</x-badge>
+                    </x-button-group.item>
+                </x-button-group>
+            </div>
+
+            {{-- Quiet, full width and small, as the theme switcher in the user menu. --}}
+            <div class="max-w-xs">
+                <x-button-group :label="__('Theme')" block quiet size="sm">
+                    <x-button-group.item color="neutral" :aria-label="__('Light')"><x-heroicon-o-sun class="h-4 w-4" /></x-button-group.item>
+                    <x-button-group.item color="neutral" active :aria-label="__('Dark')"><x-heroicon-o-moon class="h-4 w-4" /></x-button-group.item>
+                    <x-button-group.item color="neutral" :aria-label="__('System')"><x-heroicon-o-computer-desktop class="h-4 w-4" /></x-button-group.item>
+                </x-button-group>
             </div>
         </div>
 

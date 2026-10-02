@@ -19,6 +19,7 @@ return [
     'cancel' => 'Cancel',
     'confirm' => 'Confirm',
     'close' => 'Close',
+    'records_shown' => 'Records shown',
     'save_changes' => 'Save Changes',
     'delete' => 'Delete',
 

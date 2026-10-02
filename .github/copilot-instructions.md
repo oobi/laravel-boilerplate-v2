@@ -68,9 +68,10 @@ currently registered.
   writing any markup, check the component table in
   [the design-system skill](../.ai/skills/design-system/SKILL.md) and use
   `<x-banner>`, `<x-alert>`, `<x-card>` (`inset`, `accent`, `footer`),
-  `<x-badge>` and the `<x-button.*>` intents. No raw daisyUI `btn` / `alert` /
-  `card` / `badge` classes, and no status strips built from a coloured border or
-  tint. If a component almost fits, extend it. See
+  `<x-badge>`, the `<x-button.*>` intents, `<x-button-group>` (segmented
+  controls) and `<x-avatar icon>` (icon tiles). No raw daisyUI `btn` / `alert` /
+  `card` / `badge` / `join` classes, and no status strips built from a coloured
+  border or tint. If a component almost fits, extend it. See
   [.ai/rules/views.md](../.ai/rules/views.md); `ComponentUsageTest` enforces it.
 - Route names for panel/nav-linked pages must be flat (`resource.action`, not
   `resource.sub.action`) — `App\Support\Breadcrumbs` derives the parent

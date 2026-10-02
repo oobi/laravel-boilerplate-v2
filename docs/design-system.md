@@ -46,6 +46,25 @@ daisyUI's own fills, so the hover state (the button's colour with contrasting
 text) still reads. Don't reach for `class="bg-base-100"` instead: a utility
 background also overrides the hover fill, and the label disappears on hover.
 
+### Button groups
+
+A segmented control, a row of buttons sharing borders with one chosen (a
+status toggle, quick filters, the theme switcher, pagination), is
+`<x-button-group>` with `<x-button-group.item>`s, never daisyUI's `join`:
+
+```blade
+<x-button-group label="Status">
+    <x-button-group.item :active="$status === 'all'" wire:click="$set('status', 'all')">All</x-button-group.item>
+    <x-button-group.item :active="$status === 'archived'" wire:click="$set('status', 'archived')">Archived</x-button-group.item>
+</x-button-group>
+```
+
+The group is labelled for screen readers and each item says whether it's
+chosen (`aria-pressed`, or `aria-current` on a link). `block` makes it full
+width, `quiet` drops the frame for use inside a menu, and `size="sm"` makes it
+compact. In a Filament form, a single choice is
+`ToggleButtons::make()->grouped()`, drawn to match.
+
 ### Links on wrapped buttons
 
 The `<x-button.*>` wrappers declare `href` as a prop and pass it on as one.

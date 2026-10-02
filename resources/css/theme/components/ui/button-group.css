@@ -1,9 +1,12 @@
 /*
 |--------------------------------------------------------------------------
-| ui-button-group — segmented button toggle (e.g. active/trashed status)
+| ui-button-group: segmented button toggle (e.g. active/trashed status)
 |--------------------------------------------------------------------------
-| Plain custom chrome (not a daisyUI component) for cases like the toolbar's
-| active/trashed toggle, where each segment carries its own live count.
+| The one segmented control, rendered by <x-button-group> and
+| <x-button-group.item> (never daisyUI's join). Plain custom chrome for cases
+| like the toolbar's active/trashed toggle, where each segment carries its own
+| live count, and the theme switcher. Filament's grouped ToggleButtons are
+| drawn to match, below.
 | Active-state colors use color-mix() against daisyUI's theme tokens, so
 | they automatically follow the current theme (light/dark) with no
 | duplicated dark-mode overrides needed.
@@ -21,8 +24,11 @@
         align-items: center;
         gap: 0.375rem;
         /* daisyUI's field height, so the group lines up with the selects and buttons beside it. */
+        justify-content: center;
         min-height: calc(var(--size-field, 0.25rem) * 10);
-        padding: 0.5rem 0.75rem;
+        /* Room to breathe, and a short label ("No") is never a sliver to tap. */
+        min-width: 3rem;
+        padding: 0.5rem 1rem;
         font-size: 0.875rem;
         font-weight: 500;
         line-height: 1;
@@ -67,5 +73,134 @@
         background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-base-100));
         color: var(--color-error);
         border-color: color-mix(in srgb, var(--color-error) 45%, var(--color-base-300));
+    }
+
+    .ui-button-group-btn-active-neutral {
+        background-color: var(--color-base-200);
+        color: var(--color-base-content);
+    }
+
+    /* Full width, each segment an equal share (block). */
+    .ui-button-group-block {
+        display: flex;
+        width: 100%;
+
+        & > .ui-button-group-btn {
+            flex: 1 1 0%;
+            justify-content: center;
+        }
+    }
+
+    .ui-button-group-sm > .ui-button-group-btn {
+        min-height: calc(var(--size-field, 0.25rem) * 8);
+        min-width: 2.5rem;
+        padding: 0.25rem 0.75rem;
+    }
+
+    /* Touch screens: segments sit edge to edge, so a near-miss picks the
+       neighbour. Taller on a coarse pointer only (44px, the platforms'
+       comfortable target), so desktop keeps the field height beside them. */
+    @media (pointer: coarse) {
+        .ui-button-group-btn {
+            min-height: 2.75rem;
+        }
+
+        .ui-button-group-sm > .ui-button-group-btn {
+            min-height: 2.5rem;
+        }
+    }
+
+    /* No frame or shadow, for inside a menu or toolbar (quiet): segments are
+       muted until hovered or chosen. */
+    .ui-button-group-quiet {
+        box-shadow: none;
+
+        & > .ui-button-group-btn {
+            border-color: transparent;
+            background: transparent;
+            color: color-mix(in srgb, var(--color-base-content) 55%, transparent);
+
+            &:hover {
+                background: color-mix(in srgb, var(--color-base-200) 70%, transparent);
+                color: var(--color-base-content);
+            }
+
+            &.ui-button-group-btn-active-neutral {
+                background: var(--color-base-200);
+                color: var(--color-base-content);
+            }
+        }
+    }
+}
+
+/*
+| Filament's grouped ToggleButtons (->grouped()) drawn as a ui-button-group,
+| so a form's single choice (Yes / No / Not asked yet) looks like every other
+| segmented control. Filament keeps the radio inputs, state and validation;
+| the checked option takes the primary active state. Unlayered, like
+| Filament's own rules, so it wins.
+*/
+.fi-fo-toggle-buttons.fi-btn-group {
+    display: inline-flex;
+    border-radius: var(--radius-field, 0.5rem);
+    box-shadow: var(--ui-island-shadow-xs);
+
+    & > .fi-btn {
+        /* Filament grows each segment from zero (flex: 1 1 0%), which in a
+           group sized to its content squeezes them to their narrowest and
+           wraps the labels; size each to its label, on one line. */
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        min-height: calc(var(--size-field, 0.25rem) * 10);
+        min-width: 3rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--color-base-300);
+        border-radius: 0;
+        background: var(--color-base-100);
+        box-shadow: none;
+        color: var(--color-base-content);
+        font-size: 0.875rem;
+        font-weight: 500;
+
+        &:hover {
+            background: var(--color-base-200);
+        }
+
+        &:nth-child(1 of .fi-btn) {
+            border-start-start-radius: var(--radius-field, 0.5rem);
+            border-end-start-radius: var(--radius-field, 0.5rem);
+        }
+
+        &:nth-last-child(1 of .fi-btn) {
+            border-start-end-radius: var(--radius-field, 0.5rem);
+            border-end-end-radius: var(--radius-field, 0.5rem);
+        }
+
+        &:not(:nth-child(1 of .fi-btn)) {
+            margin-inline-start: -1px;
+        }
+    }
+
+    & > .fi-fo-toggle-buttons-input:checked + .fi-btn {
+        position: relative;
+        background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-base-100));
+        color: var(--color-primary);
+        border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-base-300));
+    }
+
+    & > .fi-fo-toggle-buttons-input:focus-visible + .fi-btn {
+        position: relative;
+        z-index: 1;
+        outline: 2px solid var(--color-primary);
+        outline-offset: 1px;
+    }
+}
+
+@media (pointer: coarse) {
+    .fi-fo-toggle-buttons.fi-btn-group > .fi-btn {
+        min-height: 2.75rem;
     }
 }

@@ -32,8 +32,8 @@
                 <div class="ui-toolbar mt-4 flex items-center justify-between">
                     <span class="text-sm font-medium">{{ __(':count selected', ['count' => count($selected)]) }}</span>
                     <div class="flex gap-2">
-                        <button type="button" class="btn btn-sm" wire:click="clearSelection">{{ __('Clear') }}</button>
-                        <button type="button" class="btn btn-sm btn-warning" wire:click="bulkArchive">{{ __('Archive selected') }}</button>
+                        <x-button.cancel size="sm" wire:click="clearSelection">{{ __('Clear') }}</x-button.cancel>
+                        <x-button.warning size="sm" wire:click="bulkArchive">{{ __('Archive selected') }}</x-button.warning>
                     </div>
                 </div>
             @endif
@@ -73,9 +73,9 @@
                                 <td><x-badge :value="$row->status" /></td>
                                 <td>{{ $row->joinedAt }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-ghost btn-square btn-sm" wire:click="toggleExpand({{ $row->id }})">
+                                    <x-button.icon :aria-label="__('Show details')" :aria-expanded="in_array($row->id, $expanded, true) ? 'true' : 'false'" wire:click="toggleExpand({{ $row->id }})">
                                         <x-heroicon-o-chevron-down class="h-4 w-4 transition-transform {{ in_array($row->id, $expanded, true) ? 'rotate-180' : '' }}" />
-                                    </button>
+                                    </x-button.icon>
                                 </td>
                             </tr>
                             @if (in_array($row->id, $expanded, true))
@@ -105,21 +105,21 @@
                     </label>
 
                     <nav class="daisy-table__pagination-actions" aria-label="{{ __('filament::components/pagination.label') }}">
-                        <button type="button" class="btn btn-sm" wire:click="previousPage" @disabled($this->rows->onFirstPage())>
+                        <x-button color="neutral" variant="outline" size="sm" wire:click="previousPage" :disabled="$this->rows->onFirstPage()">
                             <x-heroicon-o-chevron-left class="h-4 w-4" />
                             <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.previous.label') }}</span>
-                        </button>
+                        </x-button>
 
-                        <div class="daisy-table__pagination-pages join">
+                        <x-button-group :label="__('Pages')" size="sm" class="daisy-table__pagination-pages">
                             @for ($p = 1; $p <= $this->rows->lastPage(); $p++)
-                                <button type="button" class="join-item btn btn-sm {{ $p === $this->rows->currentPage() ? 'btn-active' : '' }}" wire:click="gotoPage({{ $p }})">{{ $p }}</button>
+                                <x-button-group.item :active="$p === $this->rows->currentPage()" wire:click="gotoPage({{ $p }})">{{ $p }}</x-button-group.item>
                             @endfor
-                        </div>
+                        </x-button-group>
 
-                        <button type="button" class="btn btn-sm" wire:click="nextPage" @disabled(! $this->rows->hasMorePages())>
+                        <x-button color="neutral" variant="outline" size="sm" wire:click="nextPage" :disabled="! $this->rows->hasMorePages()">
                             <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.next.label') }}</span>
                             <x-heroicon-o-chevron-right class="h-4 w-4" />
-                        </button>
+                        </x-button>
                     </nav>
                 </footer>
             </div>

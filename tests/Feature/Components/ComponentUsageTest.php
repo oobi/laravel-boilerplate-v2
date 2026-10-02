@@ -30,6 +30,7 @@ class ComponentUsageTest extends TestCase
         '/class="[^"]*(?<![\w-])ui-banner(?![\w-])/' => '<x-banner>',
         '/border-l-4 border-(info|success|warning|error)\b/' => '<x-banner> or <x-alert>',
         '/(?<![\w:-])bg-(info|success|warning|error)\/\d+/' => '<x-banner> or <x-alert>',
+        '/class="[^"]*(?<![\w-])join(-item)?(?![\w-])/' => '<x-button-group>',
     ];
 
     /**
@@ -43,10 +44,6 @@ class ComponentUsageTest extends TestCase
         'resources/views/livewire/profile/edit-profile.blade.php' => ['<x-button'],
         // Clickable colour swatches, a picker built on badge styles, not a badge.
         'resources/views/filament/forms/components/role-color-swatches.blade.php' => ['<x-badge>'],
-        // The gallery: a joined button group (daisyUI join, no component yet).
-        'packages/theme-demo/resources/views/livewire/component-gallery.blade.php' => ['<x-button'],
-        // Pagination as a joined button group (daisyUI join, no component yet).
-        'packages/theme-demo/resources/views/livewire/tables/maximalist.blade.php' => ['<x-button'],
     ];
 
     public function test_views_use_the_components_rather_than_hand_rolled_markup(): void
@@ -76,6 +73,7 @@ class ComponentUsageTest extends TestCase
             '<div role="alert" class="alert alert-warning">' => '<x-alert>',
             '<div class="card bg-base-100">' => '<x-card>',
             '<span class="badge badge-soft">' => '<x-badge>',
+            '<div class="join"><button class="join-item">' => '<x-button-group>',
             '<div class="flex rounded-box border-l-4 border-warning px-4">' => '<x-banner>',
             '<div class="rounded-box bg-success/8 p-4">' => '<x-banner>',
         ] as $markup => $component) {
