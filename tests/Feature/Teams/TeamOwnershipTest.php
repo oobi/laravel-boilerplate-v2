@@ -99,13 +99,13 @@ class TeamOwnershipTest extends TestCase
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->assertActionVisible('addCoOwner')
             ->callAction('addCoOwner', data: ['user_id' => $this->member->id])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertTrue($this->team->isOwnedBy($this->member));
 
         // Someone who's already a co-owner isn't eligible to be added again — and the refusal says so.
         $component->callAction('addCoOwner', data: ['user_id' => $this->coOwner->id])
-            ->assertHasActionErrors(['user_id' => [team_trans('ownership.already_co_owner', ['person' => $this->coOwner->name])]]);
+            ->assertHasFormErrors(['user_id' => [team_trans('ownership.already_co_owner', ['person' => $this->coOwner->name])]]);
 
         Livewire::actingAs($this->primary)
             ->test(ManageOwnership::class, ['team' => $this->team])
@@ -139,7 +139,7 @@ class TeamOwnershipTest extends TestCase
         Livewire::actingAs($this->primary)
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->callAction('transferOwnership', data: ['user_id' => $this->member->id])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->team->refresh();
         $this->member->refresh(); // the component wrote through its own instances; ours memoised the old membership
@@ -163,7 +163,7 @@ class TeamOwnershipTest extends TestCase
         Livewire::actingAs($this->primary)
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->callAction('transferOwnership', data: ['user_id' => $this->member->id])
-            ->assertHasActionErrors(['user_id' => [team_trans('ownership.is_suspended', ['person' => $this->member->name])]]);
+            ->assertHasFormErrors(['user_id' => [team_trans('ownership.is_suspended', ['person' => $this->member->name])]]);
 
         $this->assertTrue($this->team->fresh()->isPrimaryOwner($this->primary));
     }
@@ -175,7 +175,7 @@ class TeamOwnershipTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->callAction('transferOwnership', data: ['user_id' => $this->member->id])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertTrue($this->team->fresh()->isPrimaryOwner($this->member));
     }

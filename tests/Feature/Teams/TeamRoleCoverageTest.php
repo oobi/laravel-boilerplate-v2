@@ -11,6 +11,7 @@ use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Models\TeamInvitation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -71,14 +72,14 @@ class TeamRoleCoverageTest extends TestCase
         Livewire::actingAs($this->lead)
             ->test(MembersTable::class, ['team' => $this->team])
             ->callTableAction('changeRole', $this->member, $this->roles('Manager'))
-            ->assertHasTableActionErrors();
+            ->assertHasFormErrors();
 
         $this->assertSame('Member', $this->team->roleFor($this->member));
 
         Livewire::actingAs($this->lead)
             ->test(MembersTable::class, ['team' => $this->team])
             ->callTableAction('changeRole', $this->member, $this->roles('Lead'))
-            ->assertHasNoTableActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertSame('Lead', $this->team->fresh()->roleFor($this->member->fresh()));
     }
@@ -101,7 +102,7 @@ class TeamRoleCoverageTest extends TestCase
         Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_TEAMS)->create())
             ->test(MembersTable::class, ['team' => $this->team])
             ->callTableAction('changeRole', $this->member, $this->roles('Manager'))
-            ->assertHasNoTableActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertSame('Manager', $this->team->fresh()->roleFor($this->member->fresh()));
     }
@@ -134,6 +135,7 @@ class TeamRoleCoverageTest extends TestCase
         $this->assertTrue($this->team->invitations()->where('email', 'new@example.com')->exists());
 
         $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(team_trans('invitations.role_not_allowed', ['role' => 'Manager']));
         app(InviteMember::class)($this->team, 'other@example.com', 'Manager', $this->lead);
     }
 
@@ -166,7 +168,31 @@ class TeamRoleCoverageTest extends TestCase
         Livewire::actingAs($recruiter)
             ->test(PendingInvitations::class, ['team' => $this->team])
             ->callAction('invite', data: ['email' => 'new@example.com', 'role' => 'Manager'])
-            ->assertHasActionErrors(['role']);
+            ->assertHasFormErrors(['role' => team_trans('invitations.role_not_allowed', ['role' => 'Manager'])]);
+
+        $this->assertFalse($this->team->invitations()->exists());
+    }
+
+    public function test_anything_invite_member_refuses_past_the_form_is_shown_not_thrown(): void
+    {
+        Notification::fake();
+        config(['teams.invitations.members' => true]);
+        Team::createRole('Recruiter', [TeamPermission::INVITE_MEMBERS]);
+        $recruiter = $this->joined('Recruiter');
+
+        // The form and the action disagreeing (say, a role changed between showing the form and sending it).
+        $this->app->instance(InviteMember::class, new class extends InviteMember
+        {
+            public function __invoke(Team $team, string $email, ?string $role = null, ?User $inviter = null): TeamInvitation
+            {
+                throw new InvalidArgumentException(team_trans('invitations.role_not_allowed', ['role' => 'Lead']));
+            }
+        });
+
+        Livewire::actingAs($recruiter)
+            ->test(PendingInvitations::class, ['team' => $this->team])
+            ->callAction('invite', data: ['email' => 'new@example.com'])
+            ->assertNotified(team_trans('invitations.role_not_allowed', ['role' => 'Lead']));
 
         $this->assertFalse($this->team->invitations()->exists());
     }

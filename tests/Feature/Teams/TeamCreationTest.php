@@ -48,7 +48,7 @@ class TeamCreationTest extends TestCase
             ->test(Onboarding::class)
             ->assertActionVisible('createTeam')
             ->callAction('createTeam', data: ['name' => 'Northwind'])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $team = Team::query()->where('name', 'Northwind')->firstOrFail();
 
@@ -188,7 +188,7 @@ class TeamCreationTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ListTeams::class)
             ->callAction('createTeam', data: ['name' => 'Second', 'user_id' => $owner->id, 'active' => true])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertSame(2, $owner->ownedTeams()->count());
     }

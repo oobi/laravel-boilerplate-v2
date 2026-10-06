@@ -289,14 +289,14 @@ class ShowUserTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])
             ->callAction('manageRoles', data: ['roles' => ['Scoped Role']])
-            ->assertHasActionErrors();
+            ->assertHasFormErrors();
 
         $this->assertFalse($target->fresh()->hasRole('Scoped Role'));
 
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])
             ->callAction('manageRoles', data: ['roles' => ['Editor']])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertTrue($target->fresh()->hasRole('Editor'));
     }

@@ -48,14 +48,14 @@ class AccessCoverageTest extends TestCase
         Livewire::actingAs($this->support)
             ->test(ShowUser::class, ['user' => $target])
             ->callAction('manageRoles', data: ['roles' => ['Administrator']])
-            ->assertHasActionErrors(['roles.0']);
+            ->assertHasFormErrors(['roles.0']);
 
         $this->assertFalse($target->fresh()->hasRole('Administrator'));
 
         Livewire::actingAs($this->support)
             ->test(ShowUser::class, ['user' => $target])
             ->callAction('manageRoles', data: ['roles' => ['Support']])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertTrue($target->fresh()->hasRole('Support'));
     }

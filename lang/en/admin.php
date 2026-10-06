@@ -19,6 +19,7 @@ return [
     'cancel' => 'Cancel',
     'confirm' => 'Confirm',
     'close' => 'Close',
+    'swipe_for_more_tabs' => 'Swipe for more tabs',
     'records_shown' => 'Records shown',
     'save_changes' => 'Save Changes',
     'delete' => 'Delete',

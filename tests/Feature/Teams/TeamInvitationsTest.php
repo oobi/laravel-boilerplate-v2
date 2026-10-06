@@ -46,7 +46,7 @@ class TeamInvitationsTest extends TestCase
         Livewire::actingAs($owner)
             ->test(PendingInvitations::class, ['team' => $team])
             ->callAction('invite', data: ['email' => 'New.Person@Example.com', 'role' => 'Member'])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas('team_invitations', ['team_id' => $team->id, 'email' => 'new.person@example.com', 'role' => 'Member']);
         Notification::assertSentOnDemand(
@@ -118,7 +118,7 @@ class TeamInvitationsTest extends TestCase
         Livewire::actingAs($owner)
             ->test(PendingInvitations::class, ['team' => $team])
             ->callAction('invite', data: ['email' => 'MEMBER@example.com'])
-            ->assertHasActionErrors(['email']);
+            ->assertHasFormErrors(['email']);
 
         $this->assertDatabaseMissing('team_invitations', ['email' => 'member@example.com']);
     }

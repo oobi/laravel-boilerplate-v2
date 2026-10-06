@@ -48,7 +48,7 @@ class StyleDemoAccessTest extends TestCase
                 __('theme-demo::messages.modals_filament_record_delete'),
             ])
             ->callMountedAction()
-            ->assertHasNoActionErrors()
+            ->assertHasNoFormErrors()
             ->assertNotified(__('theme-demo::messages.modals_filament_confirmed'));
     }
 

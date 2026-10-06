@@ -167,7 +167,7 @@ class ShowTeamTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(MembersTable::class, ['team' => $this->team])
             ->callAction('addMember', data: ['user_id' => $user->id, 'roles' => 'Member'])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertTrue($this->team->fresh()->hasUser($user));
         $this->assertSame('Member', $this->team->roleFor($user));
@@ -190,7 +190,7 @@ class ShowTeamTest extends TestCase
             ->test(MembersTable::class, ['team' => $this->team])
             ->assertTableActionHidden('remove', $this->owner)
             ->callTableAction('changeRole', $member, data: ['roles' => 'Team Admin'])
-            ->assertHasNoTableActionErrors()
+            ->assertHasNoFormErrors()
             ->callTableAction('remove', $member);
 
         $this->assertFalse($this->team->fresh()->hasUser($member));
