@@ -87,9 +87,21 @@ class UserFactory extends Factory
      */
     public function support(): static
     {
-        return $this->afterCreating(function (User $user): void {
-            $role = Role::findOrCreate('Support');
-            $role->givePermissionTo(collect(SystemPermission::withImplied(SystemRolesSeeder::defaults()['Support']['permissions']))
+        return $this->withSeededRole('Support');
+    }
+
+    /** The seeded Administrator role: every permission a role can carry. */
+    public function administrator(): static
+    {
+        return $this->withSeededRole(SystemRolesSeeder::ADMINISTRATOR);
+    }
+
+    /** A role from SystemRolesSeeder's definitions, built (not seeded) and assigned. */
+    private function withSeededRole(string $name): static
+    {
+        return $this->afterCreating(function (User $user) use ($name): void {
+            $role = Role::findOrCreate($name);
+            $role->givePermissionTo(collect(SystemPermission::withImplied(SystemRolesSeeder::defaults()[$name]['permissions']))
                 ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value))
                 ->all());
 

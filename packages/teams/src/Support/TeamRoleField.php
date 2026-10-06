@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Support;
 
+use Closure;
 use Concise\Teams\Models\Team;
 use Filament\Forms\Components\Select;
 
@@ -15,13 +16,17 @@ use Filament\Forms\Components\Select;
  */
 final class TeamRoleField
 {
-    public static function make(?string $label = null): Select
+    /**
+     * @param  (Closure(string): bool)|null  $assignable  whether the viewer may give or take away a role (by name); the rest are shown but can't be picked
+     */
+    public static function make(?string $label = null, ?Closure $assignable = null): Select
     {
         $multiple = Team::allowsMultipleRoles();
 
         return Select::make('roles')
             ->label($label ?? team_trans($multiple ? 'members.roles' : 'members.role'))
             ->options(fn (): array => Team::availableRoles()->orderBy('name')->pluck('name', 'name')->all())
+            ->disableOptionWhen(fn (string $value): bool => $assignable !== null && ! $assignable($value))
             ->multiple($multiple)
             ->native(! $multiple)
             ->placeholder(team_trans($multiple ? 'members.no_roles' : 'members.no_role'));

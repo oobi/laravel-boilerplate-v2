@@ -169,6 +169,8 @@ class ManageRolesTest extends TestCase
                 SystemPermission::SUSPEND_USERS->value,
                 SystemPermission::DELETE_USERS->value,
                 SystemPermission::IMPERSONATE_USERS->value,
+                SystemPermission::SET_USER_PASSWORDS->value,
+                SystemPermission::MANAGE_ROLES->value,
             ]);
     }
 
@@ -181,6 +183,8 @@ class ManageRolesTest extends TestCase
             Permission::findOrCreate(SystemPermission::SUSPEND_USERS->value),
             Permission::findOrCreate(SystemPermission::DELETE_USERS->value),
             Permission::findOrCreate(SystemPermission::IMPERSONATE_USERS->value),
+            Permission::findOrCreate(SystemPermission::SET_USER_PASSWORDS->value),
+            Permission::findOrCreate(SystemPermission::MANAGE_ROLES->value),
         ]);
 
         Livewire::actingAs($admin)

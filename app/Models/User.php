@@ -6,6 +6,7 @@ use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
 use App\Models\Concerns\HasProfilePhoto;
 use App\Models\Concerns\HasSuperAdminFlag;
+use App\Support\Roles\Coverage;
 // teams:start
 use Concise\Teams\Concerns\HasTeams;
 // teams:end
@@ -208,6 +209,8 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return ! $this->isSuperAdmin();
+        // Never a super admin, and never someone with access the actor lacks:
+        // impersonating them would be a way to borrow it.
+        return ! $this->isSuperAdmin() && Coverage::coversUser($actor, $this);
     }
 }

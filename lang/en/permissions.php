@@ -24,6 +24,8 @@ return [
         'suspend_users' => 'Suspend Users',
         'delete_users' => 'Delete Users',
         'impersonate_users' => 'Impersonate Users',
+        'set_user_passwords' => 'Set User Passwords',
+        'manage_roles' => 'Manage Roles',
     ],
 
     'categories' => [

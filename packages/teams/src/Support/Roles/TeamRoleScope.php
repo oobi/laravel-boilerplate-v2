@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Support\Roles;
 
+use App\Enums\SystemPermission;
+use App\Models\User;
 use App\Support\Roles\RoleScope;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
@@ -73,5 +75,16 @@ final class TeamRoleScope implements RoleScope
     public function order(): int
     {
         return 10;
+    }
+
+    /**
+     * Only head office running teams ("manage teams"). Team roles are shared by
+     * every team and someone with "manage roles" may hold one, so editing them
+     * could otherwise raise their own access; "manage teams" already grants
+     * every team ability (TeamPolicy::before()), so it gains them nothing.
+     */
+    public function mayManage(User $actor): bool
+    {
+        return $actor->hasSystemPermission(SystemPermission::MANAGE_TEAMS);
     }
 }

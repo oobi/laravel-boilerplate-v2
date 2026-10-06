@@ -8,6 +8,7 @@ use App\Models\User;
 use Closure;
 use Concise\Teams\Actions\InviteMember;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamCoverage;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -51,6 +52,8 @@ trait HasInviteAction
                 Select::make('role')
                     ->label(team_trans('invitations.role'))
                     ->options(fn (): array => Team::availableRoles()->orderBy('name')->pluck('name', 'name')->all())
+                    // Only a role the inviter holds everything of (TeamCoverage); InviteMember checks again.
+                    ->disableOptionWhen(fn (string $value): bool => ! TeamCoverage::coversRoleNamed(auth()->user(), $this->team, $value))
                     ->placeholder(team_trans('members.no_role')),
             ])
             ->action(function (array $data): void {

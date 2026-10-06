@@ -6,6 +6,7 @@ namespace App\Support\Roles;
 
 use App\Enums\SystemPermission;
 use App\Models\Role;
+use App\Models\User;
 
 /** The app-wide roles: what a user can do across the whole system (SystemPermission). */
 final class SystemRoleScope implements RoleScope
@@ -55,5 +56,11 @@ final class SystemRoleScope implements RoleScope
     public function order(): int
     {
         return 0;
+    }
+
+    /** Anyone with "manage roles"; which roles they may change is Coverage::mayEditRole()'s call. */
+    public function mayManage(User $actor): bool
+    {
+        return true;
     }
 }

@@ -14,14 +14,23 @@
         @endforeach
     </x-form-select>
 
+    @unless ($this->canEditRole())
+        {{-- A head office role with permissions the viewer lacks, or their own: shown, not changed. --}}
+        <x-banner variant="info" role="status" class="mb-6">
+            {{ __('admin.role_read_only') }}
+        </x-banner>
+    @endunless
+
     <form wire:submit="save">
         {{ $form }}
 
-        <div class="mt-6 flex items-center gap-4">
-            <x-button.action type="submit">
-                {{ __('admin.save_changes') }}
-            </x-button.action>
-        </div>
+        @if ($this->canEditRole())
+            <div class="mt-6 flex items-center gap-4">
+                <x-button.action type="submit">
+                    {{ __('admin.save_changes') }}
+                </x-button.action>
+            </div>
+        @endif
     </form>
 @else
     <x-alert color="info">

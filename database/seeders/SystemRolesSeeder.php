@@ -37,10 +37,10 @@ class SystemRolesSeeder extends Seeder
     public static function defaults(): array
     {
         return [
-            // Everything a role can grant. The gap from a super admin is exactly
-            // the acts that aren't permissions — managing roles, granting super
-            // admin, direct password resets, the policy bypass itself — so an
-            // Administrator runs the platform without holding the master key.
+            // Everything a role can grant, roles and passwords included. The gap
+            // from a super admin is granting super admin, acting on a super admin,
+            // and the policy bypass itself: an Administrator runs the platform
+            // without holding the master key.
             self::ADMINISTRATOR => [
                 'color' => DaisyColor::ERROR,
                 'permissions' => SystemPermission::cases(),

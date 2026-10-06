@@ -9,6 +9,7 @@ use App\Models\User;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Support\InvitationPolicy;
+use Concise\Teams\Support\TeamCoverage;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 use RuntimeException;
@@ -40,6 +41,11 @@ class InviteMember
 
         if ($role !== null && ! Team::availableRoles()->where('name', $role)->exists()) {
             throw new InvalidArgumentException(sprintf("'%s' is not a team role.", $role));
+        }
+
+        // A member inviting may only offer a role they hold everything of (TeamCoverage).
+        if ($role !== null && $inviter !== null && ! TeamCoverage::coversRoleNamed($inviter, $team, $role)) {
+            throw new InvalidArgumentException(sprintf("You can't invite someone as '%s': it has permissions you don't hold.", $role));
         }
 
         // Re-inviting the same address refreshes the role and re-sends, rather than failing on the unique index.

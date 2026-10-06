@@ -109,6 +109,8 @@ return [
     'select_role' => 'Select Role',
     'manage_roles' => 'Manage Roles',
     'roles_updated' => 'Roles updated successfully.',
+    'role_read_only' => 'You can\'t change this role: it\'s one you hold, or it has permissions you don\'t. A super admin, or someone who holds all of them, can.',
+    'roles_coverage_help' => 'You can only give or take away a role whose permissions you hold yourself.',
     'role_created' => 'Role created successfully.',
     'role_updated' => 'Role updated successfully.',
     'role_deleted' => 'Role deleted.',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Roles\Concerns;
 
 use App\Models\Role;
+use App\Support\Roles\Coverage;
 use App\Support\Roles\Implications;
 use App\Support\Roles\RoleScope;
 use Filament\Forms\Components\Checkbox;
@@ -16,6 +17,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\View;
 use Filament\Support\Enums\GridDirection;
 use Filament\Support\Enums\VerticalAlignment;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
@@ -38,7 +40,9 @@ use Illuminate\Support\Str;
  * list reads and completes the selection of the whole form, not just its own
  * category. A permission that doesn't apply in this environment
  * (RoleScope::unavailable()) isn't offered at all; if the role already holds
- * one, the save keeps it rather than stripping what it couldn't show.
+ * one, the save keeps it rather than stripping what it couldn't show. A head
+ * office permission the editor doesn't hold is shown but can't be ticked
+ * (mayGrant()), so nobody builds a role with more than they have.
  */
 trait HasPermissionsSchema
 {
@@ -75,7 +79,8 @@ trait HasPermissionsSchema
                     ->hiddenLabel()
                     ->dehydrated(false)
                     ->live()
-                    ->afterStateUpdated(fn (bool $state, Set $set) => $set($field, $state ? $values : []))
+                    // Only what the editor may grant (mayGrant()); the rest stays as it was.
+                    ->afterStateUpdated(fn (bool $state, Set $set) => $set($field, $state ? array_values(array_filter($values, fn (string $value): bool => $this->mayGrant($value))) : []))
                     ->extraInputAttributes(fn (Checkbox $component): array => [
                         'aria-label' => __('admin.select_all_in', ['group' => $category]),
                         'title' => __('admin.select_all'),
@@ -109,7 +114,7 @@ trait HasPermissionsSchema
                 // Validate against the whole category, not just the enabled options:
                 // an implied option is disabled on screen but legitimately held.
                 ->in($values)
-                ->disableOptionWhen(fn (string $value, CheckboxList $component): bool => Implications::isCarried(
+                ->disableOptionWhen(fn (string $value, CheckboxList $component): bool => ! $this->mayGrant($value) || Implications::isCarried(
                     $this->roleScope()->implications(),
                     $this->selectedPermissions($component->getContainer()->getRawState()),
                     $value,
@@ -120,6 +125,27 @@ trait HasPermissionsSchema
                 ->extraAttributes(['class' => 'ui-option-grid']),
         ])
             ->extraAttributes(['class' => 'ui-option-group']);
+    }
+
+    /**
+     * Whether the editor may put this permission on a role: a system
+     * permission only if they hold it themselves (App\Support\Roles\Coverage);
+     * an add-on scope's permissions (team roles) carry no system access, so
+     * the scope's own rule (RoleScope::mayManage()) decides.
+     */
+    protected function mayGrant(string $permission): bool
+    {
+        if ($this->roleScope()->key() !== Role::SYSTEM_SCOPE) {
+            return $this->roleScope()->mayManage(Auth::user());
+        }
+
+        return Coverage::covers(Auth::user(), [$permission]);
+    }
+
+    /** @param  list<string>  $permissions */
+    protected function mayGrantAll(array $permissions): bool
+    {
+        return collect($permissions)->every(fn (string $permission): bool => $this->mayGrant($permission));
     }
 
     protected function permissionsFieldName(string $category): string

@@ -14,6 +14,7 @@ use App\Support\Auth\Destination;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamCoverage;
 use Concise\Teams\Support\TeamRoleField;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -179,11 +180,16 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                                 ? $this->memberRoles()->get($record->id, [])
                                 : ($this->memberRoles()->get($record->id, [])[0] ?? null),
                         ])
-                        ->schema([TeamRoleField::make()->required()])
+                        ->schema([TeamRoleField::make(assignable: fn (string $role): bool => $this->mayAssign($role))->required()])
                         ->action(function (User $record, array $data): void {
                             abort_unless($this->canActOn($record), 403);
 
-                            $this->team->syncMemberRoles($record, TeamRoleField::selected($data));
+                            // Every role given or taken away must be one the viewer covers (TeamCoverage).
+                            $held = collect($this->memberRoles()->get($record->id, []));
+                            $chosen = collect(TeamRoleField::selected($data));
+                            abort_unless($chosen->diff($held)->merge($held->diff($chosen))->every(fn (string $role): bool => $this->mayAssign($role)), 403);
+
+                            $this->team->syncMemberRoles($record, $chosen->all());
                             $this->memberRoles = null;
 
                             Notification::make()->title(team_trans('members.roles_updated'))->success()->send();
@@ -269,6 +275,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     ->label(__('admin.user'))
                     ->required()
                     ->searchable()
+                    // Filament waits a second by default; the search itself takes milliseconds.
+                    ->searchDebounce(250)
                     ->getSearchResultsUsing(fn (string $search): array => $this->searchNonMembers($search))
                     ->getOptionLabelUsing(fn (mixed $value): ?string => User::find($value)?->email),
 
@@ -374,7 +382,16 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             return false;
         }
 
-        return $this->isOwner($member) ? $this->canManageOwners() : $this->canManage();
+        // Owners have their own shield; anyone else only by someone who holds all they hold here.
+        return $this->isOwner($member)
+            ? $this->canManageOwners()
+            : $this->canManage() && TeamCoverage::coversMember(auth()->user(), $this->team, $member);
+    }
+
+    /** Whether the viewer may give or take away this team role (TeamCoverage). */
+    private function mayAssign(string $role): bool
+    {
+        return TeamCoverage::coversRoleNamed(auth()->user(), $this->team, $role);
     }
 
     /** The primary owner or a system admin (via TeamPolicy::before) — see ManageOwnership for the ownership acts themselves. */

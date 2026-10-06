@@ -6,6 +6,7 @@ namespace App\Policies;
 
 use App\Enums\SystemPermission;
 use App\Models\User;
+use App\Support\Roles\Coverage;
 
 /**
  * Per-instance authorization for the Users admin area. Global, non-instance
@@ -13,6 +14,11 @@ use App\Models\User;
  * directly via `hasPermissionTo()`/spatie's own Gate::before — see
  * .ai/rules/providers.md. The super-admin bypass for both is a single
  * global `Gate::before()` in AppServiceProvider, not a method here.
+ *
+ * Every act on another user needs its permission AND that the actor covers
+ * the target (holds every permission they hold; App\Support\Roles\Coverage),
+ * so nobody acts on someone with more access than themselves, and nobody but
+ * a super admin acts on a super admin.
  */
 class UserPolicy
 {
@@ -22,29 +28,33 @@ class UserPolicy
         return true;
     }
 
-    /** Reached only for non-super-admins — creating/deleting the user roster stays super-admin only, unlike editing. */
+    /** A new account starts with no roles, so creating needs only the permission. */
     public function create(User $actor): bool
     {
-        return false;
+        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value);
     }
 
     /** Ordinary profile fields only — never implies role assignment (see assignRole()). */
     public function update(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && ! $target->isSuperAdmin();
+        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     /**
-     * Deliberately its own ability, not folded into update() — a support-style
-     * "manage users" grant must never implicitly let its holder assign roles
-     * (this is the fix for a real reviewed vulnerability: a generic `update`
-     * check let a non-super-admin persist an arbitrary elevated role through
-     * the edit form). Super-admin only, not permission-gated — assigning
-     * roles is itself a privileged, meta-level action.
+     * Deliberately its own ability, not folded into update(): a generic edit
+     * must never carry role assignment (the fix for a reviewed vulnerability,
+     * where the edit form persisted an elevated role). Held through "manage
+     * users", never on yourself, and only on someone the actor covers; each
+     * role added or removed must be covered too (Coverage::coversRole(), checked
+     * where the roles are saved). Excluded from the super-admin bypass, so a
+     * super admin answers here too: anyone but another super admin or themself.
      */
     public function assignRole(User $actor, User $target): bool
     {
-        return $actor->isSuperAdmin() && ! $target->isSuperAdmin();
+        return $actor->id !== $target->id
+            && ($actor->isSuperAdmin() || $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value))
+            && Coverage::coversUser($actor, $target)
+            && ! $target->isSuperAdmin();
     }
 
     /** Never permission-gated — granting/revoking the super-admin flag itself must stay outside the configurable-role system. */
@@ -53,15 +63,15 @@ class UserPolicy
         return $actor->isSuperAdmin() && $actor->id !== $target->id;
     }
 
-    /** Only super admins may set a password directly; everyone else must send a reset link. */
+    /** Setting a password directly is its own permission; without it, a reset link. */
     public function updatePasswordDirectly(User $actor, User $target): bool
     {
-        return false;
+        return $actor->checkPermissionTo(SystemPermission::SET_USER_PASSWORDS->value) && Coverage::coversUser($actor, $target);
     }
 
     public function sendPasswordResetLink(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && ! $target->isSuperAdmin();
+        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     /** Nobody may toggle their own active state, including a super admin. */
@@ -71,18 +81,18 @@ class UserPolicy
             return false;
         }
 
-        return $actor->checkPermissionTo(SystemPermission::SUSPEND_USERS->value) && ! $target->isSuperAdmin();
+        return $actor->checkPermissionTo(SystemPermission::SUSPEND_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     public function resetTwoFactorAuthentication(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && ! $target->isSuperAdmin();
+        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     /** Resetting a user's mandatory-2FA grace period, which also lifts a lockout (see GracePeriod). */
     public function manageTwoFactorGrace(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && ! $target->isSuperAdmin();
+        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     /** Nobody may delete their own account, including a super admin. */
@@ -92,17 +102,17 @@ class UserPolicy
             return false;
         }
 
-        return $actor->checkPermissionTo(SystemPermission::DELETE_USERS->value);
+        return $actor->checkPermissionTo(SystemPermission::DELETE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     public function restore(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::DELETE_USERS->value);
+        return $actor->checkPermissionTo(SystemPermission::DELETE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     public function forceDelete(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::DELETE_USERS->value);
+        return $actor->checkPermissionTo(SystemPermission::DELETE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     /** Delegates to the lab404/laravel-impersonate contract methods — see .ai/rules/models.md. */

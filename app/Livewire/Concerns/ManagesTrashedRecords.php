@@ -8,6 +8,7 @@ use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -41,6 +42,12 @@ trait ManagesTrashedRecords
         return $this->trashedRecordsModel()::onlyTrashed();
     }
 
+    /** Whether one trashed record may be emptied; override to check each (e.g. its policy). */
+    protected function mayEmpty(Model $record): bool
+    {
+        return true;
+    }
+
     /** Return null for no extra permission check beyond the component's own mount() gate. */
     protected function emptyTrashPermission(): ?string
     {
@@ -64,7 +71,7 @@ trait ManagesTrashedRecords
                 // Force-delete each record rather than a bulk query delete: a bulk
                 // delete skips model events, so per-model deletion cleanup (e.g. a
                 // User's stored profile photo) would never run — see GitHub #12.
-                $records = $this->emptyTrashQuery()->get();
+                $records = $this->emptyTrashQuery()->get()->filter(fn (Model $record): bool => $this->mayEmpty($record));
                 $count = $records->count();
 
                 $records->each->forceDelete();

@@ -7,7 +7,6 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
-use App\Enums\SystemGate;
 use App\Enums\UserAbility;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\PasswordResetLinkResponse;
@@ -171,13 +170,6 @@ class AppServiceProvider extends ServiceProvider
 
             return true;
         });
-
-        // The Roles admin screen (defining what a role can do at all) is
-        // deliberately hardcoded super-admin-only, not permission-gated —
-        // otherwise a role could grant itself broader permissions by editing
-        // its own definition. Registered explicitly (rather than left
-        // undefined) so nav visibility resolves deterministically.
-        Gate::define(SystemGate::MANAGE_ROLES, fn (User $user): bool => $user->isSuperAdmin());
     }
 
     private function registerFortify(): void

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Roles;
 
-use App\Enums\SystemGate;
+use App\Enums\SystemPermission;
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use App\Models\Role;
 use App\Support\Roles\RoleScope;
@@ -19,6 +19,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -38,11 +39,12 @@ class CreateRole extends Component implements HasSchemas
 
     public function mount(): void
     {
-        Gate::authorize(SystemGate::MANAGE_ROLES);
+        Gate::authorize(SystemPermission::MANAGE_ROLES);
 
         $this->scopeKey = (string) request()->query('scope', RoleScopeRegistry::default()->key());
 
         abort_if(RoleScopeRegistry::find($this->scopeKey) === null, 404);
+        abort_unless($this->roleScope()->mayManage(Auth::user()), 403);
 
         $this->form->fill([
             'color' => DaisyColor::NEUTRAL->value,
@@ -91,9 +93,13 @@ class CreateRole extends Component implements HasSchemas
 
     public function create(): void
     {
-        Gate::authorize(SystemGate::MANAGE_ROLES);
+        Gate::authorize(SystemPermission::MANAGE_ROLES);
 
         $data = $this->form->getState();
+        $permissions = $this->resolvePermissionsFromState($data);
+
+        // Only in a scope they may manage, and only permissions they hold (the form disables the rest).
+        abort_unless($this->roleScope()->mayManage(Auth::user()) && $this->mayGrantAll($permissions), 403);
 
         $role = Role::create([
             'name' => $data['name'],
@@ -102,7 +108,7 @@ class CreateRole extends Component implements HasSchemas
             ...$this->roleScope()->attributes(),
         ]);
 
-        $role->givePermissionTo(collect($this->resolvePermissionsFromState($data))
+        $role->givePermissionTo(collect($permissions)
             ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
             ->all());
 
