@@ -60,7 +60,7 @@ class TeamInvitationsPageTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(PendingInvitations::class, ['team' => $this->team])
             ->callAction('invite', data: ['email' => 'new@example.com', 'role' => 'Member'])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas('team_invitations', ['team_id' => $this->team->id, 'email' => 'new@example.com', 'role' => 'Member']);
         Notification::assertSentOnDemand(TeamInvitationNotification::class);

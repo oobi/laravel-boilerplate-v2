@@ -94,7 +94,7 @@ class ListTeamsTest extends TestCase
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ListTeams::class)
             ->callAction('createTeam', data: ['name' => 'Northwind', 'user_id' => $owner->id, 'active' => true])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $team = Team::query()->where('name', 'Northwind')->firstOrFail();
         $this->assertTrue($team->isOwnedBy($owner));

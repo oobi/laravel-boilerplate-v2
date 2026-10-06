@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support\Roles;
 
+use App\Models\User;
+
 /**
  * One family of roles managed on the admin Roles screen: the `roles.scope`
  * value it owns, the permission vocabulary its roles can hold, and the row
@@ -72,4 +74,11 @@ interface RoleScope
 
     /** Tab order; lowest first, and the lowest is the scope the bare Roles route opens on. */
     public function order(): int;
+
+    /**
+     * Whether this person may manage this scope's roles at all, on top of
+     * "manage roles". A scope whose roles someone could hold themselves must
+     * make sure editing them can't raise that person's own access.
+     */
+    public function mayManage(User $actor): bool;
 }

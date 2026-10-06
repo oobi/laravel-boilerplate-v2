@@ -33,6 +33,8 @@ enum SystemPermission: string
     case SUSPEND_USERS = 'suspend users';
     case DELETE_USERS = 'delete users';
     case IMPERSONATE_USERS = 'impersonate users';
+    case SET_USER_PASSWORDS = 'set user passwords';
+    case MANAGE_ROLES = 'manage roles';
     // teams:start — contributed by the teams tier (packages/teams): the system-level "manage all teams" area. Removed on uninstall.
     // `view teams` is the read floor (admin entry to the teams area, read-only); `manage teams` the
     // day-to-day edits (create, settings, members, roles, invitations, domains); the destructive and
@@ -55,6 +57,8 @@ enum SystemPermission: string
             self::SUSPEND_USERS => __('permissions.labels.suspend_users'),
             self::DELETE_USERS => __('permissions.labels.delete_users'),
             self::IMPERSONATE_USERS => __('permissions.labels.impersonate_users'),
+            self::SET_USER_PASSWORDS => __('permissions.labels.set_user_passwords'),
+            self::MANAGE_ROLES => __('permissions.labels.manage_roles'),
             // teams:start — labels relabel with the tier (values above stay fixed identifiers).
             self::VIEW_TEAMS => team_trans('permissions.system_view_teams'),
             self::MANAGE_TEAMS => team_trans('permissions.system_manage_teams'),
@@ -72,7 +76,9 @@ enum SystemPermission: string
             self::MANAGE_USERS,
             self::SUSPEND_USERS,
             self::DELETE_USERS,
-            self::IMPERSONATE_USERS => __('permissions.categories.user_management'),
+            self::IMPERSONATE_USERS,
+            self::SET_USER_PASSWORDS,
+            self::MANAGE_ROLES => __('permissions.categories.user_management'),
 
             self::MANAGE_SYSTEM_SETTINGS,
             self::VIEW_SYSTEM_ANALYTICS,
@@ -108,7 +114,10 @@ enum SystemPermission: string
             self::MANAGE_USERS,
             self::SUSPEND_USERS,
             self::DELETE_USERS,
-            self::IMPERSONATE_USERS => [self::VIEW_USERS],
+            self::IMPERSONATE_USERS,
+            self::SET_USER_PASSWORDS => [self::VIEW_USERS],
+
+            self::MANAGE_ROLES => [self::ACCESS_ADMIN_PANEL],
 
             // teams:start
             self::VIEW_TEAMS => [self::ACCESS_ADMIN_PANEL],

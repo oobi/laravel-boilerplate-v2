@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support\Navigation;
 
-use App\Enums\SystemGate;
 use App\Enums\SystemPermission;
 use App\Support\Navigation\Registry\NavItem;
 use App\Support\Navigation\Registry\NavRegistry;
@@ -42,7 +41,7 @@ class AdminNav
                     ->route('roles.index')
                     ->icon('heroicon-o-shield-check')
                     ->active('roles.*')
-                    ->can(SystemGate::MANAGE_ROLES),
+                    ->can(SystemPermission::MANAGE_ROLES),
             );
     }
 }

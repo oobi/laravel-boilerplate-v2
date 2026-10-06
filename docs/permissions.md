@@ -189,16 +189,36 @@ the extra `attributes()` a role created in it needs, and its tab `order()`.
 - A role whose scope has no registered `RoleScope` (an add-on since removed)
   is a 404 on this screen rather than being edited with the wrong vocabulary.
 
-The **`manage roles`** ability that gates both screens is deliberately
-hardcoded super-admin-only in `AppServiceProvider` (`Gate::define('manage
-roles', fn (User $user) => $user->isSuperAdmin())`), never itself a
-`SystemPermission` — otherwise a role could grant itself broader access by
-editing its own definition.
+Both screens are gated by the **`manage roles`** permission. What stops a
+role editor raising their own access is the **coverage rule**
+(`App\Support\Roles\Coverage`): you may act on a user or a system role
+only if you hold every permission it carries.
+
+- **Roles screen:** a system role is edited or deleted only by someone who
+  covers it, covers everyone who holds it (a change reaches them all, so
+  nobody takes access away from someone above them), and doesn't hold it; a
+  permission you don't hold is shown but can't be ticked, and the save
+  re-checks. Each scope also decides who may manage its roles at all
+  (`RoleScope::mayManage()`): team roles need `manage teams` as well, since a
+  role editor may hold a team role and could otherwise grow it.
+- **Users:** every act on another user (edit, suspend, delete, set or reset a
+  password, reset 2FA, impersonate, assign roles) needs its permission and
+  that you cover them; each role given or taken away must be covered too.
+  Nobody assigns their own roles. Peers (the same access) act on each other;
+  a super admin untangles. Nobody but a super admin acts on a super admin.
+- **Team roles:** the teams tier applies the same rule in team permissions
+  (`Concise\Teams\Support\TeamCoverage`) to changing a member's role,
+  suspending or removing them, and the role an invitation offers. A system admin
+  running teams covers everything.
+
+Super admin stays a protected login, not a role: only a super admin grants
+super admin. Creating users and assigning roles come with `manage users`;
+setting a password directly is `set user passwords`.
 
 Assigning a *role* to a *user* is a separate ability (`assignRole`) from
-assigning *permissions* to a *role* — see `EditUser::manageRolesAction()`
-and `UserPolicy::assignRole()`'s docblock for why that's never folded into
-the generic "update a user" ability.
+editing the user — see `ShowUser::manageRolesAction()` and
+`UserPolicy::assignRole()`'s docblock for why that's never folded into the
+generic "update a user" ability.
 
 ## Adding a new permission
 

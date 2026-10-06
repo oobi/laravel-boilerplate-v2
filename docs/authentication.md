@@ -35,16 +35,17 @@ weaker security.
 
 ### 2. Admin sets a password directly — `EditUser::resetPasswordAction()`
 
-Only a **super admin** may type a new password straight into another user's
-account. This is gated by the `updatePasswordDirectly` policy ability, which
-returns `false` for everyone in `UserPolicy` — the only way it passes is the
-hardcoded super-admin `Gate::before()` bypass in `AppServiceProvider`. It is
-never granted by a role.
+Typing a new password straight into another user's account needs the **`set
+user passwords`** permission (and a super admin always can), gated by the
+`updatePasswordDirectly` policy ability. Like every act on another user, it
+also needs the actor to cover the target: hold every permission they hold
+(see docs/permissions.md), so nobody sets the password of someone with more
+access than themselves.
 
-The reason for the restriction: an admin setting *someone else's* secret is a
-takeover primitive — they end up knowing a working credential for an account
-that isn't theirs, with no proof the owner consented. Limiting it to a single
-hardcoded super-admin flag keeps that power auditable and un-delegatable.
+The reason it's its own permission, apart from `manage users`: an admin
+setting *someone else's* secret is a takeover primitive. They end up knowing a
+working credential for an account that isn't theirs, so it's granted
+deliberately, never as part of routine user management.
 
 ### 3. Admin sends a reset link — `EditUser::resetPasswordAction()`
 

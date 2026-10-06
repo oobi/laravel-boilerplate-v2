@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Enums\SystemPermission;
 use App\Livewire\Admin\Users\CreateUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,11 +20,10 @@ class CreateUserTest extends TestCase
         $this->actingAs($user)->get('/admin/users/create')->assertForbidden();
     }
 
-    public function test_support_is_forbidden_from_creating_a_user(): void
+    public function test_creating_users_needs_manage_users(): void
     {
-        $support = User::factory()->support()->create();
-
-        $this->actingAs($support)->get('/admin/users/create')->assertForbidden();
+        $this->actingAs(User::factory()->support()->create())->get('/admin/users/create')->assertOk();
+        $this->actingAs(User::factory()->withPermission(SystemPermission::VIEW_USERS)->create())->get('/admin/users/create')->assertForbidden();
     }
 
     public function test_admins_can_create_a_user(): void

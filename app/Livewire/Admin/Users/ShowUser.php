@@ -17,6 +17,7 @@ use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
 use App\Support\Panels\Contracts\ShowPanel;
 use App\Support\Panels\Registry\PanelRegistry;
+use App\Support\Roles\Coverage;
 use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -165,6 +166,10 @@ class ShowUser extends Component implements HasActions, HasSchemas
                     // System roles only: an add-on's scoped roles (e.g. team roles) live in
                     // the same table but mean nothing assigned at the system scope.
                     ->options(fn (): array => Role::systemRoles()->orderBy('name')->pluck('name', 'name')->all())
+                    // A role with a permission the viewer lacks can't be given or taken away by them.
+                    ->disableOptionWhen(fn (string $value): bool => ! $this->mayChangeRole($value))
+                    // A super admin can give or take away any role, so the rule isn't theirs.
+                    ->helperText(fn (): ?string => Auth::user()?->isSuperAdmin() ? null : __('admin.roles_coverage_help'))
                     ->columns(2)
                     ->visible(fn (): bool => Gate::allows(UserAbility::ASSIGN_ROLE, $this->user)),
             ])
@@ -172,7 +177,14 @@ class ShowUser extends Component implements HasActions, HasSchemas
                 if (Gate::allows(UserAbility::ASSIGN_ROLE, $this->user) && array_key_exists('roles', $data)) {
                     Gate::authorize(UserAbility::ASSIGN_ROLE, $this->user);
 
-                    $this->user->syncRoles($data['roles'] ?? []);
+                    // Every role added or removed must be one the viewer covers; the
+                    // disabled checkboxes say so, this holds it at the write boundary.
+                    $held = $this->user->roles->pluck('name');
+                    $chosen = collect($data['roles'] ?? []);
+
+                    abort_unless($chosen->diff($held)->merge($held->diff($chosen))->every(fn (string $name): bool => $this->mayChangeRole($name)), 403);
+
+                    $this->user->syncRoles($chosen->all());
                 }
 
                 if (Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user)
@@ -191,9 +203,15 @@ class ShowUser extends Component implements HasActions, HasSchemas
             });
     }
 
+    /** Whether the viewer covers this system role, so may give it or take it away. */
+    private function mayChangeRole(string $name): bool
+    {
+        return Coverage::coversRoleNamed(Auth::user(), $name);
+    }
+
     /**
-     * Super admins set a new password directly; everyone else authorized to
-     * manage users can only trigger the standard password reset link email.
+     * With "set user passwords", a new password set directly; otherwise, for
+     * anyone authorized to manage users, the standard password reset link email.
      * Each branch guards its own visibility so the button never shows to a
      * viewer who could only reach the Show page to look.
      */

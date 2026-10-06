@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Roles;
 
-use App\Enums\SystemGate;
+use App\Enums\SystemPermission;
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use App\Models\Role;
+use App\Support\Roles\Coverage;
 use App\Support\Roles\RoleScope;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Theme\DaisyColor;
@@ -22,6 +23,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -54,7 +56,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
 
     public function mount(?Role $role = null): void
     {
-        Gate::authorize(SystemGate::MANAGE_ROLES);
+        Gate::authorize(SystemPermission::MANAGE_ROLES);
 
         // On the bare `/admin/roles` route (no {role} segment) Laravel's container still
         // instantiates an empty, unsaved Role for the nullable type-hint instead of passing
@@ -66,6 +68,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
         // A role whose scope no registered RoleScope owns (an add-on since removed) can't be
         // edited with the right vocabulary — 404 rather than silently use the wrong one.
         abort_if(RoleScopeRegistry::find($this->scopeKey) === null, 404);
+        abort_unless($this->roleScope()->mayManage(Auth::user()), 403);
 
         $this->role = $role?->exists ? $role : Role::query()->ofScope($this->scopeKey)->orderBy('name')->first();
         $this->selectedRoleId = $this->role ? (string) $this->role->getKey() : null;
@@ -85,6 +88,18 @@ class ManageRoles extends Component implements HasActions, HasSchemas
     protected function roleScope(): RoleScope
     {
         return RoleScopeRegistry::find($this->scopeKey) ?? abort(404);
+    }
+
+    /**
+     * A role is changed or deleted only by someone allowed its scope
+     * (RoleScope::mayManage()); a system role also only by someone who covers
+     * it and everyone holding it, and doesn't hold it (Coverage::mayEditRole()).
+     */
+    public function canEditRole(): bool
+    {
+        return $this->role !== null
+            && $this->roleScope()->mayManage(Auth::user())
+            && ($this->scopeKey !== Role::SYSTEM_SCOPE || Coverage::mayEditRole(Auth::user(), $this->role));
     }
 
     /** The dropdown navigates rather than swapping state in place, so the URL always reflects the role being edited. */
@@ -125,14 +140,24 @@ class ManageRoles extends Component implements HasActions, HasSchemas
             ])
             ->statePath('data');
 
-        return $this->role ? $schema->record($this->role) : $schema;
+        if ($this->role) {
+            $schema->record($this->role)->disabled(! $this->canEditRole());
+        }
+
+        return $schema;
     }
 
     public function save(): void
     {
-        Gate::authorize(SystemGate::MANAGE_ROLES);
+        Gate::authorize(SystemPermission::MANAGE_ROLES);
+
+        abort_unless($this->canEditRole(), 403);
 
         $data = $this->form->getState();
+        $permissions = $this->resolvePermissionsFromState($data, $this->role);
+
+        // Covered before (canEditRole) and after: no adding a permission the editor lacks.
+        abort_unless($this->mayGrantAll($permissions), 403);
 
         $this->role->update([
             'name' => $data['name'],
@@ -140,7 +165,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
             'requires_two_factor' => $this->scopeKey === Role::SYSTEM_SCOPE && ($data['requires_two_factor'] ?? false),
         ]);
 
-        $this->role->syncPermissions(collect($this->resolvePermissionsFromState($data, $this->role))
+        $this->role->syncPermissions(collect($permissions)
             ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
             ->all());
 
@@ -157,9 +182,10 @@ class ManageRoles extends Component implements HasActions, HasSchemas
             ->icon('heroicon-o-trash')
             ->color(DaisyColor::ERROR->toFilamentColor())
             ->requiresConfirmation()
-            ->visible(fn (): bool => (bool) $this->role)
+            ->visible(fn (): bool => (bool) $this->role && $this->canEditRole())
             ->action(function (): void {
-                Gate::authorize(SystemGate::MANAGE_ROLES);
+                Gate::authorize(SystemPermission::MANAGE_ROLES);
+                abort_unless($this->canEditRole(), 403);
 
                 $this->role->delete();
 
@@ -180,10 +206,10 @@ class ManageRoles extends Component implements HasActions, HasSchemas
         // Tabs only when there's a choice — a single-scope install keeps the plain screen.
         $tabs = collect();
 
-        if ($scopes->count() > 1) {
+        if ($scopes->filter(fn (RoleScope $option): bool => $option->mayManage(Auth::user()))->count() > 1) {
             $counts = Role::query()->selectRaw('scope, count(*) as aggregate')->groupBy('scope')->pluck('aggregate', 'scope');
 
-            $tabs = $scopes->map(fn (RoleScope $option): array => [
+            $tabs = $scopes->filter(fn (RoleScope $option): bool => $option->mayManage(Auth::user()))->values()->map(fn (RoleScope $option): array => [
                 'label' => $option->label(),
                 'href' => route('roles.index', RoleScopeRegistry::routeParameters($option)),
                 'active' => $option->key() === $scope->key(),

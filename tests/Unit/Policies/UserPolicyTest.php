@@ -42,7 +42,7 @@ class UserPolicyTest extends TestCase
         $this->assertFalse(Gate::forUser($regular)->allows('update', $other));
     }
 
-    public function test_only_super_admins_can_assign_roles(): void
+    public function test_manage_users_assigns_roles_to_others_never_themselves_or_a_super_admin(): void
     {
         $admin = User::factory()->superAdmin()->create();
         $manager = User::factory()->withPermission(SystemPermission::MANAGE_USERS)->create();
@@ -51,7 +51,9 @@ class UserPolicyTest extends TestCase
 
         $this->assertTrue(Gate::forUser($admin)->allows('assignRole', $regular));
         $this->assertFalse(Gate::forUser($admin)->allows('assignRole', $otherAdmin));
-        $this->assertFalse(Gate::forUser($manager)->allows('assignRole', $regular));
+        $this->assertTrue(Gate::forUser($manager)->allows('assignRole', $regular));
+        $this->assertFalse(Gate::forUser($manager)->allows('assignRole', $manager));
+        $this->assertFalse(Gate::forUser($manager)->allows('assignRole', $otherAdmin));
     }
 
     public function test_only_super_admins_can_grant_or_revoke_super_admin_and_never_for_themselves(): void
@@ -105,12 +107,12 @@ class UserPolicyTest extends TestCase
         $this->assertFalse(Gate::forUser($admin)->allows('delete', $admin));
     }
 
-    public function test_support_cannot_create_delete_restore_or_force_delete(): void
+    public function test_support_creates_users_but_cannot_delete_restore_or_force_delete(): void
     {
         $support = User::factory()->support()->create();
         $target = User::factory()->create();
 
-        $this->assertFalse(Gate::forUser($support)->allows('create', User::class));
+        $this->assertTrue(Gate::forUser($support)->allows('create', User::class));
         $this->assertFalse(Gate::forUser($support)->allows('delete', $target));
         $this->assertFalse(Gate::forUser($support)->allows('restore', $target));
         $this->assertFalse(Gate::forUser($support)->allows('forceDelete', $target));
@@ -126,14 +128,16 @@ class UserPolicyTest extends TestCase
         $this->assertFalse(Gate::forUser($remover)->allows('delete', $remover));
     }
 
-    public function test_only_super_admins_can_directly_reset_passwords(): void
+    public function test_setting_a_password_directly_needs_its_own_permission(): void
     {
         $admin = User::factory()->superAdmin()->create();
         $support = User::factory()->support()->create();
+        $setter = User::factory()->withPermission(SystemPermission::SET_USER_PASSWORDS)->create();
         $target = User::factory()->create();
 
         $this->assertTrue(Gate::forUser($admin)->allows('updatePasswordDirectly', $target));
         $this->assertFalse(Gate::forUser($support)->allows('updatePasswordDirectly', $target));
+        $this->assertTrue(Gate::forUser($setter)->allows('updatePasswordDirectly', $target));
     }
 
     public function test_actor_with_manage_users_permission_can_send_a_password_reset_link_but_not_to_a_super_admin(): void

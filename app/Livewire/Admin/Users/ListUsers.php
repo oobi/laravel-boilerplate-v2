@@ -35,6 +35,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -238,6 +239,12 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     protected function emptyTrashQuery(): Builder
     {
         return User::onlyTrashed()->where('id', '!=', Auth::id());
+    }
+
+    /** Only trashed users the viewer may delete for good: never someone with more access (Coverage). */
+    protected function mayEmpty(Model $record): bool
+    {
+        return Gate::allows(UserAbility::FORCE_DELETE, $record);
     }
 
     /**

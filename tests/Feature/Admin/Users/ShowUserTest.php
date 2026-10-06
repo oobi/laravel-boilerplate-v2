@@ -289,14 +289,14 @@ class ShowUserTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])
             ->callAction('manageRoles', data: ['roles' => ['Scoped Role']])
-            ->assertHasActionErrors();
+            ->assertHasFormErrors();
 
         $this->assertFalse($target->fresh()->hasRole('Scoped Role'));
 
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])
             ->callAction('manageRoles', data: ['roles' => ['Editor']])
-            ->assertHasNoActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertTrue($target->fresh()->hasRole('Editor'));
     }
@@ -338,21 +338,15 @@ class ShowUserTest extends TestCase
      * able to assign an elevated role or grant super admin — the Manage Roles
      * action is hidden from the UI, and both abilities are denied.
      */
-    public function test_support_cannot_assign_roles_or_grant_super_admin(): void
+    public function test_support_assigns_roles_but_never_grants_super_admin(): void
     {
         $support = User::factory()->support()->create();
         $target = User::factory()->create();
-        Role::findOrCreate('Editor');
-
-        Livewire::actingAs($support)
-            ->test(ShowUser::class, ['user' => $target])
-            ->assertActionHidden('manageRoles');
 
         $this->actingAs($support);
 
-        $this->assertFalse(Gate::allows(UserAbility::ASSIGN_ROLE, $target));
+        $this->assertTrue(Gate::allows(UserAbility::ASSIGN_ROLE, $target));
         $this->assertFalse(Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $target));
-        $this->assertFalse($target->fresh()->is_super_admin);
     }
 
     public function test_super_admins_can_directly_reset_a_users_password(): void

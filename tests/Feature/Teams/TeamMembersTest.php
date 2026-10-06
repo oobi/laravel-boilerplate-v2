@@ -148,7 +148,7 @@ class TeamMembersTest extends TestCase
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
             ->callTableAction('changeRole', $member, data: ['roles' => self::TEAM_ADMIN])
-            ->assertHasNoTableActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertSame(self::TEAM_ADMIN, $team->roleFor($member));
     }
@@ -163,7 +163,7 @@ class TeamMembersTest extends TestCase
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
             ->callTableAction('changeRole', $member, data: ['roles' => 'Superuser'])
-            ->assertHasTableActionErrors(['roles']);
+            ->assertHasFormErrors(['roles']);
 
         $this->assertSame(self::MEMBER, $team->roleFor($member));
     }
@@ -200,7 +200,7 @@ class TeamMembersTest extends TestCase
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
             ->callTableAction('changeRole', $member, data: ['roles' => [self::TEAM_ADMIN, self::MEMBER]])
-            ->assertHasNoTableActionErrors();
+            ->assertHasNoFormErrors();
 
         $this->assertCount(2, $team->rolesFor($member));
     }
