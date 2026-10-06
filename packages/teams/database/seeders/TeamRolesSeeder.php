@@ -42,6 +42,7 @@ class TeamRolesSeeder extends Seeder
                 'permissions' => [
                     TeamPermission::MANAGE_MEMBERS,
                     TeamPermission::INVITE_MEMBERS,
+                    TeamPermission::REMOVE_MEMBERS,
                     TeamPermission::UPDATE_TEAM,
                     // Only while the custom-domains tier is on: a seeder sets up the
                     // base scenario, it doesn't pre-grant a feature that's switched off.

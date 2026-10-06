@@ -50,6 +50,8 @@ enum TeamPermission: string
     case VIEW_MEMBERS = 'view team members';
     case MANAGE_MEMBERS = 'manage team members';
     case INVITE_MEMBERS = 'invite team members';
+    // Its own permission: ending a membership is bigger than changing a role or suspending.
+    case REMOVE_MEMBERS = 'remove team members';
     case VIEW_SETTINGS = 'view team settings';
     case UPDATE_TEAM = 'update team';
     case MANAGE_DOMAINS = 'manage team domains';
@@ -60,6 +62,7 @@ enum TeamPermission: string
             self::VIEW_MEMBERS => team_trans('permissions.view_members'),
             self::MANAGE_MEMBERS => team_trans('permissions.manage_members'),
             self::INVITE_MEMBERS => team_trans('permissions.invite_members'),
+            self::REMOVE_MEMBERS => team_trans('permissions.remove_members'),
             self::VIEW_SETTINGS => team_trans('permissions.view_settings'),
             self::UPDATE_TEAM => team_trans('permissions.update_team'),
             self::MANAGE_DOMAINS => team_trans('permissions.manage_domains'),
@@ -71,6 +74,7 @@ enum TeamPermission: string
         return match ($this) {
             self::VIEW_MEMBERS,
             self::MANAGE_MEMBERS,
+            self::REMOVE_MEMBERS,
             self::INVITE_MEMBERS => team_trans('permissions.category_members'),
 
             self::VIEW_SETTINGS,
@@ -89,7 +93,7 @@ enum TeamPermission: string
     public function implies(): array
     {
         return match ($this) {
-            self::MANAGE_MEMBERS => [self::VIEW_MEMBERS],
+            self::MANAGE_MEMBERS, self::REMOVE_MEMBERS => [self::VIEW_MEMBERS],
             self::UPDATE_TEAM, self::MANAGE_DOMAINS => [self::VIEW_SETTINGS],
             default => [],
         };

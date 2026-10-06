@@ -8,6 +8,7 @@ use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
@@ -46,19 +47,19 @@ class TeamSuspensionTest extends TestCase
     {
         $component = Livewire::actingAs($this->teamAdmin)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionVisible('suspend', $this->member)
-            ->assertTableActionHidden('reinstate', $this->member)
-            ->callTableAction('suspend', $this->member);
+            ->assertActionVisible(TestAction::make('suspend')->table($this->member))
+            ->assertActionHidden(TestAction::make('reinstate')->table($this->member))
+            ->callAction(TestAction::make('suspend')->table($this->member));
 
         $this->assertTrue($this->team->isSuspended($this->member));
         $this->assertTrue($this->team->hasUser($this->member), 'still a member');
         $this->assertSame('Member', $this->team->roleFor($this->member), 'role kept');
 
         $component
-            ->assertTableActionHidden('suspend', $this->member)
-            ->assertTableActionVisible('reinstate', $this->member)
+            ->assertActionHidden(TestAction::make('suspend')->table($this->member))
+            ->assertActionVisible(TestAction::make('reinstate')->table($this->member))
             ->assertSee('Suspended')
-            ->callTableAction('reinstate', $this->member);
+            ->callAction(TestAction::make('reinstate')->table($this->member));
 
         // The component wrote through its own instances; reload our member before asking about them.
         $this->assertFalse($this->team->isSuspended($this->member->refresh()));
@@ -113,7 +114,7 @@ class TeamSuspensionTest extends TestCase
     {
         Livewire::actingAs($this->teamAdmin)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionHidden('suspend', $this->owner);
+            ->assertActionHidden(TestAction::make('suspend')->table($this->owner));
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -126,12 +127,12 @@ class TeamSuspensionTest extends TestCase
 
         Livewire::actingAs($this->teamAdmin)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionHidden('suspend', $this->member);
+            ->assertActionHidden(TestAction::make('suspend')->table($this->member));
 
         Livewire::actingAs($this->owner)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionVisible('suspend', $this->member)
-            ->callTableAction('suspend', $this->member);
+            ->assertActionVisible(TestAction::make('suspend')->table($this->member))
+            ->callAction(TestAction::make('suspend')->table($this->member));
 
         $this->assertTrue($this->team->isSuspended($this->member));
     }

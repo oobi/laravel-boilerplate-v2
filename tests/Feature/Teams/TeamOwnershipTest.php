@@ -10,6 +10,7 @@ use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\Settings;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
@@ -42,7 +43,7 @@ class TeamOwnershipTest extends TestCase
     {
         parent::setUp();
 
-        Team::createRole(self::TEAM_ADMIN, [TeamPermission::MANAGE_MEMBERS]);
+        Team::createRole(self::TEAM_ADMIN, [TeamPermission::MANAGE_MEMBERS, TeamPermission::REMOVE_MEMBERS]);
         Team::createRole('Member');
 
         // Unrelated accounts first, so user ids and team_user pivot ids diverge: a
@@ -212,13 +213,13 @@ class TeamOwnershipTest extends TestCase
 
         Livewire::actingAs($this->primary)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionHidden('changeRole', $this->primary)
-            ->assertTableActionVisible('changeRole', $this->member);
+            ->assertActionHidden(TestAction::make('changeRole')->table($this->primary))
+            ->assertActionVisible(TestAction::make('changeRole')->table($this->member));
 
         // A system admin still can — that's how a locked-out owner gets fixed.
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionVisible('changeRole', $this->primary);
+            ->assertActionVisible(TestAction::make('changeRole')->table($this->primary));
     }
 
     public function test_the_primary_owner_can_delete_the_team_from_settings(): void
@@ -239,14 +240,14 @@ class TeamOwnershipTest extends TestCase
 
         Livewire::actingAs($teamAdmin)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionVisible('remove', $this->member)
-            ->assertTableActionHidden('remove', $this->coOwner)
-            ->assertTableActionHidden('remove', $this->primary);
+            ->assertActionVisible(TestAction::make('remove')->table($this->member))
+            ->assertActionHidden(TestAction::make('remove')->table($this->coOwner))
+            ->assertActionHidden(TestAction::make('remove')->table($this->primary));
 
         Livewire::actingAs($this->primary)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionVisible('remove', $this->coOwner)
-            ->callTableAction('remove', $this->coOwner);
+            ->assertActionVisible(TestAction::make('remove')->table($this->coOwner))
+            ->callAction(TestAction::make('remove')->table($this->coOwner));
 
         $this->assertFalse($this->team->fresh()->hasUser($this->coOwner));
     }
@@ -261,13 +262,13 @@ class TeamOwnershipTest extends TestCase
 
         Livewire::actingAs($teamAdmin)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionHidden('changeRole', $this->coOwner)   // an owner's role is protected
-            ->assertTableActionVisible('changeRole', $this->member);  // a regular member's isn't
+            ->assertActionHidden(TestAction::make('changeRole')->table($this->coOwner))   // an owner's role is protected
+            ->assertActionVisible(TestAction::make('changeRole')->table($this->member));  // a regular member's isn't
 
         // Manage-owners authority (here the primary owner) may change an owner's role.
         Livewire::actingAs($this->primary)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionVisible('changeRole', $this->coOwner);
+            ->assertActionVisible(TestAction::make('changeRole')->table($this->coOwner));
     }
 
     public function test_the_members_table_labels_owners(): void

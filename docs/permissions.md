@@ -210,6 +210,10 @@ only if you hold every permission it carries.
   (`Concise\Teams\Support\TeamCoverage`) to changing a member's role,
   suspending or removing them, and the role an invitation offers. A system admin
   running teams covers everything.
+  Removing a member is its own team permission, `remove team members`, apart
+  from `manage team members` (role and suspend): ending a membership is the
+  bigger act, so a project can let a role manage people without removing
+  them.
 
 Super admin stays a protected login, not a role: only a super admin grants
 super admin. Creating users and assigning roles come with `manage users`;

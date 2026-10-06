@@ -11,6 +11,7 @@ use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Notifications\TeamInvitationNotification;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
@@ -133,11 +134,11 @@ class TeamInvitationsTest extends TestCase
         $component = Livewire::actingAs($owner)
             ->test(PendingInvitations::class, ['team' => $team])
             ->assertSee('pending@example.com')
-            ->callTableAction('resend', $invitation);
+            ->callAction(TestAction::make('resend')->table($invitation));
 
         Notification::assertSentOnDemand(TeamInvitationNotification::class);
 
-        $component->callTableAction('revoke', $invitation);
+        $component->callAction(TestAction::make('revoke')->table($invitation));
 
         $this->assertModelMissing($invitation);
     }
