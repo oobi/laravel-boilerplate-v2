@@ -9,10 +9,11 @@ use Filament\Support\Enums\Size;
 
 /**
  * A Filament action pre-styled for the app's action lists (pairs with the
- * <x-action-list> Blade component): an outlined, small trigger button. Use it
- * in place of `Action::make()` for any button that sits in an "Actions" card or
- * a panel's action row, so every screen gets the same treatment without
- * repeating `->outlined()->size(...)`.
+ * <x-action-list> Blade component): a soft, small trigger button. Use it in
+ * place of `Action::make()` for any button that sits in an "Actions" card or a
+ * panel's action row, so every screen gets the same treatment. Soft keeps the
+ * intent colour while staying a step below the solid primary action in a page
+ * or list header, so a stack of actions doesn't shout.
  *
  * Colour, icon, label and behaviour are set per action as usual — those express
  * intent and aren't part of the shared look. Modal defaults (sticky header/
@@ -25,21 +26,18 @@ class AdminAction extends Action
     {
         parent::setUp();
 
-        $this->outlined()->size(Size::Small);
+        static::styleForList($this);
     }
 
     /**
-     * Render as a soft button (tinted fill, dark coloured text, soft ring) — the
-     * third emphasis level alongside the default outlined and Filament's solid.
-     * See `.fi-btn-soft` in filament-buttons.css.
+     * Give the action-list look (soft, small) to an action built elsewhere, such
+     * as a shared factory whose action is solid in a list header but sits in an
+     * "Actions" card here. See `.fi-btn-soft` in filament-buttons.css.
      */
-    public function soft(bool $condition = true): static
+    public static function styleForList(Action $action): Action
     {
-        if ($condition) {
-            $this->outlined(false);
-            $this->extraAttributes(['class' => 'fi-btn-soft'], merge: true);
-        }
-
-        return $this;
+        return $action
+            ->size(Size::Small)
+            ->extraAttributes(['class' => 'fi-btn-soft'], merge: true);
     }
 }
