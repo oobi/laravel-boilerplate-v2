@@ -168,7 +168,8 @@ class ShowUser extends Component implements HasActions, HasSchemas
                     ->options(fn (): array => Role::systemRoles()->orderBy('name')->pluck('name', 'name')->all())
                     // A role with a permission the viewer lacks can't be given or taken away by them.
                     ->disableOptionWhen(fn (string $value): bool => ! $this->mayChangeRole($value))
-                    ->helperText(__('admin.roles_coverage_help'))
+                    // A super admin can give or take away any role, so the rule isn't theirs.
+                    ->helperText(fn (): ?string => Auth::user()?->isSuperAdmin() ? null : __('admin.roles_coverage_help'))
                     ->columns(2)
                     ->visible(fn (): bool => Gate::allows(UserAbility::ASSIGN_ROLE, $this->user)),
             ])
@@ -205,9 +206,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
     /** Whether the viewer covers this system role, so may give it or take it away. */
     private function mayChangeRole(string $name): bool
     {
-        $role = Role::systemRoles()->where('name', $name)->first();
-
-        return $role !== null && Coverage::coversRole(Auth::user(), $role);
+        return Coverage::coversRoleNamed(Auth::user(), $name);
     }
 
     /**

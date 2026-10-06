@@ -7,6 +7,7 @@ namespace App\Support\Roles;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use WeakMap;
 
 /**
  * The guard against raising access through the admin screens: you may act on
@@ -21,14 +22,25 @@ use Illuminate\Support\Collection;
  */
 final class Coverage
 {
+    /** @var WeakMap<User, Collection<int, string>>|null */
+    private static ?WeakMap $permissions = null;
+
+    /** @var WeakMap<User, array<string, list<string>>>|null */
+    private static ?WeakMap $rolePermissions = null;
+
     /**
      * Every system permission the user holds, through roles or directly.
+     * Remembered against the User object (a WeakMap, so it goes when the object
+     * does): a page asks about the same people many times. Cached per object,
+     * so after changing someone's access use a fresh instance to see it.
      *
      * @return Collection<int, string>
      */
     public static function permissionsOf(User $user): Collection
     {
-        return $user->getAllPermissions()->pluck('name')->values();
+        self::$permissions ??= new WeakMap;
+
+        return self::$permissions[$user] ??= $user->getAllPermissions()->pluck('name')->values();
     }
 
     /** Whether the actor holds every one of these permission names. */
@@ -55,6 +67,18 @@ final class Coverage
     public static function coversRole(User $actor, Role $role): bool
     {
         return self::covers($actor, $role->permissions->pluck('name'));
+    }
+
+    /** Whether the actor covers the system role with this name (an unknown name, never). */
+    public static function coversRoleNamed(User $actor, string $name): bool
+    {
+        // Every system role's permissions in one query, remembered against the viewer.
+        self::$rolePermissions ??= new WeakMap;
+        $map = self::$rolePermissions[$actor] ??= Role::systemRoles()->with('permissions')->get()
+            ->mapWithKeys(fn (Role $role): array => [$role->name => $role->permissions->pluck('name')->all()])
+            ->all();
+
+        return array_key_exists($name, $map) && self::covers($actor, $map[$name]);
     }
 
     /**

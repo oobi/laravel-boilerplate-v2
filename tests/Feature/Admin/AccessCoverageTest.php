@@ -12,6 +12,8 @@ use App\Models\Role;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
@@ -172,5 +174,32 @@ class AccessCoverageTest extends TestCase
         $this->administrator->assignRole($editor);
 
         $this->assertFalse(Livewire::actingAs($this->support)->test(ManageRoles::class, ['role' => $editor->fresh()])->instance()->canEditRole());
+    }
+
+    public function test_the_role_rule_is_explained_to_everyone_but_a_super_admin(): void
+    {
+        $target = User::factory()->create();
+
+        Livewire::actingAs($this->support)->test(ShowUser::class, ['user' => $target])
+            ->mountAction('manageRoles')
+            ->assertFormFieldExists('roles', 'mountedActionSchema0', fn (CheckboxList $field): bool => str_contains((string) $field->getChildSchema(CheckboxList::BELOW_CONTENT_SCHEMA_KEY)?->toHtml(), e(__('admin.roles_coverage_help'))));
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())->test(ShowUser::class, ['user' => $target])
+            ->mountAction('manageRoles')
+            ->assertFormFieldExists('roles', 'mountedActionSchema0', fn (CheckboxList $field): bool => ! str_contains((string) $field->getChildSchema(CheckboxList::BELOW_CONTENT_SCHEMA_KEY)?->toHtml(), e(__('admin.roles_coverage_help'))));
+    }
+
+    public function test_emptying_the_trash_says_who_was_left_behind(): void
+    {
+        $remover = User::factory()->withPermission(SystemPermission::DELETE_USERS)->create();
+        User::factory()->create()->delete();
+        $this->administrator->delete();
+
+        Livewire::actingAs($remover)->test(ListUsers::class)
+            ->callAction('emptyTrash')
+            ->assertNotified(FilamentNotification::make()
+                ->title(__('admin.empty_trash_success', ['count' => 1]))
+                ->body(trans_choice('admin.empty_trash_kept', 1, ['count' => 1]))
+                ->success());
     }
 }

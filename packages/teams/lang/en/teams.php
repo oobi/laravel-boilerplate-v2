@@ -159,6 +159,7 @@ return [
         'invite_heading' => 'Invite someone to :name',
         'already_member' => 'That person already belongs to this :team.',
         'sent_to' => 'Invitation sent to :email',
+        'role_not_allowed' => 'You can\'t invite someone as :role: it has permissions you don\'t hold.',
         'resend' => 'Resend',
         'resent_to' => 'Invitation re-sent to :email',
         'revoke' => 'Revoke',

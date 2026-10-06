@@ -14,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
+use InvalidArgumentException;
 
 /**
  * The "invite by email" modal, in the pending invitations table's toolbar.
@@ -54,12 +55,27 @@ trait HasInviteAction
                     ->options(fn (): array => Team::availableRoles()->orderBy('name')->pluck('name', 'name')->all())
                     // Only a role the inviter holds everything of (TeamCoverage); InviteMember checks again.
                     ->disableOptionWhen(fn (string $value): bool => ! TeamCoverage::coversRoleNamed(auth()->user(), $this->team, $value))
+                    ->rules([
+                        fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                            if (filled($value) && ! TeamCoverage::coversRoleNamed(auth()->user(), $this->team, $value)) {
+                                $fail(team_trans('invitations.role_not_allowed', ['role' => $value]));
+                            }
+                        },
+                    ])
                     ->placeholder(team_trans('members.no_role')),
             ])
-            ->action(function (array $data): void {
+            ->action(function (array $data, Action $action): void {
                 abort_unless($this->canInvite(), 403);
 
-                $invitation = app(InviteMember::class)($this->team, $data['email'], $data['role'] ?: null, auth()->user());
+                // InviteMember is the write boundary; anything it refuses that the form
+                // didn't catch becomes a message rather than an error page.
+                try {
+                    $invitation = app(InviteMember::class)($this->team, $data['email'], $data['role'] ?: null, auth()->user());
+                } catch (InvalidArgumentException $exception) {
+                    Notification::make()->title($exception->getMessage())->danger()->send();
+                    $action->halt();
+                }
+
                 $this->dispatch('team-invitations-updated');
 
                 Notification::make()

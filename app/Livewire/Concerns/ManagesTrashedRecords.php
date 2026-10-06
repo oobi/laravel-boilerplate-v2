@@ -71,7 +71,7 @@ trait ManagesTrashedRecords
                 // Force-delete each record rather than a bulk query delete: a bulk
                 // delete skips model events, so per-model deletion cleanup (e.g. a
                 // User's stored profile photo) would never run — see GitHub #12.
-                $records = $this->emptyTrashQuery()->get()->filter(fn (Model $record): bool => $this->mayEmpty($record));
+                [$records, $kept] = $this->emptyTrashQuery()->get()->partition(fn (Model $record): bool => $this->mayEmpty($record));
                 $count = $records->count();
 
                 $records->each->forceDelete();
@@ -80,6 +80,8 @@ trait ManagesTrashedRecords
 
                 Notification::make()
                     ->title(__('admin.empty_trash_success', ['count' => $count]))
+                    // Any left behind (mayEmpty() said no) are explained, not silently skipped.
+                    ->body($kept->isEmpty() ? null : trans_choice('admin.empty_trash_kept', $kept->count(), ['count' => $kept->count()]))
                     ->success()
                     ->send();
             });

@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\User;
 use Concise\Teams\Models\Team;
 use Illuminate\Support\Collection;
+use WeakMap;
 
 /**
  * The team-level counterpart of App\Support\Roles\Coverage: a member may give,
@@ -24,27 +25,56 @@ use Illuminate\Support\Collection;
 final class TeamCoverage
 {
     /**
+     * Remembered against the objects they describe (WeakMaps, so an entry goes
+     * when its object does): a page asks about the same people many times.
+     *
+     * @var WeakMap<User, array<int|string, Collection<int, string>>>|null
+     */
+    private static ?WeakMap $permissions = null;
+
+    /** @var WeakMap<User, bool>|null */
+    private static ?WeakMap $headOffice = null;
+
+    /** @var WeakMap<Team, array<string, list<string>>>|null */
+    private static ?WeakMap $rolePermissions = null;
+
+    /**
      * The team permissions the user holds in this team through their roles.
+     * Cached per object, so after changing someone's roles use a fresh instance.
      *
      * @return Collection<int, string>
      */
     public static function permissionsOf(Team $team, User $user): Collection
     {
-        if ($team->isSuspended($user)) {
-            return collect();
+        self::$permissions ??= new WeakMap;
+        $byTeam = self::$permissions[$user] ?? [];
+
+        if (! array_key_exists($team->getKey(), $byTeam)) {
+            $byTeam[$team->getKey()] = $team->isSuspended($user)
+                ? collect()
+                : self::permissionsOfRoles($team, $team->rolesFor($user));
+            self::$permissions[$user] = $byTeam;
         }
 
-        return Team::availableRoles()->whereIn('name', $team->rolesFor($user))->with('permissions')->get()
-            ->flatMap(fn (Role $role): Collection => $role->permissions->pluck('name'))
-            ->unique()
-            ->values();
+        return $byTeam[$team->getKey()];
+    }
+
+    /**
+     * Whether the actor holds every team permission these roles carry, in this
+     * team: the cheap check for a list that already has each member's roles.
+     *
+     * @param  iterable<string>  $names
+     */
+    public static function coversRoleNames(User $actor, Team $team, iterable $names): bool
+    {
+        return self::isHeadOffice($actor)
+            || self::permissionsOfRoles($team, $names)->diff(self::permissionsOf($team, $actor))->isEmpty();
     }
 
     /** Whether the actor holds every team permission this role carries, in this team. */
     public static function coversRole(User $actor, Team $team, Role $role): bool
     {
-        return self::isHeadOffice($actor)
-            || $role->permissions->pluck('name')->diff(self::permissionsOf($team, $actor))->isEmpty();
+        return self::coversRoleNames($actor, $team, [$role->name]);
     }
 
     /** Whether the actor holds every team permission the member holds, in this team. */
@@ -54,16 +84,44 @@ final class TeamCoverage
             || self::permissionsOf($team, $member)->diff(self::permissionsOf($team, $actor))->isEmpty();
     }
 
-    /** Whether the actor covers the team role with this name. */
+    /** Whether the actor covers the team role with this name (an unknown name, never). */
     public static function coversRoleNamed(User $actor, Team $team, string $name): bool
     {
-        $role = Team::availableRoles()->where('name', $name)->with('permissions')->first();
+        return array_key_exists($name, self::rolePermissions($team)) && self::coversRoleNames($actor, $team, [$name]);
+    }
 
-        return $role !== null && self::coversRole($actor, $team, $role);
+    /**
+     * Every team permission these team roles carry.
+     *
+     * @param  iterable<string>  $names
+     * @return Collection<int, string>
+     */
+    private static function permissionsOfRoles(Team $team, iterable $names): Collection
+    {
+        $map = self::rolePermissions($team);
+
+        return collect($names)->flatMap(fn (string $name): array => $map[$name] ?? [])->unique()->values();
+    }
+
+    /**
+     * Team role name => the permission names it carries: every team role in
+     * one query, remembered against the Team object.
+     *
+     * @return array<string, list<string>>
+     */
+    private static function rolePermissions(Team $team): array
+    {
+        self::$rolePermissions ??= new WeakMap;
+
+        return self::$rolePermissions[$team] ??= Team::availableRoles()->with('permissions')->get()
+            ->mapWithKeys(fn (Role $role): array => [$role->name => $role->permissions->pluck('name')->all()])
+            ->all();
     }
 
     private static function isHeadOffice(User $actor): bool
     {
-        return $actor->isSuperAdmin() || $actor->hasSystemPermission(SystemPermission::MANAGE_TEAMS);
+        self::$headOffice ??= new WeakMap;
+
+        return self::$headOffice[$actor] ??= $actor->isSuperAdmin() || $actor->hasSystemPermission(SystemPermission::MANAGE_TEAMS);
     }
 }

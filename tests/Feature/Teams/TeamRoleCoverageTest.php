@@ -9,12 +9,16 @@ use App\Models\User;
 use Concise\Teams\Actions\InviteMember;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
+use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use InvalidArgumentException;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
@@ -131,5 +135,39 @@ class TeamRoleCoverageTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         app(InviteMember::class)($this->team, 'other@example.com', 'Manager', $this->lead);
+    }
+
+    public function test_the_members_table_checks_coverage_without_a_query_per_member(): void
+    {
+        // Each count starts cold (fresh objects, so nothing remembered), paying the same one-off lookups.
+        $queries = function (): int {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            Livewire::actingAs($this->lead->fresh())->test(MembersTable::class, ['team' => $this->team->fresh()]);
+
+            return count(DB::getQueryLog());
+        };
+
+        $few = $queries();
+        collect(range(1, 8))->each(fn () => $this->joined('Member'));
+
+        $this->assertSame($few, $queries());
+    }
+
+    public function test_inviting_with_a_role_you_dont_cover_is_a_form_error_not_a_crash(): void
+    {
+        Notification::fake();
+        config(['teams.invitations.members' => true]);
+        Team::createRole('Recruiter', [TeamPermission::INVITE_MEMBERS]);
+        $recruiter = $this->joined('Recruiter');
+
+        Livewire::actingAs($recruiter)
+            ->test(PendingInvitations::class, ['team' => $this->team])
+            ->callAction('invite', data: ['email' => 'new@example.com', 'role' => 'Manager'])
+            ->assertHasActionErrors(['role']);
+
+        $this->assertFalse($this->team->invitations()->exists());
     }
 }

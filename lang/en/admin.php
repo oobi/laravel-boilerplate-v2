@@ -80,6 +80,7 @@ return [
     'empty_trash' => 'Empty Trash',
     'empty_trash_confirm' => 'Are you sure you want to permanently delete all trashed users? This cannot be undone.',
     'empty_trash_success' => 'Permanently deleted :count trashed user(s).',
+    'empty_trash_kept' => '{1} One stays in the trash: you can\'t delete it. Someone with more access can.|[2,*] :count stay in the trash: you can\'t delete them. Someone with more access can.',
 
     'roles' => 'Roles',
     'roles_description' => 'Define what each role can do, and assign roles to users.',

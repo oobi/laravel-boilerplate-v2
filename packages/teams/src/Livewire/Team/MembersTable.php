@@ -385,7 +385,12 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         // Owners have their own shield; anyone else only by someone who holds all they hold here.
         return $this->isOwner($member)
             ? $this->canManageOwners()
-            : $this->canManage() && TeamCoverage::coversMember(auth()->user(), $this->team, $member);
+            : $this->canManage() && TeamCoverage::coversRoleNames(
+                auth()->user(),
+                $this->team,
+                // The roles every member holds, already loaded once for the table.
+                $this->isSuspended($member) ? [] : $this->memberRoles()->get($member->id, []),
+            );
     }
 
     /** Whether the viewer may give or take away this team role (TeamCoverage). */
