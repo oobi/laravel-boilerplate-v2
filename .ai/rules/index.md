@@ -14,7 +14,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Livewire/** | .ai/rules/livewire.md |
 | app/Models/** | .ai/rules/models.md |
 | app/Policies/** | .ai/rules/policies.md |
-| app/Livewire/Profile/EditPassword.php | .ai/rules/profile.md |
+| app/Livewire/Profile/** | .ai/rules/profile.md |
 | app/Providers/AppServiceProvider.php | .ai/rules/providers.md |
 | app/Http/Responses/** | .ai/rules/responses.md |
 | routes/web.php | .ai/rules/routes.md |

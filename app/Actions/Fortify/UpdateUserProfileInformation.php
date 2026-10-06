@@ -12,7 +12,12 @@ use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 
 class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 {
-    /** @param array<string, mixed> $input */
+    /**
+     * Changing the email takes the current password: a new address is a route
+     * to a password reset.
+     *
+     * @param  array<string, mixed>  $input
+     */
     public function update(User $user, array $input): void
     {
         // EditProfile calls this action directly rather than going through
@@ -23,11 +28,16 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             $input['email'] = User::normalizeEmail($input['email']);
         }
 
+        $changingEmail = ($input['email'] ?? null) !== $user->email;
+
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'current_password' => [Rule::requiredIf($changingEmail), 'nullable', 'string', 'current_password:'.config('fortify.guard', 'web')],
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
+        ], [
+            'current_password.current_password' => __('auth.current_password_mismatch'),
         ])->validateWithBag('updateProfileInformation');
 
         if (isset($input['photo'])) {

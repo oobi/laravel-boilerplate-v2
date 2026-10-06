@@ -8,6 +8,7 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Enums\UserAbility;
+use App\Http\Middleware\DenyLowAssuranceSessions;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\PasswordResetLinkResponse;
 use App\Http\Responses\RegisterResponse;
@@ -25,8 +26,10 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\View\TablesIconAlias;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route as RouteDefinition;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
@@ -191,6 +194,16 @@ class AppServiceProvider extends ServiceProvider
         // not on config('fortify.home') — the public landing. See the response classes.
         $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
         $this->app->singleton(VerifyEmailResponseContract::class, VerifyEmailResponse::class);
+
+        // Impersonated sessions stay off Fortify's two-factor routes too,
+        // added once every route is registered (a cached route table carries it).
+        if (! $this->app->routesAreCached()) {
+            $this->app->booted(function (): void {
+                collect(Route::getRoutes()->getRoutes())
+                    ->filter(fn (RouteDefinition $route): bool => DenyLowAssuranceSessions::guardsFortifyRoute($route->getName()))
+                    ->each(fn (RouteDefinition $route) => $route->middleware(DenyLowAssuranceSessions::class));
+            });
+        }
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());

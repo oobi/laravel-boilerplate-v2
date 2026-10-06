@@ -114,9 +114,19 @@ class InactiveUserAccessTest extends TestCase
         $sessionId = $this->startImpersonation($driver, $admin, $target);
         $target->update(['active' => false]);
 
-        $this->resumeSession($sessionId)->get('/profile')
-            ->assertRedirect('/login')
-            ->assertSessionMissing('impersonated_by')
+        // The database driver's sessions are swept on deactivation (UserObserver), so that
+        // request arrives as a guest; the array driver's is ended by EnsureAccountIsActive.
+        if ($driver === 'database') {
+            $this->assertDatabaseMissing('sessions', ['id' => $sessionId]);
+        }
+
+        $response = $this->resumeSession($sessionId)->get('/');
+
+        if ($driver === 'array') {
+            $response->assertRedirect('/login');
+        }
+
+        $response->assertSessionMissing('impersonated_by')
             ->assertSessionMissing('impersonator_guard')
             ->assertSessionMissing('impersonator_guard_using')
             ->assertSessionMissing('remember_web');
@@ -126,22 +136,18 @@ class InactiveUserAccessTest extends TestCase
     }
 
     #[DataProvider('sessionDrivers')]
-    public function test_deactivated_impersonator_cannot_continue_editing_the_target(string $driver): void
+    public function test_deactivated_impersonators_session_ends_on_the_next_request(string $driver): void
     {
         $admin = User::factory()->superAdmin()->create();
-        $target = User::factory()->create(['first_name' => 'OriginalName']);
+        $target = User::factory()->create();
         $sessionId = $this->startImpersonation($driver, $admin, $target);
         $admin->update(['active' => false]);
 
-        $this->resumeSession($sessionId)->put('/user/profile-information', [
-            'first_name' => 'BlockedChange',
-            'last_name' => $target->last_name,
-            'email' => $target->email,
-        ])->assertRedirect('/login')
+        $this->resumeSession($sessionId)->get('/')
+            ->assertRedirect('/login')
             ->assertSessionMissing('impersonated_by');
 
         $this->assertGuest();
-        $this->assertSame('OriginalName', $target->fresh()->first_name);
     }
 
     #[DataProvider('sessionDrivers')]

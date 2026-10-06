@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Profile;
 
 use App\Livewire\Concerns\ConfirmsPassword;
+use App\Livewire\Concerns\RequiresFullSession;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
@@ -27,6 +28,7 @@ use Livewire\Component;
 class TwoFactorAuthentication extends Component
 {
     use ConfirmsPassword;
+    use RequiresFullSession;
 
     public bool $showingQrCode = false;
 

@@ -1,6 +1,6 @@
 ---
 paths:
-  - app/Livewire/Profile/EditPassword.php
+  - 'app/Livewire/Profile/**'
 ---
 
 # Profile
@@ -12,3 +12,6 @@ AuthenticateSession is on the web group (bootstrap/app.php): it stamps the user'
 - Admin direct-set (ShowUser, via updatePasswordDirectly: the "set user passwords" permission) and reset-link paths need nothing extra — changing the target's stored hash invalidates their sessions automatically; logoutOtherDevices can't be used (acts on the acting guard, not the target).
 
 Driver-agnostic (hash lives in the session payload). Tests use the array driver which can't show a real two-request logout, so assert the OtherDeviceLogout event + that AuthenticateSession is on the web group. See docs/authentication.md.
+
+## Account-security pages refuse impersonated sessions
+Email, password and two-factor management is for the account holder only. App\Support\Auth\SessionAssurance::isLow() is true while impersonating (an add-on with a weaker sign-in adds its own case there). The /profile group and Fortify's two-factor routes carry DenyLowAssuranceSessions (Fortify routes get it in AppServiceProvider::registerFortify()); every profile component uses the RequiresFullSession trait because Livewire updates skip route middleware. A new account-security page needs both. Fortify's updateProfileInformation/updatePasswords route features stay off: the pages call the actions directly. Changing the email requires current_password.

@@ -116,6 +116,27 @@ can lock themselves out). It's surfaced on the admin Users list and edit
 screens (`app/Livewire/Admin/Users/*`) and the
 `UserInformationFormSection` panel.
 
+## Account security is for the account holder
+
+Changing the email, password or two-factor settings is refused (403) to any
+session that did not prove it is the account holder:
+`App\Support\Auth\SessionAssurance::isLow()`, true while impersonating (an
+add-on with a weaker sign-in adds its own case there). An impersonator could
+otherwise set the target's email to their own and take the account with a
+password reset, outside the impersonation trail.
+
+- `DenyLowAssuranceSessions` sits on the `/profile` route group and on
+  Fortify's two-factor routes (attached in `AppServiceProvider`). It also covers
+  passkey management and Fortify's profile and password routes, should those
+  features be switched on.
+- Livewire updates skip route middleware, so every profile component uses the
+  `RequiresFullSession` trait, which re-checks on each request.
+- Fortify's `updateProfileInformation()` and `updatePasswords()` features are
+  off: the pages call the actions directly.
+- Changing the email asks for the current password.
+- Profile links and the two-factor banner's setup button are hidden for these
+  sessions.
+
 ## Mandatory two-factor
 
 2FA can be made mandatory **per role**. Turn on **Require two factor

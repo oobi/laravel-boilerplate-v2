@@ -16,9 +16,11 @@
 
                 {{-- Profile now lives inside the admin shell, so only panel users get these links. --}}
                 @if (auth()->user()->canAccessAdmin())
-                    <x-button color="neutral" variant="ghost" size="sm" :href="route('profile.edit')">
-                        {{ __('Profile') }}
-                    </x-button>
+                    @unless (\App\Support\Auth\SessionAssurance::isLow())
+                        <x-button color="neutral" variant="ghost" size="sm" :href="route('profile.edit')">
+                            {{ __('Profile') }}
+                        </x-button>
+                    @endunless
 
                     <x-button color="neutral" variant="ghost" size="sm" :href="route('dashboard')">
                         {{ __('Admin Dashboard') }}

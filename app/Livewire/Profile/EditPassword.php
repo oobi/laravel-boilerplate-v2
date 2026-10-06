@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Profile;
 
+use App\Livewire\Concerns\RequiresFullSession;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,8 @@ use Livewire\Component;
 #[Layout('layouts.account')]
 class EditPassword extends Component
 {
+    use RequiresFullSession;
+
     public string $current_password = '';
 
     public string $password = '';

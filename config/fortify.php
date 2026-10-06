@@ -54,8 +54,9 @@ return [
         Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),
-        Features::updateProfileInformation(),
-        Features::updatePasswords(),
+        // No updateProfileInformation() or updatePasswords(): the profile pages
+        // call those actions directly, so their HTTP routes would only be an
+        // unguarded second way in.
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
