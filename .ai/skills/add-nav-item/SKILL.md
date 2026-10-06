@@ -21,7 +21,8 @@ in detail. This skill is the short procedure.
 3. A link inside a section: `NavRegistry::group($groupName)->add(NavItem::make($name)->label(...)->route(...)->icon(...))`.
    Calling `group()` with an existing name returns the *same* group — use
    this to add into `business` or `people-access` rather than creating a duplicate
-   section.
+   section. `add()` replaces an item with the same name in place, so an add-on
+   can override a core item by reusing its name.
 4. Gate visibility with `->can('permission-name')` (a `SystemPermission`
    value) on the item or group — omit it entirely for always-visible.
 5. Icons are heroicon component names (e.g. `heroicon-o-user`).

@@ -64,9 +64,23 @@ final class NavGroup
         return $this;
     }
 
+    /**
+     * Append items, replacing in place any already added under the same name.
+     * Providers re-run on every app boot (each test boots one), and a group
+     * outlives the boot in its static registry, so a plain append would pile
+     * up duplicates.
+     */
     public function add(NavItem ...$items): static
     {
-        array_push($this->items, ...$items);
+        foreach ($items as $item) {
+            $existing = array_search($item->name, array_column($this->items, 'name'), true);
+
+            if ($existing === false) {
+                $this->items[] = $item;
+            } else {
+                $this->items[$existing] = $item;
+            }
+        }
 
         return $this;
     }

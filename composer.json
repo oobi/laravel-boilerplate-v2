@@ -77,6 +77,7 @@
             "@php artisan test --parallel"
         ],
         "test": "@php scripts/test-summary.php",
+        "test:fast": "@php scripts/test-summary.php --exclude-group=slow",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",
