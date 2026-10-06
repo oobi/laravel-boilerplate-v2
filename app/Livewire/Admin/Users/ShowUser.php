@@ -120,7 +120,6 @@ class ShowUser extends Component implements HasActions, HasSchemas
         return AdminAction::make('impersonate')
             ->label(__('admin.impersonate_user'))
             ->icon('heroicon-o-finger-print')
-            ->soft()
             ->color(DaisyColor::WARNING->toFilamentColor())
             ->visible(fn (): bool => Gate::allows(UserAbility::IMPERSONATE, $this->user))
             ->action(fn () => app(StartImpersonation::class)->handle($this->user))
@@ -141,7 +140,6 @@ class ShowUser extends Component implements HasActions, HasSchemas
         return AdminAction::make('manageRoles')
             ->label(__('admin.manage_roles'))
             ->icon('heroicon-o-shield-check')
-            ->soft()
             // Filament defaults schema modals to 4xl; a role checklist doesn't
             // need that. A dev with a very long role list can widen it again.
             // (Sticky header/footer is applied globally in AppServiceProvider.)
@@ -221,7 +219,6 @@ class ShowUser extends Component implements HasActions, HasSchemas
             return AdminAction::make('resetPassword')
                 ->label(__('admin.reset_password'))
                 ->icon('heroicon-o-key')
-                ->soft()
                 // Two stacked password fields don't need Filament's default 4xl.
                 ->modalWidth(Width::Medium)
                 ->visible(fn (): bool => Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user))
@@ -260,7 +257,6 @@ class ShowUser extends Component implements HasActions, HasSchemas
         return AdminAction::make('resetPassword')
             ->label(__('admin.send_password_reset_link'))
             ->icon('heroicon-o-key')
-            ->soft()
             ->visible(fn (): bool => Gate::allows(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user))
             ->requiresConfirmation()
             ->action(function (): void {

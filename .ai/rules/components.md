@@ -23,7 +23,9 @@ Rubric for danger vs warning: destroys/removes/cuts off access → `danger`; pow
 
 Group a set of sibling actions (a sidebar "Actions" card, a panel's action row) in **`<x-action-list>`** rather than hand-rolling a flex wrapper — it tiles the buttons horizontally, wraps them, and grows each to share the row width (a lone button on a row fills it). Works with both `<x-button.*>` and Filament `{{ $action }}` output.
 
-For the **Filament actions** that go in one, use **`App\Support\Filament\AdminAction::make()`** in place of `Action::make()` — it bakes in the app's action-list treatment (outlined, small) so every screen matches without re-typing `->outlined()->size(...)`. Set colour/icon/label per action for intent; modal defaults still come from `AppServiceProvider`. See `app/Livewire/Admin/Users/ShowUser.php` for the reference usage.
+For the **Filament actions** that go in one, use **`App\Support\Filament\AdminAction::make()`** in place of `Action::make()` — it bakes in the app's action-list treatment (soft, small) so every screen matches. An action built by a shared factory (one that is solid in a list header elsewhere) gets the same look via `AdminAction::styleForList($action)`. Set colour/icon/label per action for intent; modal defaults still come from `AppServiceProvider`. See `app/Livewire/Admin/Users/ShowUser.php` for the reference usage. Blade `<x-button.*>` in an action list take `variant="soft" size="sm"` to match.
+
+Emphasis by placement: the page or list header's primary action (New user, Edit user) is **solid**; every button in an Actions card or action row is **soft**, coloured by intent; cancel/back stay outline/ghost. The same action can be solid in one place and soft in another.
 
 **Never use `<x-filament::button>` for a hand-placed button** — it exists only where Filament renders it. A Filament PHP `Action` is correct for table row/bulk/header actions and anything that opens a `->requiresConfirmation()` or `->schema()` modal; everything else is a `<x-button.*>`.
 

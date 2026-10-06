@@ -43,7 +43,7 @@
             <x-button.danger
                 type="button"
                 wire:click="callPanelAction('security', 'force-disable-2fa')"
-                variant="outline"
+                variant="soft"
                 size="sm"
             >
                 {{ __('admin.force_disable_2fa') }}
@@ -55,7 +55,7 @@
                 <x-button.warning
                     type="button"
                     wire:click="callPanelAction('security', 'reset-2fa-grace')"
-                    variant="outline"
+                    variant="soft"
                     size="sm"
                 >
                     {{ __('admin.reset_two_factor_grace') }}

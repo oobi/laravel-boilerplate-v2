@@ -135,7 +135,6 @@ class Settings extends Component implements HasActions, HasSchemas
         return AdminAction::make('deleteTeam')
             ->label(team_trans('ownership.delete'))
             ->icon('heroicon-o-trash')
-            ->soft()
             ->color(DaisyColor::ERROR->toFilamentColor())
             ->visible(fn (): bool => $this->canDelete())
             ->requiresConfirmation()
