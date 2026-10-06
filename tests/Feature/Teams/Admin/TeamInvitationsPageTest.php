@@ -8,6 +8,7 @@ use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Notifications\TeamInvitationNotification;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -47,7 +48,7 @@ class TeamInvitationsPageTest extends TestCase
             ->searchTable('pending')
             ->assertCanSeeTableRecords([$pending])
             ->assertCanNotSeeTableRecords([$other])
-            ->callTableAction('revoke', $pending);
+            ->callAction(TestAction::make('revoke')->table($pending));
 
         $this->assertModelMissing($pending);
     }

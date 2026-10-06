@@ -7,6 +7,7 @@ use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Admin\Teams\ListTeams;
 use Concise\Teams\Models\Team;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -57,9 +58,9 @@ class ListTeamsTest extends TestCase
             ->test(ListTeams::class)
             ->assertCanSeeTableRecords([$team])
             ->assertActionHidden('createTeam')
-            ->assertTableActionVisible('view', $team)
-            ->assertTableActionHidden('toggleActive', $team)
-            ->assertTableActionHidden('delete', $team);
+            ->assertActionVisible(TestAction::make('view')->table($team))
+            ->assertActionHidden(TestAction::make('toggleActive')->table($team))
+            ->assertActionHidden(TestAction::make('delete')->table($team));
     }
 
     public function test_a_role_holding_manage_teams_can_view_the_list(): void
@@ -108,11 +109,11 @@ class ListTeamsTest extends TestCase
 
         $component = Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ListTeams::class)
-            ->callTableAction('toggleActive', $team);
+            ->callAction(TestAction::make('toggleActive')->table($team));
 
         $this->assertFalse($team->fresh()->active);
 
-        $component->callTableAction('toggleActive', $team);
+        $component->callAction(TestAction::make('toggleActive')->table($team));
 
         $this->assertTrue($team->fresh()->active);
     }
@@ -140,9 +141,9 @@ class ListTeamsTest extends TestCase
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ListTeams::class)
-            ->assertTableActionHidden('delete', $active)
-            ->assertTableActionVisible('delete', $inactive)
-            ->callTableAction('delete', $inactive);
+            ->assertActionHidden(TestAction::make('delete')->table($active))
+            ->assertActionVisible(TestAction::make('delete')->table($inactive))
+            ->callAction(TestAction::make('delete')->table($inactive));
 
         $this->assertSoftDeleted('teams', ['id' => $inactive->id]);
         $this->assertNotSoftDeleted('teams', ['id' => $active->id]);
@@ -158,7 +159,7 @@ class ListTeamsTest extends TestCase
             ->assertCanNotSeeTableRecords([$team])
             ->filterTable('trashed', '0')
             ->assertCanSeeTableRecords([$team])
-            ->callTableAction('restore', $team);
+            ->callAction(TestAction::make('restore')->table($team));
 
         $this->assertNotSoftDeleted('teams', ['id' => $team->id]);
     }
@@ -176,7 +177,7 @@ class ListTeamsTest extends TestCase
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ListTeams::class)
             ->filterTable('trashed', '0')
-            ->callTableAction('forceDelete', $team);
+            ->callAction(TestAction::make('forceDelete')->table($team));
 
         $this->assertDatabaseMissing('teams', ['id' => $team->id]);
         $this->assertDatabaseMissing('team_user', ['team_id' => $team->id]);

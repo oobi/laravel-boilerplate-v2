@@ -6,6 +6,7 @@ use App\Enums\SystemPermission;
 use App\Livewire\Admin\Users\ListUsers;
 use App\Models\Role;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -59,10 +60,10 @@ class ListUsersTest extends TestCase
         Livewire::actingAs($viewer)
             ->test(ListUsers::class)
             ->assertCanSeeTableRecords([$target])
-            ->assertTableActionVisible('view', $target)
-            ->assertTableActionHidden('edit', $target)
-            ->assertTableActionHidden('toggleActive', $target)
-            ->assertTableActionHidden('delete', $target);
+            ->assertActionVisible(TestAction::make('view')->table($target))
+            ->assertActionHidden(TestAction::make('edit')->table($target))
+            ->assertActionHidden(TestAction::make('toggleActive')->table($target))
+            ->assertActionHidden(TestAction::make('delete')->table($target));
     }
 
     public function test_admins_can_view_the_users_list(): void
@@ -95,7 +96,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
-            ->callTableBulkAction('activate', $targets);
+            ->selectTableRecords($targets)->callAction(TestAction::make('activate')->table()->bulk());
 
         $targets->each(fn (User $user) => $this->assertTrue($user->fresh()->active));
     }
@@ -107,7 +108,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
-            ->callTableBulkAction('deactivate', $targets);
+            ->selectTableRecords($targets)->callAction(TestAction::make('deactivate')->table()->bulk());
 
         $targets->each(fn (User $user) => $this->assertFalse($user->fresh()->active));
     }
@@ -119,7 +120,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
-            ->callTableBulkAction('deactivate', collect([$admin, $target]));
+            ->selectTableRecords(collect([$admin, $target]))->callAction(TestAction::make('deactivate')->table()->bulk());
 
         // The actor is filtered out of the selection; the ordinary user is deactivated.
         $this->assertTrue($admin->fresh()->active);
@@ -134,7 +135,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($support)
             ->test(ListUsers::class)
-            ->callTableBulkAction('deactivate', collect([$protectedSuperAdmin, $target]));
+            ->selectTableRecords(collect([$protectedSuperAdmin, $target]))->callAction(TestAction::make('deactivate')->table()->bulk());
 
         // Support may suspend an ordinary user but never a super admin.
         $this->assertTrue($protectedSuperAdmin->fresh()->active);
@@ -148,7 +149,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
-            ->callTableBulkAction('delete', $targets);
+            ->selectTableRecords($targets)->callAction(TestAction::make('delete')->table()->bulk());
 
         $targets->each(fn (User $user) => $this->assertSoftDeleted($user));
     }
@@ -162,7 +163,7 @@ class ListUsersTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
             ->filterTable('trashed', '0')
-            ->callTableBulkAction('restore', $targets);
+            ->selectTableRecords($targets)->callAction(TestAction::make('restore')->table()->bulk());
 
         $targets->each(fn (User $user) => $this->assertNotSoftDeleted($user->fresh()));
     }
@@ -173,8 +174,8 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($support)
             ->test(ListUsers::class)
-            ->assertTableBulkActionHidden('delete')
-            ->assertTableBulkActionHidden('restore');
+            ->assertActionHidden(TestAction::make('delete')->table()->bulk())
+            ->assertActionHidden(TestAction::make('restore')->table()->bulk());
     }
 
     public function test_activate_and_deactivate_bulk_actions_are_hidden_in_the_trash_view(): void
@@ -184,8 +185,8 @@ class ListUsersTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
             ->filterTable('trashed', '0')
-            ->assertTableBulkActionHidden('activate')
-            ->assertTableBulkActionHidden('deactivate');
+            ->assertActionHidden(TestAction::make('activate')->table()->bulk())
+            ->assertActionHidden(TestAction::make('deactivate')->table()->bulk());
     }
 
     public function test_a_non_self_user_can_be_deactivated(): void
@@ -195,7 +196,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
-            ->callTableAction('toggleActive', $target);
+            ->callAction(TestAction::make('toggleActive')->table($target));
 
         $this->assertFalse($target->fresh()->active);
     }
@@ -206,7 +207,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
-            ->assertTableActionHidden('toggleActive', $admin);
+            ->assertActionHidden(TestAction::make('toggleActive')->table($admin));
     }
 
     public function test_admins_can_empty_the_trash_except_their_own_account(): void
@@ -304,8 +305,8 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($support)
             ->test(ListUsers::class)
-            ->assertTableActionVisible('edit', $target)
-            ->assertTableActionVisible('toggleActive', $target);
+            ->assertActionVisible(TestAction::make('edit')->table($target))
+            ->assertActionVisible(TestAction::make('toggleActive')->table($target));
     }
 
     public function test_support_cannot_edit_or_toggle_active_for_a_super_admin(): void
@@ -315,8 +316,8 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($support)
             ->test(ListUsers::class)
-            ->assertTableActionHidden('edit', $target)
-            ->assertTableActionHidden('toggleActive', $target);
+            ->assertActionHidden(TestAction::make('edit')->table($target))
+            ->assertActionHidden(TestAction::make('toggleActive')->table($target));
     }
 
     public function test_support_cannot_delete_restore_or_force_delete_users(): void
@@ -326,7 +327,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($support)
             ->test(ListUsers::class)
-            ->assertTableActionHidden('delete', $target);
+            ->assertActionHidden(TestAction::make('delete')->table($target));
     }
 
     public function test_the_status_column_is_not_sortable(): void

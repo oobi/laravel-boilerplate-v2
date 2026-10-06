@@ -8,6 +8,7 @@ use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
@@ -148,7 +149,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->callTableAction('changeRole', $member, data: ['roles' => self::TEAM_ADMIN])
+            ->callAction(TestAction::make('changeRole')->table($member), data: ['roles' => self::TEAM_ADMIN])
             ->assertHasNoFormErrors();
 
         $this->assertSame(self::TEAM_ADMIN, $team->roleFor($member));
@@ -163,7 +164,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->callTableAction('changeRole', $member, data: ['roles' => 'Superuser'])
+            ->callAction(TestAction::make('changeRole')->table($member), data: ['roles' => 'Superuser'])
             ->assertHasFormErrors(['roles']);
 
         $this->assertSame(self::MEMBER, $team->roleFor($member));
@@ -200,7 +201,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->callTableAction('changeRole', $member, data: ['roles' => [self::TEAM_ADMIN, self::MEMBER]])
+            ->callAction(TestAction::make('changeRole')->table($member), data: ['roles' => [self::TEAM_ADMIN, self::MEMBER]])
             ->assertHasNoFormErrors();
 
         $this->assertCount(2, $team->rolesFor($member));
@@ -215,7 +216,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->callTableAction('remove', $member);
+            ->callAction(TestAction::make('remove')->table($member));
 
         $this->assertFalse($team->fresh()->hasUser($member));
         $this->assertNull($team->roleFor($member));
@@ -228,7 +229,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->assertTableActionHidden('remove', $owner);
+            ->assertActionHidden(TestAction::make('remove')->table($owner));
 
         $team->removeMember($owner); // the domain method is a no-op for the owner too
 
@@ -245,7 +246,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(MembersTable::class, ['team' => $team])
-            ->assertTableActionVisible('impersonate', $member);
+            ->assertActionVisible(TestAction::make('impersonate')->table($member));
     }
 
     public function test_the_roster_impersonate_action_needs_impersonation_permission(): void
@@ -258,7 +259,7 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($owner)
             ->test(MembersTable::class, ['team' => $team])
-            ->assertTableActionHidden('impersonate', $member);
+            ->assertActionHidden(TestAction::make('impersonate')->table($member));
     }
 
     public function test_a_regular_member_cannot_use_the_members_table(): void
@@ -306,8 +307,8 @@ class TeamMembersTest extends TestCase
             ->test(MembersTable::class, ['team' => $team])
             ->assertSuccessful()
             ->assertCanSeeTableRecords([$owner, $viewer, $other])
-            ->assertTableActionHidden('changeRole', $other)
-            ->assertTableActionHidden('remove', $other);
+            ->assertActionHidden(TestAction::make('changeRole')->table($other))
+            ->assertActionHidden(TestAction::make('remove')->table($other));
     }
 
     protected function tearDown(): void

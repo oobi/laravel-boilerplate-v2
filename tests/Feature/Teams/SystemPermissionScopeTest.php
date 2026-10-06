@@ -10,6 +10,7 @@ use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
@@ -165,8 +166,8 @@ class SystemPermissionScopeTest extends TestCase
         Livewire::actingAs($admin)
             ->test(MembersTable::class, ['team' => $team])
             ->assertActionVisible('addMember')
-            ->assertTableActionVisible('changeRole', $other)
-            ->assertTableActionVisible('changeRole', $admin); // a system admin may act on their own row
+            ->assertActionVisible(TestAction::make('changeRole')->table($other))
+            ->assertActionVisible(TestAction::make('changeRole')->table($admin)); // a system admin may act on their own row
     }
 
     public function test_a_system_admins_invitations_follow_the_admin_switch_not_the_member_one(): void

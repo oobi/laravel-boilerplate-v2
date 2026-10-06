@@ -12,6 +12,7 @@ use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -62,8 +63,8 @@ class ShowTeamTest extends TestCase
             ->test(MembersTable::class, ['team' => $this->team])
             ->assertSee('Mia Member')
             ->assertActionHidden('addMember')
-            ->assertTableActionHidden('changeRole', $member)
-            ->assertTableActionHidden('remove', $member);
+            ->assertActionHidden(TestAction::make('changeRole')->table($member))
+            ->assertActionHidden(TestAction::make('remove')->table($member));
     }
 
     public function test_the_overview_shows_details_statistics_and_the_tabs(): void
@@ -188,10 +189,10 @@ class ShowTeamTest extends TestCase
 
         Livewire::actingAs($this->admin)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionHidden('remove', $this->owner)
-            ->callTableAction('changeRole', $member, data: ['roles' => 'Team Admin'])
+            ->assertActionHidden(TestAction::make('remove')->table($this->owner))
+            ->callAction(TestAction::make('changeRole')->table($member), data: ['roles' => 'Team Admin'])
             ->assertHasNoFormErrors()
-            ->callTableAction('remove', $member);
+            ->callAction(TestAction::make('remove')->table($member));
 
         $this->assertFalse($this->team->fresh()->hasUser($member));
     }
