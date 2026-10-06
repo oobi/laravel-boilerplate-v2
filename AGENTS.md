@@ -194,8 +194,10 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Running Tests
 
-- Run the narrowest set of tests that covers the change. Pass a file path or `--filter=testName` to `php artisan test --compact`.
+- While iterating, run only what you touched: a file path or `--filter=testName` with `php artisan test --compact`.
 - Rerun a test after each change to it.
+- Before merging, run the whole suite in parallel: `php artisan test --parallel --compact`.
+- Never run a bare serial `php artisan test` over the whole suite. It takes minutes; the parallel run takes seconds.
 - Run `vendor/bin/phpunit` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
 
 </laravel-boost-guidelines>
