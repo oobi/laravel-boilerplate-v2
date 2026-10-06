@@ -125,7 +125,8 @@ class TeamPolicy
      * which a stored role holding manage also holds, since roles are written
      * closed over TeamPermission::implies(). Ownership grants no visibility of
      * its own: an owner sees the roster through their role, like any member.
-     * Acting on members (role/suspend/remove) is gated separately by manageMembers.
+     * Acting on members is gated separately: role and suspend by manageMembers,
+     * removal by its own removeMembers.
      */
     public function viewMembers(User $user, Team $team): bool
     {
@@ -135,6 +136,11 @@ class TeamPolicy
     public function manageMembers(User $user, Team $team): bool
     {
         return $team->memberHasPermission($user, TeamPermission::MANAGE_MEMBERS);
+    }
+
+    public function removeMembers(User $user, Team $team): bool
+    {
+        return $team->memberHasPermission($user, TeamPermission::REMOVE_MEMBERS);
     }
 
     public function invite(User $user, Team $team): bool

@@ -12,6 +12,7 @@ use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -71,14 +72,14 @@ class TeamRoleCoverageTest extends TestCase
     {
         Livewire::actingAs($this->lead)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->callTableAction('changeRole', $this->member, $this->roles('Manager'))
+            ->callAction(TestAction::make('changeRole')->table($this->member), data: $this->roles('Manager'))
             ->assertHasFormErrors();
 
         $this->assertSame('Member', $this->team->roleFor($this->member));
 
         Livewire::actingAs($this->lead)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->callTableAction('changeRole', $this->member, $this->roles('Lead'))
+            ->callAction(TestAction::make('changeRole')->table($this->member), data: $this->roles('Lead'))
             ->assertHasNoFormErrors();
 
         $this->assertSame('Lead', $this->team->fresh()->roleFor($this->member->fresh()));
@@ -90,18 +91,18 @@ class TeamRoleCoverageTest extends TestCase
 
         Livewire::actingAs($this->lead)
             ->test(MembersTable::class, ['team' => $this->team])
-            ->assertTableActionHidden('changeRole', $this->manager)
-            ->assertTableActionHidden('suspend', $this->manager)
-            ->assertTableActionHidden('remove', $this->manager)
-            ->assertTableActionVisible('changeRole', $peer)
-            ->assertTableActionVisible('suspend', $peer);
+            ->assertActionHidden(TestAction::make('changeRole')->table($this->manager))
+            ->assertActionHidden(TestAction::make('suspend')->table($this->manager))
+            ->assertActionHidden(TestAction::make('remove')->table($this->manager))
+            ->assertActionVisible(TestAction::make('changeRole')->table($peer))
+            ->assertActionVisible(TestAction::make('suspend')->table($peer));
     }
 
     public function test_head_office_running_teams_gives_any_role(): void
     {
         Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_TEAMS)->create())
             ->test(MembersTable::class, ['team' => $this->team])
-            ->callTableAction('changeRole', $this->member, $this->roles('Manager'))
+            ->callAction(TestAction::make('changeRole')->table($this->member), data: $this->roles('Manager'))
             ->assertHasNoFormErrors();
 
         $this->assertSame('Manager', $this->team->fresh()->roleFor($this->member->fresh()));
@@ -195,5 +196,55 @@ class TeamRoleCoverageTest extends TestCase
             ->assertNotified(team_trans('invitations.role_not_allowed', ['role' => 'Lead']));
 
         $this->assertFalse($this->team->invitations()->exists());
+    }
+
+    public function test_removing_a_member_is_its_own_permission(): void
+    {
+        // Lead manages members (roles, suspending) but isn't offered removal.
+        Livewire::actingAs($this->lead)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertActionVisible(TestAction::make('suspend')->table($this->member))
+            ->assertActionHidden(TestAction::make('remove')->table($this->member));
+
+        // Remove alone, without manage members: the row's actions still offer it,
+        // only for someone they hold all of (not the Manager above them).
+        Team::createRole('Remover', [TeamPermission::REMOVE_MEMBERS]);
+        $removerUser = $this->joined('Remover');
+        $other = $this->joined('Member');
+
+        Livewire::actingAs($removerUser)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertActionHidden(TestAction::make('changeRole')->table($this->member))
+            ->assertActionHidden(TestAction::make('remove')->table($this->manager))
+            ->callAction(TestAction::make('remove')->table($other));
+
+        $this->assertFalse($this->team->fresh()->hasUser($other));
+
+        Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_TEAMS)->create())
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->callAction(TestAction::make('remove')->table($this->manager));
+
+        $this->assertFalse($this->team->fresh()->hasUser($this->manager));
+    }
+
+    public function test_a_removal_is_refused_on_the_server_once_the_permission_is_gone(): void
+    {
+        $remover = Team::createRole('Remover', [TeamPermission::REMOVE_MEMBERS]);
+        $removerUser = $this->joined('Remover');
+
+        // Opened while allowed; the permission is taken away before it's confirmed.
+        $table = Livewire::actingAs($removerUser)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertActionVisible(TestAction::make('remove')->table($this->member))
+            ->mountAction(TestAction::make('remove')->table($this->member))
+            ->assertActionMounted(TestAction::make('remove')->table($this->member));
+
+        $remover->revokePermissionTo(TeamPermission::REMOVE_MEMBERS->value);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // Filament re-checks the action before running it (and canRemove() aborts behind that).
+        $table->call('callMountedAction');
+
+        $this->assertTrue($this->team->fresh()->hasUser($this->member));
     }
 }

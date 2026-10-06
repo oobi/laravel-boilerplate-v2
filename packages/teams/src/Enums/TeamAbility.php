@@ -19,6 +19,7 @@ enum TeamAbility: string
     case VIEW_SETTINGS = 'viewSettings';
     case VIEW_MEMBERS = 'viewMembers';
     case MANAGE_MEMBERS = 'manageMembers';
+    case REMOVE_MEMBERS = 'removeMembers';
     case INVITE = 'invite';
     case UPDATE = 'update';
     case MANAGE_DOMAINS = 'manageDomains';

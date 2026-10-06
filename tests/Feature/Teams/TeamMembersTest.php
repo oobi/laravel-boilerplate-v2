@@ -31,6 +31,7 @@ class TeamMembersTest extends TestCase
             TeamPermission::VIEW_MEMBERS,
             TeamPermission::MANAGE_MEMBERS,
             TeamPermission::INVITE_MEMBERS,
+            TeamPermission::REMOVE_MEMBERS,
             TeamPermission::UPDATE_TEAM,
         ]);
         Team::createRole(self::MEMBER);

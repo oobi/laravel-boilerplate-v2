@@ -238,10 +238,9 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->requiresConfirmation()
                         ->modalDescription(fn (User $record): string => team_trans('members.remove_confirm', ['person' => $record->name, 'name' => $this->team->name]))
                         // Never the primary owner; a co-owner only by someone who could demote them.
-                        ->hidden(fn (User $record): bool => $this->team->isPrimaryOwner($record)
-                            || ! $this->canActOn($record))
+                        ->hidden(fn (User $record): bool => ! $this->canRemove($record))
                         ->action(function (User $record): void {
-                            abort_if($this->team->isPrimaryOwner($record) || ! $this->canActOn($record), 403);
+                            abort_unless($this->canRemove($record), 403);
 
                             $this->team->removeMember($record);
                             $this->ownerIds = null;
@@ -249,7 +248,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
 
                             Notification::make()->title(team_trans('members.removed'))->success()->send();
                         }),
-                ])->visible(fn (): bool => $this->canManage() || $this->canManageOwners() || (bool) auth()->user()?->canImpersonate()),
+                ])->visible(fn (): bool => $this->canManage() || Gate::allows(TeamAbility::REMOVE_MEMBERS, $this->team) || $this->canManageOwners() || (bool) auth()->user()?->canImpersonate()),
             ])
             ->searchPlaceholder(team_trans('members.search'))
             ->emptyStateHeading(team_trans('members.empty'))
@@ -367,30 +366,37 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     }
 
     /**
-     * May the current actor manage this particular member? Nobody manages their
-     * own row from inside the team (the same self-protection UserPolicy applies
-     * to deactivating/deleting yourself) — the primary owner in particular must
-     * not be able to strip their own role and lock themselves out; a system
-     * admin can still fix anyone from the admin area. An owner (primary or co-)
-     * is shielded — only manage-owners authority (primary owner / system admin)
-     * may touch them; a regular member needs manage-members. Used for role
-     * change, suspend/reinstate and removal.
+     * May the current actor act on this particular member, with the ability the
+     * act needs (manageMembers for role change and suspend/reinstate,
+     * removeMembers for removal)? Nobody acts on their own row from inside the
+     * team (the same self-protection UserPolicy applies to deactivating or
+     * deleting yourself): the primary owner in particular must not be able to
+     * strip their own role and lock themselves out; a system admin can still fix
+     * anyone from the admin area. An owner (primary or co-) is shielded: only
+     * manage-owners authority (primary owner / system admin) may touch them.
+     * Anyone else needs the ability and to hold every team permission the
+     * member holds (TeamCoverage).
      */
-    private function canActOn(User $member): bool
+    private function canActOn(User $member, TeamAbility $ability = TeamAbility::MANAGE_MEMBERS): bool
     {
         if ($member->is(auth()->user()) && ! Gate::allows(SystemPermission::MANAGE_TEAMS->value)) {
             return false;
         }
 
-        // Owners have their own shield; anyone else only by someone who holds all they hold here.
         return $this->isOwner($member)
             ? $this->canManageOwners()
-            : $this->canManage() && TeamCoverage::coversRoleNames(
+            : Gate::allows($ability, $this->team) && TeamCoverage::coversRoleNames(
                 auth()->user(),
                 $this->team,
                 // The roles every member holds, already loaded once for the table.
                 $this->isSuspended($member) ? [] : $this->memberRoles()->get($member->id, []),
             );
+    }
+
+    /** Removal: canActOn() with its own ability, and never the primary owner. */
+    private function canRemove(User $member): bool
+    {
+        return ! $this->team->isPrimaryOwner($member) && $this->canActOn($member, TeamAbility::REMOVE_MEMBERS);
     }
 
     /** Whether the viewer may give or take away this team role (TeamCoverage). */

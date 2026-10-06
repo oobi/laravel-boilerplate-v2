@@ -278,6 +278,7 @@ return [
     'permissions' => [
         'view_members' => 'View :Members',
         'manage_members' => 'Manage :Members',
+        'remove_members' => 'Remove :Members',
         'invite_members' => 'Invite :Members',
         'view_settings' => 'View :Team Settings',
         'update_team' => 'Update :Team Settings',

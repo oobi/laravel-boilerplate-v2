@@ -42,7 +42,7 @@ class TeamOwnershipTest extends TestCase
     {
         parent::setUp();
 
-        Team::createRole(self::TEAM_ADMIN, [TeamPermission::MANAGE_MEMBERS]);
+        Team::createRole(self::TEAM_ADMIN, [TeamPermission::MANAGE_MEMBERS, TeamPermission::REMOVE_MEMBERS]);
         Team::createRole('Member');
 
         // Unrelated accounts first, so user ids and team_user pivot ids diverge: a
