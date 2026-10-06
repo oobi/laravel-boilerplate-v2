@@ -14,13 +14,6 @@ use Tests\TestCase;
 
 class PanelRegistryTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        PanelRegistry::flush();
-
-        parent::tearDown();
-    }
-
     public function test_it_resolves_and_sorts_panels(): void
     {
         PanelRegistry::for('test.show')->add(SecondPanelStub::class, FirstPanelStub::class);

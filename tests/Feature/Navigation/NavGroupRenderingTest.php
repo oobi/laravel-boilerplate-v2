@@ -14,13 +14,6 @@ class NavGroupRenderingTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function tearDown(): void
-    {
-        NavRegistry::flush();
-
-        parent::tearDown();
-    }
-
     public function test_registered_groups_render_with_a_separator_and_label(): void
     {
         NavRegistry::group('test-group')

@@ -111,4 +111,7 @@ still apply:
 - Don't commit code unless explicitly asked. Make the change and leave it
   uncommitted for review; only run `git commit` (or push, or open a PR) when
   the user asks for it in so many words.
-- Run tests after every change, and before pushing. Use `php artisan test`
+- Run tests after every change. While iterating: `php artisan test --compact
+  <file>` or `--filter=<method>` for what you touched. Before pushing or
+  merging: `php artisan test --parallel --compact`. Never a bare serial
+  `php artisan test` over the whole suite.

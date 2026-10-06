@@ -69,7 +69,7 @@ Both are plain fluent objects — no interface to implement:
 | `active(string ...$routes)` | item, group | `routeIs()` patterns that mark it active; item defaults to `[$route]`, group defaults to the **union of its items' active routes** |
 | `can(?string $ability)` | item, group | Gate ability name required to see it; `null` (default) means always visible |
 | `order(int)` | item, group | Sort position among all top-level nodes |
-| `add(NavItem ...$items)` | group only | Appends items to the group |
+| `add(NavItem ...$items)` | group only | Appends items to the group; an item with a name already in the group replaces it in place |
 
 ## Why groups auto-open across route boundaries
 

@@ -1,9 +1,10 @@
 #!/bin/sh
-# Formats staged PHP files with Pint. Bypass with `git commit --no-verify`.
+# Formats staged PHP files with Pint, then runs the fast suite. Bypass with
+# `git commit --no-verify`.
 #
-# Deliberately fast: the test suite runs in .githooks/pre-push, not here, so
-# committing stays cheap and you can commit as often as you like. Nothing
-# broken reaches a remote — push is the gate, commit is not.
+# The fast suite (`composer test:fast`) is the full suite minus the `slow`
+# group, in parallel, so it takes seconds. Commits that touch no PHP skip both
+# steps. The full suite, slow group included, still runs in .githooks/pre-push.
 
 . "$(dirname "$0")/php-path.sh"
 require_php
@@ -25,5 +26,14 @@ fi
 
 # Re-stage any files Pint reformatted so the fixes are included in the commit.
 echo "$STAGED_PHP_FILES" | xargs git add
+
+echo "Running the fast test suite..."
+composer test:fast
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "Commit aborted: tests failed. Fix the failures or use --no-verify to skip this check."
+    exit 1
+fi
 
 exit 0
