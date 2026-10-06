@@ -53,7 +53,23 @@
                     <div class="flex flex-col gap-4">
                         <x-form-input name="first_name" :label="__('admin.first_name')" :floating="false" wire:model="first_name" required />
                         <x-form-input name="last_name" :label="__('admin.last_name')" :floating="false" wire:model="last_name" required />
-                        <x-form-input name="email" type="email" :label="__('admin.email')" :floating="false" wire:model="email" required />
+                        <x-form-input name="email" type="email" :label="__('admin.email')" :floating="false" wire:model.live.debounce.400ms="email" required />
+
+                        @if ($this->emailIsChanging)
+                            <div>
+                                <x-form-input
+                                    name="current_password"
+                                    type="password"
+                                    :label="__('admin.current_password')"
+                                    :floating="false"
+                                    autocomplete="current-password"
+                                    aria-describedby="current_password_hint"
+                                    wire:model="current_password"
+                                    required
+                                />
+                                <p id="current_password_hint" class="mt-1 text-xs text-base-content/70">{{ __('admin.email_change_password_hint') }}</p>
+                            </div>
+                        @endif
 
                         <div>
                             <x-button.action type="submit">

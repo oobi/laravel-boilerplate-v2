@@ -34,6 +34,7 @@ return [
     'confirm_password_prompt' => 'For your security, please confirm your password to continue.',
     'new_password' => 'New Password',
     'current_password' => 'Current Password',
+    'email_change_password_hint' => 'Enter your current password to change your email address.',
     'status' => 'Status',
     'active' => 'Active',
     'inactive' => 'Inactive',

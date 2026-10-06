@@ -2,6 +2,7 @@
 
 use App\Enums\SystemPermission;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Middleware\DenyLowAssuranceSessions;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Roles\CreateRole;
 use App\Livewire\Admin\Roles\ManageRoles;
@@ -41,7 +42,8 @@ Route::domain($apexHost)->group(function (): void {
 // staff (see docs/architecture.md). One route per tab; each 2FA action is guarded by its
 // own inline password prompt. Deliberately NOT behind ACCESS_ADMIN_PANEL: a profile is not
 // an admin page, and in host mode this group binds to account_host, never admin_host.
-Route::domain($accountHost)->middleware(['auth', 'verified'])->group(function (): void {
+// Impersonated sessions are refused: only the account holder manages it.
+Route::domain($accountHost)->middleware(['auth', 'verified', DenyLowAssuranceSessions::class])->group(function (): void {
     Route::get('/profile', EditProfile::class)->name('profile.edit');
     Route::get('/profile/password', EditPassword::class)->name('profile.password');
     Route::get('/profile/two-factor', TwoFactorAuthentication::class)->name('profile.two-factor');

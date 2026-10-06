@@ -44,6 +44,7 @@ class EditProfileTest extends TestCase
             ->set('first_name', 'Updated')
             ->set('last_name', 'Name')
             ->set('email', 'updated@example.com')
+            ->set('current_password', 'password')
             ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class));
 
         $user = $user->fresh();
@@ -111,6 +112,7 @@ class EditProfileTest extends TestCase
         Livewire::actingAs($user)
             ->test(EditProfile::class)
             ->set('email', 'Mixed.Case@Example.TEST')
+            ->set('current_password', 'password')
             ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
             ->assertHasNoErrors();
 
@@ -128,5 +130,59 @@ class EditProfileTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame('keeper@example.com', $user->fresh()->email);
+    }
+
+    /** A new email is a route to a password reset, so it takes the password (GitHub #16). */
+    public function test_changing_the_email_needs_the_current_password(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        Livewire::actingAs($user)
+            ->test(EditProfile::class)
+            ->set('email', 'new@example.com')
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasErrors(['current_password' => 'required']);
+
+        $this->assertSame('old@example.com', $user->fresh()->email);
+    }
+
+    public function test_changing_the_email_with_a_wrong_password_is_refused(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        Livewire::actingAs($user)
+            ->test(EditProfile::class)
+            ->set('email', 'new@example.com')
+            ->set('current_password', 'not-my-password')
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasErrors(['current_password' => __('auth.current_password_mismatch')]);
+
+        $this->assertSame('old@example.com', $user->fresh()->email);
+    }
+
+    public function test_the_password_field_appears_only_once_the_email_changes(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        Livewire::actingAs($user)
+            ->test(EditProfile::class)
+            ->assertDontSeeHtml('id="current_password"')
+            ->set('email', 'new@example.com')
+            ->assertSeeHtml('id="current_password"');
+    }
+
+    /** The address is stored lowercased, so a case-only edit is no change. */
+    public function test_a_case_only_email_edit_needs_no_password(): void
+    {
+        $user = User::factory()->create(['email' => 'same@example.com']);
+
+        Livewire::actingAs($user)
+            ->test(EditProfile::class)
+            ->set('email', ' Same@Example.com ')
+            ->assertDontSeeHtml('id="current_password"')
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasNoErrors();
+
+        $this->assertSame('same@example.com', $user->fresh()->email);
     }
 }

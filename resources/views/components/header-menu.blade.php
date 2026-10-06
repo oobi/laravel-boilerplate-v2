@@ -8,7 +8,11 @@
         <x-avatar color="primary" :user="auth()->user()" size="md" />
     </div>
     <ul tabindex="0" class="dropdown-content menu z-[60] mt-2 w-52 rounded-box bg-base-100 p-2 shadow">
-        <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
+        {{-- Impersonated sessions can't open the profile (DenyLowAssuranceSessions). --}}
+        @php($showProfile = ! \App\Support\Auth\SessionAssurance::isLow())
+        @if ($showProfile)
+            <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
+        @endif
 
         {{-- Cross-area / add-on links (e.g. the teams tier) — their own group, divided from account
              management above and functionally distinct from any same-named sidebar item. See
@@ -17,7 +21,9 @@
         @if ($accountMenuLinks->isNotEmpty())
             {{-- An <hr> inside the li, not an empty li — daisyUI collapses an empty menu li, so the divider needs content.
                  p-0 strips daisyUI's item padding (its :where() rules are zero-specificity) so the rule isn't offset. --}}
-            <li aria-hidden="true" class="pointer-events-none"><hr class="mx-3 my-1 border-base-200 p-0"></li>
+            @if ($showProfile)
+                <li aria-hidden="true" class="pointer-events-none"><hr class="mx-3 my-1 border-base-200 p-0"></li>
+            @endif
             @foreach ($accountMenuLinks as $item)
                 <li>
                     <a href="{{ $item->getUrl() }}">{{ $item->getLabel() }}</a>

@@ -76,11 +76,15 @@ own host, separate from the admin-only host — see `docs/teams-domains.md`.
 A **customer-facing frontend is deliberately out of scope**: a real app's public
 UI is unpredictable (Blade, Livewire, Inertia, or a headless Nuxt/SPA), so the
 boilerplate ships the reusable *capability* rather than a throwaway view. Account
-logic is already presentation-agnostic — the Fortify actions in
+logic is already presentation-agnostic: the Fortify actions in
 `app/Actions/Fortify`, the `App\Livewire\Concerns\ConfirmsPassword` trait, and
-Fortify's headless endpoints. A team building customer account screens (in any
-stack) reuses those; whether "users without a system role" are customers or
-something else is their business logic to decide, not the boilerplate's.
+Fortify's headless endpoints. Fortify's profile-information and password
+endpoints are switched off because the Livewire pages call the actions directly;
+re-enabling them for a headless frontend keeps them behind
+`DenyLowAssuranceSessions` (see [authentication.md](authentication.md)). A team
+building customer account screens (in any stack) reuses those; whether "users
+without a system role" are customers or something else is their business logic
+to decide, not the boilerplate's.
 
 ## Testing & dev tooling
 

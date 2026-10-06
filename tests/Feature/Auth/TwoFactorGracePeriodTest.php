@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Auth;
 
 use App\Actions\Impersonation\StartImpersonation;
+use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -104,11 +105,14 @@ class TwoFactorGracePeriodTest extends TestCase
 
     public function test_an_impersonating_admin_sees_the_users_banner_without_starting_their_clock(): void
     {
-        $target = $this->subjectUser();
+        $target = tap(User::factory()->withPermission(SystemPermission::ACCESS_ADMIN_PANEL)->create())->assignRole($this->flaggedRole());
         $this->actingAs(User::factory()->superAdmin()->twoFactorEnabled()->create());
         app(StartImpersonation::class)->handle($target);
 
-        $this->get('/profile')->assertSee(trans_choice('auth.two_factor_grace_warning', 14));
+        // Without the setup button: the profile refuses an impersonated session.
+        $this->get(route('dashboard'))
+            ->assertSee(trans_choice('auth.two_factor_grace_warning', 14))
+            ->assertDontSee(__('auth.two_factor_setup_cta'));
 
         $this->assertNull($target->fresh()->two_factor_grace_started_at);
     }
