@@ -150,7 +150,9 @@ class AppServiceProvider extends ServiceProvider
      * ("target must not be a super admin", not just "not self") a simple
      * self-comparison can't express, so they always defer to UserPolicy's
      * own check even for a super admin actor. `delete`/`toggleActive`/
-     * `grantSuperAdmin` are excluded only when the target is the actor
+     * `grantSuperAdmin` and the credential abilities (`updatePasswordDirectly`,
+     * `sendPasswordResetLink`, `resetTwoFactorAuthentication`,
+     * `manageTwoFactorGrace`) are excluded only when the target is the actor
      * themselves, so those still fall through to UserPolicy's self-check.
      */
     private function registerAuthorization(): void
@@ -167,7 +169,7 @@ class AppServiceProvider extends ServiceProvider
             $target = $arguments[0] ?? null;
             $isSelf = $target instanceof User && $target->id === $actor->id;
 
-            if ($isSelf && in_array($ability, [UserAbility::DELETE->value, UserAbility::TOGGLE_ACTIVE->value, UserAbility::GRANT_SUPER_ADMIN->value], true)) {
+            if ($isSelf && in_array($ability, [UserAbility::DELETE->value, UserAbility::TOGGLE_ACTIVE->value, UserAbility::GRANT_SUPER_ADMIN->value, UserAbility::UPDATE_PASSWORD_DIRECTLY->value, UserAbility::SEND_PASSWORD_RESET_LINK->value, UserAbility::RESET_TWO_FACTOR_AUTHENTICATION->value, UserAbility::MANAGE_TWO_FACTOR_GRACE->value], true)) {
                 return null;
             }
 

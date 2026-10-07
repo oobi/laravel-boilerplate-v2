@@ -365,6 +365,31 @@ class ShowUserTest extends TestCase
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $target->email]);
     }
 
+    /** Your own password changes on your profile, which asks for the current one (GitHub #17). */
+    public function test_reset_password_isnt_offered_on_your_own_page(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $admin])
+            ->assertActionHidden('resetPassword');
+    }
+
+    public function test_an_admin_cant_force_disable_their_own_two_factor(): void
+    {
+        $admin = User::factory()->superAdmin()->twoFactorEnabled()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $admin])
+            ->assertDontSeeText(__('admin.force_disable_2fa'))
+            ->call('callPanelAction', 'security', 'force-disable-2fa')
+            ->set('confirmablePassword', 'password')
+            ->call('confirmPassword')
+            ->assertForbidden();
+
+        $this->assertNotNull($admin->fresh()->two_factor_secret);
+    }
+
     public function test_support_sends_a_password_reset_link_instead_of_setting_one_directly(): void
     {
         Notification::fake();

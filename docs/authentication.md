@@ -33,29 +33,32 @@ channel), self-service is **deliberately exempt** from the "send a reset link"
 rule that applies to admins. Forcing a reset email here would be worse UX *and*
 weaker security.
 
-### 2. Admin sets a password directly — `EditUser::resetPasswordAction()`
+### 2. Admin sets a password directly: `ShowUser::resetPasswordAction()`
 
 Typing a new password straight into another user's account needs the **`set
 user passwords`** permission (and a super admin always can), gated by the
 `updatePasswordDirectly` policy ability. Like every act on another user, it
 also needs the actor to cover the target: hold every permission they hold
 (see docs/permissions.md), so nobody sets the password of someone with more
-access than themselves.
+access than themselves. Never your own account, a super admin included: your
+own password changes only through path 1, which asks for the current one.
 
 The reason it's its own permission, apart from `manage users`: an admin
 setting *someone else's* secret is a takeover primitive. They end up knowing a
 working credential for an account that isn't theirs, so it's granted
 deliberately, never as part of routine user management.
 
-### 3. Admin sends a reset link — `EditUser::resetPasswordAction()`
+### 3. Admin sends a reset link: `ShowUser::resetPasswordAction()`
 
 Everyone else authorized to manage users gets this path instead of path 2. It
 triggers `Password::sendResetLink()`, so the **owner** is the only one who ever
 chooses the new secret. Gated by the `sendPasswordResetLink` ability, which
-requires the `manage users` permission **and** forbids targeting a super admin
-(`! $target->isSuperAdmin()`) — you cannot even email a reset link at a super
-admin. Net effect: a super admin's password can only ever be changed by
-themselves (path 1) or another super admin (path 2).
+requires the `manage users` permission **and** that the actor covers the
+target (`Coverage::coversUser()`, which nobody but a super admin passes for a
+super admin), so you cannot even email a reset link at a super admin. Not for
+your own account either: that is path 1. Net effect: a super admin's password
+can only ever be changed by themselves (path 1) or another super admin
+(path 2).
 
 ### Cutting off other sessions — `AuthenticateSession`
 

@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\HtmlString;
 
 /**
  * The core name/email/active fields on the Edit User form. Role and
@@ -49,13 +50,16 @@ class UserInformationFormSection implements FormSection
                     // of an existing address fails validation instead of the DB unique
                     // index. Soft-deleted users keep their row, so `unique` (which is not
                     // soft-delete aware) correctly treats their email as still reserved.
+                    // Your own email changes on your profile, which asks for the current password.
                     Forms\Components\TextInput::make('email')
                         ->label(__('admin.email'))
                         ->email()
                         ->required()
                         ->maxLength(255)
                         ->mutateStateForValidationUsing(fn (?string $state): ?string => User::normalizeEmail($state))
-                        ->unique('users', 'email', ignorable: $subject),
+                        ->unique('users', 'email', ignorable: $subject)
+                        ->disabled($isSelf)
+                        ->helperText($isSelf ? new HtmlString(__('admin.own_email_on_profile', ['url' => e(route('profile.edit'))])) : null),
 
                     Forms\Components\Toggle::make('active')
                         ->label(__('admin.active'))
