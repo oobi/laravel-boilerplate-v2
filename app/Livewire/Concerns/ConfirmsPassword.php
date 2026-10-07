@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Concerns;
 
+use App\Support\Auth\PasswordChecks;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Locked;
 
 /**
@@ -57,7 +57,16 @@ trait ConfirmsPassword
 
     public function confirmPassword(): void
     {
-        if (! Hash::check($this->confirmablePassword, Auth::user()->password)) {
+        $this->resetErrorBag('confirmablePassword');
+        $user = Auth::user();
+
+        if (PasswordChecks::tooMany($user)) {
+            $this->addError('confirmablePassword', PasswordChecks::throttledMessage($user));
+
+            return;
+        }
+
+        if (! PasswordChecks::passes($user, $this->confirmablePassword)) {
             $this->addError('confirmablePassword', __('auth.password'));
 
             return;

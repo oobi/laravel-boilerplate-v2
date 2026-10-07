@@ -6,6 +6,7 @@ namespace Tests\Feature\Profile;
 
 use App\Livewire\Profile\TwoFactorAuthentication;
 use App\Models\User;
+use App\Support\Auth\PasswordChecks;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Fortify;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
@@ -253,5 +254,47 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
             ->call('confirmPassword');
 
         $this->assertNull($user->fresh()->two_factor_secret);
+    }
+
+    /** The password prompt can't be guessed without limit (GitHub #18). */
+    public function test_too_many_wrong_passwords_at_the_prompt_are_throttled(): void
+    {
+        $user = User::factory()->twoFactorEnabled()->create();
+        $page = Livewire::actingAs($user)->test(TwoFactorAuthentication::class)->call('showRecoveryCodes');
+
+        foreach (range(1, 5) as $attempt) {
+            $page->set('confirmablePassword', 'wrong-'.$attempt)->call('confirmPassword')->assertHasErrors(['confirmablePassword']);
+        }
+
+        $page->set('confirmablePassword', 'password')->call('confirmPassword')
+            ->assertHasErrors(['confirmablePassword'])
+            ->assertSee('Too many wrong passwords.')
+            ->assertSet('showingRecoveryCodes', false);
+    }
+
+    public function test_the_right_password_at_the_prompt_clears_earlier_misses(): void
+    {
+        $user = User::factory()->twoFactorEnabled()->create();
+        $page = Livewire::actingAs($user)->test(TwoFactorAuthentication::class)->call('showRecoveryCodes');
+
+        foreach (range(1, 4) as $attempt) {
+            $page->set('confirmablePassword', 'wrong-'.$attempt)->call('confirmPassword');
+        }
+
+        $page->set('confirmablePassword', 'password')->call('confirmPassword')->assertHasNoErrors();
+
+        $this->assertFalse(PasswordChecks::tooMany($user));
+    }
+
+    public function test_an_empty_password_at_the_prompt_isnt_counted(): void
+    {
+        $user = User::factory()->twoFactorEnabled()->create();
+        $page = Livewire::actingAs($user)->test(TwoFactorAuthentication::class)->call('showRecoveryCodes');
+
+        foreach (range(1, 5) as $attempt) {
+            $page->set('confirmablePassword', '')->call('confirmPassword');
+        }
+
+        $this->assertFalse(PasswordChecks::tooMany($user));
     }
 }
