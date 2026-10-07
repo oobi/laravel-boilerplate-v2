@@ -6,6 +6,7 @@ namespace App\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Locked;
 
 /**
  * Inline "sudo" confirmation for sensitive Livewire actions.
@@ -22,9 +23,12 @@ trait ConfirmsPassword
 
     public string $confirmablePassword = '';
 
+    /** The pending action and its arguments are set server-side only, by startConfirmingPassword(). */
+    #[Locked]
     public ?string $confirmingAction = null;
 
     /** @var array<int, string> */
+    #[Locked]
     public array $confirmingArguments = [];
 
     /**
@@ -43,7 +47,7 @@ trait ConfirmsPassword
         $this->confirmingArguments = $arguments;
     }
 
-    /** Dismissing the modal from the client (Esc / backdrop / ✕) flips this off via wire:model — clean up to match stopConfirmingPassword(). */
+    /** Dismissing the modal from the client (Esc / backdrop / ✕) flips this off via wire:model: clean up to match stopConfirmingPassword(). */
     public function updatedConfirmingPassword(bool $value): void
     {
         if (! $value) {
@@ -87,8 +91,8 @@ trait ConfirmsPassword
 
     /**
      * Run the just-confirmed action. Implementations MUST map $action to a
-     * protected method with an explicit match() — never a dynamic
-     * `$this->{$action}()` call — so a crafted request cannot use the confirm
+     * protected method with an explicit match(), never a dynamic
+     * `$this->{$action}()` call, so a crafted request cannot use the confirm
      * flow to invoke arbitrary component methods.
      *
      * @param  array<int, string>  $arguments
