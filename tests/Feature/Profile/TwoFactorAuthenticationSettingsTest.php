@@ -8,7 +8,9 @@ use App\Livewire\Profile\TwoFactorAuthentication;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Fortify;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
@@ -22,7 +24,7 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
         $this->get('/profile/two-factor')->assertRedirect('/login');
     }
 
-    /** The profile is not an admin page — any signed-in, verified user reaches it. */
+    /** The profile is not an admin page: any signed-in, verified user reaches it. */
     public function test_users_without_admin_access_can_view_the_two_factor_page(): void
     {
         $user = User::factory()->create();
@@ -143,6 +145,79 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
             ->set('confirmablePassword', 'password')
             ->call('confirmPassword')
             ->assertSet('showingRecoveryCodes', true);
+    }
+
+    /**
+     * The browser can't skip the password prompt by setting what to reveal, or
+     * swap the pending action (GitHub #15).
+     *
+     * @return array<string, array{string, mixed}>
+     */
+    public static function lockedState(): array
+    {
+        return [
+            'QR code' => ['showingQrCode', true],
+            'confirmation' => ['showingConfirmation', true],
+            'recovery codes' => ['showingRecoveryCodes', true],
+            'pending action' => ['confirmingAction', 'disable'],
+            'pending arguments' => ['confirmingArguments', ['x']],
+        ];
+    }
+
+    #[DataProvider('lockedState')]
+    public function test_the_browser_cant_set_what_the_page_reveals(string $property, mixed $value): void
+    {
+        $user = User::factory()->twoFactorEnabled()->create();
+
+        $this->expectException(CannotUpdateLockedPropertyException::class);
+
+        Livewire::actingAs($user)->test(TwoFactorAuthentication::class)->set($property, $value);
+    }
+
+    /** Fortify keeps the existing secret, so enabling again would show it. */
+    public function test_two_factor_cant_be_enabled_again_while_on(): void
+    {
+        $user = User::factory()->twoFactorEnabled()->create();
+        $secret = $user->two_factor_secret;
+
+        Livewire::actingAs($user)
+            ->test(TwoFactorAuthentication::class)
+            ->call('enableTwoFactorAuthentication')
+            ->assertForbidden();
+
+        $this->assertSame($secret, $user->fresh()->two_factor_secret);
+    }
+
+    /** Cancel and confirm belong to a setup in progress, not to two-factor that is already on (refused before the code is checked). */
+    public function test_cancel_and_confirm_dont_work_outside_a_setup(): void
+    {
+        $user = User::factory()->twoFactorEnabled()->create();
+        $page = Livewire::actingAs($user)->test(TwoFactorAuthentication::class);
+
+        $page->call('cancelSetup')->assertForbidden();
+        $this->assertNotNull($user->fresh()->two_factor_secret);
+
+        Livewire::actingAs($user)->test(TwoFactorAuthentication::class)
+            ->set('code', '123456')
+            ->call('confirmTwoFactorAuthentication')
+            ->assertForbidden();
+    }
+
+    /** A setup confirmed in another tab can't be cancelled from a tab still showing it. */
+    public function test_a_stale_tab_cant_cancel_a_setup_confirmed_elsewhere(): void
+    {
+        $user = User::factory()->create();
+        $staleTab = Livewire::actingAs($user)
+            ->test(TwoFactorAuthentication::class)
+            ->call('enableTwoFactorAuthentication')
+            ->set('confirmablePassword', 'password')
+            ->call('confirmPassword')
+            ->assertSet('showingConfirmation', true);
+        $user->forceFill(['two_factor_confirmed_at' => now()])->save();
+
+        $staleTab->call('cancelSetup')->assertForbidden();
+
+        $this->assertNotNull($user->fresh()->two_factor_secret);
     }
 
     public function test_recovery_codes_can_be_regenerated_after_confirming_the_password(): void

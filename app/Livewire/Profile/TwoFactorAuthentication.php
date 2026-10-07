@@ -14,12 +14,13 @@ use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 use Laravel\Fortify\Features;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
- * "Two-Factor" — the Two-Factor tab of the self-service account area. Every
- * action that sets up or tears down a second factor — enabling, disabling,
- * regenerating recovery codes, or revealing the existing codes — is guarded by
+ * "Two-Factor": the Two-Factor tab of the self-service account area. Every
+ * action that sets up or tears down a second factor (enabling, disabling,
+ * regenerating recovery codes, or revealing the existing codes) is guarded by
  * an inline password prompt (see the ConfirmsPassword trait); the current user
  * must re-enter their password each time. See EditProfile for why this renders
  * in the neutral account layout rather than the admin shell.
@@ -30,10 +31,14 @@ class TwoFactorAuthentication extends Component
     use ConfirmsPassword;
     use RequiresFullSession;
 
+    /** What to reveal is decided server-side, after the password prompt: never settable from the browser. */
+    #[Locked]
     public bool $showingQrCode = false;
 
+    #[Locked]
     public bool $showingConfirmation = false;
 
+    #[Locked]
     public bool $showingRecoveryCodes = false;
 
     public string $code = '';
@@ -50,8 +55,11 @@ class TwoFactorAuthentication extends Component
         }
     }
 
+    /** Not while it's on: Fortify keeps the existing secret, so this would show it again. */
     public function enableTwoFactorAuthentication(): void
     {
+        abort_if($this->enabled, 403);
+
         $this->startConfirmingPassword('enable');
     }
 
@@ -70,9 +78,11 @@ class TwoFactorAuthentication extends Component
         $this->startConfirmingPassword('showRecoveryCodes');
     }
 
-    /** Entering a valid TOTP code is itself proof of possession — no password prompt needed here. */
+    /** Only during a setup. Entering a valid TOTP code is itself proof of possession, so no password prompt. */
     public function confirmTwoFactorAuthentication(): void
     {
+        $this->ensureSettingUp();
+
         app(ConfirmTwoFactorAuthentication::class)(Auth::user(), $this->code);
 
         $this->reset('code');
@@ -81,9 +91,11 @@ class TwoFactorAuthentication extends Component
         $this->showingRecoveryCodes = true;
     }
 
-    /** Abandoning an unconfirmed setup only discards a secret the user just generated — no password prompt needed. */
+    /** Only during a setup: abandoning it discards a secret the user just generated, so no password prompt. */
     public function cancelSetup(): void
     {
+        $this->ensureSettingUp();
+
         app(DisableTwoFactorAuthentication::class)(Auth::user());
 
         $this->resetSetupState();
@@ -112,6 +124,8 @@ class TwoFactorAuthentication extends Component
 
     protected function performEnable(): void
     {
+        abort_if($this->enabled, 403);
+
         app(EnableTwoFactorAuthentication::class)(Auth::user());
 
         $this->showingQrCode = true;
@@ -140,6 +154,16 @@ class TwoFactorAuthentication extends Component
     protected function performShowRecoveryCodes(): void
     {
         $this->showingRecoveryCodes = true;
+    }
+
+    /**
+     * A setup this page started and that is still unconfirmed: the locked flag
+     * says this page started one, the database that no other tab has since
+     * confirmed it.
+     */
+    private function ensureSettingUp(): void
+    {
+        abort_unless($this->showingConfirmation && is_null(Auth::user()->two_factor_confirmed_at), 403);
     }
 
     private function resetSetupState(): void
