@@ -4,6 +4,7 @@ namespace Tests\Feature\Profile;
 
 use App\Livewire\Profile\EditProfile;
 use App\Models\User;
+use App\Support\Auth\PasswordChecks;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -184,5 +185,54 @@ class EditProfileTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame('same@example.com', $user->fresh()->email);
+    }
+
+    /** The password an email change asks for is counted like any other (GitHub #18). */
+    public function test_too_many_wrong_passwords_on_an_email_change_are_throttled(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+        $page = Livewire::actingAs($user)->test(EditProfile::class)->set('email', 'new@example.com');
+
+        foreach (range(1, 5) as $attempt) {
+            $page->set('current_password', 'wrong-'.$attempt)->call('updateProfileInformation', app(UpdatesUserProfileInformation::class));
+        }
+
+        $page->set('current_password', 'password')->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasErrors(['current_password'])
+            ->assertSee('Too many wrong passwords.');
+
+        $this->assertSame('old@example.com', $user->fresh()->email);
+    }
+
+    public function test_a_name_change_still_saves_while_throttled(): void
+    {
+        $user = User::factory()->create();
+        foreach (range(1, 5) as $attempt) {
+            PasswordChecks::failed($user);
+        }
+
+        Livewire::actingAs($user)->test(EditProfile::class)
+            ->set('first_name', 'Renamed')
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasNoErrors();
+
+        $this->assertSame('Renamed', $user->fresh()->first_name);
+    }
+
+    /** Without an email change the password isn't checked at all, so it can't be used to guess. */
+    public function test_a_password_sent_without_an_email_change_is_ignored(): void
+    {
+        $user = User::factory()->create();
+        foreach (range(1, 5) as $attempt) {
+            PasswordChecks::failed($user);
+        }
+
+        Livewire::actingAs($user)->test(EditProfile::class)
+            ->set('first_name', 'Renamed')
+            ->set('current_password', 'not-my-password')
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasNoErrors();
+
+        $this->assertSame('Renamed', $user->fresh()->first_name);
     }
 }

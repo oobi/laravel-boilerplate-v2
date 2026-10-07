@@ -140,6 +140,22 @@ password reset, outside the impersonation trail.
 - Profile links and the two-factor banner's setup button are hidden for these
   sessions.
 
+## Throttling
+
+- **Wrong passwords inside a session** (the confirm-password prompt, Change
+  password, the password an email change asks for, and Fortify's own
+  confirm-password form) are counted per person by
+  `App\Support\Auth\PasswordChecks`: five a minute across all of them, then
+  "Too many wrong passwords". A right password clears the count; a field left
+  empty doesn't count.
+- **Fortify's endpoints** get named throttles in `AppServiceProvider`:
+  `password-confirm` (per person), `password-reset` on forgot and reset
+  password, `register` on sign-up, and `login` (per email and address).
+- **No per-address ceilings yet.** Until trusted proxies are set (#19)
+  everyone behind the proxy shares one address, so a ceiling per address would
+  let one source lock everyone out. Add them with #19.
+- A throttled request gets the branded `errors/429` page.
+
 ## Mandatory two-factor
 
 2FA can be made mandatory **per role**. Turn on **Require two factor

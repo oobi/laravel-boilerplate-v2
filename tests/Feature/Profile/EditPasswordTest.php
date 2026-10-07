@@ -6,6 +6,7 @@ namespace Tests\Feature\Profile;
 
 use App\Livewire\Profile\EditPassword;
 use App\Models\User;
+use App\Support\Auth\PasswordChecks;
 use Illuminate\Auth\Events\OtherDeviceLogout;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -99,5 +100,55 @@ class EditPasswordTest extends TestCase
         // Without this middleware on the web group, a changed password hash
         // would never invalidate the user's sessions on their other devices.
         $this->assertContains(AuthenticateSession::class, $webGroup);
+    }
+
+    /** A hijacked session can't guess the current password without limit (GitHub #18). */
+    public function test_too_many_wrong_current_passwords_are_throttled(): void
+    {
+        $user = User::factory()->create();
+        $page = Livewire::actingAs($user)->test(EditPassword::class);
+
+        foreach (range(1, 5) as $attempt) {
+            $page->set('current_password', 'wrong-'.$attempt)->set('password', 'a-new-long-password-1')->set('password_confirmation', 'a-new-long-password-1')
+                ->call('updatePassword', app(UpdatesUserPasswords::class))
+                ->assertHasErrors(['current_password']);
+        }
+
+        $page->set('current_password', 'password')->set('password', 'a-new-long-password-1')->set('password_confirmation', 'a-new-long-password-1')
+            ->call('updatePassword', app(UpdatesUserPasswords::class))
+            ->assertHasErrors(['current_password'])
+            ->assertSee('Too many wrong passwords.');
+
+        $this->assertTrue(Hash::check('password', $user->fresh()->password));
+    }
+
+    public function test_the_right_current_password_clears_earlier_misses(): void
+    {
+        $user = User::factory()->create();
+        $page = Livewire::actingAs($user)->test(EditPassword::class);
+
+        foreach (range(1, 4) as $attempt) {
+            $page->set('current_password', 'wrong-'.$attempt)->set('password', 'a-new-long-password-1')->set('password_confirmation', 'a-new-long-password-1')
+                ->call('updatePassword', app(UpdatesUserPasswords::class));
+        }
+
+        $page->set('current_password', 'password')->set('password', 'a-new-long-password-1')->set('password_confirmation', 'a-new-long-password-1')
+            ->call('updatePassword', app(UpdatesUserPasswords::class))
+            ->assertHasNoErrors();
+
+        $this->assertFalse(PasswordChecks::tooMany($user));
+    }
+
+    public function test_a_current_password_left_empty_isnt_counted(): void
+    {
+        $user = User::factory()->create();
+        $page = Livewire::actingAs($user)->test(EditPassword::class);
+
+        foreach (range(1, 5) as $attempt) {
+            $page->set('current_password', '')->set('password', 'a-new-long-password-1')->set('password_confirmation', 'a-new-long-password-1')
+                ->call('updatePassword', app(UpdatesUserPasswords::class));
+        }
+
+        $this->assertFalse(PasswordChecks::tooMany($user));
     }
 }

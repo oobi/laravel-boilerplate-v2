@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Livewire\Profile;
 
 use App\Livewire\Concerns\RequiresFullSession;
+use App\Support\Auth\PasswordChecks;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -31,11 +33,31 @@ class EditPassword extends Component
 
     public function updatePassword(UpdatesUserPasswords $updater): void
     {
-        $updater->update(Auth::user(), [
-            'current_password' => $this->current_password,
-            'password' => $this->password,
-            'password_confirmation' => $this->password_confirmation,
-        ]);
+        $this->resetErrorBag();
+        $user = Auth::user();
+
+        if (PasswordChecks::tooMany($user)) {
+            $this->addError('current_password', PasswordChecks::throttledMessage($user));
+
+            return;
+        }
+
+        try {
+            $updater->update($user, [
+                'current_password' => $this->current_password,
+                'password' => $this->password,
+                'password_confirmation' => $this->password_confirmation,
+            ]);
+        } catch (ValidationException $exception) {
+            // A password left empty isn't a guess.
+            if ($this->current_password !== '' && array_key_exists('current_password', $exception->errors())) {
+                PasswordChecks::failed($user);
+            }
+
+            throw $exception;
+        }
+
+        PasswordChecks::clear($user);
 
         // Invalidate the user's sessions on every other device, keeping this
         // one authenticated. Without this, AuthenticateSession would also log

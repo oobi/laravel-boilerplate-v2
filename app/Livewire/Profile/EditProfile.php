@@ -6,9 +6,11 @@ namespace App\Livewire\Profile;
 
 use App\Livewire\Concerns\RequiresFullSession;
 use App\Models\User;
+use App\Support\Auth\PasswordChecks;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -52,13 +54,37 @@ class EditProfile extends Component
 
     public function updateProfileInformation(UpdatesUserProfileInformation $updater): void
     {
-        $updater->update(Auth::user(), array_filter([
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'email' => $this->email,
-            'current_password' => $this->current_password,
-            'photo' => $this->photo,
-        ], fn ($value): bool => ! is_null($value)));
+        $this->resetErrorBag();
+        $user = Auth::user();
+        $changingEmail = $this->emailIsChanging;
+
+        // The current password an email change asks for is counted like any other (PasswordChecks).
+        if ($changingEmail && PasswordChecks::tooMany($user)) {
+            $this->addError('current_password', PasswordChecks::throttledMessage($user));
+
+            return;
+        }
+
+        try {
+            $updater->update($user, array_filter([
+                'first_name' => $this->first_name,
+                'last_name' => $this->last_name,
+                'email' => $this->email,
+                'current_password' => $this->current_password,
+                'photo' => $this->photo,
+            ], fn ($value): bool => ! is_null($value)));
+        } catch (ValidationException $exception) {
+            // A password left empty isn't a guess.
+            if ($this->current_password !== '' && array_key_exists('current_password', $exception->errors())) {
+                PasswordChecks::failed($user);
+            }
+
+            throw $exception;
+        }
+
+        if ($changingEmail) {
+            PasswordChecks::clear($user);
+        }
 
         $this->reset('photo', 'current_password');
 

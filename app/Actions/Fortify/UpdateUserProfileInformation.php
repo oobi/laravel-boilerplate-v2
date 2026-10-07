@@ -34,7 +34,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'current_password' => [Rule::requiredIf($changingEmail), 'nullable', 'string', 'current_password:'.config('fortify.guard', 'web')],
+            // Only checked for an email change: otherwise a stray value would be a free password guess.
+            'current_password' => [Rule::excludeIf(! $changingEmail), 'required', 'string', 'current_password:'.config('fortify.guard', 'web')],
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
         ], [
             'current_password.current_password' => __('auth.current_password_mismatch'),

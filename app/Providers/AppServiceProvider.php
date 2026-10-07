@@ -15,6 +15,7 @@ use App\Http\Responses\RegisterResponse;
 use App\Http\Responses\VerifyEmailResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Support\Auth\PasswordChecks;
 use App\Support\Roles\AdminRoleScopes;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
@@ -184,6 +186,14 @@ class AppServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::authenticateUsing(app(AuthenticateUser::class));
+        // Fortify's confirm-password form counts wrong passwords with the in-app prompts.
+        Fortify::confirmPasswordsUsing(function (User $user, ?string $password): bool {
+            if (PasswordChecks::tooMany($user)) {
+                throw ValidationException::withMessages(['password' => PasswordChecks::throttledMessage($user)]);
+            }
+
+            return PasswordChecks::passes($user, (string) $password);
+        });
         Fortify::viewPrefix('auth.');
 
         $this->app->singleton(SuccessfulPasswordResetLinkRequestResponse::class, PasswordResetLinkResponse::class);
@@ -197,21 +207,48 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
         $this->app->singleton(VerifyEmailResponseContract::class, VerifyEmailResponse::class);
 
-        // Impersonated sessions stay off Fortify's two-factor routes too,
-        // added once every route is registered (a cached route table carries it).
+        // Middleware Fortify's own routes lack, added once every route is
+        // registered (a cached route table carries it): impersonated sessions
+        // stay off the two-factor routes, and the password and sign-up
+        // endpoints get throttles.
         if (! $this->app->routesAreCached()) {
             $this->app->booted(function (): void {
-                collect(Route::getRoutes()->getRoutes())
-                    ->filter(fn (RouteDefinition $route): bool => DenyLowAssuranceSessions::guardsFortifyRoute($route->getName()))
-                    ->each(fn (RouteDefinition $route) => $route->middleware(DenyLowAssuranceSessions::class));
+                $throttles = [
+                    'password.confirm.store' => 'throttle:password-confirm',
+                    'password.email' => 'throttle:password-reset',
+                    'password.update' => 'throttle:password-reset',
+                    'register.store' => 'throttle:register',
+                ];
+
+                collect(Route::getRoutes()->getRoutes())->each(function (RouteDefinition $route) use ($throttles): void {
+                    if (DenyLowAssuranceSessions::guardsFortifyRoute($route->getName())) {
+                        $route->middleware(DenyLowAssuranceSessions::class);
+                    }
+
+                    if (isset($throttles[$route->getName()])) {
+                        $route->middleware($throttles[$route->getName()]);
+                    }
+                });
             });
         }
 
+        // Per email and address. No ceiling per address yet: until trusted proxies
+        // are set (#19) every visitor behind a proxy shares its address, so one
+        // would let a single source lock everyone out.
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
         });
+
+        RateLimiter::for('password-confirm', fn (Request $request) => Limit::perMinute(5)->by('password-confirm:'.$request->user()->getAuthIdentifier()));
+
+        // Per email and address, like login (see above for why not per address alone).
+        RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by('password-reset:'.Str::lower((string) $request->input('email')).'|'.$request->ip()));
+
+        // Per email and address too, which barely slows sign-up abuse (a new email
+        // each time); the per-address ceiling it needs waits on #19 like login's.
+        RateLimiter::for('register', fn (Request $request) => Limit::perMinute(5)->by('register:'.Str::lower((string) $request->input('email')).'|'.$request->ip()));
 
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
