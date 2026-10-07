@@ -133,12 +133,15 @@ resolves the panel by `key()` and invokes the matching closure — panels never
 need to know anything about the host component.
 
 ```blade
-<button
-    wire:click="callPanelAction('security', 'force-disable-2fa')"
-    wire:confirm="Are you sure?"
->
-    Force Disable 2FA
-</button>
+{{-- Shown only to someone the action's own ability allows (it re-checks when it runs). --}}
+@can(UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, $user)
+    <button
+        wire:click="callPanelAction('security', 'force-disable-2fa')"
+        wire:confirm="Are you sure?"
+    >
+        Force Disable 2FA
+    </button>
+@endcan
 ```
 
 ## Practical example: an Edit form section
@@ -175,7 +178,9 @@ provider. `EditUser::save()` persists
 matching column on `User` — no changes needed in `EditUser.php` itself.
 (Filament excludes `disabled()` fields from that state automatically, which
 is how the existing "can't change your own active status" rule works
-without any special-casing in `EditUser`.) A **sensitive** field (one with
+without any special-casing in `EditUser`. Your own email is disabled the same
+way, and `EditUser::isChangingOwnEmail()` also refuses it at save, in case a
+section exposes the field.) A **sensitive** field (one with
 its own distinct ability, e.g. role/super-admin assignment) should not go
 through this generic path at all — see `ShowUser::manageRolesAction()`/
 `toggleSuperAdminAction()` for the pattern: its own Filament Action,

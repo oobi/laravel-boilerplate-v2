@@ -140,6 +140,24 @@ class UserPolicyTest extends TestCase
         $this->assertTrue(Gate::forUser($setter)->allows('updatePasswordDirectly', $target));
     }
 
+    /** Your own password and two-factor change on your profile, which asks for the current password (GitHub #17). */
+    public function test_nobody_manages_their_own_password_or_two_factor_from_the_admin_area(): void
+    {
+        $actors = [
+            User::factory()->superAdmin()->create(),
+            User::factory()->withPermission(SystemPermission::SET_USER_PASSWORDS, SystemPermission::MANAGE_USERS)->create(),
+        ];
+
+        $abilities = [UserAbility::UPDATE_PASSWORD_DIRECTLY, UserAbility::SEND_PASSWORD_RESET_LINK, UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, UserAbility::MANAGE_TWO_FACTOR_GRACE];
+
+        foreach ($actors as $actor) {
+            foreach ($abilities as $ability) {
+                $this->assertFalse(Gate::forUser($actor)->allows($ability->value, $actor), $ability->value.' on yourself');
+                $this->assertTrue(Gate::forUser($actor)->allows($ability->value, User::factory()->create()), $ability->value.' on someone else');
+            }
+        }
+    }
+
     public function test_actor_with_manage_users_permission_can_send_a_password_reset_link_but_not_to_a_super_admin(): void
     {
         $manager = User::factory()->withPermission(SystemPermission::MANAGE_USERS)->create();

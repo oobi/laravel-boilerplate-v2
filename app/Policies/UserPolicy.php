@@ -63,15 +63,22 @@ class UserPolicy
         return $actor->isSuperAdmin() && $actor->id !== $target->id;
     }
 
-    /** Setting a password directly is its own permission; without it, a reset link. */
+    /**
+     * Setting a password directly is its own permission; without it, a reset
+     * link. Never your own, including a super admin: that goes through the
+     * profile, which asks for the current password.
+     */
     public function updatePasswordDirectly(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::SET_USER_PASSWORDS->value) && Coverage::coversUser($actor, $target);
+        return $actor->id !== $target->id
+            && $actor->checkPermissionTo(SystemPermission::SET_USER_PASSWORDS->value) && Coverage::coversUser($actor, $target);
     }
 
+    /** Not for yourself: your own password changes on your profile. */
     public function sendPasswordResetLink(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
+        return $actor->id !== $target->id
+            && $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     /** Nobody may toggle their own active state, including a super admin. */
@@ -84,15 +91,21 @@ class UserPolicy
         return $actor->checkPermissionTo(SystemPermission::SUSPEND_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
+    /** Never your own, including a super admin: the profile asks for the password. */
     public function resetTwoFactorAuthentication(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
+        return $actor->id !== $target->id
+            && $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
-    /** Resetting a user's mandatory-2FA grace period, which also lifts a lockout (see GracePeriod). */
+    /**
+     * Resetting a user's mandatory-2FA grace period, which also lifts a lockout
+     * (see GracePeriod). Never your own, or mandatory 2FA could be put off forever.
+     */
     public function manageTwoFactorGrace(User $actor, User $target): bool
     {
-        return $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
+        return $actor->id !== $target->id
+            && $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
     /** Nobody may delete their own account, including a super admin. */

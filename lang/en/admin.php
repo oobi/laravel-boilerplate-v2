@@ -34,6 +34,7 @@ return [
     'confirm_password_prompt' => 'For your security, please confirm your password to continue.',
     'new_password' => 'New Password',
     'current_password' => 'Current Password',
+    'own_email_on_profile' => 'Change your own email on <a href=":url" class="link">your profile</a>.',
     'email_change_password_hint' => 'Enter your current password to change your email address.',
     'status' => 'Status',
     'active' => 'Active',

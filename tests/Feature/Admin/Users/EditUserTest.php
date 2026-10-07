@@ -4,6 +4,12 @@ namespace Tests\Feature\Admin\Users;
 
 use App\Livewire\Admin\Users\EditUser;
 use App\Models\User;
+use App\Support\Panels\Concerns\HasPanelMetadata;
+use App\Support\Panels\Contracts\FormSection;
+use App\Support\Panels\Registry\PanelRegistry;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -48,6 +54,47 @@ class EditUserTest extends TestCase
 
         $target->refresh();
         $this->assertSame('Updated Name', $target->name);
+    }
+
+    /** Your own email changes on your profile, which asks for the current password (GitHub #17). */
+    public function test_an_admin_cant_change_their_own_email_here(): void
+    {
+        $admin = User::factory()->superAdmin()->create(['email' => 'me@example.com']);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $admin])
+            ->assertFormFieldDisabled('email')
+            ->set('data.email', 'elsewhere@example.com')
+            ->set('data.first_name', 'Renamed')
+            ->call('save');
+
+        $admin->refresh();
+        $this->assertSame('me@example.com', $admin->email);
+        $this->assertSame('Renamed', $admin->first_name);
+    }
+
+    /** The write boundary refuses it too, should a form section expose the field. */
+    public function test_saving_refuses_a_change_to_your_own_email_from_any_section(): void
+    {
+        PanelRegistry::for('users.edit')->classes = [OpenEmailFormSection::class];
+        $admin = User::factory()->superAdmin()->create(['email' => 'me@example.com']);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $admin])
+            ->set('data.email', 'elsewhere@example.com')
+            ->call('save')
+            ->assertForbidden();
+
+        $this->assertSame('me@example.com', $admin->fresh()->email);
+    }
+
+    public function test_the_email_note_links_to_your_profile(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $admin])
+            ->assertSeeHtml('href="'.route('profile.edit').'"');
     }
 
     public function test_support_can_update_a_regular_user(): void
@@ -138,5 +185,17 @@ class EditUserTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertSame('mixed.case@example.test', $target->fresh()->email);
+    }
+}
+
+/** An add-on style section that exposes the email field without locking it. */
+class OpenEmailFormSection implements FormSection
+{
+    use HasPanelMetadata;
+
+    /** @return array<int, Component> */
+    public function components(Model $subject): array
+    {
+        return [TextInput::make('email')->email()];
     }
 }

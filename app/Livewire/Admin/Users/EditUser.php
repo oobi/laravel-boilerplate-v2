@@ -65,6 +65,8 @@ class EditUser extends Component implements HasSchemas
             Gate::authorize(UserAbility::TOGGLE_ACTIVE, $this->user);
         }
 
+        abort_if($this->isChangingOwnEmail($data), 403);
+
         $this->user->update($data);
 
         Notification::make()
@@ -78,5 +80,18 @@ class EditUser extends Component implements HasSchemas
     public function render(): View
     {
         return view('livewire.admin.users.edit-user');
+    }
+
+    /**
+     * Your own email changes on your profile, which asks for the current
+     * password: refused here even if a form section exposes the field.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function isChangingOwnEmail(array $data): bool
+    {
+        return $this->user->is(Auth::user())
+            && array_key_exists('email', $data)
+            && User::normalizeEmail($data['email']) !== $this->user->email;
     }
 }

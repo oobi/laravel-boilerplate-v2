@@ -148,9 +148,13 @@ user at all.
 Super admins bypass all of this via a single, hardcoded
 `Gate::before()` in `AppServiceProvider::registerAuthorization()` — it's a
 boolean flag on `User`, never a role, and is excluded from a small list of
-abilities (`impersonate`, `assignRole`, self-targeting `delete`/
-`toggleActive`/`grantSuperAdmin`) that must always defer to their real
-Policy check instead.
+abilities (`impersonate`, `assignRole`, and on their own account `delete`/
+`toggleActive`/`grantSuperAdmin` and the credential abilities
+`updatePasswordDirectly`/`sendPasswordResetLink`/
+`resetTwoFactorAuthentication`/`manageTwoFactorGrace`) that must always defer
+to their real Policy check instead. The admin area never manages your own
+password, two-factor or email: that is the profile, which asks for the
+current password.
 
 ## Assigning permissions to a role: the Manage Roles screen only
 

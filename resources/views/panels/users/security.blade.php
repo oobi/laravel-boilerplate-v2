@@ -39,16 +39,18 @@
     @endif
 
     @if ($user->two_factor_confirmed_at)
-        <x-action-list class="mt-2">
-            <x-button.danger
-                type="button"
-                wire:click="callPanelAction('security', 'force-disable-2fa')"
-                variant="soft"
-                size="sm"
-            >
-                {{ __('admin.force_disable_2fa') }}
-            </x-button.danger>
-        </x-action-list>
+        @can(UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, $user)
+            <x-action-list class="mt-2">
+                <x-button.danger
+                    type="button"
+                    wire:click="callPanelAction('security', 'force-disable-2fa')"
+                    variant="soft"
+                    size="sm"
+                >
+                    {{ __('admin.force_disable_2fa') }}
+                </x-button.danger>
+            </x-action-list>
+        @endcan
     @elseif ($canResetGrace)
         @can(UserAbility::MANAGE_TWO_FACTOR_GRACE, $user)
             <x-action-list class="mt-2">
