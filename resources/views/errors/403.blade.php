@@ -1,5 +1,7 @@
 @extends('layouts.error')
 
+@section('page-title', __('Access denied'))
+
 @section('content')
     <p class="ui-error-code">403</p>
 

@@ -1,5 +1,7 @@
 @extends('layouts.error')
 
+@section('page-title', __('Too many tries'))
+
 @section('content')
     <p class="ui-error-code">429</p>
 

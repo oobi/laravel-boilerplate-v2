@@ -1,5 +1,7 @@
 <div>
-    @section('page-title', $team->name)
+    @section('page-parent', $team->name)
+    @section('page-parent-url', route('teams.show', $team))
+    @section('page-title', team_trans('nav.members'))
 
     @include('teams::livewire.admin.teams.partials.header', ['team' => $team, 'current' => 'members'])
 

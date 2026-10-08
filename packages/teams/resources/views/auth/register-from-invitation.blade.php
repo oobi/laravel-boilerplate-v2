@@ -1,5 +1,7 @@
 @extends('layouts.login')
 
+@section('page-title', team_trans('invitations.register.title', ['name' => $invitation->team->name]))
+
 @section('content')
     <h1 class="text-xl font-semibold">{{ team_trans('invitations.register.title', ['name' => $invitation->team->name]) }}</h1>
     <p class="text-sm text-base-content/60">

@@ -1,5 +1,7 @@
 @extends('layouts.error')
 
+@section('page-title', __('Down for maintenance'))
+
 @section('content')
     <p class="ui-error-code">503</p>
 

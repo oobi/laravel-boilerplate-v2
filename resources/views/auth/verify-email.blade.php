@@ -1,5 +1,7 @@
 @extends('layouts.login')
 
+@section('page-title', __('Verify Email'))
+
 @section('content')
     <h1 class="text-xl font-semibold">{{ __('Verify Email') }}</h1>
 

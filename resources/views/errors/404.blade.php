@@ -1,5 +1,7 @@
 @extends('layouts.error')
 
+@section('page-title', __('Page not found'))
+
 @section('content')
     <p class="ui-error-code">404</p>
 

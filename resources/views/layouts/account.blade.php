@@ -5,6 +5,6 @@
      takes the viewer back to wherever they belong (their admin dashboard, their
      team, or the public landing). Shares the same sidebar-less shape as the
      teams tier's lobby layout. --}}
-<x-app-shell :home="\App\Support\Auth\Destination::home(auth()->user())" :title="$title ?? null" :breadcrumbs="false">
+<x-app-shell :home="\App\Support\Auth\Destination::home(auth()->user())" :title="$title ?? null" :title-context="__('admin.my_profile')" :breadcrumbs="false">
     {{ $slot }}
 </x-app-shell>

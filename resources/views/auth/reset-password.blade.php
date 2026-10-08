@@ -1,5 +1,7 @@
 @extends('layouts.login')
 
+@section('page-title', __('Reset Password'))
+
 @section('content')
     <h1 class="text-xl font-semibold">{{ __('Reset Password') }}</h1>
 

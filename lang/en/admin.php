@@ -7,7 +7,6 @@ return [
 
     'users' => 'Users',
     'users_description' => 'Manage system users and their roles.',
-    'list' => 'List',
     'create' => 'Create',
     // Also the row-action label on the users table — one definition, not two.
     'edit' => 'Edit',

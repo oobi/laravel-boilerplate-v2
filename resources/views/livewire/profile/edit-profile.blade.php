@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-6">
-    @section('page-title', __('admin.my_profile'))
+    @section('page-title', __('admin.profile'))
 
     <x-page-header :title="__('admin.my_profile')" />
 

@@ -1,4 +1,6 @@
 <div>
+    @section('page-parent', $user->name)
+    @section('page-parent-url', route('users.show', $user))
     @section('page-title', __('admin.edit'))
 
     <x-page-header>

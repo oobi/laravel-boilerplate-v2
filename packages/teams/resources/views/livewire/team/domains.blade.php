@@ -1,4 +1,5 @@
 <div class="flex flex-col gap-6">
+    @section('page-title', team_trans('domains.title'))
     {{-- Domains is a tab within the Settings section, so it keeps that section's stable header. --}}
     <x-page-header
         :title="team_trans('settings.heading')"

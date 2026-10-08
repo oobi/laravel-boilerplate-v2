@@ -1,4 +1,5 @@
 <div class="flex flex-col gap-6">
+    @section('page-title', team_trans('nav.dashboard'))
     <x-page-header :title="$team->name" :description="team_trans('dashboard.subtitle')" />
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

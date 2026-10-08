@@ -1,4 +1,5 @@
 <div class="flex flex-col gap-6">
+    @section('page-title', team_trans('settings.heading'))
     <x-page-header
         :title="team_trans('settings.heading')"
         :description="team_trans('settings.description', ['name' => $team->name])"
