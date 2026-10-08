@@ -70,6 +70,19 @@
     padding-block: calc((var(--size-field, 0.25rem) * 10 - 1.5rem) / 2);
 }
 
+/* The date picker opens a calendar like a select opens its list, so it gets the select's chevron
+   (Filament's own image, position and size) rather than reading as a plain text box. */
+.fi-fo-date-time-picker .fi-fo-date-time-picker-trigger {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+}
+
+.fi-fo-date-time-picker .fi-fo-date-time-picker-display-text-input {
+    padding-inline-end: 2rem;
+}
+
 .fi-select-input div[x-ref='select'],
 .fi-select-input .fi-select-input-btn {
     min-height: calc(var(--size-field, 0.25rem) * 10);
