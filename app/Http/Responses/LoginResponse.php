@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
 use Laravel\Fortify\Fortify;
 
 /**
@@ -19,9 +20,12 @@ use Laravel\Fortify\Fortify;
  * tier sends team users to their team area). Only the tail — a user with
  * neither a system role nor an add-on destination — is configurable via
  * `config('fortify.login_fallback')`: the public home, or, for a login-only
- * backoffice with no public page, rejected outright.
+ * backoffice with no public page, rejected outright. Used for a password login
+ * and for one that passed the two-factor challenge alike. AuthenticateUser
+ * already refuses a rejected user before they're logged in; the reject here is
+ * the backstop.
  */
-class LoginResponse implements LoginResponseContract
+class LoginResponse implements LoginResponseContract, TwoFactorLoginResponseContract
 {
     public function toResponse($request): RedirectResponse|JsonResponse
     {

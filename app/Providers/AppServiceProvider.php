@@ -38,6 +38,7 @@ use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
 use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract;
 use Laravel\Fortify\Fortify;
 
@@ -201,6 +202,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Route each user to the right area after login (see LoginResponse).
         $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+        // A login that passed the two-factor challenge lands the same way.
+        $this->app->singleton(TwoFactorLoginResponseContract::class, LoginResponse::class);
 
         // After registering / verifying, land the user in the app (Destination::home),
         // not on config('fortify.home') — the public landing. See the response classes.

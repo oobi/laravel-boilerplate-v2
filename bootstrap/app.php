@@ -2,9 +2,11 @@
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureRememberedUserIsNotLockedOut;
+use App\Support\Auth\Destination;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\AuthenticateSession;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -17,6 +19,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Theme preference is a plain (unencrypted) cookie so it can be read
         // by the blocking inline script in <head> before Alpine/Livewire boot.
         $middleware->encryptCookies(except: ['theme']);
+
+        // A signed-in user opening a guest page (login, register, reset) goes
+        // where they belong, not to the admin dashboard (which 403s a non-admin).
+        // One nothing claims (a remember-me login under LOGIN_FALLBACK=reject)
+        // still lands on the public home; an app with no public page should
+        // send `/` somewhere that signs them out.
+        $middleware->redirectUsersTo(fn (Request $request): string => Destination::home($request->user()));
 
         // AuthenticateSession stamps the user's password hash into the session
         // and logs the session out on its next request once that hash changes.
