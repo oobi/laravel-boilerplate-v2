@@ -92,4 +92,11 @@ class ModalComponentsTest extends TestCase
         $this->blade('<x-modal wire:model="open">Body</x-modal>')
             ->assertSeeInOrder(['<dialog', 'wire:ignore.self', 'x-data='], false);
     }
+
+    /** Opening announces itself so the app shell closes its menu drawer first (GitHub #32). */
+    public function test_opening_announces_itself_to_the_app_shell(): void
+    {
+        $this->blade('<x-modal wire:model="open">Body</x-modal>')
+            ->assertSeeInOrder(['ui-modal-opened', 'showModal()'], false);
+    }
 }

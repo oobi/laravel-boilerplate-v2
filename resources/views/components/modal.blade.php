@@ -57,12 +57,13 @@
 
 {{-- wire:ignore.self: on a Livewire re-render (say a wrong password's error) the morph
      would call close() on the open dialog, as its new HTML has no `open`. This morphs
-     the contents and leaves the element alone; Alpine keeps the open state in step. --}}
+     the contents and leaves the element alone; Alpine keeps the open state in step.
+     ui-modal-opened tells the app shell to close its menu drawer first. --}}
 <dialog
     wire:key="modal-{{ $model }}"
     wire:ignore.self
-    x-data="{ open: $wire.entangle('{{ $model }}') }"
-    x-init="$watch('open', value => value ? (! $el.open && $el.showModal()) : ($el.open && $el.close())); if (open) $el.showModal()"
+    x-data="{ open: $wire.entangle('{{ $model }}'), show() { this.$dispatch('ui-modal-opened'); this.$el.showModal() } }"
+    x-init="$watch('open', value => value ? (! $el.open && show()) : ($el.open && $el.close())); if (open) show()"
     x-on:close="open = false"
     @unless ($closeable) x-on:cancel.prevent @endunless
     @if ($closeable) x-on:click="$event.target === $el && (open = false)" @endif
