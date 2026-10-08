@@ -72,7 +72,7 @@ class PageTitleTest extends TestCase
 
         $this->assertTitled(team_trans('nav.dashboard')." · Bob's & Co", team_route('team.dashboard', $team));
         $this->assertTitled(team_trans('members.title')." · Bob's & Co", team_route('team.members', $team));
-        $this->assertTitled(team_trans('settings.heading')." · Bob's & Co", team_route('team.settings', $team));
+        $this->assertTitled(team_trans('nav.settings')." · Bob's & Co", team_route('team.settings', $team));
         $this->assertTitled(team_trans('select.title'), route('team.select'));
     }
 
