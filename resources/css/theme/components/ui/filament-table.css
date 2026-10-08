@@ -122,7 +122,7 @@ th.fi-ta-selection-cell,
 .fi-ta-header-cell:not(.fi-ta-header-cell-sorted)
     .fi-ta-header-cell-sort-btn:focus-visible
     .fi-icon {
-    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+    @apply text-muted;
 }
 
 .fi-ta-header-cell-sorted .fi-icon {
@@ -182,4 +182,12 @@ th.fi-ta-selection-cell,
     border: 0;
     box-shadow: none;
     border-radius: 0;
+}
+
+/*
+| Filament paints an empty cell's placeholder ("Never", "None") gray-400,
+| 3.35:1 on white; muted text clears AA. Infolists match (filament-infolist.css).
+*/
+.fi-ta-placeholder {
+    @apply text-muted;
 }

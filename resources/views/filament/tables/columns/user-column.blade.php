@@ -20,7 +20,7 @@
                 {{ $record->list_name }}
             </a>
         </div>
-        <div class="text-sm text-base-content/60">
+        <div class="text-sm text-muted">
             {{ $record->email }}
         </div>
         @if ($isCurrent)

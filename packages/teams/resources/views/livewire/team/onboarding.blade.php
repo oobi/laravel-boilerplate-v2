@@ -7,7 +7,7 @@
         {{ team_trans('onboarding.title') }}
     </h1>
 
-    <p class="mt-2 text-sm text-base-content/60">
+    <p class="mt-2 text-sm text-muted">
         @if ($canCreate)
             {{ team_trans('onboarding.can_create') }}
         @else

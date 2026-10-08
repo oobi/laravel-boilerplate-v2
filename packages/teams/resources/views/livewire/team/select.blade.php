@@ -32,7 +32,7 @@
                     <x-heroicon-o-chevron-right class="mt-0.5 h-5 w-5 shrink-0 text-base-content/40 group-hover:text-primary" />
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/60">
+                <div class="flex flex-wrap items-center gap-2 text-sm text-muted">
                     @if ($team->isOwnedBy(auth()->user()))
                         <x-badge color="success">{{ team_trans('members.owner') }}</x-badge>
                     @endif

@@ -49,14 +49,14 @@
                         <x-avatar :user="$user" size="sm" color="info"/>
                         <div class="min-w-0 flex-1">
                             <div class="truncate text-sm font-medium">{{ $user->name }}</div>
-                            <div class="truncate text-xs text-base-content/60">{{ $user->email }}</div>
+                            <div class="truncate text-xs text-muted">{{ $user->email }}</div>
                         </div>
                         @if ($user->is_super_admin)
                             <x-badge value="{{ __('admin.super_admin') }}" color="error" />
                         @endif
                     </div>
                 @empty
-                    <div class="text-sm text-base-content/60">{{ __('No recent users') }}</div>
+                    <div class="text-sm text-muted">{{ __('No recent users') }}</div>
                 @endforelse
             </div>
         </x-card>
@@ -83,7 +83,7 @@
             <div class="flex flex-col gap-3">
                 @foreach (['Metric A' => '12', 'Metric B' => '87%', 'Metric C' => '3.4k'] as $metricLabel => $metricValue)
                     <div class="flex items-center justify-between">
-                        <span class="text-sm text-base-content/60">{{ $metricLabel }}</span>
+                        <span class="text-sm text-muted">{{ $metricLabel }}</span>
                         <span class="font-semibold">{{ $metricValue }}</span>
                     </div>
                 @endforeach

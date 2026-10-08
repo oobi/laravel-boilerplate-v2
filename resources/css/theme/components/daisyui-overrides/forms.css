@@ -62,3 +62,15 @@ legend.ui-form-label {
     border-radius: 0.5rem;
     border-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
 }
+
+/*
+| Placeholder text is text (WCAG 1.4.3): Tailwind's preflight gives it 50% of
+| the field's colour (3.2:1) and Filament gray-400 (2.6:1). Muted clears AA.
+| Full opacity, or daisyUI's 0.5 inside an .input wrapper would stack on it.
+| Filament's searchable select draws its placeholder as an element.
+*/
+::placeholder,
+.fi-select-input-placeholder {
+    @apply text-muted;
+    opacity: 1;
+}

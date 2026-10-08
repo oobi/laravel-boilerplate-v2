@@ -4,7 +4,7 @@
 --}}
 @props(['root' => null, 'withResource' => true])
 @php $crumbs = \App\Support\Breadcrumbs::trail($root, $withResource); @endphp
-<div class="min-w-0 flex-1 truncate text-sm text-base-content/60">
+<div class="min-w-0 flex-1 truncate text-sm text-muted">
     @foreach ($crumbs as $index => $crumb)
         {{-- Root crumb and its separator are dropped on mobile to save space --}}
         @if ($index === 1)

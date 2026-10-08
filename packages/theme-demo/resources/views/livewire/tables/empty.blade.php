@@ -23,7 +23,7 @@
                                 <div class="flex flex-col items-center gap-2 py-12 text-center">
                                     <x-heroicon-o-inbox class="h-10 w-10 text-base-content/30" />
                                     <p class="font-medium">{{ __('theme-demo::messages.tables_empty_message') }}</p>
-                                    <p class="text-sm text-base-content/60">{{ __('theme-demo::messages.tables_empty_hint') }}</p>
+                                    <p class="text-sm text-muted">{{ __('theme-demo::messages.tables_empty_hint') }}</p>
                                 </div>
                             </td>
                         </tr>

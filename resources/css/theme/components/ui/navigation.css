@@ -20,11 +20,7 @@
 
 @layer components {
     .nav-section-label {
-        @apply px-3 py-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider;
-
-        @variant dark {
-            @apply text-base-content/50;
-        }
+        @apply px-3 py-2 text-xs font-medium text-muted uppercase tracking-widest;
 
         &:not(:first-child) {
             @apply pt-4 mt-4;

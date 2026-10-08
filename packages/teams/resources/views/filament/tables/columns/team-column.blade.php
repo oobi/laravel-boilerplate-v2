@@ -10,7 +10,7 @@
             {{ $record->name }}
         </a>
     </div>
-    <div class="text-sm text-base-content/60">
+    <div class="text-sm text-muted">
         {{ $record->slug }}
     </div>
 </div>

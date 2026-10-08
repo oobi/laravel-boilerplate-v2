@@ -4,7 +4,7 @@
 
 @section('content')
     <h1 class="text-xl font-semibold">{{ team_trans('invitations.register.title', ['name' => $invitation->team->name]) }}</h1>
-    <p class="text-sm text-base-content/60">
+    <p class="text-sm text-muted">
         {{ team_trans('invitations.register.intro', ['name' => $invitation->team->name, 'app' => config('app.name')]) }}
     </p>
 

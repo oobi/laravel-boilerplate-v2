@@ -8,7 +8,7 @@
     - value: the headline number/text
     - color: daisyUI semantic color for the icon (primary, secondary, accent,
       neutral, info, success, warning, error) — default info
-    - footerColor: semantic color for the footer note text — default neutral
+    - footerColor: semantic color for the footer note text, default neutral (muted text)
 --}}
 @props([
     'label' => '',
@@ -32,7 +32,8 @@
         </div>
 
         @isset($footer)
-            <div class="mt-2 text-sm text-{{ $footerColor }}">
+            {{-- Neutral reads as muted text: the neutral token itself misses AA as text on the dark page. --}}
+            <div @class(['mt-2 text-sm', $footerColor === 'neutral' ? 'text-muted' : 'text-'.$footerColor])>
                 {{ $footer }}
             </div>
         @endisset

@@ -1,12 +1,12 @@
 <div class="flex flex-col gap-4">
     <dl class="flex flex-col gap-3 text-sm">
         <div>
-            <dt class="text-base-content/60">{{ team_trans('ownership.primary') }}</dt>
+            <dt class="text-muted">{{ team_trans('ownership.primary') }}</dt>
             <dd class="font-medium">{{ $this->primaryOwner()->name }}</dd>
         </div>
 
         <div>
-            <dt class="text-base-content/60">{{ team_trans('ownership.co_owners') }}</dt>
+            <dt class="text-muted">{{ team_trans('ownership.co_owners') }}</dt>
             <dd>
                 @forelse ($this->coOwners() as $coOwner)
                     <div class="flex items-center justify-between gap-2">
