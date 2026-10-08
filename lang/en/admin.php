@@ -49,6 +49,8 @@ return [
         'choose_date' => 'Choose a date…',
         'any_date' => 'Any date',
         'clear' => 'Clear',
+        'previous_month' => 'Previous month',
+        'next_month' => 'Next month',
     ],
     'all_roles' => 'All Roles',
     'last_login' => 'Last Login',

@@ -25,6 +25,12 @@ class DatePickerComponentTest extends TestCase
             ->assertDontSee(__('admin.date_picker.clear'));
     }
 
+    public function test_the_month_arrows_carry_names_for_screen_readers(): void
+    {
+        $this->blade('<x-date-picker model="date" mode="single" />')
+            ->assertSeeInOrder(['slot="previous"', __('admin.date_picker.previous_month'), 'slot="next"', __('admin.date_picker.next_month')], false);
+    }
+
     public function test_a_clearable_picker_offers_clear(): void
     {
         $this->blade('<x-date-picker model="date" mode="single" clearable />')
