@@ -81,4 +81,15 @@ class ModalComponentsTest extends TestCase
             ->assertSee('btn-warning', false)
             ->assertSee('role="dialog"', false);
     }
+
+    /**
+     * A Livewire re-render (a wrong password's error) must not close an open
+     * dialog (GitHub #35). The closing happens in the browser's morph, which a
+     * PHP test can't run, so this pins the attribute that prevents it.
+     */
+    public function test_the_dialog_is_left_alone_when_livewire_re_renders(): void
+    {
+        $this->blade('<x-modal wire:model="open">Body</x-modal>')
+            ->assertSeeInOrder(['<dialog', 'wire:ignore.self', 'x-data='], false);
+    }
 }

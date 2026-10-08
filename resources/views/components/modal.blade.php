@@ -16,6 +16,9 @@
       <form wire:submit="…"> so a footer submit button posts the form.
     - closeable: bool (default true) — show the ✕ and allow Esc / backdrop close.
 
+    The <dialog>'s own attributes (role from variant, class) are set once, at first
+    render; give it a different wire:key or wire:model to change them while open.
+
     Slots: default = body; `footer` = action buttons (rendered cancel-left,
     action-right; see docs/design-system.md). Buttons may call `open = false`
     (Alpine) to dismiss.
@@ -52,8 +55,12 @@
     $role = $variant === 'danger' ? 'alertdialog' : 'dialog';
 @endphp
 
+{{-- wire:ignore.self: on a Livewire re-render (say a wrong password's error) the morph
+     would call close() on the open dialog, as its new HTML has no `open`. This morphs
+     the contents and leaves the element alone; Alpine keeps the open state in step. --}}
 <dialog
     wire:key="modal-{{ $model }}"
+    wire:ignore.self
     x-data="{ open: $wire.entangle('{{ $model }}') }"
     x-init="$watch('open', value => value ? (! $el.open && $el.showModal()) : ($el.open && $el.close())); if (open) $el.showModal()"
     x-on:close="open = false"
