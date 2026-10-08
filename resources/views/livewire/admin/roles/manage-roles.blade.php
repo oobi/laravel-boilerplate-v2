@@ -1,6 +1,5 @@
 <div>
-    {{-- The edit route names the role; the bare index falls back to the first role but is still the list. --}}
-    @section('page-title', request()->routeIs('roles.edit') ? $role?->name : __('admin.roles'))
+    @section('page-title', $editingRole ? $role->name : __('admin.roles'))
 
     <x-page-header :title="__('admin.roles')" :description="$scope->description()">
         <x-slot:actions>
