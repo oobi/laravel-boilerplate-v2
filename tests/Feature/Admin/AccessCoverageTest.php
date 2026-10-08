@@ -10,6 +10,7 @@ use App\Livewire\Admin\Users\ListUsers;
 use App\Livewire\Admin\Users\ShowUser;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Roles\Coverage;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
 use Filament\Forms\Components\CheckboxList;
@@ -174,6 +175,35 @@ class AccessCoverageTest extends TestCase
         $this->administrator->assignRole($editor);
 
         $this->assertFalse(Livewire::actingAs($this->support)->test(ManageRoles::class, ['role' => $editor->fresh()])->instance()->canEditRole());
+    }
+
+    /**
+     * Each way a holder can be above the editor blocks the edit: a direct
+     * extra permission, another role carrying one, or being a super admin
+     * (GitHub #24: one query in place of a check per holder).
+     */
+    public function test_any_holder_above_the_editor_blocks_editing_their_role(): void
+    {
+        $editor = User::factory()->withPermission(SystemPermission::MANAGE_ROLES, SystemPermission::VIEW_USERS)->create();
+        $viewer = Role::findOrCreate('Viewer');
+        $viewer->givePermissionTo(Permission::findOrCreate(SystemPermission::VIEW_USERS->value));
+        $holder = tap(User::factory()->create())->assignRole($viewer);
+        $mayEdit = fn (): bool => Coverage::mayEditRole($editor->fresh(), $viewer->fresh());
+
+        $this->assertTrue($mayEdit(), 'a plain holder');
+
+        $holder->givePermissionTo(Permission::findOrCreate(SystemPermission::DELETE_USERS->value));
+        $this->assertFalse($mayEdit(), 'a direct extra permission');
+        $holder->revokePermissionTo(SystemPermission::DELETE_USERS->value);
+        $this->assertTrue($mayEdit());
+
+        $holder->assignRole(tap(Role::findOrCreate('Deleter'))->givePermissionTo(SystemPermission::DELETE_USERS->value));
+        $this->assertFalse($mayEdit(), 'another role carrying one');
+        $holder->removeRole('Deleter');
+        $this->assertTrue($mayEdit());
+
+        $holder->forceFill(['is_super_admin' => true])->save();
+        $this->assertFalse($mayEdit(), 'a super admin');
     }
 
     public function test_the_role_rule_is_explained_to_everyone_but_a_super_admin(): void

@@ -58,6 +58,9 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 
     private const NO_ROLE_FILTER_VALUE = '__no_role__';
 
+    /** @var array<string, string>|null roleFilterOptions(), read by the filter and the view on each render */
+    private ?array $roleFilterOptions = null;
+
     public function mount(): void
     {
         Gate::authorize(SystemPermission::VIEW_USERS->value);
@@ -66,7 +69,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(User::query()->with('roles'))
+            // Roles with their permissions and direct permissions: every row action asks Coverage what the user holds.
+            ->query(User::query()->with(['roles.permissions', 'permissions']))
             ->defaultSort('last_name')
             ->columns([
                 Tables\Columns\ViewColumn::make('user_composite')
@@ -238,7 +242,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     /** Never let "Empty Trash" force-delete the current admin's own trashed account. */
     protected function emptyTrashQuery(): Builder
     {
-        return User::onlyTrashed()->where('id', '!=', Auth::id());
+        // With what each holds: mayEmpty() asks Coverage about every one.
+        return User::onlyTrashed()->with(['roles.permissions', 'permissions'])->where('id', '!=', Auth::id());
     }
 
     /** Only trashed users the viewer may delete for good: never someone with more access (Coverage). */
@@ -282,7 +287,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     /** Options for the Blade view's role <x-table-filter-select>, mirroring the table filter above. */
     public function roleFilterOptions(): array
     {
-        return [
+        return $this->roleFilterOptions ??= [
             self::SUPER_ADMIN_FILTER_VALUE => __('admin.super_admin'),
             self::NO_ROLE_FILTER_VALUE => __('admin.no_roles'),
             ...Role::systemRoles()->orderBy('name')->pluck('name', 'name')->all(),

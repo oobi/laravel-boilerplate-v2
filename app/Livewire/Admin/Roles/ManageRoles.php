@@ -54,6 +54,9 @@ class ManageRoles extends Component implements HasActions, HasSchemas
     /** @var array<string, mixed> */
     public ?array $data = [];
 
+    /** canEditRole(), once per request. */
+    private ?bool $canEditRole = null;
+
     public function mount(?Role $role = null): void
     {
         Gate::authorize(SystemPermission::MANAGE_ROLES);
@@ -97,7 +100,8 @@ class ManageRoles extends Component implements HasActions, HasSchemas
      */
     public function canEditRole(): bool
     {
-        return $this->role !== null
+        // Asked by the form, the view and the delete action: worked out once per request.
+        return $this->canEditRole ??= $this->role !== null
             && $this->roleScope()->mayManage(Auth::user())
             && ($this->scopeKey !== Role::SYSTEM_SCOPE || Coverage::mayEditRole(Auth::user(), $this->role));
     }

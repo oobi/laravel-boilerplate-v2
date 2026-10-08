@@ -6,6 +6,7 @@ namespace App\Support\Roles;
 
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use WeakMap;
 
@@ -99,6 +100,22 @@ final class Coverage
             && self::coversRole($actor, $role)
             && self::covers($actor, $newPermissions)
             // A change reaches everyone holding the role: none may be above the editor.
-            && $role->users->every(fn (User $holder): bool => self::coversUser($actor, $holder));
+            && ! self::anyHolderAbove($actor, $role);
+    }
+
+    /**
+     * Whether anyone holding the role is a super admin or holds a permission
+     * the actor doesn't: coversUser() for every holder, as one query.
+     */
+    private static function anyHolderAbove(User $actor, Role $role): bool
+    {
+        $held = self::permissionsOf($actor)->all();
+
+        return $role->users()
+            ->where(fn (Builder $holders) => $holders
+                ->where('users.is_super_admin', true)
+                ->orWhereHas('permissions', fn (Builder $permissions) => $permissions->whereNotIn('permissions.name', $held))
+                ->orWhereHas('roles.permissions', fn (Builder $permissions) => $permissions->whereNotIn('permissions.name', $held)))
+            ->exists();
     }
 }
