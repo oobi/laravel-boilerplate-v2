@@ -10,7 +10,7 @@ duplicated. Both files below are imported verbatim — edit *them*, not this fil
 
 - Skills live in `.ai/skills/` — the agent-agnostic source of truth, alongside
   `.ai/rules/`. Both `.claude/skills` and `.github/skills` are symlinks to it,
-  so every agent loads the same nine skills. Add or edit skills in `.ai/skills/`,
+  so every agent loads the same skills. Add or edit skills in `.ai/skills/`,
   never through a symlink.
 - Relative links inside these files resolve from *their own* location:
   `.github/copilot-instructions.md` uses `../docs/...` (= `docs/` at the repo
