@@ -1,6 +1,6 @@
 ---
 name: change-review
-description: 'Review a change set before it is offered for commit, push or PR. Use whenever a change is ready (code, views, CSS, tests, docs or rules), before saying it is ready to commit, and again after fixing review findings. Covers the nine review areas, how to present findings, the re-review loop, and the browser checks for visual or keyboard changes.'
+description: 'Review a change set before it is offered for commit, push or PR. Use whenever a change is ready (code, views, CSS, tests, docs or rules), before saying it is ready to commit, and again after fixing review findings. Covers the ten review areas (UI consistency among them), how to present findings, the re-review loop, and the browser checks for visual or keyboard changes.'
 ---
 
 # Change review
@@ -31,7 +31,7 @@ Where no sub-agent is available, review in a separate pass after the work is
 done: re-read the whole diff cold against this checklist, and say in the
 findings that it was a self-review.
 
-## The nine areas
+## The ten areas
 
 The reviewer reports on every one, saying plainly where an area is clean.
 
@@ -54,6 +54,25 @@ The reviewer reports on every one, saying plainly where an area is clean.
 8. **Reinventing the wheel**: does the framework, a package already installed,
    or an existing component or helper already do this?
 9. **Over-engineering**: is every new piece paying for itself?
+10. **UI consistency** (anything a user sees): does it look, sit and read like
+    the rest of the app? Compare each new or changed screen with its nearest
+    sibling (a new admin list with Services or Users, a new dialog with an
+    existing form, a banner with the banners already shipped), side by side
+    in screenshots, not from memory:
+    - **Placement**: the primary action where siblings put it (page header,
+      or the table toolbar per `.ai/rules/tables.md`), row actions in the ⋮
+      menu, filters and segmented controls in the same slot, Cancel and the
+      submit button in the same order, banners in the same place.
+    - **Layout**: page header and description, card and table chrome, spacing,
+      modal widths, field grids, empty states; nothing new that a sibling
+      solves differently, and it still works at 375 px.
+    - **Language**: the same word for the same thing everywhere (Add, Edit,
+      Delete or Retire, salon, closed), sentence case, plain short sentences
+      for the people using it, no jargon, no em dashes; a message says what
+      to do next.
+    - **Format**: dates, times, counts, plurals and names written the way
+      siblings write them (the existing formatters and lang strings, not a
+      new pattern).
 
 ## Presenting findings
 
@@ -87,6 +106,7 @@ otherwise run `npx playwright install chromium` there.
   focus goes.
 - **Looks**: before and after screenshots of each changed element, at desktop
   and at a phone width (375 px), so the user can judge the visual change.
+  Give the reviewer the sibling screens too, for area 10.
   Rebuild assets first (`npm run build`):
   a class used for the first time isn't in the CSS until then.
 - Give the user links to the pages to look at themselves (resolve them with

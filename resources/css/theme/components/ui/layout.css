@@ -63,11 +63,16 @@
         @apply text-2xl font-bold text-base-content;
     }
 
+    /* Takes the room beside the actions, never less than a readable column; below that the actions wrap underneath. */
+    .ui-page-heading {
+        @apply min-w-0 sm:grow sm:basis-80;
+    }
+
     .ui-page-title-description {
-        @apply text-muted mt-1 text-sm;
+        @apply text-muted mt-1 text-sm max-w-3xl;
     }
 
     .ui-page-actions {
-        @apply flex flex-wrap items-center gap-2;
+        @apply flex max-w-full shrink-0 flex-wrap items-center gap-2;
     }
 }
