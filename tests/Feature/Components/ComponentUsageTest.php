@@ -103,6 +103,31 @@ class ComponentUsageTest extends TestCase
     }
 
     /**
+     * The theme CSS and the core components use text-muted too: the view check
+     * above skips both (package components it already covers). CSS has no
+     * decorative-icon exception, so nothing lighter either; a component's icon
+     * may go lighter, like a view's.
+     */
+    public function test_theme_css_and_components_use_text_muted_for_muted_text(): void
+    {
+        $files = collect([resource_path('css'), resource_path('views/components')])
+            ->flatMap(fn (string $directory): array => File::allFiles($directory));
+
+        $found = $files
+            ->filter(function (SplFileInfo $file): bool {
+                $pattern = str_ends_with($file->getFilename(), '.css')
+                    ? '/(?<![\w-])text-base-content\/(60|[0-5]?\d)(?!\d)/'
+                    : '/(?<![\w-])text-base-content\/60(?!\d)/';
+
+                return preg_match($pattern, $file->getContents()) === 1;
+            })
+            ->map(fn (SplFileInfo $file): string => str_replace(base_path().'/', '', $file->getPathname()))
+            ->values();
+
+        $this->assertSame([], $found->all(), "Use text-muted (see .ai/rules/views.md):\n".$found->implode("\n"));
+    }
+
+    /**
      * The components hand-rolled in this markup.
      *
      * @return list<string>
