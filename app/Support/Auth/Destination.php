@@ -10,10 +10,11 @@ use App\Models\User;
  * Where a user belongs: the admin dashboard for a system role, else the first
  * add-on destination that claims them via {@see LoginRedirectRegistry} (e.g.
  * the teams tier sends a member straight to their team). Shared by
- * App\Http\Responses\LoginResponse (post-login redirect, which additionally
- * rejects a user neither claims — see LoginFallback) and `layouts.account`
- * (the profile pages' "home"/back link), so both agree on where a user
- * belongs without duplicating the cascade.
+ * App\Http\Responses\LoginResponse (after a password or two-factor login),
+ * App\Actions\Fortify\AuthenticateUser (which refuses a user neither claims
+ * under LoginFallback::REJECT, before logging them in), the guest-page redirect
+ * for a signed-in user (bootstrap/app.php) and `layouts.account` (the profile
+ * pages' "home"/back link), so all agree on where a user belongs.
  */
 final class Destination
 {

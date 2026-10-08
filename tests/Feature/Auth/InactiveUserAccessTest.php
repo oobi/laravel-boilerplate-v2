@@ -7,6 +7,7 @@ namespace Tests\Feature\Auth;
 use App\Actions\Impersonation\StartImpersonation;
 use App\Enums\SystemPermission;
 use App\Models\User;
+use App\Support\Auth\Destination;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
@@ -269,8 +270,9 @@ class InactiveUserAccessTest extends TestCase
         $user = User::factory()->twoFactorEnabled()->create();
         $this->beginTwoFactorChallenge($user);
 
+        // Lands where they belong, as a password login does (GitHub #20).
         $this->post('/two-factor-challenge', $credentials)
-            ->assertRedirect('/')
+            ->assertRedirect(Destination::home($user))
             ->assertSessionMissing('login.id');
 
         $this->assertAuthenticatedAs($user);
