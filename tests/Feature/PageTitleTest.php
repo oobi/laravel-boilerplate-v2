@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Support\PageTitle;
 use Concise\Teams\Enums\TeamPermission;
@@ -42,6 +43,8 @@ class PageTitleTest extends TestCase
         $this->assertTitled(__('admin.create').' · '.__('admin.users'), route('users.create'));
         $this->assertTitled("Siobhan O'Brien & Co · ".__('admin.users'), route('users.show', $user));
         $this->assertTitled(__('admin.edit')." · Siobhan O'Brien & Co · ".__('admin.users'), route('users.edit', $user));
+        $this->assertTitled(__('admin.roles'), route('roles.index'));
+        $this->assertTitled('Lead · '.__('admin.roles'), route('roles.edit', Role::create(['name' => 'Lead'])));
         $this->assertTitled("Bob's & Co · {$teams}", route('teams.show', $team));
         $this->assertTitled(team_trans('nav.members')." · Bob's & Co · {$teams}", route('teams.members', $team));
         $this->assertTitled(team_trans('nav.settings')." · Bob's & Co · {$teams}", route('teams.settings', $team));
