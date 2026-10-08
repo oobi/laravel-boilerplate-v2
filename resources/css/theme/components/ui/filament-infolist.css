@@ -40,3 +40,8 @@
         }
     }
 }
+
+/* An empty entry's placeholder, muted like a table's (filament-table.css). */
+.fi-in-placeholder {
+    @apply text-muted;
+}

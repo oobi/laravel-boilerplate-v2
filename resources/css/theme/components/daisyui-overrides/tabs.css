@@ -19,6 +19,11 @@
     &:is(.tab-active, [aria-selected="true"], [aria-current="true"], [aria-current="page"]):not(.tab-disabled, [disabled]) {
         color: var(--color-primary);
 
+        /* The brand blue is 3.3:1 on the dark page; the soft mix lifts it. */
+        @variant dark {
+            color: color-mix(in oklab, var(--color-primary) var(--soft-fg-strength), var(--soft-fg-mix));
+        }
+
         &:before {
             border-top: none;
         }
@@ -36,15 +41,17 @@
         z-index: 0;
     }
 
-    > .tabs-connected__header > .tabs {
+    /* Descendant, not child: the tablist sits inside the header's scroll shell
+       and viewport, so a child chain never matched and daisyUI's 50% colour won. */
+    .tabs-connected__header .tabs {
         > .tab {
             position: relative;
             z-index: 1;
-            color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
         }
 
-        > .tab:is(.tab-active, [aria-selected="true"], [aria-current="true"], [aria-current="page"]):not(.tab-disabled, [disabled]) {
-            color: var(--color-primary);
+        /* Inactive only, so the active colour above (.tabs-border) still wins. */
+        > .tab:not(.tab-active, [aria-selected="true"], [aria-current="true"], [aria-current="page"]) {
+            color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
         }
     }
 }

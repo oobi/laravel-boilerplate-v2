@@ -15,7 +15,7 @@
 
     @if ($showOwnership)
         <x-card :title="team_trans('ownership.title')" type="panel">
-            <p class="text-sm text-base-content/60">
+            <p class="text-sm text-muted">
                 {{ team_trans('ownership.description', ['name' => $team->name]) }}
             </p>
 
@@ -25,7 +25,7 @@
 
             @if ($this->canDelete())
                 <div @class(['border-t border-base-300 pt-4', 'mt-4' => $this->canManageOwnership()])>
-                    <p class="mb-3 text-sm text-base-content/60">{{ team_trans('ownership.delete_help') }}</p>
+                    <p class="mb-3 text-sm text-muted">{{ team_trans('ownership.delete_help') }}</p>
 
                     <x-action-list>
                         {{ $this->deleteTeamAction }}

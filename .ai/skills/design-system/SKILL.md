@@ -18,6 +18,12 @@ etc. — only the 8 fixed daisyUI semantic colors: `primary`, `secondary`,
 Each has a matching `-content` color for text-on-that-background
 (`text-primary-content` on a `bg-primary` surface).
 
+**Muted text is `text-muted`**, never `text-base-content/60`: descriptions,
+breadcrumbs, labels, placeholders. It's one utility (in `tokens.css`)
+because that mix is the one tested to clear AA 4.5 on
+`base-100` and `base-200` (`ThemeContrastTest`); in CSS, `@apply text-muted`.
+Don't go lighter for text (decorative icons may). `ComponentUsageTest` flags the raw `/60`.
+
 Defined once in `resources/css/theme/tokens.css` (two daisyUI `@plugin
 "daisyui/theme"` blocks — light `boilerplate` + dark `boilerplate-dark`).
 Changing a brand color is a one-line edit there; every component using it

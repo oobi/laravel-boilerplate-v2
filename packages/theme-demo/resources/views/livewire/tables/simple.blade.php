@@ -36,7 +36,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-base-content/60">{{ __('No matching rows.') }}</td>
+                                <td colspan="4" class="py-8 text-center text-muted">{{ __('No matching rows.') }}</td>
                             </tr>
                         @endforelse
                     </tbody>

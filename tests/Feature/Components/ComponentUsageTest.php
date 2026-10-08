@@ -34,6 +34,8 @@ class ComponentUsageTest extends TestCase
         '/(?<![\w-])ui-button-group(-btn)?(?![\w-])/' => '<x-button-group>',
         '/(?<![\w:-])border-dashed(?![\w-])/' => '<x-empty-state>',
         '/<a\b[^>]*>\s*<x-card\b/' => '<x-card href>',
+        // Not a component: the AA-tested text-muted utility (tokens.css), so the mix lives in one place.
+        '/(?<![\w-])text-base-content\/60(?!\d)/' => 'text-muted',
     ];
 
     /**
@@ -82,6 +84,7 @@ class ComponentUsageTest extends TestCase
             "<a href=\"/x\" class=\"block\">\n    <x-card>" => '<x-card href>',
             '<div class="flex rounded-box border-l-4 border-warning px-4">' => '<x-banner>',
             '<div class="rounded-box bg-success/8 p-4">' => '<x-banner>',
+            '<p class="text-sm text-base-content/60">' => 'text-muted',
         ] as $markup => $component) {
             $this->assertNotSame([], array_filter(self::hits($markup), fn (string $hit): bool => str_starts_with($hit, $component)), $markup);
         }
@@ -93,6 +96,7 @@ class ComponentUsageTest extends TestCase
             '<x-card class="card-title">',
             '<x-card href="/x">',
             '<x-button-group.item active>',
+            '<p class="text-base-content/70">',
         ] as $markup) {
             $this->assertSame([], self::hits($markup), $markup);
         }

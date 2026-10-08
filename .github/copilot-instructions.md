@@ -80,7 +80,8 @@ currently registered.
 - No shade-ramp Tailwind utilities (`bg-primary-500` etc.) — only the 8
   daisyUI semantic colors (`bg-primary`, `text-primary-content`, ...) plus
   `bg-soft-{color}` / `avatar-{color}` / `ui-banner-{color}` from
-  `resources/css/theme/components/ui/colors.css`.
+  `resources/css/theme/components/ui/colors.css`. Muted text is `text-muted`
+  (the AA-tested utility in `tokens.css`), never `text-base-content/60`.
 
 ## Coding standards
 

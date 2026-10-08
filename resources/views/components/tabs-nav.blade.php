@@ -27,7 +27,7 @@
 <div {{ $attributes->class(['tabs-connected overflow-clip rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
     @if ($scrollable)
         {{-- Mobile swipe hint --}}
-        <div class="block sm:hidden text-center text-xs text-base-content/50 pt-3 px-4">
+        <div class="block sm:hidden text-center text-xs text-muted pt-3 px-4">
             <div class="inline-flex items-center justify-center gap-1 bg-base-200/50 rounded-full py-1 px-3">
                 <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

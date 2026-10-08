@@ -32,7 +32,7 @@
 
                         @if ($this->canDeactivate() || $this->canDelete())
                             <div @class(['border-t border-base-300 mt-4 pt-4' => $this->canManageOwnership()])>
-                                <p class="mb-3 text-sm text-base-content/60">
+                                <p class="mb-3 text-sm text-muted">
                                     {{ team_trans('admin.danger_help') }}
                                 </p>
 

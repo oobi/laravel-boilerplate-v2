@@ -53,7 +53,7 @@
                 <div>
                     <label class="ui-form-label mb-1">{{ __('theme-demo::messages.field_range') }}</label>
                     <input type="range" min="0" max="100" wire:model.live="range" class="range">
-                    <div class="mt-1 text-xs text-base-content/60">{{ $range }}</div>
+                    <div class="mt-1 text-xs text-muted">{{ $range }}</div>
                 </div>
 
                 <x-form-input name="date" type="date" label="{{ __('theme-demo::messages.field_date') }}" wire:model="date" :floating="$variant === 'floating'" />

@@ -16,7 +16,9 @@
   --color-base-100: oklch(100% 0 0);
   --color-base-200: oklch(97% 0 0);
   --color-base-300: oklch(92% 0 0);
-  --color-base-content: oklch(24% 0.01 260);
+  /* 20%, not 24%: text-muted (60%: descriptions, breadcrumbs, labels) then
+     clears AA 4.5 on white and base-200; at 24% it measured 4.36. */
+  --color-base-content: oklch(20% 0.01 260);
 
   --color-primary: #2563eb;
   --color-primary-content: oklch(100% 0 0);
@@ -28,10 +30,11 @@
   --color-neutral-content: oklch(100% 0 0);
   /* info/success darkened one step (sky-700 / green-700) so white text on the
      solid variant and the raw-colour outline/ghost text both clear AA 4.5 on
-     white — the 600 shades only reached 4.10 / 3.30. Soft stays comfortable. */
+     white. The 600 shades only reached 4.10 / 3.30 (green-700 gives 5.02);
+     soft stays comfortable. */
   --color-info: #0369a1;
   --color-info-content: oklch(100% 0 0);
-  --color-success: #16a34a;
+  --color-success: #15803d;
   --color-success-content: oklch(100% 0 0);
   /* Kept as a bright gold for impact (dark label text on it is ~10:1). The gold
      fill itself is only ~1.76:1 against the white page, so warning-contrast.css
@@ -112,6 +115,13 @@
 /* ── Design tokens ──────────────────────────────────────────────
    --font-sans: prepends Figtree before TW4's default sans-serif stack.
 ─────────────────────────────────────────────────────────────── */
+/* Muted text: descriptions, breadcrumbs, labels, placeholders. One utility so
+   the AA-tested mix lives in one place (ThemeContrastTest reads it). A utility,
+   not a theme colour, so there's no bg-muted / border-muted to misread. */
+@utility text-muted {
+  color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+}
+
 @theme {
   --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }

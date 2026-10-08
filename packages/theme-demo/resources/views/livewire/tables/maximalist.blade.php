@@ -67,7 +67,7 @@
                                     <x-avatar :name="$row->name" size="sm" />
                                     <div>
                                         <div class="font-medium">{{ $row->name }}</div>
-                                        <div class="text-xs text-base-content/60">{{ $row->email }}</div>
+                                        <div class="text-xs text-muted">{{ $row->email }}</div>
                                     </div>
                                 </td>
                                 <td><x-badge :value="$row->status" /></td>
@@ -85,7 +85,7 @@
                             @endif
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 text-center text-base-content/60">{{ __('No matching rows.') }}</td>
+                                <td colspan="5" class="py-8 text-center text-muted">{{ __('No matching rows.') }}</td>
                             </tr>
                         @endforelse
                     </tbody>

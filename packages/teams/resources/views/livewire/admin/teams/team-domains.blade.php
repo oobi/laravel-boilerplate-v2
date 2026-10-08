@@ -10,7 +10,7 @@
 
         <x-slot:content>
             <x-card :title="team_trans('domains.title')" type="panel">
-                <p class="mb-4 text-sm text-base-content/60">
+                <p class="mb-4 text-sm text-muted">
                     {{ team_trans('domains.description', ['name' => $team->name]) }}
                 </p>
 

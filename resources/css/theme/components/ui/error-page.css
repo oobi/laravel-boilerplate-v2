@@ -30,7 +30,7 @@
     }
 
     .ui-error-message {
-        @apply text-base-content/60;
+        @apply text-muted;
         max-width: 18rem;
         font-size: 1.125rem;
     }

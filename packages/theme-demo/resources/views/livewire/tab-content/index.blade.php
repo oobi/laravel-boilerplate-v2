@@ -103,7 +103,7 @@
                                     <x-avatar :name="$row->name" size="sm" />
                                     <div class="min-w-0 flex-1">
                                         <p class="truncate font-medium">{{ $row->name }}</p>
-                                        <p class="text-sm text-base-content/60">{{ __('theme-demo::messages.tab_content_panels_activity_detail') }}</p>
+                                        <p class="text-sm text-muted">{{ __('theme-demo::messages.tab_content_panels_activity_detail') }}</p>
                                     </div>
                                     <x-badge value="{{ __('theme-demo::messages.tab_content_panels_activity_status') }}" color="success" />
                                 </div>

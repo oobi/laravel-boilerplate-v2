@@ -28,7 +28,7 @@
     <dd @class([
         'text-right text-sm font-medium',
         'text-base-content' => ! $muted,
-        'text-base-content/50' => $muted,
+        'text-muted' => $muted,
     ])>
         {{ $value ?? $slot }}
     </dd>

@@ -26,7 +26,7 @@
     @endif
 
     @if ($slot->isNotEmpty())
-        <div class="text-sm text-base-content/60">{{ $slot }}</div>
+        <div class="text-sm text-muted">{{ $slot }}</div>
     @endif
 
     @isset($actions)

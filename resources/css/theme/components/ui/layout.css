@@ -64,7 +64,7 @@
     }
 
     .ui-page-title-description {
-        @apply text-base-content/60 mt-1 text-sm;
+        @apply text-muted mt-1 text-sm;
     }
 
     .ui-page-actions {
