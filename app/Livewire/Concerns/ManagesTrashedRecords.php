@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Gate;
  */
 trait ManagesTrashedRecords
 {
+    /** @var array{active?: int, trashed?: int} counted once per request (read when the view renders, after any action) */
+    private array $recordCounts = [];
+
     protected function trashedRecordsModel(): string
     {
         return $this->getTable()->getModel();
@@ -29,12 +32,12 @@ trait ManagesTrashedRecords
 
     public function activeRecordsCount(): int
     {
-        return $this->trashedRecordsModel()::query()->count();
+        return $this->recordCounts['active'] ??= $this->trashedRecordsModel()::query()->count();
     }
 
     public function trashedRecordsCount(): int
     {
-        return $this->trashedRecordsModel()::onlyTrashed()->count();
+        return $this->recordCounts['trashed'] ??= $this->trashedRecordsModel()::onlyTrashed()->count();
     }
 
     protected function emptyTrashQuery(): Builder
