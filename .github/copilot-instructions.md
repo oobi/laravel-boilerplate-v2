@@ -109,6 +109,9 @@ still apply:
   functionality, `task/<name>` for chores, refactors, docs and reviews, and
   `bug/<name>` for fixes (e.g. `feature/client-merge`, `bug/phone-validation`).
   Short, lowercase, hyphenated.
+- Every change set is reviewed before it is offered for commit, push or PR,
+  and re-reviewed after fixing the findings: see
+  [the change-review skill](../.ai/skills/change-review/SKILL.md).
 - Don't commit code unless explicitly asked. Make the change and leave it
   uncommitted for review; only run `git commit` (or push, or open a PR) when
   the user asks for it in so many words.
