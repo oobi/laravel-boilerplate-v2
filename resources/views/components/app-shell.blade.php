@@ -66,9 +66,22 @@
                 style="display: none;"
             ></div>
 
-            {{-- Drawer sidebar — slides in from the left (mobile always, desktop when unpinned) --}}
+            {{-- Drawer sidebar: slides in from the left (mobile always, desktop when unpinned).
+                 A modal dialog while open: focus moves in and is held there, the page
+                 behind goes inert, Escape closes it, and focus returns to the menu button.
+                 It closes when any modal opens (<x-modal> or Filament's), so the two never
+                 fight over focus. Deliberately not an <x-modal>: it slides, and shares its
+                 navigation markup with the pinned column. --}}
             <aside
+                id="app-drawer"
+                role="dialog"
+                aria-modal="true"
+                aria-label="{{ __('Menu') }}"
                 x-show="sidebarDrawerOpen"
+                x-trap.inert="sidebarDrawerOpen"
+                @keydown.escape="sidebarDrawerOpen = false"
+                @ui-modal-opened.window="sidebarDrawerOpen = false"
+                @open-modal.window="sidebarDrawerOpen = false"
                 @click.outside="sidebarDrawerOpen = false"
                 x-transition:enter="transition ease-in-out duration-200 transform"
                 x-transition:enter-start="-translate-x-full"
@@ -86,7 +99,7 @@
                         <div class="flex shrink-0 items-center gap-1">
                             {{-- Pin button (desktop only) — pins the sidebar as a persistent column --}}
                             <x-button.icon
-                                @click="togglePin(); sidebarDrawerOpen = false"
+                                @click="togglePin(); sidebarDrawerOpen = false; $nextTick(() => $refs.unpin.focus())"
                                 class="hidden md:inline-flex"
                                 title="{{ __('Pin sidebar') }}"
                             >
@@ -112,6 +125,7 @@
                         <x-application-logo class="min-w-0 flex-1" />
                         {{-- Unpin button — switches the sidebar to drawer mode --}}
                         <x-button.icon
+                            x-ref="unpin"
                             @click="togglePin()"
                             class="shrink-0"
                             title="{{ __('Unpin sidebar') }}"
@@ -146,11 +160,11 @@
                         />
 
                         {{-- Mobile menu button --}}
-                        <x-button.icon class="md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
+                        <x-button.icon class="md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
                             <x-heroicon-o-bars-3 class="h-5 w-5" />
                         </x-button.icon>
                         {{-- Desktop menu button — visible when the sidebar is unpinned --}}
-                        <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}">
+                        <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
                             <x-heroicon-o-bars-3 class="h-5 w-5" />
                         </x-button.icon>
                     @else
