@@ -1,5 +1,7 @@
 @extends('layouts.login')
 
+@section('page-title', __('Forgot your password?'))
+
 @section('content')
     <h1 class="text-xl font-semibold">{{ __('Forgot your password?') }}</h1>
 

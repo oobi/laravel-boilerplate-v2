@@ -1,5 +1,5 @@
 <div>
-    @section('page-title', __('admin.list'))
+    @section('page-title', __('admin.users'))
 
     <x-page-header :title="__('admin.users')" :description="__('admin.users_description')">
         <x-slot:actions>

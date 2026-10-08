@@ -1,5 +1,7 @@
 @extends('layouts.login')
 
+@section('page-title', __('Log in'))
+
 @section('content')
     <h1 class="text-xl font-semibold">{{ __('Log in') }}</h1>
 

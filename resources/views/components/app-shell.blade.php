@@ -4,6 +4,7 @@
     'breadcrumbRoot' => null,
     'breadcrumbResource' => true,
     'breadcrumbs' => true,
+    'titleContext' => null,
 ])
 
 @php
@@ -12,6 +13,10 @@
     // No navigation slot → no sidebar (a gateway/lobby page). The header, account
     // menu and impersonation banner still render, so it's not a bare page.
     $hasNav = isset($navigation) && ! $navigation->isEmpty();
+    $tabTitle = \App\Support\PageTitle::for($title, [
+        ...($breadcrumbs ? \App\Support\PageTitle::trailContext(\App\Support\Breadcrumbs::trail($breadcrumbRoot, $breadcrumbResource)) : []),
+        $titleContext,
+    ]);
 @endphp
 
 <!DOCTYPE html>
@@ -19,7 +24,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
+    <title>{{ $tabTitle }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

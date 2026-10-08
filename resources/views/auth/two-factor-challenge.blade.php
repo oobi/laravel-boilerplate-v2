@@ -1,5 +1,7 @@
 @extends('layouts.login')
 
+@section('page-title', __('Two-Factor Confirmation'))
+
 @section('content')
     <h1 class="text-xl font-semibold">{{ __('Two-Factor Confirmation') }}</h1>
 

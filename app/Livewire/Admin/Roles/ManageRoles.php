@@ -45,6 +45,10 @@ class ManageRoles extends Component implements HasActions, HasSchemas
 
     public ?Role $role = null;
 
+    /** Opened on a role's own edit URL, rather than the bare list that falls back to the first role. */
+    #[Locked]
+    public bool $editingRole = false;
+
     /** The open RoleScope tab: `?scope=` on the bare route, or the role's own scope when editing one. */
     #[Locked]
     public string $scopeKey = Role::SYSTEM_SCOPE;
@@ -64,6 +68,7 @@ class ManageRoles extends Component implements HasActions, HasSchemas
         // On the bare `/admin/roles` route (no {role} segment) Laravel's container still
         // instantiates an empty, unsaved Role for the nullable type-hint instead of passing
         // null — treat that the same as "no role selected" and fall back to the first one.
+        $this->editingRole = (bool) $role?->exists;
         $this->scopeKey = $role?->exists
             ? $role->scope
             : (string) request()->query('scope', RoleScopeRegistry::default()->key());

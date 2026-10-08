@@ -1,5 +1,5 @@
 <div>
-    @section('page-title', __('admin.roles'))
+    @section('page-title', $editingRole ? $role->name : __('admin.roles'))
 
     <x-page-header :title="__('admin.roles')" :description="$scope->description()">
         <x-slot:actions>

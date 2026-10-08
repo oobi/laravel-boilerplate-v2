@@ -1,5 +1,7 @@
 @extends('layouts.error')
 
+@section('page-title', __('Server error'))
+
 @section('content')
     <p class="ui-error-code">500</p>
 
