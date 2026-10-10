@@ -29,12 +29,12 @@ class AdminNav
         // Ships empty for add-ons to fill; an empty group is never rendered.
         NavRegistry::group('business')
             ->label(__('Business'))
-            ->can('access admin panel')
+            ->can(SystemPermission::ACCESS_ADMIN_PANEL)
             ->order(10);
 
         NavRegistry::group('people-access')
             ->label(__('People & Access'))
-            ->can('access admin panel')
+            ->can(SystemPermission::ACCESS_ADMIN_PANEL)
             ->order(20)
             ->add(
                 NavItem::make('users')
@@ -67,7 +67,7 @@ Both are plain fluent objects — no interface to implement:
 | `icon(string)` / `icon(?string)` | item, group | Heroicon component name (group icon is optional) |
 | `route(string)` | item | Named route the link points at |
 | `active(string ...$routes)` | item, group | `routeIs()` patterns that mark it active; item defaults to `[$route]`, group defaults to the **union of its items' active routes** |
-| `can(?string $ability)` | item, group | Gate ability name required to see it; `null` (default) means always visible |
+| `can(BackedEnum\|string\|null $ability)` | item, group | The Gate ability required to see it (pass the `SystemPermission` case); `null` (default) means always visible |
 | `order(int)` | item, group | Sort position among all top-level nodes |
 | `add(NavItem ...$items)` | group only | Appends items to the group; an item with a name already in the group replaces it in place |
 
@@ -97,7 +97,7 @@ class ThemeDemoServiceProvider extends ServiceProvider
         // Register its own section...
         NavRegistry::group('style-demo')
             ->label(__('theme-demo::messages.nav_group'))
-            ->can(SystemPermission::ACCESS_ADMIN_PANEL->value)
+            ->can(SystemPermission::ACCESS_ADMIN_PANEL)
             ->order(20)
             ->add(
                 NavItem::make('style-demo-overview')
@@ -117,11 +117,11 @@ working example above (registered only in `local`/`testing` environments).
 
 ## Permissions
 
-`can()` takes a plain gate-ability-name **string**, resolved via
-`Gate::forUser($viewer)->allows($ability)` — either a `SystemPermission`
-value (checked via spatie/laravel-permission's own `Gate::before`, granted
-per-role on the Roles admin screen) or an explicit `Gate::define()` for a
-one-off ability like `manage roles` (see `AppServiceProvider`). No closures: a
+`can()` takes a Gate ability, resolved via
+`Gate::forUser($viewer)->allows($ability)`: pass the `SystemPermission` case
+(stored as its value; checked by spatie/laravel-permission's own `Gate::before`,
+granted per role on the Roles admin screen). An add-on passes its own enum case
+the same way. No closures: a
 group or an item is either always visible (`can()` never called) or gated by
 one named ability. A group with a `can()` gate that fails is hidden entirely; a group
 that passes but ends up with zero *visible* items (all its items' own

@@ -105,9 +105,10 @@ foreach (SystemPermission::cases() as $permission) {
 
 A fresh install also gets two system roles from
 `database/seeders/SystemRolesSeeder.php`: **Administrator** (every
-`SystemPermission` — the gap from a super admin is exactly the acts that
-aren't permissions: managing roles, granting super admin, direct password
-resets) and a limited **Support** (manage and suspend users, impersonate —
+`SystemPermission`, including `manage roles` and `set user passwords`; the gap
+from a super admin is the one act that isn't a permission, granting super
+admin, plus the super admin's reach over anyone, since an Administrator acts
+only on users and roles whose permissions it holds) and a limited **Support** (manage and suspend users, impersonate,
 listed as the actions alone; the seeder writes them closed over `implies()`,
 so the role also holds `view users` and `access admin panel`). They are seeded **only into an empty set of system roles**;
 after that the database is the source of truth and renaming, deleting or
@@ -116,8 +117,9 @@ replacing them is safe — nothing resurrects them. Edit the seeder's
 reads the same definition so the test fixture can't drift from it. The teams
 tier's `TeamRolesSeeder` does the same for team roles.
 
-`bp:make-admin --administrator` puts the first operator on the Administrator
-role instead of the super-admin flag (see `docs/commands.md`).
+`bp:make-admin` makes the first account a super admin; `bp:make-admin
+--administrator` puts each later admin on the Administrator role instead (see
+`docs/commands.md`).
 
 ## Checking a permission: `Gate::authorize()` / `checkPermissionTo()`
 
@@ -135,8 +137,8 @@ which gates the whole shell on panel entry) or a Livewire component's
 `VIEW_USERS`) is enough — no extra registration required for a
 `SystemPermission` case to become checkable.
 
-Inside a Policy or other app code checking a role/user's permission
-directly, always call **`checkPermissionTo()`**, never `hasPermissionTo()` —
+Inside a Policy checking a role's or user's permission directly, call
+**`checkPermissionTo()`**, never `hasPermissionTo()`:
 the latter throws `PermissionDoesNotExist` for an unseeded or
 guard-mismatched permission (confirmed to happen even for an already-seeded
 permission inside a Livewire component test) — turning an authorization

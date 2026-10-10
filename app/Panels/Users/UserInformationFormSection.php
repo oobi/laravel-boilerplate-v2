@@ -19,7 +19,7 @@ use Illuminate\Support\HtmlString;
 /**
  * The core name/email/active fields on the Edit User form. Role and
  * super-admin assignment are their own distinct, separately-authorized
- * actions on EditUser — never part of this generic form state (see
+ * actions on ShowUser (manageRolesAction), never part of this generic form state (see
  * UserPolicy::assignRole()/grantSuperAdmin() docblocks).
  */
 class UserInformationFormSection implements FormSection

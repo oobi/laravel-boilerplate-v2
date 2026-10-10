@@ -25,17 +25,18 @@ return [
     /**
      * The URI to redirect after taking an impersonation.
      *
-     * A route name (resolved to the right URL in either routing mode); overridden
-     * per-target by App\Http\Controllers\ImpersonationController::take(), so this
-     * is only a fallback.
+     * A route name (resolved to the right URL in either routing mode). The trigger
+     * that starts impersonation decides where to land (its successRedirectUrl, see
+     * App\Actions\Impersonation\StartImpersonation), so this is only a fallback.
      */
     'take_redirect_to' => 'dashboard',
 
     /**
      * The URI to redirect after leaving an impersonation.
      *
-     * A route name. The ultimate fallback: leave() prefers the per-session origin
-     * ImpersonationController::take() records; this is used only when that's absent.
+     * A route name. The ultimate fallback: ImpersonationController::leave() prefers
+     * the origin StartImpersonation records in the session; this is used only when
+     * that's absent.
      */
     'leave_redirect_to' => 'users.index',
 
