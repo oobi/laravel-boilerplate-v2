@@ -18,9 +18,10 @@ use function Laravel\Prompts\text;
  * Interactive, one-shot admin bootstrap — never a seeder, never hardcoded
  * credentials. The operator supplies real ones at the terminal.
  *
- * By default the account is a SUPER ADMIN: the first account must be one,
- * because only a super admin can manage roles or grant super admin, so an
- * install whose only admin is on a role could never change that. Every admin
+ * By default the account is a SUPER ADMIN: the first account should be one,
+ * because only a super admin can grant super admin and untangle any role
+ * (an Administrator acts only on users and roles whose permissions it holds),
+ * so an install whose only admin is on a role could never fix a role mistake. Every admin
  * after the first should be an Administrator instead (`--administrator`): the
  * seeded role that grants everything a role can, without the master key.
  */

@@ -12,11 +12,11 @@ the core files:
 - **Eject** — fold the tier's code into `app/` under the `App\` namespace, for a
   team that wants it app-native rather than as a package.
 
-> Status: today both are **manual procedures** (below). A `bp:` command will
-> automate the vanilla path by consuming the same markers; until then, follow
-> these steps. Nothing here should be run on a mature app built on teams —
-> removing the tier from a developed codebase means redesigning it. These are
-> setup-time transforms on a fresh clone.
+> Status: going vanilla is automated by **`php artisan bp:remove-teams`**, which
+> consumes the markers below; ejecting is still a manual procedure. Nothing here
+> should be run on a mature app built on teams: removing the tier from a
+> developed codebase means redesigning it. These are setup-time transforms on a
+> fresh clone.
 
 > Fresh-clone prerequisite (independent of teams): a freshly cloned boilerplate
 > needs `composer install` **and** `npm install && npm run build` before it
@@ -64,11 +64,33 @@ canonical line"** note in the opening comment — those are *replace*, not plain
 | `app/Enums/SystemPermission.php` | the five team permission cases (`view teams`, `manage teams`, `deactivate teams`, `delete teams`, `manage team ownership`), their `label()` arms, their `category()` arm and their `implies()` arms (4 fenced blocks). The arms call `team_trans()`, a package helper — deliberate, so the labels relabel with the tier; the fence removes the dependency with the tier | delete each block |
 | `database/seeders/DatabaseSeeder.php` | the `TeamRolesSeeder` import + its guarded `$this->call(...)` | delete each block |
 | `database/seeders/DemoSeeder.php` | the `TeamSeeder`/`TeamRolesSeeder` imports + their two guarded `$this->call(...)` blocks | delete each block |
+| `config/fortify.php` | the auth domain for the custom-domain overlay's host mode (auth on the account host) | delete the block |
+| `routes/web.php` | the host-mode host and path variables (`$apexHost`, `$accountHost`, `$adminHost`, `$adminPath`) | delete the block, then point the route groups that use them back at plain paths (see #22) |
 
 The provider is **auto-discovered** (via the package's own composer manifest),
 so there is no `bootstrap/providers.php` entry to touch.
 
 ## Going vanilla (remove teams)
+
+Run `php artisan bp:remove-teams --dry-run` to see the plan, then
+`php artisan bp:remove-teams` (it confirms first; `--force` skips that). It strips
+the fenced blocks from core files (replacing `User.php`'s with its canonical
+line) in the fenced files in the table above, deletes every test file that
+mentions `Concise\Teams`, runs `composer remove concise-dot-digital/teams`,
+drops the path repository and deletes `packages/teams`. Then do steps 5 to 7
+below.
+
+> Known issues, [#22](https://github.com/oobi/laravel-boilerplate-v2/issues/22):
+> it leaves `routes/web.php` using the host variables it stripped, so the app
+> doesn't boot until those route groups are fixed by hand; "every test file that
+> mentions `Concise\Teams`" includes some core suites (access coverage,
+> impersonation, role implications, login redirects); it reports success even
+> when `composer remove` fails; and an unterminated fence truncates the file.
+> Its dry run also lists `RemoveTeamsCommand.php`, whose docblock names the
+> marker; it has no fence, so nothing is stripped there. Check `--dry-run` and
+> `git diff` afterwards.
+
+The steps the command performs, for doing it by hand:
 
 1. **Composer** — remove the require and the path repository entry, then
    `composer update` (or `composer remove concise-dot-digital/teams` and delete
@@ -77,10 +99,11 @@ so there is no `bootstrap/providers.php` entry to touch.
    `sed -i '' '/teams:start/,/teams:end/d' <file>` — **except `User.php`**, which
    is the one *replace* case: swap its `teams:start…teams:end` block for the
    canonical trait line printed in its fence (deleting it outright would leave
-   `User` with no traits). Delete the fenced blocks in `SystemPermission.php`,
-   `DatabaseSeeder.php`, and `DemoSeeder.php` — **the fenced blocks only**; those
-   seeder files survive and keep their non-teams calls (`PermissionSeeder`,
-   `UserSeeder`), which a vanilla app still needs.
+   `User` with no traits). Delete the fenced blocks in every other file in the
+   table: **the fenced blocks only**. The seeder files survive and keep their
+   non-teams calls (`PermissionSeeder`, `SystemRolesSeeder`), which a vanilla app
+   still needs; `routes/web.php` then needs its route groups pointed back at
+   plain paths.
 3. **Delete the package** — `rm -rf packages/teams`.
 4. **Remove the teams tests** — they import `Concise\Teams\…` and would fatal the
    suite otherwise: `rm -rf tests/Feature/Teams`, the `PublicSaas` /
@@ -98,7 +121,6 @@ so there is no `bootstrap/providers.php` entry to touch.
 7. **Verify** — `composer dump-autoload`, then `php artisan test` (must be green;
    `VanillaAppTest` is the contract) and boot the app. Nothing should reference
    the tier any more: `grep -rn "Concise" app config routes database tests`.
-   *(Proven end-to-end in a throwaway clone: 257 tests pass with teams removed.)*
 
 ## Ejecting into `app/`
 

@@ -70,7 +70,8 @@ return [
     */
 
     'make_command' => [
-        'type' => 'sfc', // Options: 'sfc', 'mfc', 'class'
+        // 'class': a class plus a separate Blade view, the only kind this app uses (.ai/rules/livewire.md).
+        'type' => 'class', // Options: 'sfc', 'mfc', 'class'
         'emoji' => true, // Options: true, false
         'with' => [
             'js' => false,

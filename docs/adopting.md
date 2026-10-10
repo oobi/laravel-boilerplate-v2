@@ -22,6 +22,7 @@ Then boot it:
 ```bash
 composer run setup          # install, .env, key, migrate, npm build
 php artisan bp:setup        # pick a recipe, see docs/config-recipes.md
+php artisan db:seed         # permissions and default roles (after the recipe, so roles take its labels)
 php artisan bp:make-admin   # first super admin
 ```
 
@@ -114,7 +115,7 @@ applied. From then on, every schema change in the boilerplate goes in a
 ## Checklist
 
 - [ ] Cloned with history, `upstream` remote set
-- [ ] `composer run setup`, `bp:setup`, `bp:make-admin` run
+- [ ] `composer run setup`, `bp:setup`, `db:seed`, `bp:make-admin` run, in that order
 - [ ] `.env` configured, theme-demo kept or removed
 - [ ] Client features registered from a client service provider
 - [ ] Upstream merged regularly with `git merge --no-ff upstream/main`

@@ -51,7 +51,15 @@ Not exhaustive.
   and spatie's teams feature stays off so system roles resolve exactly as spatie
   documents. Removing or ejecting the tier is driven by `// teams:start/end`
   markers — see `docs/teams-distribution.md`; its subdomain/custom-domain
-  routing is in `docs/teams-domains.md`.
+  routing is in `docs/teams-domains.md`. Per-team isolation helpers, for
+  features that keep data per team: `team_disk($team)` (a filesystem under
+  `teams/{id}/` on `TEAMS_FILESYSTEM_DISK`), `team_cache($team)` (cache keys
+  namespaced to the team), and the `InteractsWithTeamContext` job trait with its
+  `ApplyTeamContext` middleware (a queued job runs in the team it was dispatched
+  from). `team_disk` and `team_cache` default to the current team and throw
+  without one; a job whose team is gone runs without a team, so its storage and
+  cache calls fail the same way. `TeamIsolationTest` and `TeamJobContextTest`
+  show them in use.
 - **Admin page composition (panels)** — Show/Edit admin pages are built
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own

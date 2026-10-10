@@ -34,7 +34,7 @@ quietly baking a compromise into the foundation.
 | A card/field on a Users Show/Edit page | `app/Panels/Users/*` registered in `App\Support\Panels\AdminPanels` | [docs/panels.md](../docs/panels.md) |
 | A new `bp:` artisan command | `app/Console/Commands/*`, document it | [docs/commands.md](../docs/commands.md) |
 | A Livewire full-page component | `app/Livewire/{Area}/{Domain}/*` (e.g. `app/Livewire/Admin/Users/*`) | — |
-| RBAC checks | Global abilities: `$user->hasPermissionTo(SystemPermission::X->value)` (spatie/laravel-permission). Per-instance User abilities (edit/activate/delete a specific user): `App\Policies\UserPolicy` via `Gate::authorize('ability', $target)`. Super admin bypasses both via a global `Gate::before()` — it's a hardcoded flag, never a role | [.ai/rules/policies.md](../.ai/rules/policies.md), `~/memories/repo/impersonation.md` has impersonation-specific notes |
+| RBAC checks | Global abilities: `Gate::authorize(SystemPermission::X)` (or a route's `can:` middleware) in routes and components, `$user->hasSystemPermission(SystemPermission::X)` on a User (spatie/laravel-permission behind the Gate). Never `hasPermissionTo()`: it throws for an unseeded permission. Per-instance User abilities (edit/activate/delete a specific user): `App\Policies\UserPolicy` via `Gate::authorize(UserAbility::X, $target)`. Super admin bypasses both via a global `Gate::before()`; it's a hardcoded flag, never a role | [.ai/rules/app.md](../.ai/rules/app.md), [.ai/rules/policies.md](../.ai/rules/policies.md), [docs/permissions.md](../docs/permissions.md) |
 | A new role or permission | Admin > Roles screen (`app/Livewire/Admin/Roles/*`) — never hardcode a new role in PHP. New *permissions* are still code (a `SystemPermission` case + seeder entry); role -> permission assignment is admin-configurable | [docs/permissions.md](../docs/permissions.md), [.ai/rules/policies.md](../.ai/rules/policies.md) |
 | A new *family* of roles (a tab on the Roles screen) | An `App\Support\Roles\RoleScope` registered via `RoleScopeRegistry::register()` — core's in `AdminRoleScopes`, add-ons from their own provider (e.g. the teams tier's `TeamRoleScope`) | [docs/permissions.md](../docs/permissions.md) |
 
@@ -85,14 +85,15 @@ currently registered.
 
 ## Coding standards
 
-Full source of truth: [_documentation/CODING_STANDARDS.md](../../_documentation/CODING_STANDARDS.md).
-That doc is generic across projects and assumes a controller+Form
-Request+Policy stack — this app has none of those (no `app/Http/Requests`,
-no `app/Policies`). Here, validation lives in Filament Schema field rules on
-Livewire components and authorization is `Gate::define()`-only; see
-[.ai/rules/livewire.md](../.ai/rules/livewire.md) and
-[.ai/rules/providers.md](../.ai/rules/providers.md). Salient points that
-still apply:
+The team's general coding standards (kept outside this repo) assume a
+controller, Form Request and Policy stack. This app has no controllers for its
+screens and no `app/Http/Requests`: validation lives in Filament Schema field
+rules on Livewire components. Authorization is spatie permissions checked
+through the Gate (no `Gate::define()` per permission), plus
+`App\Policies\UserPolicy` for abilities on a specific user; see
+[.ai/rules/livewire.md](../.ai/rules/livewire.md),
+[.ai/rules/providers.md](../.ai/rules/providers.md) and
+[.ai/rules/policies.md](../.ai/rules/policies.md). The points that apply here:
 
 - Extract to an **Action** once logic is >~10 lines, multi-step, or
   reusable; promote to a **Service** only when Actions share state/a

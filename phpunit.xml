@@ -29,9 +29,6 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="NIGHTWATCH_ENABLED" value="false"/>
         <!-- Pin mandatory 2FA to its defaults, for the same reason as the teams tier below. -->
         <env name="AUTH_2FA_GRACE_DAYS" value="14"/>
         <env name="AUTH_2FA_ENFORCEMENT" value="true"/>

@@ -30,7 +30,7 @@ class ThemeDemoServiceProvider extends ServiceProvider
 
         NavRegistry::group('style-demo')
             ->label(__('theme-demo::messages.nav_group'))
-            ->can(SystemPermission::ACCESS_ADMIN_PANEL->value)
+            ->can(SystemPermission::ACCESS_ADMIN_PANEL)
             ->order(1000) // intentionally last, so it doesn't clutter the nav for normal users
             ->add(
                 NavItem::make('style-demo-overview')

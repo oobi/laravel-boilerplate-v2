@@ -1,59 +1,50 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel admin boilerplate
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 12 starting point for staff back-office apps: Livewire 4, Filament 5
+tables and forms, Tailwind 4 with daisyUI, Fortify authentication (two-factor
+included), spatie roles and permissions, and an optional teams tier
+(`packages/teams`). Every project starts from it, so it aims to be secure,
+accessible and consistent out of the box.
 
-## About Laravel
+## Start a project
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+A project is its own repository that shares git history with this one, so
+fixes can flow both ways. See [docs/adopting.md](docs/adopting.md), then:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+composer run setup          # install, .env, key, migrate, npm build
+php artisan bp:setup        # pick a recipe (docs/config-recipes.md)
+php artisan db:seed         # permissions and default roles, named by the recipe
+php artisan bp:make-admin   # the first super admin
+composer run dev            # server, queue, logs and Vite together
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Requires PHP 8.4, Composer, Node, and MySQL (tests run on in-memory SQLite).
 
-## Learning Laravel
+## Tests
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+php artisan test --compact tests/Feature/Some/FileTest.php   # while working
+composer test:fast          # the parallel suite minus the slow group (pre-commit)
+php artisan test --parallel --compact                         # before merging
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Docs
 
-## Laravel Sponsors
+| Topic | Doc |
+|---|---|
+| Stack and in-house pieces | [architecture.md](docs/architecture.md) |
+| Starting a project, taking upstream fixes | [adopting.md](docs/adopting.md) |
+| Recipes (SaaS, invitation-only, back office, vanilla) | [config-recipes.md](docs/config-recipes.md) |
+| Roles and permissions | [permissions.md](docs/permissions.md) |
+| Login, passwords, two-factor, impersonation | [authentication.md](docs/authentication.md) |
+| Sidebar navigation | [navigation.md](docs/navigation.md) |
+| Show and Edit page panels | [panels.md](docs/panels.md) |
+| Components and styling | [design-system.md](docs/design-system.md) |
+| `bp:` commands | [commands.md](docs/commands.md) |
+| Removing or ejecting the teams tier | [teams-distribution.md](docs/teams-distribution.md) |
+| Team subdomains and custom domains | [teams-domains.md](docs/teams-domains.md) |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Guidance for coding agents lives in [AGENTS.md](AGENTS.md),
+[.github/copilot-instructions.md](.github/copilot-instructions.md) and the
+path-scoped rules in [.ai/rules](.ai/rules/index.md).

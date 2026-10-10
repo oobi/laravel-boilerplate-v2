@@ -10,9 +10,10 @@ use App\Support\Roles\Coverage;
 
 /**
  * Per-instance authorization for the Users admin area. Global, non-instance
- * abilities (access admin panel, view users, etc.) are checked
- * directly via `hasPermissionTo()`/spatie's own Gate::before — see
- * .ai/rules/providers.md. The super-admin bypass for both is a single
+ * abilities (access admin panel, view users, etc.) are asked through the
+ * Gate (spatie's own Gate::before resolves them; on a User,
+ * hasSystemPermission()), see .ai/rules/providers.md. Inside the methods
+ * below, use checkPermissionTo() (see policies.md). The super-admin bypass for both is a single
  * global `Gate::before()` in AppServiceProvider, not a method here.
  *
  * Every act on another user needs its permission AND that the actor covers
