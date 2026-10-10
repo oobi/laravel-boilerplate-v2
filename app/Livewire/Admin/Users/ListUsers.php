@@ -223,7 +223,6 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->authorizeIndividualRecords(UserAbility::DELETE),
 
                     RestoreBulkAction::make()
-                        ->color(DaisyColor::INFO->toFilamentColor())
                         ->visible(fn (): bool => Gate::allows(SystemPermission::DELETE_USERS->value))
                         ->modalDescription(fn (Collection $records): string => trans_choice('admin.restore_confirm', $records->count(), ['count' => $records->count()]))
                         ->authorizeIndividualRecords(UserAbility::RESTORE),

@@ -6,6 +6,7 @@ use App\Enums\SystemPermission;
 use App\Livewire\Admin\Users\ListUsers;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Theme\DaisyColor;
 use Filament\Actions\Testing\TestAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -166,6 +167,19 @@ class ListUsersTest extends TestCase
             ->selectTableRecords($targets)->callAction(TestAction::make('restore')->table()->bulk());
 
         $targets->each(fn (User $user) => $this->assertNotSoftDeleted($user->fresh()));
+    }
+
+    public function test_row_and_bulk_restore_share_the_success_colour(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        $target->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->filterTable('trashed', '0')
+            ->assertActionHasColor(TestAction::make('restore')->table($target), DaisyColor::SUCCESS->toFilamentColor())
+            ->assertActionHasColor(TestAction::make('restore')->table()->bulk(), DaisyColor::SUCCESS->toFilamentColor());
     }
 
     public function test_support_cannot_bulk_delete_or_restore_users(): void

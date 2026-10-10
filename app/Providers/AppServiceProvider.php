@@ -17,8 +17,11 @@ use App\Models\User;
 use App\Observers\UserObserver;
 use App\Support\Auth\PasswordChecks;
 use App\Support\Roles\AdminRoleScopes;
+use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
@@ -62,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentIcons();
         $this->registerFilamentModalDefaults();
         $this->registerFilamentBulkActionDefaults();
+        $this->registerFilamentRestoreDefaults();
         $this->registerNotifications();
 
         AdminRoleScopes::define();
@@ -124,6 +128,22 @@ class AppServiceProvider extends ServiceProvider
                 ->button()
                 ->outlined()
                 ->extraAttributes(['class' => 'fi-btn-menu']);
+        });
+    }
+
+    /**
+     * Every RestoreAction and RestoreBulkAction, row or bulk, is success
+     * coloured like Activate, matching the Users Show page's own Restore
+     * action. A table can still override it with its own ->color().
+     */
+    private function registerFilamentRestoreDefaults(): void
+    {
+        RestoreAction::configureUsing(function (RestoreAction $action): void {
+            $action->color(DaisyColor::SUCCESS->toFilamentColor());
+        });
+
+        RestoreBulkAction::configureUsing(function (RestoreBulkAction $action): void {
+            $action->color(DaisyColor::SUCCESS->toFilamentColor());
         });
     }
 
