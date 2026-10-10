@@ -191,6 +191,8 @@ class ManageRoles extends Component implements HasActions, HasSchemas
             ->icon('heroicon-o-trash')
             ->color(DaisyColor::ERROR->toFilamentColor())
             ->requiresConfirmation()
+            // Deleting a role strips it from everyone who holds it (spatie cascades): say how many.
+            ->modalDescription(fn (): string => trans_choice('admin.delete_role_confirm', $holders = $this->roleScope()->holderCount($this->role), ['count' => $holders, 'role' => $this->role->name]))
             ->visible(fn (): bool => (bool) $this->role && $this->canEditRole())
             ->action(function (): void {
                 Gate::authorize(SystemPermission::MANAGE_ROLES);

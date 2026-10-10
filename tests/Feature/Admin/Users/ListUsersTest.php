@@ -41,13 +41,13 @@ class ListUsersTest extends TestCase
         $this->actingAs($panelOnly)->get('/admin/users')->assertForbidden();
     }
 
-    public function test_a_stats_only_admin_cannot_open_the_users_area(): void
+    public function test_another_areas_read_floor_cannot_open_the_users_area(): void
     {
-        // The reason the users area has its own read floor: `view system analytics`
-        // legitimately reaches the panel, but must not carry the roster with it.
-        $statsAdmin = User::factory()->withPermission(SystemPermission::VIEW_SYSTEM_ANALYTICS)->create();
+        // The reason the users area has its own read floor: `manage roles` legitimately
+        // reaches the panel, but must not carry the roster with it.
+        $rolesAdmin = User::factory()->withPermission(SystemPermission::MANAGE_ROLES)->create();
 
-        $this->actingAs($statsAdmin)->get('/admin/users')->assertForbidden();
+        $this->actingAs($rolesAdmin)->get('/admin/users')->assertForbidden();
     }
 
     public function test_view_users_opens_the_list_read_only(): void

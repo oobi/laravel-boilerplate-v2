@@ -9,6 +9,7 @@ use Concise\Teams\Livewire\Admin\UserMemberships;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -33,6 +34,46 @@ class TeamMembershipsPanelTest extends TestCase
             ->assertSee('Other Co')
             ->assertSee('Team Admin')
             ->assertSee('Member since');
+    }
+
+    public function test_each_row_shows_its_standing_without_a_query_per_team(): void
+    {
+        Team::createRole('Team Admin', [TeamPermission::MANAGE_MEMBERS]);
+        $user = User::factory()->create();
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $queriesFor = function () use ($user): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            Livewire::test(UserMemberships::class, ['user' => $user]);
+
+            return count(DB::getQueryLog());
+        };
+
+        $owned = Team::factory()->ownedBy($user)->create(['name' => 'Owned Co']);
+        $coOwned = Team::factory()->create(['name' => 'Co Owned']);
+        $coOwned->addMember($user);
+        $coOwned->makeOwner($user);
+        $admin = Team::factory()->create(['name' => 'Admin Co']);
+        $admin->addMember($user, 'Team Admin');
+        $suspended = Team::factory()->create(['name' => 'Paused Co']);
+        $suspended->addMember($user, 'Team Admin');
+        $suspended->suspendMember($user);
+        $queriesFor(); // Warms the permission cache, which the first check loads.
+        $few = $queriesFor();
+
+        foreach (range(1, 6) as $index) {
+            Team::factory()->create()->addMember($user, 'Team Admin');
+        }
+
+        $this->assertSame($few, $queriesFor(), 'more teams, same queries');
+
+        // Each row on its own: the badges a page shows elsewhere can't satisfy another row's check.
+        Livewire::test(UserMemberships::class, ['user' => $user])
+            ->assertTableColumnStateSet('standing', [team_trans('members.primary_owner')], $owned)
+            ->assertTableColumnStateSet('standing', [team_trans('members.owner')], $coOwned)
+            ->assertTableColumnStateSet('standing', ['Team Admin'], $admin)
+            ->assertTableColumnStateSet('standing', ['Team Admin', team_trans('members.suspended')], $suspended);
     }
 
     public function test_an_inactive_team_is_flagged(): void

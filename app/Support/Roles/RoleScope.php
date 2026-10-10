@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Roles;
 
+use App\Models\Role;
 use App\Models\User;
 
 /**
@@ -81,4 +82,7 @@ interface RoleScope
      * make sure editing them can't raise that person's own access.
      */
     public function mayManage(User $actor): bool;
+
+    /** How many hold this role (users; for a team scope, memberships across every team): what deleting it takes away. */
+    public function holderCount(Role $role): int;
 }

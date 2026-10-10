@@ -33,7 +33,6 @@ class User extends Authenticatable implements MustVerifyEmail
     // teams:canonical: use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
     use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, HasTeams, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
         HasTeams::teams insteadof HasRoles;
-        HasRoles::teams as roleTeams;
     }
     // teams:end
 
@@ -130,12 +129,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->first_name.' '.$this->last_name;
     }
 
-    /**
-     * User list name (as appears in lists, e.g. "DOE, John")
-     */
-    public function getListNameAttribute(): string
+    /** The name as lists show it, "DOE, John" ($user->list_name). */
+    protected function listName(): Attribute
     {
-        return strtoupper($this->last_name).', '.$this->first_name;
+        return Attribute::get(fn (): string => strtoupper($this->last_name).', '.$this->first_name);
     }
 
     /**

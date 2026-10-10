@@ -9,7 +9,6 @@
 
 @php
     $home ??= url('/');
-    $themeMode = request()->cookie('theme', 'auto');
     // No navigation slot → no sidebar (a gateway/lobby page). The header, account
     // menu and impersonation banner still render, so it's not a bare page.
     $hasNav = isset($navigation) && ! $navigation->isEmpty();
@@ -20,7 +19,7 @@
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $themeMode === 'dark' ? 'boilerplate-dark' : 'boilerplate' }}" data-theme-mode="{{ $themeMode }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" {{ \App\Support\Theme\ThemeMode::htmlAttributes() }}>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

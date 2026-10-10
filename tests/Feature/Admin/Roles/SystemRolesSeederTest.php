@@ -5,9 +5,11 @@ namespace Tests\Feature\Admin\Roles;
 use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Support\Theme\DaisyColor;
+use Database\Seeders\PermissionSeeder;
 use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -47,7 +49,6 @@ class SystemRolesSeederTest extends TestCase
         $this->assertTrue($support->hasPermissionTo(SystemPermission::ACCESS_ADMIN_PANEL->value));
         $this->assertFalse($support->hasPermissionTo(SystemPermission::VIEW_TEAMS->value), 'support has no teams authority');
         $this->assertFalse($support->hasPermissionTo(SystemPermission::DELETE_USERS->value), 'support is limited');
-        $this->assertFalse($support->hasPermissionTo(SystemPermission::MANAGE_SYSTEM_SETTINGS->value));
     }
 
     public function test_it_seeds_only_into_an_empty_set(): void
@@ -89,5 +90,16 @@ class SystemRolesSeederTest extends TestCase
 
         $this->assertFalse(Role::where('name', 'Support')->exists());
         $this->assertSame(1, Role::systemRoles()->count());
+    }
+
+    public function test_seeding_drops_retired_permissions_from_existing_roles(): void
+    {
+        $role = Role::findOrCreate('Old');
+        $role->givePermissionTo(Permission::findOrCreate('view system analytics'));
+
+        (new PermissionSeeder)->run();
+
+        $this->assertFalse(Permission::query()->where('name', 'view system analytics')->exists());
+        $this->assertSame([], $role->fresh()->permissions->pluck('name')->all());
     }
 }

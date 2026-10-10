@@ -200,7 +200,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->requiresConfirmation()
                         ->modalHeading(__('admin.activate'))
                         ->modalDescription(fn (Collection $records): string => trans_choice('admin.activate_confirm', $records->count(), ['count' => $records->count()]))
-                        ->authorizeIndividualRecords('toggleActive')
+                        ->authorizeIndividualRecords(UserAbility::TOGGLE_ACTIVE)
                         ->hidden(fn (): bool => $this->isViewingOnlyTrashed())
                         ->action(fn (Collection $records) => $this->setActiveForRecords($records, true))
                         ->deselectRecordsAfterCompletion(),
@@ -212,7 +212,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->requiresConfirmation()
                         ->modalHeading(__('admin.deactivate'))
                         ->modalDescription(fn (Collection $records): string => trans_choice('admin.deactivate_confirm', $records->count(), ['count' => $records->count()]))
-                        ->authorizeIndividualRecords('toggleActive')
+                        ->authorizeIndividualRecords(UserAbility::TOGGLE_ACTIVE)
                         ->hidden(fn (): bool => $this->isViewingOnlyTrashed())
                         ->action(fn (Collection $records) => $this->setActiveForRecords($records, false))
                         ->deselectRecordsAfterCompletion(),
@@ -220,13 +220,13 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     DeleteBulkAction::make()
                         ->visible(fn (): bool => Gate::allows(SystemPermission::DELETE_USERS->value))
                         ->modalDescription(fn (Collection $records): string => trans_choice('admin.delete_confirm', $records->count(), ['count' => $records->count()]))
-                        ->authorizeIndividualRecords('delete'),
+                        ->authorizeIndividualRecords(UserAbility::DELETE),
 
                     RestoreBulkAction::make()
                         ->color(DaisyColor::INFO->toFilamentColor())
                         ->visible(fn (): bool => Gate::allows(SystemPermission::DELETE_USERS->value))
                         ->modalDescription(fn (Collection $records): string => trans_choice('admin.restore_confirm', $records->count(), ['count' => $records->count()]))
-                        ->authorizeIndividualRecords('restore'),
+                        ->authorizeIndividualRecords(UserAbility::RESTORE),
                 ]),
             ])
             // Super Admin and your own record cannot be included in bulk action

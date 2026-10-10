@@ -38,13 +38,13 @@ class ListTeamsTest extends TestCase
         $this->actingAs($panelOnly)->get(route('teams.index'))->assertForbidden();
     }
 
-    public function test_a_stats_only_admin_cannot_open_the_teams_area(): void
+    public function test_another_areas_read_floor_cannot_open_the_teams_area(): void
     {
-        // The teams area has its own read floor: `view system analytics` reaches
-        // the panel but must not carry the teams list with it.
-        $statsAdmin = User::factory()->withPermission(SystemPermission::VIEW_SYSTEM_ANALYTICS)->create();
+        // The teams area has its own read floor: `view users` reaches the panel but
+        // must not carry the teams list with it.
+        $usersAdmin = User::factory()->withPermission(SystemPermission::VIEW_USERS)->create();
 
-        $this->actingAs($statsAdmin)->get(route('teams.index'))->assertForbidden();
+        $this->actingAs($usersAdmin)->get(route('teams.index'))->assertForbidden();
     }
 
     public function test_view_teams_opens_the_list_read_only(): void

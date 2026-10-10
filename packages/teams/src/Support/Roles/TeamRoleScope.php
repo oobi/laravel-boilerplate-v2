@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Concise\Teams\Support\Roles;
 
 use App\Enums\SystemPermission;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\Roles\RoleScope;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\TeamLabels;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The teams tier's tab on the admin Roles screen: the centrally-defined roles
@@ -86,5 +88,11 @@ final class TeamRoleScope implements RoleScope
     public function mayManage(User $actor): bool
     {
         return $actor->hasSystemPermission(SystemPermission::MANAGE_TEAMS);
+    }
+
+    /** Memberships holding the role, across every team (team roles live on the membership, not the user). */
+    public function holderCount(Role $role): int
+    {
+        return DB::table('team_user_role')->where('role_id', $role->getKey())->count();
     }
 }

@@ -61,11 +61,6 @@ class ShowUser extends Component implements HasActions, HasSchemas
         return Gate::allows(UserAbility::UPDATE, $this->user);
     }
 
-    public function canImpersonateUser(): bool
-    {
-        return Gate::allows(UserAbility::IMPERSONATE, $this->user);
-    }
-
     public function userInfolist(Schema $schema): Schema
     {
         return $schema

@@ -46,7 +46,7 @@ class SystemRolesSeeder extends Seeder
                 'permissions' => SystemPermission::cases(),
             ],
             // A limited desk role: manage and suspend users, and impersonate to
-            // reproduce a problem — not delete, settings or teams. The read floor
+            // reproduce a problem — not delete or teams. The read floor
             // (`view users`) and panel entry come with those through implies().
             'Support' => [
                 'color' => DaisyColor::WARNING,

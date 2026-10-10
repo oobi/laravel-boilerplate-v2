@@ -132,14 +132,14 @@ class ManageRolesTest extends TestCase
         $role = Role::findOrCreate('Editor');
         $role->givePermissionTo([
             Permission::findOrCreate(SystemPermission::MANAGE_USERS->value),
-            Permission::findOrCreate(SystemPermission::VIEW_SYSTEM_ANALYTICS->value),
+            Permission::findOrCreate(SystemPermission::MANAGE_ROLES->value),
         ]);
 
         Livewire::actingAs($admin)
             ->test(ManageRoles::class, ['role' => $role])
             // The view a held Manage carries shows ticked with it.
-            ->assertSet('data.permissions_user_management', [SystemPermission::VIEW_USERS->value, SystemPermission::MANAGE_USERS->value])
-            ->assertSet('data.permissions_system_administration', [SystemPermission::ACCESS_ADMIN_PANEL->value, SystemPermission::VIEW_SYSTEM_ANALYTICS->value]);
+            ->assertSet('data.permissions_user_management', [SystemPermission::VIEW_USERS->value, SystemPermission::MANAGE_USERS->value, SystemPermission::MANAGE_ROLES->value])
+            ->assertSet('data.permissions_system_administration', [SystemPermission::ACCESS_ADMIN_PANEL->value]);
     }
 
     public function test_each_categorys_select_all_checkbox_is_labelled_for_screen_readers(): void
@@ -190,7 +190,8 @@ class ManageRolesTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ManageRoles::class, ['role' => $role])
             ->assertSet('data.permissions_user_management_select_all', true)
-            ->assertSet('data.permissions_system_administration_select_all', false);
+            // Panel entry is the whole category, and every manage permission carries it.
+            ->assertSet('data.permissions_system_administration_select_all', true);
     }
 
     public function test_deselecting_a_permission_unchecks_select_all(): void
@@ -214,13 +215,13 @@ class ManageRolesTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ManageRoles::class, ['role' => $role])
             ->set('data.permissions_user_management', [SystemPermission::MANAGE_USERS->value])
-            ->set('data.permissions_system_administration', [SystemPermission::VIEW_SYSTEM_ANALYTICS->value])
+            ->set('data.permissions_system_administration', [SystemPermission::ACCESS_ADMIN_PANEL->value])
             ->call('save')
             ->assertHasNoErrors();
 
         $role->refresh();
         $this->assertTrue($role->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
-        $this->assertTrue($role->checkPermissionTo(SystemPermission::VIEW_SYSTEM_ANALYTICS->value));
+        $this->assertTrue($role->checkPermissionTo(SystemPermission::ACCESS_ADMIN_PANEL->value));
     }
 
     public function test_switching_the_dropdown_redirects_to_that_roles_edit_page(): void
@@ -315,5 +316,24 @@ class ManageRolesTest extends TestCase
     private function assertOptionEnabled(string $html, string $permission): void
     {
         $this->assertDoesNotMatchRegularExpression('/\sdisabled(=|\s|\/|>)/', $this->optionInput($html, $permission), "[{$permission}] should render enabled");
+    }
+
+    public function test_deleting_a_role_says_how_many_people_hold_it(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Editor');
+        User::factory()->count(2)->create()->each(fn (User $user) => $user->assignRole($role));
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->mountAction('deleteRole')
+            ->assertMountedActionModalSee('2 people hold Editor and will lose it');
+
+        $empty = Role::findOrCreate('Unused');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $empty])
+            ->mountAction('deleteRole')
+            ->assertMountedActionModalSee('Nobody holds Unused');
     }
 }
