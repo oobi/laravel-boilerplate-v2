@@ -38,7 +38,9 @@
         </div>
     @endif
 
-    @if ($user->two_factor_confirmed_at)
+    @if ($user->trashed())
+        {{-- A trashed user is restored first; ShowUser refuses panel actions on them. --}}
+    @elseif ($user->two_factor_confirmed_at)
         @can(UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, $user)
             <x-action-list class="mt-2">
                 <x-button.danger

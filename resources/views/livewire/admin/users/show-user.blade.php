@@ -15,6 +15,12 @@
         </x-slot:actions>
     </x-page-header>
 
+    @if ($user->trashed())
+        <x-banner variant="warning" role="status" class="mb-6">
+            {{ $this->restoreAction->isVisible() ? __('admin.user_in_trash_restorable') : __('admin.user_in_trash') }}
+        </x-banner>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 flex flex-col gap-6">
             {{ $this->userInfolist }}
@@ -30,6 +36,7 @@
                  need the HasActions component's context; see docs/panels.md. --}}
             @php
                 $userActions = collect([
+                    $this->restoreAction,
                     $this->impersonateAction,
                     $this->manageRolesAction,
                     $this->resetPasswordAction,

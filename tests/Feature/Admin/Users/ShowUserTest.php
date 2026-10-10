@@ -100,6 +100,75 @@ class ShowUserTest extends TestCase
             ->assertOk();
     }
 
+    public function test_a_trashed_user_offers_only_restore(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        $target->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.user_in_trash_restorable'))
+            ->assertDontSee(route('users.edit', $target))
+            ->assertActionHidden('impersonate')
+            ->assertActionHidden('manageRoles')
+            ->assertActionHidden('resetPassword')
+            ->assertActionVisible('restore');
+    }
+
+    public function test_restoring_a_trashed_user_brings_back_their_actions(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        $target->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->callAction('restore')
+            ->assertNotified(__('admin.user_restored'))
+            ->assertActionHidden('restore')
+            ->assertActionVisible('impersonate');
+
+        $this->assertFalse($target->fresh()->trashed());
+    }
+
+    public function test_restore_is_hidden_without_permission_to_restore(): void
+    {
+        $support = User::factory()->support()->create();
+        $target = User::factory()->superAdmin()->create();
+        $target->delete();
+
+        Livewire::actingAs($support)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertSee(__('admin.user_in_trash'))
+            ->assertDontSee(__('admin.user_in_trash_restorable'))
+            ->assertActionHidden('restore');
+    }
+
+    public function test_a_trashed_users_two_factor_cant_be_force_disabled(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->twoFactorEnabled()->create();
+        $target->delete();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertDontSee(__('admin.force_disable_2fa'))
+            ->call('callPanelAction', 'security', 'force-disable-2fa')
+            ->assertNotFound();
+
+        $this->assertNotNull($target->fresh()->two_factor_confirmed_at);
+    }
+
+    public function test_restore_is_not_offered_for_a_live_user(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => User::factory()->create()])
+            ->assertActionHidden('restore');
+    }
+
     public function test_it_shows_the_statistics_panel_with_account_age_and_last_login(): void
     {
         $admin = User::factory()->superAdmin()->create();

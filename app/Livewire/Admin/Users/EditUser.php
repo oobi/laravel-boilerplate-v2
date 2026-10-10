@@ -27,6 +27,9 @@ class EditUser extends Component implements HasSchemas
 
     public function mount(User $user): void
     {
+        // A trashed user resolves (for restore) but is restored, not edited.
+        abort_if($user->trashed(), 404);
+
         $this->user = $user;
 
         Gate::authorize(UserAbility::UPDATE, $this->user);
@@ -52,6 +55,7 @@ class EditUser extends Component implements HasSchemas
 
     public function save(): void
     {
+        abort_if($this->user->trashed(), 404);
         Gate::authorize(UserAbility::UPDATE, $this->user);
 
         // Disabled fields (e.g. a self-edit's active toggle) are excluded from

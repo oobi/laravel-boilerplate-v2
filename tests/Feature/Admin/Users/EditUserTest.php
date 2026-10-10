@@ -26,6 +26,15 @@ class EditUserTest extends TestCase
         $this->actingAs($user)->get("/admin/users/{$other->id}/edit")->assertForbidden();
     }
 
+    public function test_a_trashed_user_cannot_be_edited(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        $target->delete();
+
+        $this->actingAs($admin)->get(route('users.edit', $target))->assertNotFound();
+    }
+
     public function test_the_page_header_slot_renders_intentional_markup(): void
     {
         // The page-header title is passed as a slot here (a "You" badge next to

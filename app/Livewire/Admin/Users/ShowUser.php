@@ -58,7 +58,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
     /** The one place a viewer can edit this user from — see docs/panels.md "UX flow". */
     public function canEditUser(): bool
     {
-        return Gate::allows(UserAbility::UPDATE, $this->user);
+        return ! $this->user->trashed() && Gate::allows(UserAbility::UPDATE, $this->user);
     }
 
     public function userInfolist(Schema $schema): Schema
@@ -108,7 +108,8 @@ class ShowUser extends Component implements HasActions, HasSchemas
      * The user's administrative operations all live here, on the Show page's
      * Actions card — one place to act on a user, rather than scattered across
      * the list, Show and Edit. Each is independently authorized for visibility
-     * and again inside its closure at the write boundary.
+     * and again inside its closure at the write boundary. A trashed user offers
+     * only Restore: the rest would act on an account that can't sign in.
      */
     public function impersonateAction(): Action
     {
@@ -116,7 +117,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->label(__('admin.impersonate_user'))
             ->icon('heroicon-o-finger-print')
             ->color(DaisyColor::WARNING->toFilamentColor())
-            ->visible(fn (): bool => Gate::allows(UserAbility::IMPERSONATE, $this->user))
+            ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::IMPERSONATE, $this->user))
             ->action(fn () => app(StartImpersonation::class)->handle($this->user))
             ->successRedirectUrl(fn (): string => Destination::home($this->user));
     }
@@ -139,7 +140,8 @@ class ShowUser extends Component implements HasActions, HasSchemas
             // need that. A dev with a very long role list can widen it again.
             // (Sticky header/footer is applied globally in AppServiceProvider.)
             ->modalWidth(Width::Large)
-            ->visible(fn (): bool => Gate::allows(UserAbility::ASSIGN_ROLE, $this->user) || Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user))
+            ->visible(fn (): bool => ! $this->user->trashed()
+                && (Gate::allows(UserAbility::ASSIGN_ROLE, $this->user) || Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user)))
             ->fillForm(fn (): array => [
                 'roles' => $this->user->roles->pluck('name')->all(),
                 'is_super_admin' => $this->user->is_super_admin,
@@ -167,6 +169,8 @@ class ShowUser extends Component implements HasActions, HasSchemas
                     ->visible(fn (): bool => Gate::allows(UserAbility::ASSIGN_ROLE, $this->user)),
             ])
             ->action(function (array $data): void {
+                abort_if($this->user->trashed(), 404);
+
                 if (Gate::allows(UserAbility::ASSIGN_ROLE, $this->user) && array_key_exists('roles', $data)) {
                     Gate::authorize(UserAbility::ASSIGN_ROLE, $this->user);
 
@@ -216,7 +220,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
                 ->icon('heroicon-o-key')
                 // Two stacked password fields don't need Filament's default 4xl.
                 ->modalWidth(Width::Medium)
-                ->visible(fn (): bool => Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user))
+                ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user))
                 ->schema([
                     Forms\Components\TextInput::make('password')
                         ->label(__('admin.new_password'))
@@ -233,6 +237,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
                         ->dehydrated(false),
                 ])
                 ->action(function (array $data): void {
+                    abort_if($this->user->trashed(), 404);
                     Gate::authorize(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user);
 
                     // Changing the stored hash makes every live session the
@@ -252,15 +257,39 @@ class ShowUser extends Component implements HasActions, HasSchemas
         return AdminAction::make('resetPassword')
             ->label(__('admin.send_password_reset_link'))
             ->icon('heroicon-o-key')
-            ->visible(fn (): bool => Gate::allows(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user))
+            ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user))
             ->requiresConfirmation()
             ->action(function (): void {
+                abort_if($this->user->trashed(), 404);
                 Gate::authorize(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user);
 
                 Password::sendResetLink(['email' => $this->user->email]);
 
                 Notification::make()
                     ->title(__('admin.password_reset_link_sent'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /** The one action a trashed user offers: back out of the trash, as from the list. */
+    public function restoreAction(): Action
+    {
+        return AdminAction::make('restore')
+            ->label(__('admin.restore_user'))
+            ->icon('heroicon-o-arrow-uturn-left')
+            ->color(DaisyColor::SUCCESS->toFilamentColor())
+            ->visible(fn (): bool => $this->user->trashed() && Gate::allows(UserAbility::RESTORE, $this->user))
+            ->requiresConfirmation()
+            ->modalDescription(trans_choice('admin.restore_confirm', 1, ['count' => 1]))
+            ->action(function (): void {
+                abort_unless($this->user->trashed(), 404);
+                Gate::authorize(UserAbility::RESTORE, $this->user);
+
+                $this->user->restore();
+
+                Notification::make()
+                    ->title(__('admin.user_restored'))
                     ->success()
                     ->send();
             });
@@ -307,6 +336,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
     /** @return \Closure(User): void */
     private function resolvePanelAction(string $panelKey, string $action): \Closure
     {
+        // A trashed user offers only Restore, so no panel acts on them either.
+        abort_if($this->user->trashed(), 404);
+
         $panel = PanelRegistry::find('users.show', $panelKey, $this->user, Auth::user());
 
         abort_unless($panel instanceof HasPanelActions, 404);
