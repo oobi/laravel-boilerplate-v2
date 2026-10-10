@@ -13,13 +13,19 @@ Every real, code-checked ability in the app is a case on the
 enum SystemPermission: string
 {
     case ACCESS_ADMIN_PANEL = 'access admin panel';
-    case MANAGE_SYSTEM_SETTINGS = 'manage system settings';
-    case VIEW_SYSTEM_ANALYTICS = 'view system analytics';
     case VIEW_USERS = 'view users';
     case MANAGE_USERS = 'manage users';
     case SUSPEND_USERS = 'suspend users';
     case DELETE_USERS = 'delete users';
     case IMPERSONATE_USERS = 'impersonate users';
+    case SET_USER_PASSWORDS = 'set user passwords';
+    case MANAGE_ROLES = 'manage roles';
+    // The teams tier adds its area (removed with it):
+    case VIEW_TEAMS = 'view teams';
+    case MANAGE_TEAMS = 'manage teams';
+    case DEACTIVATE_TEAMS = 'deactivate teams';
+    case DELETE_TEAMS = 'delete teams';
+    case MANAGE_TEAM_OWNERSHIP = 'manage team ownership';
 
     public function label(): string { /* ... */ }
     public function category(): string { /* ... */ }
@@ -31,16 +37,16 @@ enum SystemPermission: string
 
 `access admin panel` is **entry only** — the admin shell, the dashboard and
 its navigation. It does not open any area's data. Each area has its own read
-floor: `view users` opens the user list and profiles read-only, `view system
-analytics` the analytics module, and an add-on's area brings its own (the teams
-tier's `view teams`). The action permissions of an area sit on top of its
+floor: `view users` opens the user list and profiles read-only, and an add-on's
+area brings its own (the teams tier's `view teams`; a future analytics module
+would add `view analytics`). The action permissions of an area sit on top of its
 floor: `manage users`, `suspend users`, `delete users`, `impersonate users`
 each unlock their acts inside the users area.
 
 Why: a role that reaches the panel for one module must not browse another's
-data. A stats-only admin holds `access admin panel` + `view system analytics`
-and never sees a user's name or address; a support desk holds `view users` +
-`manage users` + `suspend users` and nothing about teams.
+data. A teams administrator holds `access admin panel` + `view teams` and never
+sees the user roster; a support desk holds `view users` + `manage users` +
+`suspend users` and nothing about teams.
 
 **Implications keep that shape honest.** `SystemPermission::implies()`
 declares, one hop at a time, that every action carries its area's read floor
@@ -242,6 +248,12 @@ generic "update a user" ability.
 3. Check it somewhere with `Gate::authorize()` / `Gate::allows()` /
    `checkPermissionTo()`, same as any existing case. A new area's pages
    authorize its read floor in `mount()`, never `ACCESS_ADMIN_PANEL`.
+
+To **remove** a permission nothing checks any more, delete its case (label,
+category, `implies()` arm, lang line) and add its value to
+`PermissionSeeder::RETIRED`: the next seed deletes the row and so takes it off
+every role. Don't seed a permission nothing checks: it shows on the Roles
+screen and grants nothing.
 
 No route, form, or Manage Roles change is required — the new permission
 appears automatically as a checkbox under its category's tab.

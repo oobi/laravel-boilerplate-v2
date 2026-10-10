@@ -12,6 +12,7 @@ use Concise\Teams\Database\Seeders\TeamRolesSeeder;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\TeamsServiceProvider;
 use Illuminate\Database\Eloquent\Model;
@@ -360,5 +361,15 @@ class TeamRolesScopeTest extends TestCase
         $role = Team::availableRoles()->where('name', 'Billing')->firstOrFail();
         $this->assertNull($role->team_id, 'shared team roles resolve in every team scope');
         $this->assertTrue($role->checkPermissionTo(TeamPermission::INVITE_MEMBERS->value));
+    }
+
+    public function test_a_team_roles_holders_are_its_memberships_in_every_team(): void
+    {
+        $role = Team::createRole('Stylist', [TeamPermission::MANAGE_MEMBERS]);
+        foreach (range(1, 3) as $index) {
+            Team::factory()->create()->addMember(User::factory()->create(), 'Stylist');
+        }
+
+        $this->assertSame(3, (new TeamRoleScope)->holderCount($role));
     }
 }

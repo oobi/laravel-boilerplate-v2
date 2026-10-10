@@ -155,19 +155,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Personal teams
-    |--------------------------------------------------------------------------
-    |
-    | When true, every user is given a personal team on registration. Off by
-    | default: users may belong to zero teams and onboarding handles the empty
-    | state.
-    |
-    */
-
-    'personal_teams' => (bool) env('TEAMS_PERSONAL_TEAMS', false),
-
-    /*
-    |--------------------------------------------------------------------------
     | Isolation
     |--------------------------------------------------------------------------
     |

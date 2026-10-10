@@ -8,6 +8,7 @@ use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
+use Concise\Teams\Models\Membership;
 use Concise\Teams\Models\Team;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -48,6 +49,13 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
 
     /** @var Collection<string, Role>|null */
     private ?Collection $roles = null;
+
+    /**
+     * The user's memberships with their roles, by team id: one query for every row, not three per row.
+     *
+     * @var Collection<int, Membership>|null
+     */
+    private ?Collection $memberships = null;
 
     public function mount(User $user): void
     {
@@ -115,11 +123,19 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
     private function resolveBadges(Team $team): array
     {
         $this->roles ??= Team::availableRoles()->get()->keyBy('name');
+        $this->memberships ??= Membership::query()
+            ->where('user_id', $this->user->getKey())
+            ->with('roles')
+            ->get()
+            ->keyBy('team_id');
+
+        /** @var Membership|null $membership */
+        $membership = $this->memberships->get($team->getKey());
 
         $standing = match (true) {
             $team->isPrimaryOwner($this->user) => [['label' => team_trans('members.primary_owner'), 'color' => DaisyColor::SUCCESS->toFilamentColor()]],
-            $team->isOwnedBy($this->user) => [['label' => team_trans('members.owner'), 'color' => DaisyColor::SUCCESS->toFilamentColor()]],
-            default => $team->rolesFor($this->user)
+            (bool) $membership?->is_owner => [['label' => team_trans('members.owner'), 'color' => DaisyColor::SUCCESS->toFilamentColor()]],
+            default => ($membership?->roles ?? collect())->sortBy('name')->pluck('name')
                 ->map(fn (string $name): array => [
                     'label' => $name,
                     'color' => ($this->roles->get($name)?->badgeColor() ?? DaisyColor::NEUTRAL)->toFilamentColor(),
@@ -129,7 +145,7 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
                 ->all(),
         };
 
-        if ($team->isSuspended($this->user)) {
+        if ($membership?->suspended_at !== null) {
             $standing[] = ['label' => team_trans('members.suspended'), 'color' => DaisyColor::WARNING->toFilamentColor()];
         }
 

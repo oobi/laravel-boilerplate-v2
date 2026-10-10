@@ -52,7 +52,6 @@
         <env name="TEAMS_ADMIN_INVITATIONS" value="true"/>
         <env name="TEAMS_MAX_PER_USER" value="null"/>
         <env name="TEAMS_MULTIPLE_ROLES" value="false"/>
-        <env name="TEAMS_PERSONAL_TEAMS" value="false"/>
         <env name="TEAMS_DOMAINS_ENABLED" value="false"/>
         <env name="TEAMS_DOMAINS_CUSTOM" value="false"/>
     </php>

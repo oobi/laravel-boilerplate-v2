@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-@php
-    $themeMode = request()->cookie('theme', 'auto');
-@endphp
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $themeMode === 'dark' ? 'boilerplate-dark' : 'boilerplate' }}" data-theme-mode="{{ $themeMode }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" {{ \App\Support\Theme\ThemeMode::htmlAttributes() }}>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

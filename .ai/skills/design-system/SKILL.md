@@ -57,7 +57,7 @@ mix strength in dark mode rather than hardcoding a second color).
 
 - Use `gap-*` utilities for spacing items in a flex/grid list, not margins.
 - Check `resources/css/theme/components/*.css` (`button-group.css`,
-  `floating-label.css`, `tabs.css`, `toolbar.css`, `sidebar-layout.css`,
+  `floating-label.css`, `tabs.css`, `toolbar.css`,
   `typography.css`, `shadows.css`) before writing custom CSS — most layout
   primitives already exist there.
 

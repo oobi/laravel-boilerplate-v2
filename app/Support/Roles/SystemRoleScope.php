@@ -63,4 +63,9 @@ final class SystemRoleScope implements RoleScope
     {
         return true;
     }
+
+    public function holderCount(Role $role): int
+    {
+        return $role->users()->count();
+    }
 }

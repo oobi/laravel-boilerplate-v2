@@ -121,6 +121,7 @@ return [
     'role_created' => 'Role created successfully.',
     'role_updated' => 'Role updated successfully.',
     'role_deleted' => 'Role deleted.',
+    'delete_role_confirm' => '{0} Nobody holds :role. Delete it?|{1} 1 person holds :role and will lose it, and everything it allows. Delete it?|[2,*] :count people hold :role and will lose it, and everything it allows. Delete it?',
     'no_roles_found' => 'No roles found',
     'super_admin' => 'Super Admin',
     'grant_super_admin' => 'Grant Super Admin',

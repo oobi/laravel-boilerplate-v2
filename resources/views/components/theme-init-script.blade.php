@@ -2,7 +2,7 @@
     Blocking script for the theme cookie's 'auto' mode — must run before
     first paint to avoid a flash of the wrong theme. Explicit light/dark
     modes are already baked into the server-rendered data-theme attribute
-    (see layouts/admin.blade.php + layouts/guest.blade.php); this only ever
+    (App\Support\Theme\ThemeMode, on every layout's <html>); this only ever
     has to correct the auto case, which the server can't resolve since it
     doesn't know the OS preference.
 --}}

@@ -15,7 +15,7 @@ use App\Support\Roles\Implications;
  *
  * Shape: `access admin panel` is entry only — the shell, the dashboard, the
  * navigation. Each admin area has its own read floor (`view users`, an add-on's
- * `view teams`, `view system analytics`) so a role can reach the panel for one
+ * `view teams`) so a role can reach the panel for one
  * module without browsing another's data; the action permissions of an area
  * sit on top of its read floor. That shape is enforced by implies(): every
  * action carries its area's view, every view carries panel entry, applied when
@@ -26,8 +26,6 @@ use App\Support\Roles\Implications;
 enum SystemPermission: string
 {
     case ACCESS_ADMIN_PANEL = 'access admin panel';
-    case MANAGE_SYSTEM_SETTINGS = 'manage system settings';
-    case VIEW_SYSTEM_ANALYTICS = 'view system analytics';
     case VIEW_USERS = 'view users';
     case MANAGE_USERS = 'manage users';
     case SUSPEND_USERS = 'suspend users';
@@ -50,8 +48,6 @@ enum SystemPermission: string
     {
         return match ($this) {
             self::ACCESS_ADMIN_PANEL => __('permissions.labels.access_admin_panel'),
-            self::MANAGE_SYSTEM_SETTINGS => __('permissions.labels.manage_system_settings'),
-            self::VIEW_SYSTEM_ANALYTICS => __('permissions.labels.view_system_analytics'),
             self::VIEW_USERS => __('permissions.labels.view_users'),
             self::MANAGE_USERS => __('permissions.labels.manage_users'),
             self::SUSPEND_USERS => __('permissions.labels.suspend_users'),
@@ -80,8 +76,6 @@ enum SystemPermission: string
             self::SET_USER_PASSWORDS,
             self::MANAGE_ROLES => __('permissions.categories.user_management'),
 
-            self::MANAGE_SYSTEM_SETTINGS,
-            self::VIEW_SYSTEM_ANALYTICS,
             self::ACCESS_ADMIN_PANEL => __('permissions.categories.system_administration'),
 
             // teams:start — the teams tier's own group on the Roles screen (relabels with the tier).
@@ -107,9 +101,7 @@ enum SystemPermission: string
     public function implies(): array
     {
         return match ($this) {
-            self::VIEW_USERS,
-            self::MANAGE_SYSTEM_SETTINGS,
-            self::VIEW_SYSTEM_ANALYTICS => [self::ACCESS_ADMIN_PANEL],
+            self::VIEW_USERS => [self::ACCESS_ADMIN_PANEL],
 
             self::MANAGE_USERS,
             self::SUSPEND_USERS,
