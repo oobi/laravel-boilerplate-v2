@@ -1,7 +1,7 @@
 @props(['team'])
 
 @php
-    // Only teams the user can enter are switchable (active, and not suspended in — see ResolveTeamContext).
+    // Only teams the user can enter are switchable (active, and not suspended in: see ResolveTeamContext).
     $teams = auth()->user()->accessibleTeams()->orderBy('name')->get();
     $canCreate = \Illuminate\Support\Facades\Gate::allows(
         \Concise\Teams\Enums\TeamAbility::CREATE,
@@ -33,8 +33,8 @@
 
     @if ($showMenu)
         {{-- Wider than the sidebar on purpose: a dropdown panel needn't match its trigger, and long
-             team names are unreadable squeezed into the rail. --}}
-        <ul x-bind:id="$id('team-switcher-menu')" x-show="open" x-cloak class="menu dropdown-content z-50 mt-1 w-72 max-w-[calc(100vw-3rem)] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
+             team names are unreadable squeezed into the rail. A long list scrolls within the screen. --}}
+        <ul x-bind:id="$id('team-switcher-menu')" x-show="open" x-cloak class="menu dropdown-content z-50 mt-1 max-h-[calc(100dvh-12rem)] w-72 max-w-[calc(100vw-3rem)] flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
             @foreach ($teams as $t)
                 <li>
                     <a href="{{ team_route('team.dashboard', $t) }}" @class(['font-semibold' => $t->is($team)]) title="{{ $t->name }}">

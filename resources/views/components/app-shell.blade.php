@@ -12,6 +12,7 @@
     // No navigation slot → no sidebar (a gateway/lobby page). The header, account
     // menu and impersonation banner still render, so it's not a bare page.
     $hasNav = isset($navigation) && ! $navigation->isEmpty();
+    $hasNavTop = isset($navigationTop) && ! $navigationTop->isEmpty();
     $tabTitle = \App\Support\PageTitle::for($title, [
         ...($breadcrumbs ? \App\Support\PageTitle::trailContext(\App\Support\Breadcrumbs::trail($breadcrumbRoot, $breadcrumbResource)) : []),
         $titleContext,
@@ -52,7 +53,7 @@
             class="ui-app-inner flex"
         >
             @if ($hasNav)
-            {{-- Drawer backdrop — shown when the drawer is open (mobile, or desktop while unpinned) --}}
+            {{-- Drawer backdrop: shown when the drawer is open (mobile, or desktop while unpinned) --}}
             <div
                 x-show="sidebarDrawerOpen"
                 x-transition:enter="transition-opacity ease-linear duration-200"
@@ -97,7 +98,7 @@
                     <div class="flex h-16 shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
                         <div class="flex shrink-0 items-center gap-1">
-                            {{-- Pin button (desktop only) — pins the sidebar as a persistent column --}}
+                            {{-- Pin button (desktop only): pins the sidebar as a persistent column --}}
                             <x-button.icon
                                 @click="togglePin(); sidebarDrawerOpen = false; $nextTick(() => $refs.unpin.focus())"
                                 class="hidden md:inline-flex"
@@ -111,11 +112,17 @@
                         </div>
                     </div>
 
+                    {{-- Above the scrolling nav, in both sidebars: a scroller clips sideways too, and what sits
+                         here (the team switcher) may open a panel wider than the sidebar. --}}
+                    @if ($hasNavTop)
+                        <div class="shrink-0 px-4 pt-4">{{ $navigationTop }}</div>
+                    @endif
+
                     {{ $navigation }}
                 </div>
             </aside>
 
-            {{-- Pinned sidebar — persistent column for desktop while pinned.
+            {{-- Pinned sidebar: persistent column for desktop while pinned.
                  Base classes assume the default (pinned) state so it renders visible
                  immediately on page load; x-show only hides it once Alpine confirms
                  the user has actually unpinned it, avoiding a flash for pinned users. --}}
@@ -123,7 +130,7 @@
                 <div class="flex h-full w-64 flex-col border-r border-base-300 bg-base-100">
                     <div class="flex h-16 shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
-                        {{-- Unpin button — switches the sidebar to drawer mode --}}
+                        {{-- Unpin button: switches the sidebar to drawer mode --}}
                         <x-button.icon
                             x-ref="unpin"
                             @click="togglePin()"
@@ -134,6 +141,10 @@
                         </x-button.icon>
                     </div>
 
+                    @if ($hasNavTop)
+                        <div class="shrink-0 px-4 pt-4">{{ $navigationTop }}</div>
+                    @endif
+
                     {{ $navigation }}
                 </div>
             </aside>
@@ -143,7 +154,7 @@
             <div class="flex min-w-0 flex-1 flex-col">
                 <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-8 backdrop-blur">
                     @if ($hasNav)
-                        {{-- Logo — visible on desktop only while the sidebar is unpinned --}}
+                        {{-- Logo: visible on desktop only while the sidebar is unpinned --}}
                         <x-application-logo
                             variant="icon"
                             :href="$home"
@@ -152,7 +163,7 @@
                             class="hidden shrink-0 items-center md:flex"
                         />
 
-                        {{-- Mobile logo — always visible; drawer/pinned asides cover this on desktop --}}
+                        {{-- Mobile logo: always visible; drawer/pinned asides cover this on desktop --}}
                         <x-application-logo
                             variant="icon"
                             :href="$home"
@@ -163,7 +174,7 @@
                         <x-button.icon class="md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
                             <x-heroicon-o-bars-3 class="h-5 w-5" />
                         </x-button.icon>
-                        {{-- Desktop menu button — visible when the sidebar is unpinned --}}
+                        {{-- Desktop menu button: visible when the sidebar is unpinned --}}
                         <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
                             <x-heroicon-o-bars-3 class="h-5 w-5" />
                         </x-button.icon>

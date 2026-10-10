@@ -1,14 +1,11 @@
 {{-- Team-area sidebar links. Dashboard is the team home, presented prominently
      and distinct from the itemized sections below. Additional sections (Members,
      Settings, …) are curated via Concise\Teams\Support\Navigation\TeamNavRegistry
-     the same way add-ons extend the system nav — abilities resolve against the
+     the same way add-ons extend the system nav: abilities resolve against the
      current team, and routes carry its slug. --}}
 @php($viewer = auth()->user())
-<nav class="flex-1 space-y-1 overflow-y-auto p-4">
-    {{-- Team select — sits at the top of the left nav, above the links --}}
-    <div class="mb-3">
-        <x-teams::team-switcher :team="$team" />
-    </div>
+{{-- The switcher sits above these, in the shell's navigationTop slot (layouts/team.blade.php). --}}
+<nav class="flex-1 space-y-1 overflow-y-auto p-4 pt-3">
 
     <x-nav-item
         :href="team_route('team.dashboard', $team)"

@@ -10,6 +10,12 @@
     :breadcrumb-root="$team ? ['label' => \Concise\Teams\Support\TeamLabels::singular(), 'url' => null] : null"
     :breadcrumb-resource="false"
 >
+    @if ($team !== null)
+        <x-slot:navigationTop>
+            <x-teams::team-switcher :team="$team" />
+        </x-slot:navigationTop>
+    @endif
+
     <x-slot:navigation>
         @includeWhen($team !== null, 'teams::partials.team-sidebar-nav', ['team' => $team])
     </x-slot:navigation>
