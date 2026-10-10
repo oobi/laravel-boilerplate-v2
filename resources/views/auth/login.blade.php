@@ -9,15 +9,9 @@
         <x-alert color="success">{{ $value }}</x-alert>
     @endsession
 
-    @if ($errors->any())
-        <x-alert color="error">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </x-alert>
-    @endif
+    {{-- Fortify files a failed or throttled sign-in under "email", but it's about the attempt, not
+         the address: it goes in the box at the top. A field's own error shows under it. --}}
+    <x-form-errors :fields="['password']" />
 
     <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-4">
         @csrf
@@ -29,7 +23,8 @@
 
         <fieldset class="fieldset">
             <label class="label" for="password">{{ __('Password') }}</label>
-            <input id="password" class="input w-full" type="password" name="password" required autocomplete="current-password">
+            <input id="password" class="input w-full @error('password') input-error @enderror" type="password" name="password" required autocomplete="current-password" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+            <x-form-error for="password" />
         </fieldset>
 
         <div class="flex items-center justify-between">

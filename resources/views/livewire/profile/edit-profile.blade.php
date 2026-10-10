@@ -28,8 +28,10 @@
                         <label class="btn btn-sm btn-outline">
                             {{ __('admin.select_new_photo') }}
                             <input
+                                id="photo"
                                 type="file"
                                 wire:model="photo"
+                                @error('photo') aria-invalid="true" aria-describedby="photo-error" @enderror
                                 x-on:change="
                                     const reader = new FileReader();
                                     reader.onload = (e) => { preview = e.target.result };
@@ -46,7 +48,7 @@
                             </x-button.danger>
                         @endif
 
-                        @error('photo') <p class="text-error text-sm">{{ $message }}</p> @enderror
+                        <x-form-error for="photo" />
                     </div>
 
                     {{-- Fields column --}}

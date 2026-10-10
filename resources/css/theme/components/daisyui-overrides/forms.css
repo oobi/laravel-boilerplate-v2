@@ -31,6 +31,12 @@
     outline: none;
 }
 
+/* A field with an error stays red while it has focus, or the error is easy to miss on a field
+   the page focuses for you (login's email). After the rule above, which it must beat. */
+:is(.input, .select, .textarea):is([aria-invalid="true"], .input-error, .select-error, .textarea-error):is(:focus, :focus-within) {
+    --input-color: var(--color-error);
+}
+
 /*
 |--------------------------------------------------------------------------
 | Non-floating field label/legend + field chrome — match Filament

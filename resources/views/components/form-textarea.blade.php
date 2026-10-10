@@ -11,7 +11,13 @@
 @php
     $id = $attributes->get('id', $name);
     $textareaClass = 'textarea w-full' . ($floating ? '' : ' ui-form-input') . ($errors->has($name) ? ' textarea-error' : '');
-    $textareaAttributes = $attributes->except(['class', 'id'])->merge(['class' => $textareaClass]);
+    // An error is announced with the field: aria-invalid, and the message (x-form-error) added to its description.
+    $describedBy = trim($attributes->get('aria-describedby', '').($errors->has($name) ? ' '.$id.'-error' : ''));
+    $textareaAttributes = $attributes->except(['class', 'id', 'aria-describedby'])->merge(array_filter([
+        'class' => $textareaClass,
+        'aria-invalid' => $errors->has($name) ? 'true' : null,
+        'aria-describedby' => $describedBy ?: null,
+    ]));
 @endphp
 
 <div {{ $attributes->only('class') }}>
@@ -25,7 +31,5 @@
         <textarea id="{{ $id }}" {{ $textareaAttributes }}>{{ $slot }}</textarea>
     @endif
 
-    @error($name)
-        <p class="mt-1 text-xs text-error">{{ $message }}</p>
-    @enderror
+    <x-form-error :for="$name" :id="$id" />
 </div>

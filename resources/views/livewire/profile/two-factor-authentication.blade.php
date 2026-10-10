@@ -44,9 +44,10 @@
                                         autocomplete="one-time-code"
                                         wire:model="code"
                                         wire:keydown.enter="confirmTwoFactorAuthentication"
-                                        class="input w-full"
+                                        class="input w-full @error('code', 'confirmTwoFactorAuthentication') input-error @enderror"
+                                        @error('code', 'confirmTwoFactorAuthentication') aria-invalid="true" aria-describedby="code-error" @enderror
                                     >
-                                    @error('code', 'confirmTwoFactorAuthentication') <p class="text-error text-sm">{{ $message }}</p> @enderror
+                                    <x-form-error for="code" bag="confirmTwoFactorAuthentication" />
                                 </fieldset>
                             @endif
                         @endif

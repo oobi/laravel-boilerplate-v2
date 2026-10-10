@@ -9,22 +9,15 @@
         {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
     </p>
 
-    @if ($errors->any())
-        <x-alert color="error">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </x-alert>
-    @endif
+    <x-form-errors :fields="['password']" />
 
     <form method="POST" action="{{ route('password.confirm') }}" class="flex flex-col gap-4">
         @csrf
 
         <fieldset class="fieldset">
             <label class="label" for="password">{{ __('Password') }}</label>
-            <input id="password" class="input w-full" type="password" name="password" required autofocus autocomplete="current-password">
+            <input id="password" class="input w-full @error('password') input-error @enderror" type="password" name="password" required autofocus autocomplete="current-password" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+            <x-form-error for="password" />
         </fieldset>
 
         <div class="flex justify-end">

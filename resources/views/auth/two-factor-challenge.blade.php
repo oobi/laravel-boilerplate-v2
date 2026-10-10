@@ -13,27 +13,21 @@
         {{ __('Please confirm access to your account by entering one of your emergency recovery codes.') }}
     </p>
 
-    @if ($errors->any())
-        <x-alert color="error">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </x-alert>
-    @endif
+    <x-form-errors :fields="['code', 'recovery_code']" />
 
     <form method="POST" action="{{ route('two-factor.login') }}" class="flex flex-col gap-4">
         @csrf
 
         <fieldset class="fieldset" id="authentication-code-field">
             <label class="label" for="code">{{ __('Code') }}</label>
-            <input id="code" class="input w-full" type="text" inputmode="numeric" name="code" autofocus autocomplete="one-time-code">
+            <input id="code" class="input w-full @error('code') input-error @enderror" type="text" inputmode="numeric" name="code" autofocus autocomplete="one-time-code" @error('code') aria-invalid="true" aria-describedby="code-error" @enderror>
+            <x-form-error for="code" />
         </fieldset>
 
         <fieldset class="fieldset hidden" id="recovery-code-field">
             <label class="label" for="recovery_code">{{ __('Recovery Code') }}</label>
-            <input id="recovery_code" class="input w-full" type="text" name="recovery_code" autocomplete="one-time-code">
+            <input id="recovery_code" class="input w-full @error('recovery_code') input-error @enderror" type="text" name="recovery_code" autocomplete="one-time-code" @error('recovery_code') aria-invalid="true" aria-describedby="recovery_code-error" @enderror>
+            <x-form-error for="recovery_code" />
         </fieldset>
 
         <div class="flex items-center justify-between">
