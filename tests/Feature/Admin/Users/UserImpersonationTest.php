@@ -85,6 +85,14 @@ class UserImpersonationTest extends TestCase
         );
     }
 
+    public function test_trashed_users_cannot_be_impersonated(): void
+    {
+        $target = User::factory()->create();
+        $target->delete();
+
+        $this->assertImpersonationDenied(User::factory()->superAdmin()->create(), $target);
+    }
+
     public function test_a_user_cannot_impersonate_themselves(): void
     {
         $admin = User::factory()->superAdmin()->create();

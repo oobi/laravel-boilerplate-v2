@@ -153,7 +153,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return UserStatus::ACTIVE;
     }
 
-    /** Admin screens (ShowUser/EditUser) need to resolve soft-deleted users too. */
+    /** ShowUser resolves soft-deleted users too, to restore them; EditUser 404s on them. */
     public function resolveRouteBinding($value, $field = null): ?self
     {
         return $this->withTrashed()->where($field ?? $this->getRouteKeyName(), $value)->first();
@@ -192,13 +192,14 @@ class User extends Authenticatable implements MustVerifyEmail
      * Determine if this user can be impersonated by the given actor (the
      * currently authenticated user if omitted — required for the vendor
      * package's own no-argument calls). Rules: must be logged in, can't
-     * impersonate yourself, inactive users and super admins cannot be impersonated.
+     * impersonate yourself, inactive or trashed users and super admins cannot
+     * be impersonated.
      */
     public function canBeImpersonated(?self $actor = null): bool
     {
         $actor ??= Auth::user();
 
-        if (! $actor || ! $this->active) {
+        if (! $actor || ! $this->active || $this->trashed()) {
             return false;
         }
 
