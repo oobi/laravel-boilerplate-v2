@@ -18,11 +18,14 @@
 
     $daisyColor = DaisyColor::fromFilamentColor($color)->value;
 
+    // Errors and warnings interrupt (alert); everything else waits its turn (status). A page may pass its own role.
+    $role = $attributes->get('role', in_array($daisyColor, ['error', 'warning'], true) ? 'alert' : 'status');
+
     $classes = collect(['alert', "alert-{$daisyColor}"])
         ->when($variant !== 'solid', fn ($classes) => $classes->push("alert-{$variant}"))
         ->implode(' ');
 @endphp
 
-<div role="alert" {{ $attributes->class($classes) }}>
+<div role="{{ $role }}" {{ $attributes->except('role')->class($classes) }}>
     {{ $slot }}
 </div>

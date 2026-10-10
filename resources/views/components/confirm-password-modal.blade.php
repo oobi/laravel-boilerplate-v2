@@ -25,10 +25,11 @@
     <x-form-input
         name="confirmablePassword"
         type="password"
-        :label="__('admin.password')"
+        :label="__('Password')"
         autocomplete="current-password"
         autofocus
         wire:model="confirmablePassword"
+        x-on:password-confirmation-failed.window="$el.closest('dialog')?.open && $nextTick(() => { $el.focus(); $el.select() })"
     />
 
     <x-slot:footer>

@@ -19,6 +19,8 @@ return [
     'confirm' => 'Confirm',
     'close' => 'Close',
     'swipe_for_more_tabs' => 'Swipe for more tabs',
+    'active_records_label' => '{1} :count active record|[0,*] :count active records',
+    'trashed_records_label' => '{1} :count in the trash|[0,*] :count in the trash',
     'records_shown' => 'Records shown',
     'save_changes' => 'Save Changes',
     'delete' => 'Delete',

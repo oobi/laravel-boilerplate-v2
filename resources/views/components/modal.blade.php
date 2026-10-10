@@ -53,6 +53,10 @@
 
     // Destructive modals are alert dialogs (assertive) per WAI-ARIA.
     $role = $variant === 'danger' ? 'alertdialog' : 'dialog';
+
+    // The dialog is named and described by its own heading and copy.
+    $titleId = 'modal-'.\Illuminate\Support\Str::slug((string) $model).'-title';
+    $descriptionId = 'modal-'.\Illuminate\Support\Str::slug((string) $model).'-description';
 @endphp
 
 {{-- wire:ignore.self: on a Livewire re-render (say a wrong password's error) the morph
@@ -68,6 +72,8 @@
     @unless ($closeable) x-on:cancel.prevent @endunless
     @if ($closeable) x-on:click="$event.target === $el && (open = false)" @endif
     role="{{ $role }}"
+    @if ($title) aria-labelledby="{{ $titleId }}" @endif
+    @if ($description) aria-describedby="{{ $descriptionId }}" @endif
     {{ $attributes->except('wire:model')->class([
         'm-auto w-[calc(100%-2rem)] max-w-lg rounded-box bg-base-100 p-0 text-base-content shadow-2xl',
         '[&::backdrop]:bg-black/40 [&::backdrop]:backdrop-blur-sm',
@@ -92,11 +98,11 @@
         @endif
 
         @if ($title)
-            <h2 @class(['text-lg font-semibold', 'text-center' => $resolvedIcon])>{{ $title }}</h2>
+            <h2 id="{{ $titleId }}" @class(['text-lg font-semibold', 'text-center' => $resolvedIcon])>{{ $title }}</h2>
         @endif
 
         @if ($description)
-            <p @class(['ui-subtle text-sm', 'text-center' => $resolvedIcon])>{{ $description }}</p>
+            <p id="{{ $descriptionId }}" @class(['ui-subtle text-sm', 'text-center' => $resolvedIcon])>{{ $description }}</p>
         @endif
 
         {{ $slot }}

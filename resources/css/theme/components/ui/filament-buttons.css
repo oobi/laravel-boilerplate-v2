@@ -97,8 +97,31 @@
 }
 
 .fi-btn.fi-outlined:not(.fi-color) {
-    color: var(--color-neutral);
+    /* Text in the AA-safe grey (plain neutral is 3.6:1 on the dark page, e.g. every modal's Cancel). */
+    color: var(--color-neutral-text);
     --tw-ring-color: var(--color-neutral);
+}
+
+/* An outlined primary button's text: Filament's dark shade (primary-500) is 4.49:1 on the dark page. */
+.fi-btn.fi-outlined.fi-color-primary {
+    @variant dark {
+        color: var(--color-primary-text);
+    }
+}
+
+/* Filament's coloured links (a table's "Select all" / bulk "Delete"): the AA-safe text tokens.
+   Their own shades miss 4.5 on the selection bar (light danger 4.38, dark primary 4.29). */
+.fi-link.fi-color-primary {
+    color: var(--color-primary-text);
+}
+
+.fi-link.fi-color-danger {
+    color: var(--color-error-text);
+}
+
+/* daisyUI's link-primary: the brand blue as text fails on the dark page. */
+.link-primary {
+    color: var(--color-primary-text);
 }
 
 /*

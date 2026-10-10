@@ -24,6 +24,12 @@ because that mix is the one tested to clear AA 4.5 on
 `base-100` and `base-200` (`ThemeContrastTest`); in CSS, `@apply text-muted`.
 Don't go lighter for text (decorative icons may). `ComponentUsageTest` flags the raw `/60`.
 
+**Brand blue or red as text is `text-primary-text` / `text-error-text`**, never
+`text-primary` / `text-error`: plain primary is 3.3:1 and error 3.6:1 on the dark
+page. In CSS use `var(--color-primary-text)`, `var(--color-neutral-text)` or
+`var(--color-error-text)` (tokens.css; `ThemeContrastTest` checks all three in
+both themes). Fills (buttons, badges, borders) keep the plain colour.
+
 Defined once in `resources/css/theme/tokens.css` (two daisyUI `@plugin
 "daisyui/theme"` blocks — light `boilerplate` + dark `boilerplate-dark`).
 Changing a brand color is a one-line edit there; every component using it
@@ -78,7 +84,7 @@ list with the reason. See `.ai/rules/views.md`.
 |---|---|---|
 | `<x-card>` | `<div class="card bg-base-100 border border-base-300">…` section wrapper | `title`, `type` (`default` bold title / `panel` smaller muted heading — Users Show page panel cards; picks `titleClass` for you, don't guess a heading class), `bordered` (default true — every card should have a border; only false when nesting a card inside another card), `bodyClass` (default `gap-3`), `accent` (a daisyUI colour for a thick top edge marking status, e.g. `warning` on a needs-attention card; text stays body colour); `href` (the whole card becomes the link, with hover and focus states; never wrap a card in an `<a>`, and nothing interactive inside it); slots: `actions` (e.g. a "View all" link, rendered inline with the title), `footer` (an action row under a divider; add `sticky-footer` to keep it in view while a long card scrolls) |
 | `<x-empty-state>` | a dashed `rounded-box border border-dashed` "nothing here yet" panel: an empty list, a page still to come, a search that found nothing | `icon` (shown via `<x-avatar icon>`), `title`; slots: default (the explanation), `actions` |
-| `<x-alert>` | `<div class="alert ...">` — short-lived flash/inline message | `color` (default `info`), `variant` (default `soft`) |
+| `<x-alert>` | `<div class="alert ...">`, a short-lived flash or inline message | `color` (default `info`), `variant` (default `soft`); errors and warnings are `role="alert"` (announced at once), the rest `role="status"`; pass `role` to override |
 | `<x-banner>` | persistent contextual banner (announcements, "trial ending") **and any in-page status or warning strip that stays on screen, with or without buttons** ("Check these are the same person", "Not merged yet" with Back and Merge, "No email address" with Add details). Never hand-build one from a coloured border or tint. Not for flash messages, use `<x-alert>` for those | `variant` (default `info`), `dismissible`; slots: default (body), `actions` (wrap under the body on narrow screens) |
 | `<x-badge>` | `<span class="badge ...">`; pass a Filament enum (`HasColor`/`HasLabel`) as `value` to skip color/label | `value`, `color`, `variant` (default `soft`), `size` |
 | `<x-avatar>` | `<div class="avatar">…` initials/photo circle, **and any tinted icon tile** (a coloured square or circle behind an icon, e.g. a card or banner header): `<x-avatar icon="heroicon-o-users" color="warning" square />` | `user` (model with `->name`/`->profile_photo_url`), `name`, `src`, `size`, `variant` (default `soft`), `color`, `square`, `icon` (a heroicon name, shown instead of initials) |
@@ -89,6 +95,9 @@ list with the reason. See `.ai/rules/views.md`.
 | `<x-form-input>` | labelled `<input>` (text/email/password/number/date/...) | `name` (id/for/@error key), `label`, `floating` (default true — floating label vs plain label above); rest of attrs (`type`, `wire:model`, ...) pass through to the `<input>`; `class` sizes the wrapper (e.g. `md:col-span-2`), not the input |
 | `<x-form-textarea>` | labelled `<textarea>` | same props as `<x-form-input>`; slot is initial content |
 | `<x-form-select>` | labelled `<select>` | same props as `<x-form-input>`; slot is the `<option>` list |
+| `<x-form-error>` | a hand-rolled `@error … <p class="text-error">` under a field you wrote yourself (the form components above already include it) | `for` (the field name), `id` (the field's id when it isn't the name), `bag` (a Livewire error bag); renders nothing without an error. Give the field `@error('x') aria-invalid="true" aria-describedby="x-error" @enderror` so the message is read with it |
+| `<x-form-errors>` | an `@if ($errors->any())` alert listing every error at the top of a hand-rolled form | `fields` (the names whose errors already show under their field); lists only the rest, so no error appears twice; renders nothing when there are none |
+| `<x-skip-link>` | nothing (every layout needs one) | none; the first thing in `<body>`, pointing at `<main id="main-content" tabindex="-1">` |
 
 ### Tables (pairs with a Filament resource table)
 

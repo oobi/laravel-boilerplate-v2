@@ -187,7 +187,8 @@ class ShowUserTest extends TestCase
             ->call('callPanelAction', 'security', 'force-disable-2fa')
             ->set('confirmablePassword', 'wrong-password')
             ->call('confirmPassword')
-            ->assertHasErrors('confirmablePassword');
+            ->assertHasErrors('confirmablePassword')
+            ->assertDispatched('password-confirmation-failed');
 
         $target->refresh();
         $this->assertNotNull($target->two_factor_secret);

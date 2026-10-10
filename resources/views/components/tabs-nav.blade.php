@@ -26,14 +26,14 @@
      isn't a scroll container, so sticky content inside (a card's footer) follows the page. --}}
 <div {{ $attributes->class(['tabs-connected overflow-clip rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
     @if ($scrollable)
-        {{-- Mobile swipe hint --}}
-        <div class="block sm:hidden text-center text-xs text-muted pt-3 px-4">
+        {{-- Mobile swipe hint: tab-scroll.js shows it only when the tabs overflow; no pulse for reduced motion. --}}
+        <div class="tab-swipe-hint sm:hidden text-center text-xs text-muted pt-3 px-4" style="display:none;">
             <div class="inline-flex items-center justify-center gap-1 bg-base-200/50 rounded-full py-1 px-3">
-                <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 motion-safe:animate-pulse" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
                 <span class="font-medium">{{ __('admin.swipe_for_more_tabs') }}</span>
-                <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 motion-safe:animate-pulse" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </div>
@@ -55,12 +55,13 @@
             </div>
 
             @if ($scrollable)
-                <div class="tab-scroll-indicator tab-scroll-left" style="display:none;">
+                {{-- Mouse helpers only (aria-hidden): keyboard users reach every tab with Tab, which scrolls it into view. --}}
+                <div class="tab-scroll-indicator tab-scroll-left" style="display:none;" aria-hidden="true">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </div>
-                <div class="tab-scroll-indicator tab-scroll-right">
+                <div class="tab-scroll-indicator tab-scroll-right" aria-hidden="true">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>

@@ -61,7 +61,7 @@ class CreateUser extends Component implements HasSchemas
                             ->unique('users', 'email'),
 
                         Forms\Components\TextInput::make('password')
-                            ->label(__('admin.password'))
+                            ->label(__('Password'))
                             ->password()
                             ->revealable()
                             ->required()

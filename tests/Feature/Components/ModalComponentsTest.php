@@ -60,6 +60,19 @@ class ModalComponentsTest extends TestCase
             ->assertSee('Are you sure?');
     }
 
+    public function test_the_dialog_is_named_and_described_by_its_own_title_and_copy(): void
+    {
+        $this->blade('<x-modal wire:model="showDelete" title="Delete user?" description="This can\'t be undone." />')
+            ->assertSee('aria-labelledby="modal-showdelete-title"', false)
+            ->assertSee('<h2 id="modal-showdelete-title"', false)
+            ->assertSee('aria-describedby="modal-showdelete-description"', false)
+            ->assertSee('<p id="modal-showdelete-description"', false);
+
+        $this->blade('<x-modal wire:model="open">Body</x-modal>')
+            ->assertDontSee('aria-labelledby', false)
+            ->assertDontSee('aria-describedby', false);
+    }
+
     public function test_danger_confirm_modal_is_an_alertdialog_with_a_danger_button(): void
     {
         $this->blade(

@@ -61,13 +61,13 @@ trait ConfirmsPassword
         $user = Auth::user();
 
         if (PasswordChecks::tooMany($user)) {
-            $this->addError('confirmablePassword', PasswordChecks::throttledMessage($user));
+            $this->failPasswordConfirmation(PasswordChecks::throttledMessage($user));
 
             return;
         }
 
         if (! PasswordChecks::passes($user, $this->confirmablePassword)) {
-            $this->addError('confirmablePassword', __('auth.password'));
+            $this->failPasswordConfirmation(__('auth.password'));
 
             return;
         }
@@ -107,4 +107,11 @@ trait ConfirmsPassword
      * @param  array<int, string>  $arguments
      */
     abstract protected function dispatchConfirmedAction(string $action, array $arguments): void;
+
+    /** The error on the field, and focus back to it in the browser (the prompt's input listens). */
+    private function failPasswordConfirmation(string $message): void
+    {
+        $this->addError('confirmablePassword', $message);
+        $this->dispatch('password-confirmation-failed');
+    }
 }

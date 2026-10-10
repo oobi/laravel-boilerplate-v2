@@ -19,7 +19,13 @@
 @php
     $id = $attributes->get('id', $name);
     $inputClass = 'input w-full' . ($floating ? '' : ' ui-form-input') . ($errors->has($name) ? ' input-error' : '');
-    $inputAttributes = $attributes->except(['class', 'id'])->merge(['class' => $inputClass]);
+    // An error is announced with the field: aria-invalid, and the message (x-form-error) added to its description.
+    $describedBy = trim($attributes->get('aria-describedby', '').($errors->has($name) ? ' '.$id.'-error' : ''));
+    $inputAttributes = $attributes->except(['class', 'id', 'aria-describedby'])->merge(array_filter([
+        'class' => $inputClass,
+        'aria-invalid' => $errors->has($name) ? 'true' : null,
+        'aria-describedby' => $describedBy ?: null,
+    ]));
 @endphp
 
 <div {{ $attributes->only('class') }}>
@@ -33,7 +39,5 @@
         <input id="{{ $id }}" {{ $inputAttributes }}>
     @endif
 
-    @error($name)
-        <p class="mt-1 text-xs text-error">{{ $message }}</p>
-    @enderror
+    <x-form-error :for="$name" :id="$id" />
 </div>

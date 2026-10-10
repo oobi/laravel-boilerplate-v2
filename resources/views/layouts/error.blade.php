@@ -16,7 +16,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-base-100">
-    <div class="mx-auto flex min-h-screen max-w-[760px] items-center px-6 py-12">
+    <main class="mx-auto flex min-h-screen max-w-[760px] items-center px-6 py-12">
         <div class="ui-error-hero w-full">
             <div class="ui-error-copy flex flex-col gap-6">
                 <x-application-logo size="h-12" class="self-center md:self-start" />
@@ -27,6 +27,6 @@
             {{-- illustration supplied per error code, dropped into public/images/errors/ --}}
             <div class="ui-error-art" style="background-image: url('@yield('illustration-src')')" aria-hidden="true"></div>
         </div>
-    </div>
+    </main>
 </body>
 </html>

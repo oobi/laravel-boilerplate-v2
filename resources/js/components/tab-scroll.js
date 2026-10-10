@@ -10,6 +10,7 @@ export class TabScrollController {
         const indicatorRoot = element.parentElement;
         this.leftIndicator = indicatorRoot?.querySelector('.tab-scroll-left');
         this.rightIndicator = indicatorRoot?.querySelector('.tab-scroll-right');
+        this.swipeHint = element.closest('.tabs-connected')?.querySelector('.tab-swipe-hint');
 
         // Configurable options
         this.options = {
@@ -80,6 +81,11 @@ export class TabScrollController {
         const isAtStart = this.element.scrollLeft <= this.options.leftThreshold;
         const isAtEnd = this.element.scrollLeft >= (this.element.scrollWidth - this.element.clientWidth - this.options.rightThreshold);
         const hasOverflow = this.element.scrollWidth > this.element.clientWidth;
+
+        // The swipe hint (phones) only means something when there's more to swipe to.
+        if (this.swipeHint) {
+            this.swipeHint.style.display = hasOverflow ? '' : 'none';
+        }
 
         // Only show indicators if there's actually overflow
         if (!hasOverflow) {

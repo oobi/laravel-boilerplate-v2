@@ -113,6 +113,21 @@ the explanation as its content and an `actions` slot.
 
 Demos of all of these are in the style demo's component gallery.
 
+## Form errors and page landmarks
+
+- A field you build by hand (not `<x-form-input>` / `-select` / `-textarea`, which do this
+  already) shows its error with `<x-form-error for="name" />` and carries
+  `@error('name') aria-invalid="true" aria-describedby="name-error" @enderror`, so a screen
+  reader reads the message with the field. Each error shows once: a summary at the top of the
+  form (`<x-form-errors :fields="[...]" />`) lists only errors that belong to no field on it.
+- Every layout starts its `<body>` with `<x-skip-link />` and wraps its content in
+  `<main id="main-content" tabindex="-1">` (guest layouts: a plain `<main>`).
+- A dropdown trigger is a `<button>` with `aria-expanded`/`aria-controls` that opens on click
+  and closes on Escape (see `header-menu.blade.php`), never a `div role="button"`
+  that opens on focus. Ids for things the shell draws twice come from Alpine's `x-id`.
+- Text in brand blue, grey or red uses `--color-primary-text`, `--color-neutral-text` or
+  `--color-error-text` (utilities `text-primary-text`, `text-error-text`).
+
 ## Modals
 
 Every modal is built on **`<x-modal>`**, which renders a native `<dialog>`. That
