@@ -28,8 +28,8 @@
             <x-card :href="team_route('team.dashboard', $team)" wire:key="team-{{ $team->id }}">
                 <div class="flex items-start justify-between gap-2">
                     {{-- Cards are wide, so long names wrap here rather than truncating as they must in the sidebar. --}}
-                    <h2 class="font-semibold text-base-content group-hover:text-primary">{{ $team->name }}</h2>
-                    <x-heroicon-o-chevron-right class="mt-0.5 h-5 w-5 shrink-0 text-base-content/40 group-hover:text-primary" />
+                    <h2 class="font-semibold text-base-content group-hover:text-primary-text">{{ $team->name }}</h2>
+                    <x-heroicon-o-chevron-right class="mt-0.5 h-5 w-5 shrink-0 text-base-content/40 group-hover:text-primary-text" />
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 text-sm text-muted">

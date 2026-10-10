@@ -60,6 +60,14 @@
   --soft-fg-strength: 83%;
   --soft-ring-strength: 30%;
   --soft-lighten: 0%;
+
+  /* Brand blue, grey and red used as TEXT (not fills): the soft mix, so they clear AA on
+     the page in both themes (plain primary is 3.3:1 and error 3.6:1 on the dark page). One
+     value each: the text-primary-text and text-error-text utilities, focused labels, active
+     tabs, outlined buttons, links and field errors. */
+  --color-primary-text: color-mix(in oklab, var(--color-primary) var(--soft-fg-strength), var(--soft-fg-mix));
+  --color-neutral-text: color-mix(in oklab, var(--color-neutral) var(--soft-fg-strength), var(--soft-fg-mix));
+  --color-error-text: color-mix(in oklab, var(--color-error) var(--soft-fg-strength), var(--soft-fg-mix));
 }
 
 @plugin "daisyui/theme" {
@@ -110,6 +118,14 @@
   --soft-fg-strength: 60%;
   --soft-ring-strength: 50%;
   --soft-lighten: 45%;
+
+  /* Brand blue, grey and red used as TEXT (not fills): the soft mix, so they clear AA on
+     the page in both themes (plain primary is 3.3:1 and error 3.6:1 on the dark page). One
+     value each: the text-primary-text and text-error-text utilities, focused labels, active
+     tabs, outlined buttons, links and field errors. */
+  --color-primary-text: color-mix(in oklab, var(--color-primary) var(--soft-fg-strength), var(--soft-fg-mix));
+  --color-neutral-text: color-mix(in oklab, var(--color-neutral) var(--soft-fg-strength), var(--soft-fg-mix));
+  --color-error-text: color-mix(in oklab, var(--color-error) var(--soft-fg-strength), var(--soft-fg-mix));
 }
 
 /* ── Design tokens ──────────────────────────────────────────────
@@ -120,6 +136,17 @@
    not a theme colour, so there's no bg-muted / border-muted to misread. */
 @utility text-muted {
   color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+}
+
+/* Brand blue as text (a link-like word, a hover state, a check mark): the AA-safe
+   --color-primary-text, never text-primary, which fails on the dark page. */
+@utility text-primary-text {
+  color: var(--color-primary-text);
+}
+
+/* Error text (a field's message, an inline warning): the AA-safe --color-error-text. */
+@utility text-error-text {
+  color: var(--color-error-text);
 }
 
 @theme {

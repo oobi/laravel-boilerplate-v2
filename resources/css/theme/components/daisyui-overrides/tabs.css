@@ -17,12 +17,8 @@
     }
 
     &:is(.tab-active, [aria-selected="true"], [aria-current="true"], [aria-current="page"]):not(.tab-disabled, [disabled]) {
-        color: var(--color-primary);
-
-        /* The brand blue is 3.3:1 on the dark page; the soft mix lifts it. */
-        @variant dark {
-            color: color-mix(in oklab, var(--color-primary) var(--soft-fg-strength), var(--soft-fg-mix));
-        }
+        /* Brand blue as text: the AA-safe mix in both themes (tokens.css). */
+        color: var(--color-primary-text);
 
         &:before {
             border-top: none;

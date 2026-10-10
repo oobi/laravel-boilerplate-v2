@@ -126,7 +126,7 @@ th.fi-ta-selection-cell,
 }
 
 .fi-ta-header-cell-sorted .fi-icon {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
 }
 
 /* Footer (pagination bar) — same tint as the column header row above it. */

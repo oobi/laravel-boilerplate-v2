@@ -67,6 +67,6 @@
     }
 
     .ui-floating-label:has(:focus) .ui-floating-label-text {
-        color: var(--color-primary);
+        color: var(--color-primary-text);
     }
 }
