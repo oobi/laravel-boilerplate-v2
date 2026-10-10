@@ -4,20 +4,22 @@
 --}}
 @props(['root' => null, 'withResource' => true])
 @php $crumbs = \App\Support\Breadcrumbs::trail($root, $withResource); @endphp
-<div class="min-w-0 flex-1 truncate text-sm text-muted">
-    @foreach ($crumbs as $index => $crumb)
-        {{-- Root crumb and its separator are dropped on mobile to save space --}}
-        @if ($index === 1)
-            <span class="mx-2 hidden sm:inline">/</span>
-        @elseif ($index > 1)
-            <span class="mx-2">/</span>
-        @endif
-        @if ($index === 0)
-            <span class="hidden sm:inline">{{ $crumb['label'] }}</span>
-        @elseif ($crumb['url'])
-            <a href="{{ $crumb['url'] }}" class="hover:text-base-content">{{ $crumb['label'] }}</a>
-        @else
-            <span>{{ $crumb['label'] }}</span>
-        @endif
-    @endforeach
-</div>
+<nav aria-label="{{ __('Breadcrumb') }}" class="min-w-0 flex-1 truncate text-sm text-muted">
+    <ol class="inline">
+        @foreach ($crumbs as $index => $crumb)
+            {{-- Root crumb and its separator are dropped on mobile to save space; separators are decoration. --}}
+            <li @class(['inline' => $index > 0, 'hidden sm:inline' => $index === 0])>
+                @if ($index === 1)
+                    <span class="mx-2 hidden sm:inline" aria-hidden="true">/</span>
+                @elseif ($index > 1)
+                    <span class="mx-2" aria-hidden="true">/</span>
+                @endif
+                @if ($crumb['url'] && $index > 0)
+                    <a href="{{ $crumb['url'] }}" class="hover:text-base-content">{{ $crumb['label'] }}</a>
+                @else
+                    <span @if ($loop->last) aria-current="page" @endif>{{ $crumb['label'] }}</span>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+</nav>

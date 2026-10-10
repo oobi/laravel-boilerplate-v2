@@ -12,13 +12,14 @@
 ])
 
 <x-button-group :label="__('admin.records_shown')" {{ $attributes }}>
-    <x-button-group.item :active="$value !== '0'" wire:click="$set('{{ $model }}', '')">
-        <x-heroicon-m-check class="h-4 w-4" />
+    {{-- Named in words: the icon and count alone read as just "106". --}}
+    <x-button-group.item :active="$value !== '0'" wire:click="$set('{{ $model }}', '')" :aria-label="trans_choice('admin.active_records_label', $activeCount, ['count' => $activeCount])">
+        <x-heroicon-m-check class="h-4 w-4" aria-hidden="true" />
         <x-badge color="info" size="xs">{{ $activeCount }}</x-badge>
     </x-button-group.item>
     @if ($trashedCount > 0)
-        <x-button-group.item :active="$value === '0'" color="danger" wire:click="$set('{{ $model }}', '0')">
-            <x-heroicon-o-trash class="h-4 w-4" />
+        <x-button-group.item :active="$value === '0'" color="danger" wire:click="$set('{{ $model }}', '0')" :aria-label="trans_choice('admin.trashed_records_label', $trashedCount, ['count' => $trashedCount])">
+            <x-heroicon-o-trash class="h-4 w-4" aria-hidden="true" />
             <x-badge color="error" size="xs">{{ $trashedCount }}</x-badge>
         </x-button-group.item>
     @endif

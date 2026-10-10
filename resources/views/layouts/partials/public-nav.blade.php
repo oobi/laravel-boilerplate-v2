@@ -4,9 +4,10 @@
     <div class="ui-page flex h-16 items-center justify-between gap-4">
         <x-application-logo />
 
-        {{-- Stub: add public nav links here (e.g. About, Pricing, Contact) --}}
-        <nav class="hidden flex-1 items-center justify-center gap-6 md:flex">
-        </nav>
+        {{-- Stub: add public nav links (e.g. About, Pricing, Contact) in a
+             <nav aria-label="Main" class="hidden flex-1 items-center justify-center gap-6 md:flex">
+             here. Left out while empty: an empty nav landmark is noise to a screen reader. --}}
+        <div class="flex-1" aria-hidden="true"></div>
 
         <div class="flex items-center gap-3">
             @auth

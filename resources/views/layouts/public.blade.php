@@ -17,11 +17,12 @@
     @livewireStyles
 </head>
 <body class="min-h-screen bg-base-100 font-sans antialiased {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }}">
+    <x-skip-link />
     <x-impersonation-banner />
 
     @include('layouts.partials.public-nav')
 
-    <main class="ui-page py-10">
+    <main id="main-content" tabindex="-1" class="ui-page py-10 focus:outline-none">
         {{ $slot }}
     </main>
 

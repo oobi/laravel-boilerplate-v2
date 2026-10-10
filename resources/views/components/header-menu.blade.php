@@ -1,13 +1,18 @@
 {{--
     Header user menu — plain circular avatar trigger (no name text, no chevron),
-    matching Buzz's header-menu look. Uses daisyUI's native dropdown instead of
-    a custom dropdown component.
+    matching Buzz's header-menu look. daisyUI's dropdown styling, opened as a
+    disclosure: a named button that says whether it's open, opens on click (not
+    on focus), and closes on Escape (focus back to the button), a click outside or
+    Tabbing out.
 --}}
-<div class="dropdown dropdown-end">
-    <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
-        <x-avatar color="primary" :user="auth()->user()" size="md" />
-    </div>
-    <ul tabindex="0" class="dropdown-content menu z-[60] mt-2 w-52 rounded-box bg-base-100 p-2 shadow">
+<div class="dropdown dropdown-end" x-data="{ open: false }" x-bind:class="{ 'dropdown-open': open }"
+    x-on:keydown.escape="if (open) { $event.stopPropagation(); open = false; $refs.trigger.focus() }" x-on:click.outside="open = false"
+    x-on:focusout="if (open && $event.relatedTarget && ! $el.contains($event.relatedTarget)) open = false">
+    <button type="button" x-ref="trigger" class="btn btn-ghost btn-circle" aria-label="{{ __('Account menu') }}" aria-controls="account-menu"
+        x-bind:aria-expanded="open.toString()" aria-expanded="false" x-on:click="open = ! open">
+        <x-avatar color="primary" :user="auth()->user()" size="md" aria-hidden="true" />
+    </button>
+    <ul id="account-menu" class="dropdown-content menu z-[60] mt-2 w-52 rounded-box bg-base-100 p-2 shadow" x-show="open" x-cloak>
         {{-- Impersonated sessions can't open the profile (DenyLowAssuranceSessions). --}}
         @php($showProfile = ! \App\Support\Auth\SessionAssurance::isLow())
         @if ($showProfile)

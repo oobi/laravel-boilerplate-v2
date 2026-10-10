@@ -16,10 +16,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-base-200 flex flex-col items-center justify-center gap-6 p-4">
-    <x-application-logo size="h-16" />
+    <main class="flex w-full max-w-md flex-col items-center gap-6">
+        <x-application-logo size="h-16" />
 
-    <x-card bordered="false" class="w-full max-w-md shadow-xl">
-        @yield('content')
-    </x-card>
+        <x-card bordered="false" class="w-full shadow-xl">
+            @yield('content')
+        </x-card>
+    </main>
 </body>
 </html>

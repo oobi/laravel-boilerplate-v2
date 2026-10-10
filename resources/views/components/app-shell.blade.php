@@ -35,6 +35,7 @@
     @livewireStyles
 </head>
 <body class="font-sans antialiased {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }}">
+    <x-skip-link />
     <x-impersonation-banner />
 
     <div class="ui-app">
@@ -182,7 +183,7 @@
                     <x-header-menu />
                 </header>
 
-                <main class="flex-1 overflow-y-auto">
+                <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto focus:outline-none">
                     <div class="py-6">
                         {{-- No sidebar → cap the width so content isn't spread across the whole viewport (roughly the admin content width). --}}
                         <div @class(['ui-page flex flex-col gap-4', 'max-w-6xl' => ! $hasNav])>
