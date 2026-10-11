@@ -8,6 +8,7 @@ use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Action;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -246,7 +247,8 @@ class TeamMembersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(MembersTable::class, ['team' => $team])
-            ->assertActionVisible(TestAction::make('impersonate')->table($member));
+            ->assertActionVisible(TestAction::make('impersonate')->table($member))
+            ->assertActionExists(TestAction::make('impersonate')->table($member), fn (Action $action): bool => $action->isConfirmationRequired());
     }
 
     public function test_the_roster_impersonate_action_needs_impersonation_permission(): void

@@ -12,7 +12,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-base-200 flex flex-col items-center justify-center gap-6 p-4">
+<body class="min-h-screen bg-base-200 flex flex-col items-center justify-center gap-6 px-4 pb-4 {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : 'pt-4' }}">
+    {{-- A signed-in page here (confirm password) must still let an impersonator leave. --}}
+    <x-impersonation-banner />
+
     <main class="flex w-full max-w-md flex-col items-center gap-6">
         <x-application-logo size="h-16" />
 

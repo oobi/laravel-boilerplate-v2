@@ -162,6 +162,11 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                         ->label(__('admin.impersonate'))
                         ->icon('heroicon-o-finger-print')
                         ->color(DaisyColor::WARNING->toFilamentColor())
+                        ->requiresConfirmation()
+                        ->modalIcon('heroicon-o-finger-print')
+                        ->modalHeading(fn (User $record): string => __('admin.impersonate_heading', ['name' => $record->name]))
+                        ->modalDescription(fn (User $record): string => __('admin.impersonate_confirm', ['name' => $record->name]))
+                        ->modalSubmitActionLabel(__('admin.impersonate'))
                         ->action(fn (User $record) => app(StartImpersonation::class)->handle($record))
                         ->successRedirectUrl(fn (User $record): string => Destination::home($record))
                         ->authorize(UserAbility::IMPERSONATE),

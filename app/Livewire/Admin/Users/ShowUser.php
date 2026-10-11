@@ -117,9 +117,35 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->label(__('admin.impersonate_user'))
             ->icon('heroicon-o-finger-print')
             ->color(DaisyColor::WARNING->toFilamentColor())
-            ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::IMPERSONATE, $this->user))
+            ->visible(fn (): bool => ! $this->user->trashed()
+                && (Gate::allows(UserAbility::IMPERSONATE, $this->user) || $this->impersonationAwaitsVerification()))
+            ->requiresConfirmation()
+            ->modalIcon('heroicon-o-finger-print')
+            ->modalHeading(fn (): string => $this->user->hasVerifiedEmail()
+                ? __('admin.impersonate_heading', ['name' => $this->user->name])
+                : __('admin.impersonate_unverified_heading', ['name' => $this->user->name]))
+            ->modalDescription(fn (): string => $this->user->hasVerifiedEmail()
+                ? __('admin.impersonate_confirm', ['name' => $this->user->name])
+                : __('admin.impersonate_unverified'))
+            ->modalSubmitActionLabel(__('admin.impersonate'))
+            ->modalSubmitAction(fn (): ?bool => $this->user->hasVerifiedEmail() ? null : false)
             ->action(fn () => app(StartImpersonation::class)->handle($this->user))
             ->successRedirectUrl(fn (): string => Destination::home($this->user));
+    }
+
+    /**
+     * Whether only an unverified email stands between the viewer and
+     * impersonating this user, so the action stays visible and its modal says
+     * why rather than vanishing. StartImpersonation still refuses it.
+     */
+    private function impersonationAwaitsVerification(): bool
+    {
+        $actor = Auth::user();
+
+        return ! $this->user->hasVerifiedEmail()
+            && $actor instanceof User
+            && $actor->canImpersonate()
+            && $this->user->canBeImpersonatedOnceVerified($actor);
     }
 
     /**
