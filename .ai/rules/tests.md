@@ -19,3 +19,12 @@ While iterating, run only what you touched: `php artisan test --compact <file>` 
 
 ## The slow group is a budget
 A test class that takes over a second gets `#[Group('slow')]` and a docblock line saying why, which keeps it out of `test:fast`. No test class qualifies today. Fix a slow test before adding it to the group; check with `php artisan test --profile`.
+
+## After a completed action on a component with no form of its own, assert assertHasNoErrors()
+Since Filament 5.7.7 a closed action forgets its cached schema (forgetCachedMountedActionSchemas()). On a component that declares no schema itself (e.g. ManageOwnership, Onboarding, FilamentModalGallery), assertHasNoFormErrors() after a finished callAction()/callMountedAction() then has no schema to resolve and throws a TypeError. Use Livewire's assertHasNoErrors() there: with no keys, assertHasNoFormErrors() only calls assertHasNoErrors([]) over the whole error bag (the schema just prefixes keys), so the check is identical. Keep assertHasNoFormErrors()/assertHasFormErrors() while the action is still mounted, or on components with their own form.
+
+## Livewire tests: a missing model from a call is a 404 response, not an exception
+Since Livewire 4.4.6 a ModelNotFoundException thrown during ->call()/->mountAction() becomes the test's 404 response, as AuthorizationException and HttpException already did. Assert ->assertNotFound() on the chain; expectException(ModelNotFoundException::class) no longer fires there. Direct calls outside Livewire (an Action's handle()) still throw.
+
+## Assert on our own markup, not a common word
+Filament renders its own labels into the page (the 5.10 select's config carries "Clear selection"), so assertSee('Clear') can match Filament's text rather than ours. Assert on markup only our view produces, such as its own `wire:click` or `id`, with assertSeeHtml().
