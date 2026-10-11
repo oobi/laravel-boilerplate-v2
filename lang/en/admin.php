@@ -63,6 +63,10 @@ return [
     'view' => 'View',
     'impersonate' => 'Impersonate',
     'impersonate_user' => 'Impersonate User',
+    'impersonate_heading' => 'Impersonate :name?',
+    'impersonate_confirm' => 'You will use the app as :name until you choose Stop Impersonating.',
+    'impersonate_unverified_heading' => ':name can\'t be impersonated yet',
+    'impersonate_unverified' => 'Their email address is not verified. You can impersonate them once they verify it.',
     'impersonating' => 'Impersonating',
     'stop_impersonating' => 'Stop Impersonating',
 

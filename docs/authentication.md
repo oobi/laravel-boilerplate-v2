@@ -139,6 +139,12 @@ password reset, outside the impersonation trail.
 - Changing the email asks for the current password.
 - Profile links and the two-factor banner's setup button are hidden for these
   sessions.
+- Logging out while impersonating only stops impersonating
+  (`LeaveImpersonationOnLogout` on Fortify's `logout` route). A real logout
+  would end the impersonator's session and rotate the impersonated user's
+  remember token, signing them out on their own devices.
+- A user whose email is not verified can't be impersonated: they could only
+  be shown the verify-email page.
 
 ## Throttling
 

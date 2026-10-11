@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\Impersonation\StartImpersonation;
+use App\Actions\Impersonation\StopImpersonation;
 use Illuminate\Http\RedirectResponse;
 use Lab404\Impersonate\Services\ImpersonateManager;
 
@@ -15,18 +16,14 @@ use Lab404\Impersonate\Services\ImpersonateManager;
  * inside the CSRF-protected Livewire/Filament action via
  * {@see StartImpersonation}.
  *
- * The destination is lab404's own per-session `leave_redirect_to` (recorded by
- * StartImpersonation as the page the impersonator started from), falling back
- * to the config route when absent.
+ * {@see StopImpersonation} does the leaving and picks the destination.
  */
 class ImpersonationController extends Controller
 {
-    public function leave(ImpersonateManager $manager): RedirectResponse
+    public function leave(ImpersonateManager $manager, StopImpersonation $stopImpersonation): RedirectResponse
     {
         abort_unless($manager->isImpersonating(), 403);
 
-        $manager->leave();
-
-        return redirect()->to($manager->getLeaveRedirectTo());
+        return redirect()->to($stopImpersonation->handle() ?? url()->previous());
     }
 }

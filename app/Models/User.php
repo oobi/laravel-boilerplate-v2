@@ -192,10 +192,24 @@ class User extends Authenticatable implements MustVerifyEmail
      * Determine if this user can be impersonated by the given actor (the
      * currently authenticated user if omitted — required for the vendor
      * package's own no-argument calls). Rules: must be logged in, can't
-     * impersonate yourself, inactive or trashed users and super admins cannot
-     * be impersonated.
+     * impersonate yourself, and unverified, inactive or trashed users and super
+     * admins cannot be impersonated. An unverified user could only be shown the
+     * verify-email page, whose Resend button would mail them on the
+     * impersonator's behalf.
      */
     public function canBeImpersonated(?self $actor = null): bool
+    {
+        // Like the `verified` middleware, only a MustVerifyEmail model is held to it.
+        return (! $this instanceof MustVerifyEmail || $this->hasVerifiedEmail())
+            && $this->canBeImpersonatedOnceVerified($actor);
+    }
+
+    /**
+     * Every impersonation rule except a verified email, so a trigger can explain
+     * that one gap instead of hiding itself. Never authorizes on its own: the
+     * write boundary goes through canBeImpersonated().
+     */
+    public function canBeImpersonatedOnceVerified(?self $actor = null): bool
     {
         $actor ??= Auth::user();
 

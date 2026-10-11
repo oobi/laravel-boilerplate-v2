@@ -9,6 +9,7 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Enums\UserAbility;
 use App\Http\Middleware\DenyLowAssuranceSessions;
+use App\Http\Middleware\LeaveImpersonationOnLogout;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\PasswordResetLinkResponse;
 use App\Http\Responses\RegisterResponse;
@@ -232,8 +233,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Middleware Fortify's own routes lack, added once every route is
         // registered (a cached route table carries it): impersonated sessions
-        // stay off the two-factor routes, and the password and sign-up
-        // endpoints get throttles.
+        // stay off the two-factor routes, logging out while impersonating
+        // only stops impersonating, and the password and sign-up endpoints
+        // get throttles.
         if (! $this->app->routesAreCached()) {
             $this->app->booted(function (): void {
                 $throttles = [
@@ -246,6 +248,10 @@ class AppServiceProvider extends ServiceProvider
                 collect(Route::getRoutes()->getRoutes())->each(function (RouteDefinition $route) use ($throttles): void {
                     if (DenyLowAssuranceSessions::guardsFortifyRoute($route->getName())) {
                         $route->middleware(DenyLowAssuranceSessions::class);
+                    }
+
+                    if ($route->getName() === 'logout') {
+                        $route->middleware(LeaveImpersonationOnLogout::class);
                     }
 
                     if (isset($throttles[$route->getName()])) {
