@@ -82,12 +82,13 @@
             "@php artisan package:discover --ansi",
             "@php artisan filament:assets --ansi"
         ],
+        "hooks:install": "@php -r \"if (file_exists('.git')) { passthru('git config core.hooksPath .githooks'); }\"",
         "post-install-cmd": [
-            "git config core.hooksPath .githooks"
+            "@hooks:install"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "git config core.hooksPath .githooks"
+            "@hooks:install"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
