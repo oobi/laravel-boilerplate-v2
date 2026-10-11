@@ -16,8 +16,9 @@
         </div>
 
         {{-- POST, not a link: leaving impersonation is a state change, so it goes
-             through a CSRF-protected form rather than a navigable GET (GitHub #11). --}}
-        <form method="POST" action="{{ route('users.impersonate.leave') }}">
+             through a CSRF-protected form rather than a navigable GET (GitHub #11).
+             target="_top" so it leaves Livewire's error-modal iframe too. --}}
+        <form method="POST" action="{{ route('users.impersonate.leave') }}" target="_top">
             @csrf
             <x-button type="submit" color="neutral" size="xs" variant="outline">
                 {{ __('admin.stop_impersonating') }}

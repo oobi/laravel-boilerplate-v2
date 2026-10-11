@@ -84,3 +84,10 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
 Route::domain($accountHost)->middleware('auth')->prefix('users')->name('users.')->group(function (): void {
     Route::post('impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
 });
+
+// Unmatched URLs 404 through the web group, not before it: without a session
+// the error page can't see an impersonated user, so it would drop the banner
+// and its "stop impersonating" form. The fallback is GET/HEAD only, so a GET to
+// a POST-only URL now 404s (was 405), and a POST/PUT/DELETE to an unknown URL
+// 405s (was 404).
+Route::fallback(fn () => abort(404));

@@ -12,8 +12,11 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-base-100">
-    <main class="mx-auto flex min-h-screen max-w-[760px] items-center px-6 py-12">
+<body class="flex min-h-screen flex-col bg-base-100 {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }}">
+    {{-- An impersonator who hits a 403/404 must still be able to leave. --}}
+    <x-impersonation-banner />
+
+    <main class="mx-auto flex w-full max-w-[760px] flex-1 items-center px-6 py-12">
         <div class="ui-error-hero w-full">
             <div class="ui-error-copy flex flex-col gap-6">
                 <x-application-logo size="h-12" class="self-center md:self-start" />

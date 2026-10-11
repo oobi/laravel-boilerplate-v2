@@ -29,7 +29,7 @@
         <p class="text-sm text-base-content/70">{{ __('theme-demo::messages.error_pages_description') }}</p>
 
         <div class="flex flex-wrap gap-2">
-            @foreach (['403', '404', '500', '503'] as $status)
+            @foreach (['403', '404', '405', '419', '500', '502', '503'] as $status)
                 {{-- Opens in a new tab: the target view has no admin chrome, so this avoids losing the demo page. --}}
                 <x-button color="neutral" variant="outline" size="sm" :href="route('style-demo.errors-'.$status)" target="_blank" rel="noopener">
                     {{ $status }}
