@@ -100,7 +100,7 @@ class TeamOwnershipTest extends TestCase
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->assertActionVisible('addCoOwner')
             ->callAction('addCoOwner', data: ['user_id' => $this->member->id])
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         $this->assertTrue($this->team->isOwnedBy($this->member));
 
@@ -140,7 +140,7 @@ class TeamOwnershipTest extends TestCase
         Livewire::actingAs($this->primary)
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->callAction('transferOwnership', data: ['user_id' => $this->member->id])
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         $this->team->refresh();
         $this->member->refresh(); // the component wrote through its own instances; ours memoised the old membership
@@ -176,7 +176,7 @@ class TeamOwnershipTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ManageOwnership::class, ['team' => $this->team])
             ->callAction('transferOwnership', data: ['user_id' => $this->member->id])
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         $this->assertTrue($this->team->fresh()->isPrimaryOwner($this->member));
     }

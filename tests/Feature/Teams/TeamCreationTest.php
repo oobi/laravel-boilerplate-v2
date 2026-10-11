@@ -48,7 +48,7 @@ class TeamCreationTest extends TestCase
             ->test(Onboarding::class)
             ->assertActionVisible('createTeam')
             ->callAction('createTeam', data: ['name' => 'Northwind'])
-            ->assertHasNoFormErrors();
+            ->assertHasNoErrors();
 
         $team = Team::query()->where('name', 'Northwind')->firstOrFail();
 

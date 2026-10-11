@@ -106,6 +106,36 @@ class EditUserTest extends TestCase
             ->assertSeeHtml('href="'.route('profile.edit').'"');
     }
 
+    /** Screen readers read a field's helper text with the field (GitHub oobi #51). */
+    public function test_the_email_field_is_described_by_its_helper_text(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $html = Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $admin])
+            ->assertSeeHtml('id="form.email-helper-text"')
+            ->html();
+
+        $this->assertMatchesRegularExpression('/<input\b(?=[^>]*\bid="form\.email")(?=[^>]*\baria-describedby="form\.email-helper-text")[^>]*>/', $html);
+    }
+
+    /** A field's validation error is read with the field and marks it invalid (GitHub oobi #51). */
+    public function test_the_email_field_is_described_by_its_error(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        $html = Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $target])
+            ->set('data.email', 'not-an-email')
+            ->call('save')
+            ->assertHasErrors('data.email')
+            ->assertSeeHtml('id="form.email-error"')
+            ->html();
+
+        $this->assertMatchesRegularExpression('/<input\b(?=[^>]*\bid="form\.email")(?=[^>]*\baria-describedby="form\.email-error")(?=[^>]*\baria-invalid="true")[^>]*>/', $html);
+    }
+
     public function test_support_can_update_a_regular_user(): void
     {
         $support = User::factory()->support()->create();
