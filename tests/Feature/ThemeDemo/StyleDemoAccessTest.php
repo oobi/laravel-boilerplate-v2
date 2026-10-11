@@ -194,7 +194,10 @@ class StyleDemoAccessTest extends TestCase
         return [
             '403' => [403, 'Not on the list'],
             '404' => [404, 'Page not found'],
+            '405 (4xx fallback)' => [405, "That didn't work"],
+            '419' => [419, 'Page expired'],
             '500' => [500, 'Oops!'],
+            '502 (5xx fallback)' => [502, 'Something broke'],
             '503' => [503, 'Be right back'],
         ];
     }

@@ -45,6 +45,9 @@ Route::middleware(['web', 'auth', 'verified'])
         Route::get('/tab-content/text', TabContent::class)->name('tab-content-text')->defaults('variant', 'text');
         Route::get('/errors/403', fn () => abort(403))->name('errors-403');
         Route::get('/errors/404', fn () => abort(404))->name('errors-404');
+        Route::get('/errors/405', fn () => abort(405))->name('errors-405');
+        Route::get('/errors/419', fn () => abort(419))->name('errors-419');
         Route::get('/errors/500', fn () => abort(500))->name('errors-500');
+        Route::get('/errors/502', fn () => abort(502))->name('errors-502');
         Route::get('/errors/503', fn () => abort(503))->name('errors-503');
     });

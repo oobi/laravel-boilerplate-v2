@@ -165,8 +165,34 @@ class UserImpersonationTest extends TestCase
         $this->actingAs($admin);
         app(StartImpersonation::class)->handle($target);
 
-        $this->get('/users/impersonate/leave')->assertMethodNotAllowed();
+        // 404, not 405: a GET to a POST-only URL lands on the web fallback route.
+        $this->get('/users/impersonate/leave')->assertNotFound();
         $this->assertAuthenticatedAs($target);
+    }
+
+    public function test_error_pages_still_offer_a_way_out_of_impersonation(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        $this->actingAs($admin);
+        app(StartImpersonation::class)->handle($target);
+
+        // The impersonated non-admin is refused the admin area, and an unknown
+        // URL 404s: both error pages keep the banner's leave form.
+        $leaveForm = 'action="'.route('users.impersonate.leave').'"';
+
+        $this->get(route('dashboard'))->assertForbidden()->assertSeeHtml($leaveForm);
+        $this->get('/no-such-page')->assertNotFound()->assertSeeHtml($leaveForm);
+    }
+
+    public function test_unknown_urls_404_inside_the_web_middleware_group(): void
+    {
+        // Without a session the error page can't tell the user is impersonating,
+        // so an unmatched URL must reach the web group's fallback route.
+        $this->get('/no-such-page')
+            ->assertNotFound()
+            ->assertCookie(config('session.cookie'));
     }
 
     private function assertImpersonationDenied(User $actor, User $target): void
