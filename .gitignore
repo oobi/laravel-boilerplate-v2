@@ -21,6 +21,7 @@ Thumbs.db
 .phpactor.json
 *.swp
 *.swo
+CLAUDE.local.md
 
 # --- SVN / Git ---
 **/.svn/
