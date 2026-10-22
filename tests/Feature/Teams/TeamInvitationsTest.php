@@ -13,6 +13,7 @@ use Concise\Teams\Notifications\TeamInvitationNotification;
 use Concise\Teams\Support\TeamContext;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -152,6 +153,22 @@ class TeamInvitationsTest extends TestCase
         Livewire::actingAs($wrangler)
             ->test(PendingInvitations::class, ['team' => $team])
             ->assertForbidden();
+    }
+
+    /** The link is built from APP_URL, not the inviter's request (GitHub #58), and still works. */
+    public function test_the_invitation_link_ignores_the_requests_host(): void
+    {
+        config(['app.url' => 'https://app.example']);
+        $team = $this->team(User::factory()->create());
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'invitee@example.com']);
+
+        app('url')->setRequest(Request::create('http://evil.example/'));
+        $link = $invitation->acceptUrl();
+
+        $this->assertStringStartsWith('https://app.example/', $link);
+        $this->actingAs($invitee)->get($link)->assertRedirect();
+        $this->assertTrue($team->fresh()->hasUser($invitee));
     }
 
     public function test_accepting_an_invitation_joins_the_team_with_the_invited_role(): void

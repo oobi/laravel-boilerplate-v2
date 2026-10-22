@@ -8,8 +8,10 @@ use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\Navigation\TeamNavRegistry;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Notification;
 use ReflectionProperty;
 use Tests\TestCase;
 
@@ -66,6 +68,22 @@ class TeamHostModeHttpTest extends TestCase
         // nav item into a process-wide static; clear it so a later path-mode test
         // doesn't inherit a stale link.
         TeamNavRegistry::flush();
+    }
+
+    // --- Mailed links ---------------------------------------------------------
+
+    /** A route bound to the account host keeps it when mailed links are built from APP_URL (GitHub #58). */
+    public function test_the_reset_link_stays_on_the_account_host(): void
+    {
+        config(['app.url' => 'https://elsewhere.example', 'auth.timebox_duration' => 0]);
+        Notification::fake();
+        $user = User::factory()->create();
+
+        $this->post('http://'.self::BASE.'/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user): bool {
+            return str_starts_with($notification->toMail($user)->actionUrl, 'https://'.self::BASE.'/reset-password/');
+        });
     }
 
     // --- Team hosts ---------------------------------------------------------

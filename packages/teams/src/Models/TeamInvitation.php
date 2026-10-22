@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Concise\Teams\Models;
 
 use App\Models\User;
+use App\Support\Auth\MailedLinks;
 use Concise\Teams\Database\Factories\TeamInvitationFactory;
 use Concise\Teams\Notifications\TeamInvitationNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\URL;
 
 /**
  * A pending invitation for an email address to join a team. `role` is the
@@ -51,10 +51,13 @@ class TeamInvitation extends Model
         return $this->belongsTo(Team::class);
     }
 
-    /** The signed link the invitee follows to accept; deleting the invitation invalidates it. */
+    /**
+     * The signed link the invitee follows to accept; deleting the invitation
+     * invalidates it. Built from APP_URL, not the inviter's request (GitHub #58).
+     */
     public function acceptUrl(): string
     {
-        return URL::signedRoute('team.invitations.accept', ['invitation' => $this]);
+        return MailedLinks::generator()->signedRoute('team.invitations.accept', ['invitation' => $this]);
     }
 
     /** Whether this invitation was addressed to the given account's email. */
