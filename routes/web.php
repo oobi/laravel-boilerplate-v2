@@ -16,6 +16,11 @@ use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\TwoFactorAuthentication;
 use Illuminate\Support\Facades\Route;
 
+// Path mode: no host constraint, admin under /admin. Defined outside the teams
+// fence so the file still loads once bp:remove-teams strips it.
+$apexHost = $accountHost = $adminHost = null;
+$adminPath = 'admin';
+
 // teams:start — when the teams tier's custom-domain overlay is in host mode,
 // three hosts carry three different things: the apex is the public landing;
 // account_host (default the apex, overridable for a headless-apex deployment)

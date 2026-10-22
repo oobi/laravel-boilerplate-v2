@@ -26,9 +26,11 @@ to the dashboard). Only the "neither" tail above is a configurable choice.
 
 ## Recipes
 
-Each recipe below has a matching scenario test in `tests/Feature/Scenarios/`
-that pins this exact config and walks its critical paths, so a change that
-breaks one recipe fails under `php artisan test` even if the others still pass.
+Each recipe below has a matching scenario test that pins this exact config and
+walks its critical paths, so a change that breaks one recipe fails under
+`php artisan test` even if the others still pass. Vanilla's is in
+`tests/Feature/Scenarios/`; the teams recipes' are in
+`tests/Feature/Teams/Scenarios/`, so they go when the tier is removed.
 
 ### Vanilla (no teams tier)
 
