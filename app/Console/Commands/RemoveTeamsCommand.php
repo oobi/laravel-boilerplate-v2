@@ -25,7 +25,9 @@ use function Laravel\Prompts\warning;
  * Turn the boilerplate vanilla by removing the teams tier: the one-shot,
  * setup-time transform documented in docs/teams-distribution.md. It consumes
  * the `teams:start`/`teams:end` markers, so it stays correct as the seams
- * evolve rather than hardcoding line numbers.
+ * evolve rather than hardcoding line numbers. Besides the core PHP files, the
+ * markers fence the tier's settings in `.env.example`, `phpunit.xml` and a
+ * `.env` copied from the example, so no dead TEAMS_* keys are left behind.
  *
  * Destructive, so it checks before it destroys: the stripped core files must
  * lint, reference nothing from the tier and load the routes, or the originals
@@ -44,6 +46,9 @@ class RemoveTeamsCommand extends Command
     /** Core directories that may carry fences. */
     public const ROOTS = ['app', 'bootstrap', 'config', 'database', 'routes'];
 
+    /** Files outside those directories that may carry fences (the tier's settings). */
+    public const CONFIG_FILES = ['.env', '.env.example', 'phpunit.xml'];
+
     private const PACKAGE = 'concise-dot-digital/teams';
 
     private const PACKAGE_PATH = 'packages/teams';
@@ -58,7 +63,8 @@ class RemoveTeamsCommand extends Command
             return self::SUCCESS;
         }
 
-        $originals = $stripper->fencedFiles(collect(self::ROOTS)->map(fn (string $root): string => base_path($root))->all());
+        $originals = $stripper->fencedFiles(collect(self::ROOTS)->map(fn (string $root): string => base_path($root))->all())
+            + $stripper->fencedAmong(collect(self::CONFIG_FILES)->map(fn (string $file): string => base_path($file))->all());
 
         try {
             $stripped = collect($originals)->map(fn (string $contents, string $file): string => $this->strip($stripper, $file, $contents))->all();
@@ -69,7 +75,7 @@ class RemoveTeamsCommand extends Command
         }
 
         info('bp:remove-teams will:');
-        $this->line('  • strip the teams markers from '.count($stripped).' core file(s), then check the app still loads');
+        $this->line('  • strip the teams markers from '.count($stripped).' core and config file(s), then check the app still loads');
         $this->line('  • drop the '.self::PACKAGE_PATH.' repository and run `composer remove '.self::PACKAGE.'`');
         $this->line('  • delete '.self::TESTS.' and '.self::PACKAGE_PATH);
 
@@ -133,7 +139,8 @@ class RemoveTeamsCommand extends Command
     }
 
     /**
-     * Why the stripped files wouldn't work without the tier, if anything.
+     * Why the stripped files wouldn't work without the tier, if anything. Only
+     * PHP files are linted and searched; the settings files have nothing to run.
      *
      * @param  array<string, string>  $stripped
      * @return list<string>
@@ -141,6 +148,7 @@ class RemoveTeamsCommand extends Command
     private function verify(array $stripped, TierReferences $references): array
     {
         $problems = collect($stripped)
+            ->filter(fn (string $contents, string $file): bool => str_ends_with($file, '.php'))
             ->flatMap(function (string $contents, string $file) use ($references): array {
                 return collect([$this->lint($file)])
                     ->filter()

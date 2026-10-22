@@ -45,10 +45,14 @@ Every place teams touches core is fenced so it's greppable and unambiguous:
 // teams:end
 ```
 
+The tier's settings are fenced the same way in each file's own comment syntax:
+`# teams:start` in `.env.example` (and so in a `.env` copied from it), and
+`<!-- teams:start -->` in `phpunit.xml`.
+
 Find them all:
 
 ```bash
-grep -rn "teams:start" app database config routes composer.json
+grep -rn "teams:start" app database config routes composer.json .env.example phpunit.xml
 ```
 
 Some fenced blocks (e.g. the `User` trait composition) carry a **"restore the
@@ -66,6 +70,8 @@ canonical line"** note in the opening comment — those are *replace*, not plain
 | `database/seeders/DemoSeeder.php` | the `TeamSeeder`/`TeamRolesSeeder` imports + their two guarded `$this->call(...)` blocks | delete each block |
 | `config/fortify.php` | the auth domain for the custom-domain overlay's host mode (auth on the account host) | delete the block |
 | `routes/web.php` | the host-mode overrides of the host and path variables (`$apexHost`, `$accountHost`, `$adminHost`, `$adminPath`); their path-mode defaults sit above the fence | delete the block |
+| `.env.example`, `.env` | the Teams tier settings section (`TEAMS_*`); a `.env` made before the fence existed has no markers, so delete its `TEAMS_*` lines by hand | delete the block |
+| `phpunit.xml` | the `TEAMS_*` pins that keep the suite independent of a developer's `.env` | delete the block |
 
 The provider is **auto-discovered** (via the package's own composer manifest),
 so there is no `bootstrap/providers.php` entry to touch.
@@ -79,7 +85,7 @@ Run `php artisan bp:remove-teams --dry-run` to see the plan, then
    `User.php`'s with its canonical line). A `teams:start` with no `teams:end`
    stops it before anything is written; `--dry-run` checks this too.
 2. Clears the route and config caches, then checks the result: every stripped
-   file must lint and reference nothing from the tier outside comments, and
+   PHP file must lint and reference nothing from the tier outside comments, and
    `php artisan route:list` must run. If not, it puts every file back and exits
    non-zero.
 3. Drops the path repository (`composer config --unset`, so the lock stays in
@@ -110,10 +116,11 @@ The steps the command performs, for doing it by hand:
    scenarios are in there too). Every other test passes without the tier
    (`CoreTestsStandAloneTest` keeps it that way), and `VanillaAppTest` is the
    vanilla contract.
-5. **`.env`** — no `TEAMS_*` keys are needed; set `LOGIN_FALLBACK=home` and keep
-   registration as your app requires (`bp:make-login-only` removes it and the
-   public landing page for a login-only app). See [config-recipes.md](config-recipes.md)
-   (Vanilla).
+5. **`.env`**: no `TEAMS_*` keys are needed. The command strips the fenced
+   section; delete any left in a `.env` made without the markers. Set
+   `LOGIN_FALLBACK=home` and keep registration as your app requires
+   (`bp:make-login-only` removes it and the public landing page for a
+   login-only app). See [config-recipes.md](config-recipes.md) (Vanilla).
 6. **Migrations** — teams migrations are loaded *from the package*, so once it's
    gone they no longer run on a fresh install. An existing database keeps its
    `teams` / `team_user` / `team_invitations` tables; drop them by hand if you
