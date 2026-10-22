@@ -5,8 +5,6 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use App\Support\Auth\Destination;
 use App\Support\Auth\LoginRedirectRegistry;
-use Concise\Teams\Models\Team;
-use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
@@ -17,7 +15,8 @@ use Tests\TestCase;
  * Post-login routing (App\Http\Responses\LoginResponse): a fixed cascade —
  * system role → admin dashboard, else the first add-on resolver (the teams tier
  * sends non-admins to the team area) — with only the "neither" tail configurable
- * via `fortify.login_fallback`.
+ * via `fortify.login_fallback`. Where the teams tier's resolver sends a user is
+ * in Tests\Feature\Teams\TeamLandingTest.
  */
 class LoginRedirectTest extends TestCase
 {
@@ -33,23 +32,6 @@ class LoginRedirectTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->login($admin)->assertRedirect(route('dashboard'));
-    }
-
-    public function test_a_non_admin_with_a_team_lands_directly_on_it(): void
-    {
-        // One hop, not a bounce through the /teams front door — see TeamDestination.
-        $user = User::factory()->create();
-        $team = Team::factory()->ownedBy($user)->create();
-
-        $this->login($user)->assertRedirect(team_route('team.dashboard', $team));
-    }
-
-    public function test_a_non_admin_with_no_team_lands_on_onboarding(): void
-    {
-        // The tier owns the "ask an admin" onboarding decision — see TeamDestination.
-        $user = User::factory()->create();
-
-        $this->login($user)->assertRedirect(route('team.onboarding'));
     }
 
     public function test_a_user_no_resolver_claims_falls_back_to_the_public_home(): void
@@ -82,10 +64,10 @@ class LoginRedirectTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         // Hitting a guarded page while logged out stashes it as the intended URL…
-        $this->get(route('team.index'))->assertRedirect(route('login'));
+        $this->get(route('users.index'))->assertRedirect(route('login'));
 
         // …so after login the admin lands there, not on the dashboard the cascade would default to.
-        $this->login($admin)->assertRedirect(route('team.index'));
+        $this->login($admin)->assertRedirect(route('users.index'));
     }
 
     public function test_a_system_user_reaches_the_dashboard_regardless_of_resolvers(): void
@@ -142,6 +124,8 @@ class LoginRedirectTest extends TestCase
     {
         $this->mock(TwoFactorAuthenticationProvider::class, fn (MockInterface $mock) => $mock->shouldReceive('verify')->andReturnTrue());
         config(['fortify.login_fallback' => 'reject']);
+        LoginRedirectRegistry::flush();
+        LoginRedirectRegistry::register(fn (User $user): string => route('home')); // claimed at the password
         $user = User::factory()->twoFactorEnabled()->create();
         $this->login($user)->assertRedirect('/two-factor-challenge');
 
@@ -158,12 +142,5 @@ class LoginRedirectTest extends TestCase
         LoginRedirectRegistry::flush();
 
         $this->actingAs(User::factory()->create())->get(route('login'))->assertRedirect(route('home'));
-    }
-
-    protected function tearDown(): void
-    {
-        app(TeamContext::class)->clear();
-
-        parent::tearDown();
     }
 }

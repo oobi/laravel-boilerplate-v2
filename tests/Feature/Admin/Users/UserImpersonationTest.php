@@ -6,7 +6,7 @@ use App\Actions\Impersonation\StartImpersonation;
 use App\Livewire\Admin\Users\ListUsers;
 use App\Livewire\Admin\Users\ShowUser;
 use App\Models\User;
-use Concise\Teams\Models\Team;
+use App\Support\Auth\Destination;
 use Filament\Actions\Action;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -26,31 +26,15 @@ class UserImpersonationTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->create();
 
-        // Impersonation lands on the target's own post-login destination — a
-        // team-less user's is onboarding, not the admin dashboard.
+        // Impersonation lands on the target's own post-login destination, not the
+        // admin dashboard (Tests\Feature\Teams\TeamLandingTest for a team member).
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])
             ->callAction('impersonate')
-            ->assertRedirect(route('team.onboarding'));
+            ->assertRedirect(Destination::home($target));
 
         $this->assertAuthenticatedAs($target);
         $this->assertEquals($admin->id, session('impersonated_by'));
-    }
-
-    public function test_impersonation_lands_on_the_targets_own_team(): void
-    {
-        $admin = User::factory()->superAdmin()->create();
-        $target = User::factory()->create();
-        $team = Team::factory()->create();
-        $team->addMember($target);
-
-        // You see what they'd see after login: straight into their team.
-        Livewire::actingAs($admin)
-            ->test(ShowUser::class, ['user' => $target])
-            ->callAction('impersonate')
-            ->assertRedirect(route('team.dashboard', ['team' => $team->slug]));
-
-        $this->assertAuthenticatedAs($target);
     }
 
     public function test_support_can_impersonate_a_regular_user(): void
@@ -295,12 +279,12 @@ class UserImpersonationTest extends TestCase
         $this->actingAs($admin);
         app(StartImpersonation::class)->handle($target);
 
-        // The impersonated non-admin is refused the admin area, and a missing
-        // team 404s: both error pages keep the banner's leave form.
+        // The impersonated non-admin is refused the admin area: the error page
+        // keeps the banner's leave form (a 404 is in TeamLandingTest, which has a
+        // non-admin route to miss on).
         $leaveForm = 'action="'.route('users.impersonate.leave').'"';
 
         $this->get(route('dashboard'))->assertForbidden()->assertSeeHtml($leaveForm);
-        $this->get(route('team.dashboard', ['team' => 'no-such-team']))->assertNotFound()->assertSeeHtml($leaveForm);
     }
 
     private function assertImpersonationDenied(User $actor, User $target): void

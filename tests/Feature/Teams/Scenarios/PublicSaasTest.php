@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Scenarios;
+namespace Tests\Feature\Teams\Scenarios;
 
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
@@ -24,7 +24,7 @@ use Tests\TestCase;
  * hold together for the recipe.
  *
  * Maintenance: when a config-sensitive feature is added, extend each scenario
- * class in this directory — not just the default suite.
+ * class here and in tests/Feature/Scenarios, not just the default suite.
  */
 class PublicSaasTest extends TestCase
 {

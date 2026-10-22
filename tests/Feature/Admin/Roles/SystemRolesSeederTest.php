@@ -47,7 +47,6 @@ class SystemRolesSeederTest extends TestCase
         // Written closed over implications: the read floor and panel entry come with manage.
         $this->assertTrue($support->hasPermissionTo(SystemPermission::VIEW_USERS->value));
         $this->assertTrue($support->hasPermissionTo(SystemPermission::ACCESS_ADMIN_PANEL->value));
-        $this->assertFalse($support->hasPermissionTo(SystemPermission::VIEW_TEAMS->value), 'support has no teams authority');
         $this->assertFalse($support->hasPermissionTo(SystemPermission::DELETE_USERS->value), 'support is limited');
     }
 

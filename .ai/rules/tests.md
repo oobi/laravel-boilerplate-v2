@@ -28,3 +28,6 @@ Since Livewire 4.4.6 a ModelNotFoundException thrown during ->call()/->mountActi
 
 ## Assert on our own markup, not a common word
 Filament renders its own labels into the page (the 5.10 select's config carries "Clear selection"), so assertSee('Clear') can match Filament's text rather than ours. Assert on markup only our view produces, such as its own `wire:click` or `id`, with assertSeeHtml().
+
+## Core tests never depend on the teams tier
+Every test outside tests/Feature/Teams/ must pass with the teams tier removed: bp:remove-teams deletes only tests/Feature/Teams/** (GitHub #22). No Concise\Teams import, team_route()/team_trans(), team route name (route('team.'/'teams.') and the other route helpers) or SystemPermission team case (VIEW_TEAMS etc., stripped with the tier) in a core test, and no reliance on the tier's login resolver: assert Destination::home($user), or LoginRedirectRegistry::flush() then register a stand-in resolver. A case that needs the tier goes in tests/Feature/Teams/ (e.g. TeamLandingTest, TeamPageTitleTest). CoreTestsStandAloneTest enforces the static part.

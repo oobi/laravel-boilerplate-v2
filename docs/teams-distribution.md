@@ -65,7 +65,7 @@ canonical line"** note in the opening comment — those are *replace*, not plain
 | `database/seeders/DatabaseSeeder.php` | the `TeamRolesSeeder` import + its guarded `$this->call(...)` | delete each block |
 | `database/seeders/DemoSeeder.php` | the `TeamSeeder`/`TeamRolesSeeder` imports + their two guarded `$this->call(...)` blocks | delete each block |
 | `config/fortify.php` | the auth domain for the custom-domain overlay's host mode (auth on the account host) | delete the block |
-| `routes/web.php` | the host-mode host and path variables (`$apexHost`, `$accountHost`, `$adminHost`, `$adminPath`) | delete the block, then point the route groups that use them back at plain paths (see #22) |
+| `routes/web.php` | the host-mode overrides of the host and path variables (`$apexHost`, `$accountHost`, `$adminHost`, `$adminPath`); their path-mode defaults sit above the fence | delete the block |
 
 The provider is **auto-discovered** (via the package's own composer manifest),
 so there is no `bootstrap/providers.php` entry to touch.
@@ -81,11 +81,10 @@ drops the path repository and deletes `packages/teams`. Then do steps 5 to 7
 below.
 
 > Known issues, [#22](https://github.com/oobi/laravel-boilerplate-v2/issues/22):
-> it leaves `routes/web.php` using the host variables it stripped, so the app
-> doesn't boot until those route groups are fixed by hand; "every test file that
-> mentions `Concise\Teams`" includes some core suites (access coverage,
-> impersonation, role implications, login redirects); it reports success even
-> when `composer remove` fails; and an unterminated fence truncates the file.
+> "every test file that mentions `Concise\Teams`" also deletes
+> `MarkerStripperTest`, whose fixtures name the namespace; it reports success
+> even when `composer remove` fails; and an unterminated fence truncates the
+> file.
 > Its dry run also lists `RemoveTeamsCommand.php`, whose docblock names the
 > marker; it has no fence, so nothing is stripped there. Check `--dry-run` and
 > `git diff` afterwards.
@@ -102,15 +101,12 @@ The steps the command performs, for doing it by hand:
    `User` with no traits). Delete the fenced blocks in every other file in the
    table: **the fenced blocks only**. The seeder files survive and keep their
    non-teams calls (`PermissionSeeder`, `SystemRolesSeeder`), which a vanilla app
-   still needs; `routes/web.php` then needs its route groups pointed back at
-   plain paths.
+   still needs.
 3. **Delete the package** — `rm -rf packages/teams`.
-4. **Remove the teams tests** — they import `Concise\Teams\…` and would fatal the
-   suite otherwise: `rm -rf tests/Feature/Teams`, the `PublicSaas` /
-   `InvitationOnly` / `Backoffice` scenario tests, and
-   `tests/Feature/Auth/LoginRedirectTest.php` (teams-coupled — `VanillaAppTest`
-   covers the core login behaviour). **Keep `VanillaAppTest`** — it's the vanilla
-   contract.
+4. **Remove the teams tests**: `rm -rf tests/Feature/Teams` (the teams recipe
+   scenarios are in there too). Every other test passes without the tier
+   (`CoreTestsStandAloneTest` keeps it that way), and `VanillaAppTest` is the
+   vanilla contract.
 5. **`.env`** — no `TEAMS_*` keys are needed; set `LOGIN_FALLBACK=home` and keep
    registration as your app requires. See [config-recipes.md](config-recipes.md)
    (Vanilla).

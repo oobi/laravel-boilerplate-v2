@@ -15,6 +15,7 @@ use Concise\Teams\Models\Team;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\TeamsServiceProvider;
+use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +55,14 @@ class TeamRolesScopeTest extends TestCase
         $this->assertFalse($member->hasPermissionTo(TeamPermission::MANAGE_MEMBERS->value));
         $this->assertTrue($member->hasPermissionTo(TeamPermission::VIEW_MEMBERS->value), 'members see the roster by default');
         $this->assertSame(DaisyColor::PRIMARY, $member->color);
+    }
+
+    public function test_the_seeded_support_role_has_no_teams_authority(): void
+    {
+        (new SystemRolesSeeder)->run();
+
+        $support = Role::systemRoles()->where('name', 'Support')->firstOrFail();
+        $this->assertFalse($support->hasPermissionTo(SystemPermission::VIEW_TEAMS->value));
     }
 
     public function test_the_seeder_does_nothing_when_the_teams_tier_is_not_active(): void

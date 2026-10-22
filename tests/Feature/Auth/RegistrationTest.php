@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Support\Auth\LoginRedirectRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Contracts\VerifyEmailResponse;
@@ -22,9 +23,17 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /** A stand-in add-on destination that differs from fortify.home, so a test can tell them apart. */
+    private function claimEveryUserFor(string $url): void
+    {
+        LoginRedirectRegistry::flush();
+        LoginRedirectRegistry::register(fn (User $user): string => $url);
+    }
+
     public function test_new_users_can_register(): void
     {
         $this->skipUnlessFortifyFeature(Features::registration());
+        $this->claimEveryUserFor(route('profile.edit'));
 
         $response = $this->post('/register', [
             'first_name' => 'Test',
@@ -35,10 +44,9 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        // A fresh registrant is sent to where they belong (Destination::home), not the
-        // public landing — with the teams tier active and no team yet, that's onboarding
-        // (the verified middleware then prompts them to confirm their email).
-        $response->assertRedirect(route('team.onboarding'));
+        // A fresh registrant is sent to where they belong (Destination::home), not
+        // fortify.home; the verified middleware then prompts them to confirm their email.
+        $response->assertRedirect(route('profile.edit'));
 
         $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
@@ -49,14 +57,15 @@ class RegistrationTest extends TestCase
     public function test_verifying_email_lands_the_user_in_the_app_not_the_landing(): void
     {
         // The bound VerifyEmailResponse sends the (now verified) user to where they
-        // belong (Destination::home) — for a no-team user, onboarding — not fortify.home.
+        // belong (Destination::home), not fortify.home.
+        $this->claimEveryUserFor(route('profile.edit'));
         $user = User::factory()->create();
         $request = Request::create('/email/verify');
         $request->setUserResolver(fn () => $user);
 
         $target = app(VerifyEmailResponse::class)->toResponse($request)->getTargetUrl();
 
-        $this->assertStringStartsWith(route('team.onboarding'), $target);
+        $this->assertStringStartsWith(route('profile.edit'), $target);
     }
 
     public function test_registering_with_a_taken_email_fails_validation_regardless_of_casing(): void

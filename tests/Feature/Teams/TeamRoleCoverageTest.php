@@ -108,6 +108,19 @@ class TeamRoleCoverageTest extends TestCase
         $this->assertSame('Manager', $this->team->fresh()->roleFor($this->member->fresh()));
     }
 
+    public function test_team_roles_are_edited_only_by_those_running_teams(): void
+    {
+        $editor = User::factory()->withPermission(SystemPermission::MANAGE_ROLES)->create();
+        $coordinator = Team::createRole('Coordinator', [TeamPermission::MANAGE_MEMBERS]);
+        $this->team->addMember($editor, 'Coordinator');
+
+        // Holding a team role, they could otherwise give it every team permission.
+        $this->actingAs($editor)->get(route('roles.edit', $coordinator))->assertForbidden();
+
+        $runner = User::factory()->withPermission(SystemPermission::MANAGE_ROLES, SystemPermission::MANAGE_TEAMS)->create();
+        $this->actingAs($runner)->get(route('roles.edit', $coordinator))->assertOk();
+    }
+
     public function test_a_role_editor_without_manage_teams_cant_rewrite_their_own_team_role(): void
     {
         $this->member->givePermissionTo(Permission::findOrCreate(SystemPermission::MANAGE_ROLES->value));

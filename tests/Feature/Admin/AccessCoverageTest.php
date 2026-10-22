@@ -11,8 +11,6 @@ use App\Livewire\Admin\Users\ShowUser;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Roles\Coverage;
-use Concise\Teams\Enums\TeamPermission;
-use Concise\Teams\Models\Team;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -148,19 +146,6 @@ class AccessCoverageTest extends TestCase
 
         $this->assertNull(User::withTrashed()->find($plain->id));
         $this->assertNotNull(User::withTrashed()->find($this->administrator->id));
-    }
-
-    public function test_team_roles_are_edited_only_by_those_running_teams(): void
-    {
-        $editor = User::factory()->withPermission(SystemPermission::MANAGE_ROLES)->create();
-        $lead = Team::createRole('Lead', [TeamPermission::MANAGE_MEMBERS]);
-        Team::factory()->create()->addMember($editor, 'Lead');
-
-        // Holding a team role, they could otherwise give it every team permission.
-        $this->actingAs($editor)->get(route('roles.edit', $lead))->assertForbidden();
-
-        $runner = User::factory()->withPermission(SystemPermission::MANAGE_ROLES, SystemPermission::MANAGE_TEAMS)->create();
-        $this->actingAs($runner)->get(route('roles.edit', $lead))->assertOk();
     }
 
     public function test_a_role_held_by_someone_with_more_access_cant_be_edited(): void

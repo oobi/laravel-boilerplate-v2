@@ -21,7 +21,8 @@ use Tests\TestCase;
  * that assumes teams (or any add-on) is present should fail here.
  *
  * Maintenance: when a config-sensitive feature touches core auth, assert it in
- * this class as well as its siblings in this directory.
+ * this class as well as its siblings in tests/Feature/Teams/Scenarios (when the
+ * tier is installed).
  */
 class VanillaAppTest extends TestCase
 {

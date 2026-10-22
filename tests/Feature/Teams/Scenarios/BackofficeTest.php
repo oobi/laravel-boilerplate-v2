@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Scenarios;
+namespace Tests\Feature\Teams\Scenarios;
 
 use App\Models\User;
 use Concise\Teams\Livewire\Team\ListInvitations;
