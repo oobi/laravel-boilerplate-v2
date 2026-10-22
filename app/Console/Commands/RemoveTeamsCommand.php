@@ -5,21 +5,32 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Support\Teams\MarkerStripper;
+use App\Support\Teams\TierReferences;
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\PackageManifest;
 use Illuminate\Support\Facades\File;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Throwable;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\warning;
 
 /**
- * Turn the boilerplate vanilla by removing the teams tier — the one-shot,
+ * Turn the boilerplate vanilla by removing the teams tier: the one-shot,
  * setup-time transform documented in docs/teams-distribution.md. It consumes
  * the `teams:start`/`teams:end` markers, so it stays correct as the seams
- * evolve rather than hardcoding line numbers. Destructive: prints its plan and
- * confirms first, and supports --dry-run.
+ * evolve rather than hardcoding line numbers.
+ *
+ * Destructive, so it checks before it destroys: the stripped core files must
+ * lint, reference nothing from the tier and load the routes, or the originals
+ * are put back. Only once `composer remove` succeeds does it delete anything,
+ * and packages/teams goes last. Any failure exits non-zero, which bp:setup's
+ * Vanilla recipe checks.
  */
 class RemoveTeamsCommand extends Command
 {
@@ -27,122 +38,207 @@ class RemoveTeamsCommand extends Command
 
     protected $description = 'Remove the teams tier and make the boilerplate vanilla.';
 
+    /** Core directories that may carry fences. */
+    public const ROOTS = ['app', 'bootstrap', 'config', 'database', 'routes'];
+
     private const PACKAGE = 'concise-dot-digital/teams';
 
-    public function handle(): int
+    private const PACKAGE_PATH = 'packages/teams';
+
+    private const TESTS = 'tests/Feature/Teams';
+
+    public function handle(MarkerStripper $stripper, TierReferences $references): int
     {
-        if (! File::isDirectory(base_path('packages/teams'))) {
-            info('The teams tier is not installed — nothing to remove.');
+        if (! File::isDirectory(base_path(self::PACKAGE_PATH))) {
+            info('The teams tier is not installed: nothing to remove.');
 
             return self::SUCCESS;
         }
 
-        $fenced = $this->filesContaining([app_path(), database_path(), config_path(), base_path('routes'), base_path('bootstrap')], 'teams:'.'start');
-        $tests = $this->filesContaining([base_path('tests')], 'Concise\\Teams');
+        $originals = $stripper->fencedFiles(collect(self::ROOTS)->map(fn (string $root): string => base_path($root))->all());
+
+        try {
+            $stripped = collect($originals)->map(fn (string $contents, string $file): string => $this->strip($stripper, $file, $contents))->all();
+        } catch (RuntimeException $e) {
+            error('Nothing changed: '.$e->getMessage());
+
+            return self::FAILURE;
+        }
 
         info('bp:remove-teams will:');
-        $this->line('  • strip the teams markers from '.count($fenced).' core file(s)');
-        $this->line('  • delete '.count($tests).' teams-coupled test file(s)');
-        $this->line('  • run `composer remove '.self::PACKAGE.'` and drop its path repository');
-        $this->line('  • delete packages/teams');
+        $this->line('  • strip the teams markers from '.count($stripped).' core file(s), then check the app still loads');
+        $this->line('  • drop the '.self::PACKAGE_PATH.' repository and run `composer remove '.self::PACKAGE.'`');
+        $this->line('  • delete '.self::TESTS.' and '.self::PACKAGE_PATH);
 
         if ($this->option('dry-run')) {
             $this->newLine();
-            info('Dry run — no changes made.');
-            collect($fenced)->merge($tests)->each(fn (string $f) => $this->line('    '.$this->relative($f)));
+            info('Dry run: no changes made. Files to strip:');
+            collect($stripped)->keys()->each(fn (string $file) => $this->line('    '.$this->relative($file)));
 
             return self::SUCCESS;
         }
 
         if (! $this->option('force') && ! confirm('This permanently removes the teams tier from this project. Continue?', default: false)) {
-            warning('Aborted — nothing changed.');
+            warning('Aborted: nothing changed.');
 
             return self::SUCCESS;
         }
 
-        $stripper = new MarkerStripper;
-        foreach ($fenced as $file) {
-            File::put($file, $stripper->strip(File::get($file)));
+        // Cached routes or config would be read instead of the stripped files, and would still name the tier.
+        if (! $this->runArtisan('optimize:clear')) {
+            error('Nothing changed: php artisan optimize:clear failed.');
+
+            return self::FAILURE;
         }
 
-        foreach ($tests as $file) {
-            File::delete($file);
+        $this->write($stripped);
+
+        try {
+            $problems = $this->verify($stripped, $references);
+        } catch (Throwable $e) {
+            $problems = ['the check itself failed: '.$e->getMessage()];
         }
 
-        $composerOk = $this->composer(['remove', self::PACKAGE, '--no-interaction']);
-        $this->dropPathRepository('packages/teams');
-        File::deleteDirectory(base_path('packages/teams'));
-        if ($composerOk) {
-            $this->composer(['dump-autoload']);
+        if ($problems !== []) {
+            $this->write($originals);
+            error('The stripped app would not load, so every file was put back. Nothing else changed.');
+            collect($problems)->each(fn (string $problem) => $this->line('  '.$problem));
+
+            return self::FAILURE;
         }
+
+        $composerFiles = $this->read([base_path('composer.json'), base_path('composer.lock')]);
+
+        if (! $this->dropPathRepository() || ! $this->composer(['remove', self::PACKAGE, '--no-interaction'])) {
+            $this->write($originals + $composerFiles);
+            error('Removing the package failed, so the core files, composer.json and composer.lock were put back.');
+            $this->line('  Run `composer install` to bring vendor/ back in line, then try again.');
+
+            return self::FAILURE;
+        }
+
+        File::deleteDirectory(base_path(self::TESTS));
+        File::deleteDirectory(base_path(self::PACKAGE_PATH));
 
         $this->newLine();
-        info('Teams tier removed — the boilerplate is now vanilla.');
+        info('Teams tier removed: the boilerplate is now vanilla.');
         $this->line('Next:');
-        if (! $composerOk) {
-            $this->line('  • composer could not be run here — run `composer remove '.self::PACKAGE.'` yourself');
-        }
         $this->line('  • npm install && npm run build   (a fresh tree needs the Vite manifest)');
         $this->line('  • php artisan test               (VanillaAppTest is the contract)');
-        $this->line('  • the teams-removal tooling (app/Support/Teams, this command) is now dead weight — delete it if you like');
 
         return self::SUCCESS;
     }
 
+    private function strip(MarkerStripper $stripper, string $file, string $contents): string
+    {
+        try {
+            return $stripper->strip($contents);
+        } catch (RuntimeException $e) {
+            throw new RuntimeException($this->relative($file).': '.$e->getMessage(), previous: $e);
+        }
+    }
+
     /**
-     * PHP files under $roots whose contents include $needle (literal, so a
-     * namespace backslash is matched as written — unlike Finder::contains()).
+     * Why the stripped files wouldn't work without the tier, if anything.
      *
-     * @param  list<string>  $roots
+     * @param  array<string, string>  $stripped
      * @return list<string>
      */
-    private function filesContaining(array $roots, string $needle): array
+    private function verify(array $stripped, TierReferences $references): array
     {
-        $roots = array_filter($roots, File::isDirectory(...));
+        $problems = collect($stripped)
+            ->flatMap(function (string $contents, string $file) use ($references): array {
+                $lint = Process::run([PHP_BINARY, '-l', $file]);
 
-        if ($roots === []) {
-            return [];
+                return collect($lint->failed() ? [trim($lint->output().$lint->errorOutput())] : [])
+                    ->merge(collect($references->in($contents))->map(fn (string $reference): string => 'still needs the tier at '.$reference))
+                    ->map(fn (string $problem): string => $this->relative($file).': '.$problem)
+                    ->all();
+            })
+            ->values()
+            ->all();
+
+        if ($problems === [] && ! $this->routesLoadWithoutTheTier($output)) {
+            $problems[] = 'php artisan route:list: '.$output;
         }
 
-        return collect(Finder::create()->files()->in($roots)->name('*.php'))
-            ->filter(fn ($file): bool => str_contains($file->getContents(), $needle))
-            ->map(fn ($file): string => $file->getRealPath())
-            ->values()
+        return $problems;
+    }
+
+    /**
+     * Load the routes with the package still installed but not discovered: its
+     * provider expects the core seams that were just stripped, so booting it
+     * would fail even when the stripped core is fine. Its classes still
+     * autoload, so this proves the core loads without the tier's provider;
+     * TierReferences covers its code. Temporary package and services caches
+     * keep the real ones untouched.
+     */
+    private function routesLoadWithoutTheTier(?string &$output): bool
+    {
+        $packages = tempnam(sys_get_temp_dir(), 'packages').'.php';
+        $services = tempnam(sys_get_temp_dir(), 'services').'.php';
+
+        try {
+            (new PackageManifest(new Filesystem, base_path(), $packages))->build();
+            $manifest = collect(require $packages)->except(self::PACKAGE)->all();
+            File::put($packages, '<?php return '.var_export($manifest, true).';'.PHP_EOL);
+
+            return $this->runArtisan('route:list', $output, ['APP_PACKAGES_CACHE' => $packages, 'APP_SERVICES_CACHE' => $services]);
+        } finally {
+            File::delete([$packages, $services, Str::beforeLast($packages, '.php'), Str::beforeLast($services, '.php')]);
+        }
+    }
+
+    /**
+     * Run an artisan command in a fresh process, so it boots from the files on disk.
+     *
+     * @param  array<string, string>  $environment
+     */
+    private function runArtisan(string $command, ?string &$output = null, array $environment = []): bool
+    {
+        $result = Process::path(base_path())->env($environment)->run([PHP_BINARY, 'artisan', $command, '--no-interaction']);
+        $output = trim($result->errorOutput() ?: $result->output());
+
+        return $result->successful();
+    }
+
+    /** @param  array<string, string>  $contents */
+    private function write(array $contents): void
+    {
+        collect($contents)->each(fn (string $content, string $file) => File::put($file, $content));
+    }
+
+    /**
+     * @param  list<string>  $files
+     * @return array<string, string>
+     */
+    private function read(array $files): array
+    {
+        return collect($files)
+            ->filter(File::exists(...))
+            ->mapWithKeys(fn (string $file): array => [$file => File::get($file)])
             ->all();
     }
 
-    /** Remove a path repository (and any lingering require) for $url from composer.json. */
-    private function dropPathRepository(string $url): void
+    /** Drop the package's path repository through composer, so the lock's hash stays in step. */
+    private function dropPathRepository(): bool
     {
-        $path = base_path('composer.json');
-        $json = json_decode(File::get($path), true);
+        $repositories = json_decode(File::get(base_path('composer.json')), true)['repositories'] ?? [];
+        $key = collect(is_array($repositories) ? $repositories : [])
+            ->search(fn ($repository): bool => is_array($repository) && ($repository['url'] ?? null) === self::PACKAGE_PATH);
 
-        if (! is_array($json)) {
-            warning('Could not parse composer.json — remove the '.$url.' repository entry by hand.');
-
-            return;
-        }
-
-        if (isset($json['repositories']) && is_array($json['repositories'])) {
-            $json['repositories'] = array_values(array_filter(
-                $json['repositories'],
-                fn ($repo): bool => ! (is_array($repo) && ($repo['url'] ?? null) === $url),
-            ));
-        }
-
-        unset($json['require'][self::PACKAGE]);
-
-        File::put($path, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
+        return $key === false || $this->composer(['config', '--unset', 'repositories.'.$key]);
     }
 
     /** @param  list<string>  $args */
     private function composer(array $args): bool
     {
-        $process = new Process(['composer', ...$args], base_path(), timeout: 300);
-        $process->run(fn (string $type, string $buffer) => $this->output->write($buffer));
+        $result = Process::path(base_path())
+            ->timeout(300)
+            ->run(['composer', ...$args], fn (string $type, string $buffer) => $this->output->write($buffer));
 
-        if (! $process->isSuccessful()) {
-            warning('composer '.implode(' ', $args).' did not complete — see above.');
+        if ($result->failed()) {
+            warning('composer '.implode(' ', $args).' did not complete: see above.');
 
             return false;
         }

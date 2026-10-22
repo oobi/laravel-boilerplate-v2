@@ -19,7 +19,7 @@ class CoreTestsStandAloneTest extends TestCase
     /** What only resolves while the tier is installed. */
     private const PATTERNS = [
         '/Concise\\\\Teams\b/',
-        '/\bteam_(route|trans)\(/',
+        '/\b(team_trans|team_trans_choice|team_route|current_team|team_disk|team_cache)\(/',
         '/\b(route|to_route|signedRoute|temporarySignedRoute|assertRedirectToRoute)\(\s*[\'"]teams?\./',
         // The tier's SystemPermission cases are stripped with it.
         '/SystemPermission::\w*TEAM/',
@@ -27,8 +27,10 @@ class CoreTestsStandAloneTest extends TestCase
 
     /** Files that mention the tier as data, not a dependency. */
     private const ALLOWED = [
-        'tests/Unit/Support/Teams/MarkerStripperTest.php',
+        'tests/Feature/Console/RemoveTeamsCommandTest.php',
         'tests/Unit/Support/Teams/CoreTestsStandAloneTest.php',
+        'tests/Unit/Support/Teams/MarkerStripperTest.php',
+        'tests/Unit/Support/Teams/TierReferencesTest.php',
     ];
 
     public function test_no_core_test_depends_on_the_teams_tier(): void

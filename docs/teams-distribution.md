@@ -73,21 +73,24 @@ so there is no `bootstrap/providers.php` entry to touch.
 ## Going vanilla (remove teams)
 
 Run `php artisan bp:remove-teams --dry-run` to see the plan, then
-`php artisan bp:remove-teams` (it confirms first; `--force` skips that). It strips
-the fenced blocks from core files (replacing `User.php`'s with its canonical
-line) in the fenced files in the table above, deletes every test file that
-mentions `Concise\Teams`, runs `composer remove concise-dot-digital/teams`,
-drops the path repository and deletes `packages/teams`. Then do steps 5 to 7
-below.
+`php artisan bp:remove-teams` (it confirms first; `--force` skips that). In order:
 
-> Known issues, [#22](https://github.com/oobi/laravel-boilerplate-v2/issues/22):
-> "every test file that mentions `Concise\Teams`" also deletes
-> `MarkerStripperTest`, whose fixtures name the namespace; it reports success
-> even when `composer remove` fails; and an unterminated fence truncates the
-> file.
-> Its dry run also lists `RemoveTeamsCommand.php`, whose docblock names the
-> marker; it has no fence, so nothing is stripped there. Check `--dry-run` and
-> `git diff` afterwards.
+1. Strips the fenced blocks from the core files in the table above (replacing
+   `User.php`'s with its canonical line). A `teams:start` with no `teams:end`
+   stops it before anything is written; `--dry-run` checks this too.
+2. Clears the route and config caches, then checks the result: every stripped
+   file must lint and reference nothing from the tier outside comments, and
+   `php artisan route:list` must run. If not, it puts every file back and exits
+   non-zero.
+3. Drops the path repository (`composer config --unset`, so the lock stays in
+   step) and runs `composer remove concise-dot-digital/teams`. If either fails,
+   it puts the core files, `composer.json` and `composer.lock` back and asks you
+   to run `composer install`.
+4. Deletes `tests/Feature/Teams` (every other test passes without the tier)
+   and, last, `packages/teams`.
+
+Any failure exits non-zero, so `bp:setup`'s Vanilla recipe stops too. Then do
+steps 5 to 7 below.
 
 The steps the command performs, for doing it by hand:
 
