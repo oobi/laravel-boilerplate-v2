@@ -10,9 +10,11 @@
         --ui-impersonation-banner-height: 32px; /* Condensed banner height */
     }
 
-    /* Body & Application Wrapper */
+    /* Body & Application Wrapper. dvh, not vh: on iOS Safari 100vh is the height
+       with the toolbars hidden, which they never are here (only <main> scrolls),
+       so a vh shell hides its bottom behind the toolbar (#47). */
     .ui-app {
-        @apply min-h-screen;
+        @apply min-h-dvh;
         background-color: #f7f8fc;
 
         @variant dark {
@@ -21,7 +23,7 @@
     }
 
     .ui-app > .ui-app-inner {
-        @apply relative flex h-screen overflow-hidden;
+        @apply relative flex h-dvh overflow-hidden;
     }
 
     /* Single source of truth: reserve space for the fixed banner on the body,
@@ -30,11 +32,11 @@
         padding-top: var(--ui-impersonation-banner-height);
     }
 
-    /* Admin's app shell is viewport-locked (h-screen flex), so shrink it by
+    /* Admin's app shell is viewport-locked (h-dvh flex), so shrink it by
        the offset body padding already reserved instead of overflowing it. */
     body.is-impersonating .ui-app {
         min-height: 0;
-        height: calc(100vh - var(--ui-impersonation-banner-height));
+        height: calc(100dvh - var(--ui-impersonation-banner-height));
     }
 
     body.is-impersonating .ui-app > .ui-app-inner {
