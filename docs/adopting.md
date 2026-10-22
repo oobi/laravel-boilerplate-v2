@@ -112,11 +112,36 @@ applied. From then on, every schema change in the boilerplate goes in a
 **new** migration, so `git merge --no-ff upstream/main` followed by
 `php artisan migrate` brings the client up to date.
 
+## 7. Deploying behind a proxy
+
+Rate limits key on the visitor's address, and secure cookies and generated
+URLs follow the request's scheme. Behind a proxy or load balancer the app sees
+the proxy's address and plain HTTP unless it trusts that proxy's
+`X-Forwarded-*` headers:
+
+- **Laravel Cloud, and Forge or Vapor on their own `*.on-forge.com` /
+  `*.on-vapor.com` domains:** nothing to set; the framework trusts their
+  proxies automatically.
+- **Anything else** (your own domain on Forge or Vapor, Cloudflare in front of
+  a server, your own load balancer): set `TRUSTED_PROXIES` (see
+  `config/trustedproxy.php`). Use the proxy's addresses or CIDR ranges, or `*`
+  only when the app can't be reached except through the proxy. Trusting `*` on
+  a server anyone can reach directly lets them fake their address and step
+  around the rate limits.
+- **Chained proxies** (Cloudflare in front of a load balancer): `*` trusts only
+  the nearest one, so Cloudflare's edge becomes "the visitor". List every
+  hop's ranges instead (Cloudflare publishes theirs).
+- **Missed it?** The app logs a warning (at most hourly) when forwarded headers
+  arrive from a proxy it doesn't trust.
+
+In production also set `SESSION_SECURE_COOKIE=true`.
+
 ## Checklist
 
 - [ ] Cloned with history, `upstream` remote set
 - [ ] `composer run setup`, `bp:setup`, `db:seed`, `bp:make-admin` run, in that order
 - [ ] `.env` configured, theme-demo kept or removed
+- [ ] Behind a proxy: `TRUSTED_PROXIES` set (not needed on Cloud, or Forge/Vapor's own domains); `SESSION_SECURE_COOKIE=true` in production
 - [ ] Client features registered from a client service provider
 - [ ] Upstream merged regularly with `git merge --no-ff upstream/main`
 - [ ] Generic fixes land in the boilerplate and are merged back down

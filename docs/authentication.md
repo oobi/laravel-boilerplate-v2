@@ -156,10 +156,22 @@ password reset, outside the impersonation trail.
   empty doesn't count.
 - **Fortify's endpoints** get named throttles in `AppServiceProvider`:
   `password-confirm` (per person), `password-reset` on forgot and reset
-  password, `register` on sign-up, and `login` (per email and address).
-- **No per-address ceilings yet.** Until trusted proxies are set (#19)
-  everyone behind the proxy shares one address, so a ceiling per address would
-  let one source lock everyone out. Add them with #19.
+  password, `register` on sign-up, and `login`. The last three count per
+  email and address (5 a minute), plus a ceiling per address so one source
+  can't work through a list of emails: 30 a minute for login, 10 for sign-up
+  and for password reset.
+- **The address is the visitor's** only once the proxy in front of the app is
+  trusted (`TRUSTED_PROXIES`; automatic on Laravel Cloud, and on Forge and
+  Vapor's own domains; see [adopting.md](adopting.md#7-deploying-behind-a-proxy)).
+  Otherwise everyone behind the proxy shares one address and its ceiling, and
+  `WarnAboutUntrustedProxy` logs a warning (hourly at most) saying so.
+- **The login ceiling counts every attempt**, successful ones too. An app
+  whose users sign in together from one network (a classroom, a training
+  room) may need more than 30 a minute: raise it in `AppServiceProvider`.
+- **Unblocking:** every limit is per minute, so an address is free again a
+  minute after the attempts stop. `php artisan cache:clear` resets every
+  counter at once (and the rest of the cache). If a flood behind an untrusted
+  proxy keeps blocking everyone, the fix is `TRUSTED_PROXIES`, not unblocking.
 - A throttled request gets the branded `errors/429` page.
 
 ## Mandatory two-factor

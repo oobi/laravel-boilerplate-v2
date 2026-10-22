@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureRememberedUserIsNotLockedOut;
+use App\Http\Middleware\WarnAboutUntrustedProxy;
 use App\Support\Auth\Destination;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -40,10 +41,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // a user locked out by the mandatory-2FA grace period (password logins
         // are refused in AuthenticateUser). It only acts on the request where
         // the cookie logged the user in.
+        //
+        // WarnAboutUntrustedProxy logs (hourly at most) when forwarded headers
+        // arrive from a proxy that isn't trusted: a missing TRUSTED_PROXIES.
         $middleware->web(append: [
             AuthenticateSession::class,
             EnsureAccountIsActive::class,
             EnsureRememberedUserIsNotLockedOut::class,
+            WarnAboutUntrustedProxy::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -10,12 +10,21 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Fortify's password endpoints (GitHub #18). Limits are per email and
- * address, never per address alone, until trusted proxies are set (#19).
+ * Fortify's password endpoints (GitHub #18): per email and address, with a
+ * looser ceiling per address on login, sign-up and reset (#19).
  */
 class AuthThrottleTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The password broker pads every reset request to ~200 ms so timing can't tell
+        // a known email from an unknown one; these tests make dozens of them.
+        config(['auth.timebox_duration' => 0]);
+    }
 
     public function test_reset_link_requests_are_throttled_per_email(): void
     {
@@ -64,7 +73,7 @@ class AuthThrottleTest extends TestCase
             ->assertDontSee('Back to sign in');
     }
 
-    /** Sign-up is on in the boilerplate: per email and address until #19 adds a per-address ceiling. */
+    /** Sign-up is on in the boilerplate: per email and address, then per address below. */
     public function test_sign_up_is_throttled_per_email_and_address(): void
     {
         $attempt = fn (string $email) => $this->post('/register', ['first_name' => 'A', 'last_name' => 'B', 'email' => $email, 'password' => 'x', 'password_confirmation' => 'y']);
@@ -99,5 +108,47 @@ class AuthThrottleTest extends TestCase
         $this->actingAs($user)
             ->post(route('password.confirm.store'), ['password' => 'password'])
             ->assertSessionHasErrors(['password' => PasswordChecks::throttledMessage($user)]);
+    }
+
+    /** One address working through a list of emails hits the ceiling; the visitor behind a trusted proxy is the address. */
+    public function test_login_has_a_ceiling_per_address(): void
+    {
+        config(['trustedproxy.proxies' => '*']);
+        $attempt = fn (string $email, string $visitor) => $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.5'])
+            ->withHeaders(['X-Forwarded-For' => $visitor])
+            ->post('/login', ['email' => $email, 'password' => 'wrong']);
+
+        foreach (range(1, 30) as $try) {
+            $attempt("user{$try}@example.com", '203.0.113.9')->assertStatus(302);
+        }
+
+        $attempt('user31@example.com', '203.0.113.9')->assertStatus(429);
+        $attempt('user31@example.com', '203.0.113.10')->assertStatus(302);
+    }
+
+    public function test_sign_up_has_a_ceiling_per_address(): void
+    {
+        $attempt = fn (string $email, string $address) => $this->withServerVariables(['REMOTE_ADDR' => $address])
+            ->post('/register', ['first_name' => 'A', 'last_name' => 'B', 'email' => $email, 'password' => 'x', 'password_confirmation' => 'y']);
+
+        foreach (range(1, 10) as $try) {
+            $attempt("user{$try}@example.com", '203.0.113.9')->assertStatus(302);
+        }
+
+        $attempt('user11@example.com', '203.0.113.9')->assertStatus(429);
+        $attempt('user11@example.com', '203.0.113.10')->assertStatus(302);
+    }
+
+    public function test_reset_link_requests_have_a_ceiling_per_address(): void
+    {
+        $attempt = fn (string $email, string $address) => $this->withServerVariables(['REMOTE_ADDR' => $address])
+            ->post(route('password.email'), ['email' => $email]);
+
+        foreach (range(1, 10) as $try) {
+            $attempt("user{$try}@example.com", '203.0.113.9')->assertStatus(302);
+        }
+
+        $attempt('user11@example.com', '203.0.113.9')->assertStatus(429);
+        $attempt('user11@example.com', '203.0.113.10')->assertStatus(302);
     }
 }
