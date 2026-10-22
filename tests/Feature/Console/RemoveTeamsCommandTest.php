@@ -43,6 +43,10 @@ class RemoveTeamsCommandTest extends TestCase
         }
         PHP;
 
+    private const ENV = "APP_NAME=App\n\n# teams:start\nTEAMS_CREATION=admin-only\n# teams:end\n\nVITE_APP_NAME=App\n";
+
+    private const PHPUNIT = "<phpunit>\n    <!-- teams:start -->\n    <env name=\"TEAMS_CREATION\" value=\"self-service\"/>\n    <!-- teams:end -->\n</phpunit>\n";
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -60,6 +64,9 @@ class RemoveTeamsCommandTest extends TestCase
             'require' => ['concise-dot-digital/teams' => '@dev'],
         ]));
         $this->writeFile('composer.lock', '{"lock": true}');
+        $this->writeFile('.env', self::ENV);
+        $this->writeFile('.env.example', self::ENV);
+        $this->writeFile('phpunit.xml', self::PHPUNIT);
 
         $this->app->setBasePath($this->root);
     }
@@ -104,6 +111,9 @@ class RemoveTeamsCommandTest extends TestCase
         $this->assertSame(self::USER, $this->contents('app/Models/User.php'));
         $this->assertDirectoryExists($this->root.'/tests/Feature/Teams');
         $this->assertDirectoryExists($this->root.'/packages/teams');
+        $this->assertSame(self::ENV, $this->contents('.env'));
+        $this->assertSame(self::ENV, $this->contents('.env.example'));
+        $this->assertSame(self::PHPUNIT, $this->contents('phpunit.xml'));
     }
 
     public function test_it_strips_the_core_checks_it_loads_then_removes_the_tier(): void
@@ -118,6 +128,11 @@ class RemoveTeamsCommandTest extends TestCase
         $this->assertDirectoryDoesNotExist($this->root.'/tests/Feature/Teams');
         $this->assertFileExists($this->root.'/tests/Unit/Support/Setup/MarkerStripperTest.php', 'only tests/Feature/Teams goes');
         $this->assertDirectoryDoesNotExist($this->root.'/packages/teams');
+
+        // The tier's settings go too, without being linted as PHP.
+        $this->assertSame("APP_NAME=App\n\nVITE_APP_NAME=App\n", $this->contents('.env'));
+        $this->assertSame("APP_NAME=App\n\nVITE_APP_NAME=App\n", $this->contents('.env.example'));
+        $this->assertSame("<phpunit>\n</phpunit>\n", $this->contents('phpunit.xml'));
 
         // Caches cleared first so the check reads the stripped files; the repository goes through composer so the lock stays in step.
         $this->assertProcessRan([PHP_BINARY, 'artisan', 'optimize:clear', '--no-interaction']);

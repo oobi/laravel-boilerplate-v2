@@ -46,6 +46,19 @@ class TierFencesTest extends TestCase
         }
     }
 
+    public function test_the_tiers_settings_strip_cleanly_from_the_config_files(): void
+    {
+        foreach (['.env.example', 'phpunit.xml'] as $path) {
+            $fenced = (new MarkerStripper)->fencedAmong([base_path($path)]);
+            $this->assertNotEmpty($fenced, $path.' has no teams fence');
+
+            $stripped = (new MarkerStripper)->strip(reset($fenced));
+            $this->assertStringNotContainsString('TEAMS_', $stripped, $path.' keeps a teams setting outside its fence');
+        }
+
+        $this->assertNotFalse(simplexml_load_string((new MarkerStripper)->strip(File::get(base_path('phpunit.xml')))), 'phpunit.xml is not valid XML once stripped');
+    }
+
     public function test_it_knows_every_helper_the_tier_defines(): void
     {
         preg_match_all('/^\s*function (\w+)\(/m', file_get_contents(base_path('packages/teams/src/helpers.php')), $matches);

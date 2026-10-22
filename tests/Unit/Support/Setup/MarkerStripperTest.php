@@ -3,6 +3,7 @@
 namespace Tests\Unit\Support\Setup;
 
 use App\Support\Setup\MarkerStripper;
+use Illuminate\Support\Facades\File;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -58,6 +59,7 @@ class MarkerStripperTest extends TestCase
         $out = (new MarkerStripper)->strip($in);
 
         $this->assertStringNotContainsString("\n\n\n", $out);
+        $this->assertStringNotContainsString("\r\n\r\n\r\n", (new MarkerStripper)->strip(str_replace("\n", "\r\n", $in)));
         $this->assertStringContainsString('a', $out);
         $this->assertStringContainsString('b', $out);
     }
@@ -75,5 +77,30 @@ class MarkerStripperTest extends TestCase
         $this->expectExceptionMessage('Unterminated teams:start at line 2');
 
         (new MarkerStripper)->strip("a\n// teams:start\nb\nc\n");
+    }
+
+    public function test_it_strips_env_and_xml_comment_fences(): void
+    {
+        $env = "APP_NAME=App\n\n# teams:start (stripped with the tier)\nTEAMS_CREATION=admin-only\n# teams:end\n\nVITE_APP_NAME=App\n";
+        $xml = "<php>\n    <env name=\"A\" value=\"1\"/>\n    <!-- teams:start -->\n    <env name=\"TEAMS_CREATION\" value=\"self-service\"/>\n    <!-- teams:end -->\n</php>\n";
+
+        $this->assertSame("APP_NAME=App\n\nVITE_APP_NAME=App\n", (new MarkerStripper)->strip($env));
+        $this->assertSame("<php>\n    <env name=\"A\" value=\"1\"/>\n</php>\n", (new MarkerStripper)->strip($xml));
+    }
+
+    public function test_fenced_among_finds_only_existing_fenced_files(): void
+    {
+        $dir = sys_get_temp_dir().'/fenced-among-'.uniqid();
+        mkdir($dir);
+        file_put_contents($dir.'/.env', "# teams:start\nTEAMS_CREATION=admin-only\n# teams:end\n");
+        file_put_contents($dir.'/phpunit.xml', "<!-- mentions teams:start mid-line, so not a fence -->\n");
+
+        try {
+            $found = (new MarkerStripper)->fencedAmong([$dir.'/.env', $dir.'/phpunit.xml', $dir.'/.env.example']);
+
+            $this->assertSame([$dir.'/.env'], array_keys($found));
+        } finally {
+            File::deleteDirectory($dir);
+        }
     }
 }
