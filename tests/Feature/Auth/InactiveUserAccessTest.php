@@ -281,7 +281,7 @@ class InactiveUserAccessTest extends TestCase
     private function beginTwoFactorChallenge(User $user): void
     {
         $this->mock(TwoFactorAuthenticationProvider::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('verify')->with('test-secret', '123456')->andReturnTrue();
+            $mock->shouldReceive('verify')->with('JBSWY3DPEHPK3PXP', '123456')->andReturnTrue();
         });
 
         $this->post('/login', ['email' => $user->email, 'password' => 'password'])

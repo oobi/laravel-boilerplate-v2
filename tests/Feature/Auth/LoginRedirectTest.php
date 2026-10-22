@@ -143,4 +143,27 @@ class LoginRedirectTest extends TestCase
 
         $this->actingAs(User::factory()->create())->get(route('login'))->assertRedirect(route('home'));
     }
+
+    /** A JSON login gets JSON back, for an SPA or API client (#45). */
+    public function test_a_json_login_gets_json(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->postJson('/login', ['email' => $admin->email, 'password' => 'password'])
+            ->assertOk()
+            ->assertExactJson(['two_factor' => false]);
+    }
+
+    /** A JSON login with nowhere to land is refused as JSON, not redirected (#45). */
+    public function test_a_json_login_nothing_claims_is_refused_as_json(): void
+    {
+        LoginRedirectRegistry::flush();
+        config(['fortify.login_fallback' => 'reject']);
+        $user = User::factory()->create();
+
+        $this->postJson('/login', ['email' => $user->email, 'password' => 'password'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['email' => __('auth.no_workspace')]);
+        $this->assertGuest();
+    }
 }

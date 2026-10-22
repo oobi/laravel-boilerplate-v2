@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Enums\SystemPermission;
 use App\Livewire\Admin\Users\EditUser;
 use App\Models\User;
 use App\Notifications\Auth\QueuedVerifyEmail;
@@ -9,6 +10,7 @@ use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\FormSection;
 use App\Support\Panels\Registry\PanelRegistry;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Component;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -271,5 +273,31 @@ class OpenEmailFormSection implements FormSection
     public function components(Model $subject): array
     {
         return [TextInput::make('email')->email()];
+    }
+
+    /** Only someone who may suspend users changes `active`, even if a section exposes it (#45). */
+    public function test_saving_refuses_an_active_change_without_the_suspend_permission(): void
+    {
+        PanelRegistry::for('users.edit')->classes = [OpenActiveFormSection::class];
+        $target = User::factory()->create();
+
+        Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_USERS)->create())
+            ->test(EditUser::class, ['user' => $target])
+            ->set('data.active', false)
+            ->call('save')
+            ->assertForbidden();
+
+        $this->assertTrue($target->fresh()->active);
+    }
+}
+
+class OpenActiveFormSection implements FormSection
+{
+    use HasPanelMetadata;
+
+    /** @return array<int, Component> */
+    public function components(Model $subject): array
+    {
+        return [Toggle::make('active')];
     }
 }

@@ -120,3 +120,5 @@ through the Gate (no `Gate::define()` per permission), plus
   <file>` or `--filter=<method>` for what you touched. Before pushing or
   merging: `php artisan test --parallel --compact`. Never a bare serial
   `php artisan test` over the whole suite.
+- CI (`.github/workflows/tests.yml`) runs Pint and the suite on SQLite and
+  MySQL for every push to main and every PR; keep it green.

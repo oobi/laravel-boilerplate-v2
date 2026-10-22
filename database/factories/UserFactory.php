@@ -120,7 +120,8 @@ class UserFactory extends Factory
     public function twoFactorEnabled(): static
     {
         return $this->state(fn (array $attributes) => [
-            'two_factor_secret' => encrypt('test-secret'),
+            // A valid base32 secret, as Fortify generates, so a real code check runs (not throws).
+            'two_factor_secret' => encrypt('JBSWY3DPEHPK3PXP'),
             'two_factor_recovery_codes' => encrypt(json_encode(['test-recovery-code'])),
             'two_factor_confirmed_at' => now(),
         ]);

@@ -72,4 +72,12 @@ class DashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee($user->name);
     }
+
+    /** The admin area needs a verified email, as the profile's other tabs do (#45). */
+    public function test_an_unverified_admin_is_sent_to_verify_their_email(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->unverified()->create())
+            ->get(route('dashboard'))
+            ->assertRedirect(route('verification.notice'));
+    }
 }
