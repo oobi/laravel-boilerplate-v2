@@ -58,3 +58,14 @@
 .btn-surface:is(.btn-outline, .btn-dash):not(:hover, :focus-visible, :active, .btn-active, :disabled, [disabled], .btn-disabled) {
     --btn-bg: var(--color-base-100);
 }
+
+/*
+| A button on the impersonation banner: daisyUI rings a focused button in its
+| own colour (`outline-color: var(--btn-color)`), and neutral grey on the dark
+| theme's amber is ~2.5:1, under the 3:1 a focus indicator needs (#56). The
+| banner's near-black text colour is clear on either amber. Unlayered, like
+| the rest of this file, so it beats daisyUI's layered `.btn` rule.
+*/
+.ui-impersonation-banner .btn:focus-visible {
+    outline-color: var(--color-warning-content);
+}

@@ -20,7 +20,9 @@
              target="_top" so it leaves Livewire's error-modal iframe too. --}}
         <form method="POST" action="{{ route('users.impersonate.leave') }}" target="_top">
             @csrf
-            <x-button type="submit" color="neutral" size="xs" variant="outline">
+            {{-- Solid, not outline: an outline's text sat on the amber banner at 4.28:1
+                 (light) and 1.21:1 (dark), below AA (#56). --}}
+            <x-button type="submit" color="neutral" size="xs">
                 {{ __('admin.stop_impersonating') }}
             </x-button>
         </form>
