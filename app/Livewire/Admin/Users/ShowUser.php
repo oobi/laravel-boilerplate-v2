@@ -11,6 +11,7 @@ use App\Livewire\Concerns\ConfirmsPassword;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Auth\Destination;
+use App\Support\Auth\GoogleLogin;
 use App\Support\Filament\AdminAction;
 use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
@@ -283,8 +284,12 @@ class ShowUser extends Component implements HasActions, HasSchemas
                     // acting guard, and the admin is not the target).
                     $this->user->update(['password' => Hash::make($data['password'])]);
 
+                    // A recovery: a Google link someone else made must not outlive it (#61).
+                    $unlinkedGoogle = GoogleLogin::unlink($this->user);
+
                     Notification::make()
                         ->title(__('admin.password_reset_success'))
+                        ->body($unlinkedGoogle ? __('admin.password_reset_google_unlinked') : null)
                         ->success()
                         ->send();
                 });

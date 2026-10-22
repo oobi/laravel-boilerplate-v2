@@ -211,6 +211,15 @@ Socialite with PKCE (`App\Support\Auth\GoogleLogin`,
   window (Fortify's 2FA routes would honour one). Any verified Google address
   can be linked this way, Gmail or not. Impersonated sessions are refused.
   Unlinking also asks for the password.
+- **A recovery drops the link.** Resetting the password by email link, or an
+  admin setting it, removes the Google link, so one made by someone who once
+  had the password can't outlive the reset (#61). The admin is told in the
+  confirmation; the owner can link Google again. Changing your own password
+  on the profile keeps it (that already proved the current password).
+- **Admins see and remove links** on the user's Security panel, the Google
+  address masked (`j•••@gmail.com`). Unlinking needs `manage users` and
+  coverage, never your own account, and the admin's password
+  (`UserAbility::UNLINK_GOOGLE_ACCOUNT`).
 - **Every link is announced** by email to the account's address
   (`GoogleAccountLinked`, queued), so a link the owner didn't make is noticed.
 - **Failures land back on the login page** with a message: cancelled at

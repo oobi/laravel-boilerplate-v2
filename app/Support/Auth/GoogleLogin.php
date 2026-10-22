@@ -59,6 +59,17 @@ final class GoogleLogin
         return count($domains) === 1 ? $driver->with(['hd' => $domains[0]]) : $driver;
     }
 
+    /**
+     * Removes the user's Google link, if any, returning whether there was one.
+     * Called by the profile and the admin Security panel, and on every account
+     * recovery (a reset link, an admin setting the password), so a link someone
+     * else made doesn't outlive the reset (#61).
+     */
+    public static function unlink(User $user): bool
+    {
+        return $user->googleAccount()->delete() > 0;
+    }
+
     /** The link for this Google account, matched on its stable id. */
     public static function findAccount(GoogleUser $googleUser): ?SocialAccount
     {

@@ -177,6 +177,7 @@ return [
     'google_unlink' => 'Unlink Google Account',
     'linked' => 'Linked',
     'not_linked' => 'Not linked',
+    'password_reset_google_unlinked' => 'Their Google link was removed too, so they log in with the new password and can link Google again.',
 
     'statistics' => 'Statistics',
     'account_age' => 'Account Age',

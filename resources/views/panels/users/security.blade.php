@@ -1,12 +1,18 @@
 {{-- Security panel (App\Panels\Users\SecurityPanel) --}}
 @php
     use App\Enums\UserAbility;
+    use App\Notifications\Auth\EmailAddressChanged;
+    use App\Support\Auth\GoogleLogin;
     use App\Support\TwoFactor\GracePeriod;
 
     // Only users the 2FA mandate applies to have a grace period worth showing.
     $graceApplies = GracePeriod::applies($user);
     $graceDays = GracePeriod::daysRemaining($user);
     $canResetGrace = GracePeriod::canBeLockedOut($user) && $user->two_factor_grace_started_at !== null;
+
+    // Shown while Google login is on, or while a link is left over from when it was.
+    $googleAccount = $user->googleAccount;
+    $showGoogle = GoogleLogin::enabled() || $googleAccount !== null;
 @endphp
 
 <x-card :title="__('admin.security')" type="panel">
@@ -66,5 +72,37 @@
                 </x-button.warning>
             </x-action-list>
         @endcan
+    @endif
+
+    @if ($showGoogle)
+        <div class="mt-2 flex items-center justify-between gap-2">
+            <span>{{ __('admin.google_account') }}</span>
+
+            @if ($googleAccount)
+                <x-badge color="success" class="shrink-0">{{ __('admin.linked') }}</x-badge>
+            @else
+                <x-badge color="neutral" class="shrink-0">{{ __('admin.not_linked') }}</x-badge>
+            @endif
+        </div>
+
+        @if ($googleAccount)
+            {{-- Masked like the link email: enough to recognise, not to hand out. A long domain truncates. --}}
+            <p class="truncate text-sm text-muted">{{ EmailAddressChanged::mask($googleAccount->email) }}</p>
+        @endif
+
+        @if ($googleAccount && ! $user->trashed())
+            @can(UserAbility::UNLINK_GOOGLE_ACCOUNT, $user)
+                <x-action-list class="mt-2">
+                    <x-button.danger
+                        type="button"
+                        wire:click="callPanelAction('security', 'unlink-google')"
+                        variant="soft"
+                        size="sm"
+                    >
+                        {{ __('admin.google_unlink') }}
+                    </x-button.danger>
+                </x-action-list>
+            @endcan
+        @endif
     @endif
 </x-card>
