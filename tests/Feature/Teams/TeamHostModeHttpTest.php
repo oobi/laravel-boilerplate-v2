@@ -4,6 +4,7 @@ namespace Tests\Feature\Teams;
 
 use App\Actions\Impersonation\StartImpersonation;
 use App\Models\User;
+use App\Notifications\Auth\QueuedResetPassword;
 use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
@@ -81,7 +82,7 @@ class TeamHostModeHttpTest extends TestCase
 
         $this->post('http://'.self::BASE.'/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user): bool {
+        Notification::assertSentTo($user, QueuedResetPassword::class, function (ResetPassword $notification) use ($user): bool {
             return str_starts_with($notification->toMail($user)->actionUrl, 'https://'.self::BASE.'/reset-password/');
         });
     }

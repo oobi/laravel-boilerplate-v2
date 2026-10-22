@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Notifications\Auth\QueuedResetPassword;
+use App\Notifications\Auth\QueuedVerifyEmail;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,7 +35,7 @@ class MailedLinksTest extends TestCase
     private function resetLinkFor(User $user): string
     {
         $link = null;
-        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user, &$link): bool {
+        Notification::assertSentTo($user, QueuedResetPassword::class, function (ResetPassword $notification) use ($user, &$link): bool {
             $link = $notification->toMail($user)->actionUrl;
 
             return true;
@@ -45,7 +47,7 @@ class MailedLinksTest extends TestCase
     private function verificationLinkFor(User $user): string
     {
         $link = null;
-        Notification::assertSentTo($user, VerifyEmail::class, function (VerifyEmail $notification) use ($user, &$link): bool {
+        Notification::assertSentTo($user, QueuedVerifyEmail::class, function (VerifyEmail $notification) use ($user, &$link): bool {
             $link = $notification->toMail($user)->actionUrl;
 
             return true;

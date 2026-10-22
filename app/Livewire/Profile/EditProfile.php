@@ -52,6 +52,15 @@ class EditProfile extends Component
         $this->email = $user->email;
     }
 
+    /** Photos wait for a verified address (#46); the picker is hidden until then. */
+    public function updatedPhoto(): void
+    {
+        if (! Auth::user()->hasVerifiedEmail()) {
+            $this->reset('photo');
+            abort(403);
+        }
+    }
+
     public function updateProfileInformation(UpdatesUserProfileInformation $updater): void
     {
         $this->resetErrorBag();
@@ -71,7 +80,8 @@ class EditProfile extends Component
                 'last_name' => $this->last_name,
                 'email' => $this->email,
                 'current_password' => $this->current_password,
-                'photo' => $this->photo,
+                // Photos wait for a verified address, so unverified sign-ups can't fill storage (#46).
+                'photo' => $user->hasVerifiedEmail() ? $this->photo : null,
             ], fn ($value): bool => ! is_null($value)));
         } catch (ValidationException $exception) {
             // A password left empty isn't a guess.

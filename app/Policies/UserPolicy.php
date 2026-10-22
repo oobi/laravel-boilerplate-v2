@@ -75,6 +75,17 @@ class UserPolicy
             && $actor->checkPermissionTo(SystemPermission::SET_USER_PASSWORDS->value) && Coverage::coversUser($actor, $target);
     }
 
+    /**
+     * Mark someone's address verified for them, so support can unblock a user
+     * stuck on "verify your email" (#55). Not for yourself: you prove your own
+     * address by following the link.
+     */
+    public function verifyEmail(User $actor, User $target): bool
+    {
+        return $actor->id !== $target->id
+            && $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
+    }
+
     /** Not for yourself: your own password changes on your profile. */
     public function sendPasswordResetLink(User $actor, User $target): bool
     {

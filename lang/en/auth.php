@@ -19,4 +19,6 @@ return [
     'two_factor_required_super_admin' => 'Two factor authentication is required for this account. Please set it up to protect it.',
     'two_factor_setup_cta' => 'Set Up Two Factor Authentication',
     'password_min_hint' => 'At least :min characters.',
+    'verify_wrong_address' => 'Wrong address?',
+    'verify_change_address' => 'Change it on your profile.',
 ];

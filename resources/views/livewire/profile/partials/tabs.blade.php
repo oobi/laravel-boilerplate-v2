@@ -7,6 +7,8 @@
     {{ __('admin.profile') }}
 </x-tabs-item>
 
+{{-- Until the email is verified only the profile tab is open (to fix a mistyped address). --}}
+@if (Auth::user()->hasVerifiedEmail())
 <x-tabs-item
     :active="request()->routeIs('profile.password')"
     :href="route('profile.password')"
@@ -22,3 +24,4 @@
 >
     {{ __('admin.two_factor') }}
 </x-tabs-item>
+@endif

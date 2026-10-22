@@ -47,9 +47,14 @@ Route::domain($apexHost)->group(function (): void {
 // staff (see docs/architecture.md). One route per tab; each 2FA action is guarded by its
 // own inline password prompt. Deliberately NOT behind ACCESS_ADMIN_PANEL: a profile is not
 // an admin page, and in host mode this group binds to account_host, never admin_host.
-// Impersonated sessions are refused: only the account holder manages it.
-Route::domain($accountHost)->middleware(['auth', 'verified', DenyLowAssuranceSessions::class])->group(function (): void {
+// Impersonated sessions are refused: only the account holder manages it. The profile tab
+// itself skips `verified` so someone who mistyped their address at sign-up can fix it
+// (changing it needs the current password and sends a new link); the rest need it.
+Route::domain($accountHost)->middleware(['auth', DenyLowAssuranceSessions::class])->group(function (): void {
     Route::get('/profile', EditProfile::class)->name('profile.edit');
+});
+
+Route::domain($accountHost)->middleware(['auth', 'verified', DenyLowAssuranceSessions::class])->group(function (): void {
     Route::get('/profile/password', EditPassword::class)->name('profile.password');
     Route::get('/profile/two-factor', TwoFactorAuthentication::class)->name('profile.two-factor');
 });

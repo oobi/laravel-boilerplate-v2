@@ -75,8 +75,8 @@ This is an **admin/back-office** boilerplate, but not everyone who signs in is
 admin staff (an add-on like the teams tier gives ordinary users their own
 area). Self-service account management (profile, password, two-factor) is
 therefore **not** an admin page: it renders in the neutral `layouts.account`
-shell, reachable by any signed-in, verified user via `/profile` — admin or
-not. Only the admin area proper (dashboard, users, roles, …) sits behind
+shell, reachable by any signed-in user via `/profile` (admin or not; until
+the email is verified only the Profile tab, to fix a mistyped address). Only the admin area proper (dashboard, users, roles, …) sits behind
 `ACCESS_ADMIN_PANEL`. In the teams tier's host mode this also means the
 account routes (auth, profile, the team picker) are quarantined onto their
 own host, separate from the admin-only host — see `docs/teams-domains.md`.
