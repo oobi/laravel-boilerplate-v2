@@ -146,6 +146,19 @@ password reset, outside the impersonation trail.
 - A user whose email is not verified can't be impersonated: they could only
   be shown the verify-email page.
 
+## Links sent by email
+
+Reset, verification and team invitation links are built from `APP_URL`
+(`App\Support\Auth\MailedLinks`), never from the host of the request that
+sent them, which the sender controls (#58). A route bound to a host (the
+account host in teams host mode) keeps that host. So `APP_URL` must be the
+app's real public address in every environment, scheme included.
+
+Signed links (verification, invitations) are then checked against the address
+the app sees when they're followed. If that differs from `APP_URL`, they fail
+with a 403: behind a proxy that terminates HTTPS but isn't trusted (the app
+sees `http://`, see `TRUSTED_PROXIES`), or with `www` in one and not the other.
+
 ## Throttling
 
 - **Wrong passwords inside a session** (the confirm-password prompt, Change

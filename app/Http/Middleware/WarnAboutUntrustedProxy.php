@@ -13,9 +13,10 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Makes a missing TRUSTED_PROXIES visible. Behind an untrusted proxy every
  * visitor shares the proxy's address, so one source can trip the login,
- * sign-up and reset ceilings for everyone, silently. A request carrying
- * X-Forwarded-For from an untrusted caller logs a warning, at most once an
- * hour. See config/trustedproxy.php.
+ * sign-up and reset ceilings for everyone, silently; and if the proxy
+ * terminates HTTPS, signed links built from APP_URL (MailedLinks) fail. A
+ * request carrying X-Forwarded-For from an untrusted caller logs a warning,
+ * at most once an hour. See config/trustedproxy.php.
  */
 class WarnAboutUntrustedProxy
 {
@@ -24,7 +25,7 @@ class WarnAboutUntrustedProxy
     public function handle(Request $request, Closure $next): Response
     {
         if ($request->headers->has('X-Forwarded-For') && ! $request->isFromTrustedProxy() && Cache::add(self::CACHE_KEY, true, now()->addHour())) {
-            Log::warning('A request from '.$request->ip().' carried X-Forwarded-For but that address is not a trusted proxy, so every visitor behind it shares one address and one rate limit. If the app sits behind a proxy or load balancer, set TRUSTED_PROXIES (config/trustedproxy.php). If not, a client sent the header itself and this can be ignored.');
+            Log::warning('A request from '.$request->ip().' carried X-Forwarded-For but that address is not a trusted proxy, so every visitor behind it shares one address and one rate limit, and signed links in emails fail with a 403 if the proxy terminates HTTPS. If the app sits behind a proxy or load balancer, set TRUSTED_PROXIES (config/trustedproxy.php). If not, a client sent the header itself and this can be ignored.');
         }
 
         return $next($request);

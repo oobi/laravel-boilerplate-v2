@@ -16,6 +16,7 @@ use App\Http\Responses\RegisterResponse;
 use App\Http\Responses\VerifyEmailResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Support\Auth\MailedLinks;
 use App\Support\Auth\PasswordChecks;
 use App\Support\Roles\AdminRoleScopes;
 use App\Support\Theme\DaisyColor;
@@ -29,7 +30,11 @@ use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\View\TablesIconAlias;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route as RouteDefinition;
 use Illuminate\Support\Facades\Gate;
@@ -153,6 +158,19 @@ class AppServiceProvider extends ServiceProvider
     {
         Notifications::alignment(Alignment::Center);
         Notifications::verticalAlignment(VerticalAlignment::Start);
+
+        // Laravel's defaults build these links from the request's host, which the
+        // sender chooses (GitHub #58). Same routes, parameters and expiry, from APP_URL.
+        ResetPassword::createUrlUsing(fn (CanResetPassword $user, string $token): string => MailedLinks::generator()->route('password.reset', [
+            'token' => $token,
+            'email' => $user->getEmailForPasswordReset(),
+        ]));
+
+        VerifyEmail::createUrlUsing(fn (MustVerifyEmail $user): string => MailedLinks::generator()->temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(config('auth.verification.expire', 60)),
+            ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())],
+        ));
     }
 
     /** Sortable-but-unsorted columns get a double chevron; once sorted, a single chevron shows the direction (daisyUI style). */
