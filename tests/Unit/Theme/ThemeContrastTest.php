@@ -28,6 +28,11 @@ class ThemeContrastTest extends TestCase
         foreach (['success', 'info', 'error', 'primary'] as $name) {
             $this->assertContrast([1.0, 1.0, 1.0], $this->token($name), $name);
         }
+
+        // Solid neutral buttons, e.g. Stop Impersonating on the amber banner (#56), in both themes.
+        foreach (['boilerplate', 'boilerplate-dark'] as $theme) {
+            $this->assertContrast([1.0, 1.0, 1.0], $this->token('neutral', $theme), "neutral ({$theme})");
+        }
     }
 
     /**
