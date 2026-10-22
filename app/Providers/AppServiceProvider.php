@@ -261,23 +261,30 @@ class AppServiceProvider extends ServiceProvider
             });
         }
 
-        // Per email and address. No ceiling per address yet: until trusted proxies
-        // are set (#19) every visitor behind a proxy shares its address, so one
-        // would let a single source lock everyone out.
+        // Per email and address, plus a looser ceiling per address so one source
+        // can't work through a list of emails. The address is only the visitor's
+        // own behind a proxy once that proxy is trusted (config/trustedproxy.php).
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
-            return Limit::perMinute(5)->by($throttleKey);
+            return [
+                Limit::perMinute(5)->by($throttleKey),
+                Limit::perMinute(30)->by('login-ip:'.$request->ip()),
+            ];
         });
 
         RateLimiter::for('password-confirm', fn (Request $request) => Limit::perMinute(5)->by('password-confirm:'.$request->user()->getAuthIdentifier()));
 
-        // Per email and address, like login (see above for why not per address alone).
-        RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by('password-reset:'.Str::lower((string) $request->input('email')).'|'.$request->ip()));
+        // Like login: per email and address, with a ceiling per address.
+        RateLimiter::for('password-reset', fn (Request $request) => [
+            Limit::perMinute(5)->by('password-reset:'.Str::lower((string) $request->input('email')).'|'.$request->ip()),
+            Limit::perMinute(10)->by('password-reset-ip:'.$request->ip()),
+        ]);
 
-        // Per email and address too, which barely slows sign-up abuse (a new email
-        // each time); the per-address ceiling it needs waits on #19 like login's.
-        RateLimiter::for('register', fn (Request $request) => Limit::perMinute(5)->by('register:'.Str::lower((string) $request->input('email')).'|'.$request->ip()));
+        RateLimiter::for('register', fn (Request $request) => [
+            Limit::perMinute(5)->by('register:'.Str::lower((string) $request->input('email')).'|'.$request->ip()),
+            Limit::perMinute(10)->by('register-ip:'.$request->ip()),
+        ]);
 
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
