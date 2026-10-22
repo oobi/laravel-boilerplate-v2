@@ -13,8 +13,9 @@ export default defineConfig({
     css: {
         devSourcemap: true,
     },
+    // No production source maps: they'd publish the original source. `npm run dev` keeps them.
     build: {
-        sourcemap: true,
+        sourcemap: false,
     },
     server: {
         watch: {
