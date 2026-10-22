@@ -17,10 +17,12 @@ git remote add origin git@github.com:<org>/client-app.git
 git push -u origin main
 ```
 
-Then boot it:
+Then boot it. Create `.env` first and set `APP_NAME`, `APP_URL`, mail, and
+the database, since `composer run setup` migrates:
 
 ```bash
-composer run setup          # install, .env, key, migrate, npm build
+cp .env.example .env        # then edit it
+composer run setup          # install, key, migrate, npm build
 php artisan bp:setup        # pick a recipe, see docs/config-recipes.md
 php artisan db:seed         # permissions and default roles (after the recipe, so roles take its labels)
 php artisan bp:make-admin   # first super admin
@@ -28,9 +30,22 @@ php artisan bp:make-admin   # first super admin
 
 `bp:setup` writes the teams config to `.env`. Choosing the Vanilla recipe
 removes the teams tier entirely (`bp:remove-teams`), so only pick it if the
-client will never need teams.
+client will never need teams. Backoffice also makes the app login-only
+(`bp:make-login-only`) and asks whether to keep the tier.
 
-Set `APP_NAME`, mail, and database settings in `.env`. Remove
+For example, a login-only backoffice without teams, start to finish:
+
+```bash
+cp .env.example .env        # then edit it
+composer run setup
+php artisan bp:setup --recipe=backoffice --without-teams
+npm run build               # the CSS no longer needs the removed views
+php artisan migrate:fresh --seed   # drops the teams tables the first migrate made
+php artisan bp:make-admin --first-name=Ada --last-name=Lovelace --email=ada@example.com
+php artisan test --parallel --compact
+```
+
+Remove
 `packages/theme-demo` if the client doesn't want the theme showcase (drop its
 path repository and `require` from `composer.json`, then `composer update`).
 
@@ -161,8 +176,8 @@ It signs in existing accounts only. See
 ## Checklist
 
 - [ ] Cloned with history, `upstream` remote set
-- [ ] `composer run setup`, `bp:setup`, `db:seed`, `bp:make-admin` run, in that order
-- [ ] `.env` configured, theme-demo kept or removed
+- [ ] `.env` created first, then `composer run setup`, `bp:setup`, `db:seed` (`migrate:fresh --seed` if teams was removed), `bp:make-admin`, in that order
+- [ ] theme-demo kept or removed
 - [ ] A queue worker runs in production (verification and reset emails depend on it)
 - [ ] Behind a proxy: `TRUSTED_PROXIES` set (not needed on Cloud, or Forge/Vapor's own domains); `SESSION_SECURE_COOKIE=true` in production
 - [ ] Log in with Google: OAuth client created and `GOOGLE_*` set, or left off on purpose

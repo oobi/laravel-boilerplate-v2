@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Support\Teams;
+namespace App\Support\Setup;
 
 use RuntimeException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
 /**
- * Removes the fenced marker blocks that delimit an add-on's contributions to
- * core files (see docs/teams-distribution.md). A pure string transform so the
- * removal logic is testable without touching the filesystem; the command
- * (bp:remove-teams) wires it to real files.
+ * Removes the fenced marker blocks that delimit an optional part of core files:
+ * the teams tier's contributions (`teams`, see docs/teams-distribution.md) and
+ * the public landing page and sign-up (`public`). A pure string transform so
+ * the removal logic is testable without touching the filesystem; the commands
+ * (bp:remove-teams, bp:make-login-only) wire it to real files.
  *
  * A block runs from a line matching `// {marker}:start` to `// {marker}:end`
  * (either may carry trailing prose). By default the whole block is deleted; if

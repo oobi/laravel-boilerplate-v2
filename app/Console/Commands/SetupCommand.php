@@ -15,35 +15,37 @@ use function Laravel\Prompts\text;
 use function Laravel\Prompts\warning;
 
 /**
- * First-run wizard for a fresh clone: asks the key shaping questions — app
- * name, and the teams tier recipe with optional relabelling (see
- * docs/config-recipes.md) — and writes them to `.env`. For the vanilla recipe
- * it hands off to bp:remove-teams, and it generates the app key if one is
- * missing.
+ * First-run wizard for a fresh clone: asks the key shaping questions (app
+ * name, the recipe from docs/config-recipes.md, optional teams relabelling)
+ * and writes them to `.env`. Without the teams tier (the Vanilla recipe, or
+ * Backoffice when told to drop it) it hands off to bp:remove-teams; for the
+ * login-only Backoffice recipe it hands off to bp:make-login-only. It also
+ * generates the app key if one is missing.
  *
- * It does what it safely can, then prints the finishing steps it leaves to you:
- * it never runs your database or creates users (those stay explicit commands).
- * The structural code choices a login-only app needs (public registration is a
- * Fortify edit, the public landing page a scaffold decision) can't be
- * auto-applied safely either, so it prints exactly what to do.
+ * It never runs your database or creates users: those stay explicit commands,
+ * printed as the finishing steps.
  *
- * Interactive by default; `--recipe=` pre-answers the shape and `--force` runs
- * non-interactively (keeps the current app name, no prompts).
+ * Interactive by default; `--recipe=` pre-answers the shape, `--without-teams`
+ * drops the tier from Backoffice, and `--force` runs non-interactively (keeps
+ * the current app name and the teams tier, no prompts).
  */
 class SetupCommand extends Command
 {
-    protected $signature = 'bp:setup {--recipe= : public-saas|invitation-only|backoffice|vanilla} {--dry-run} {--force}';
+    protected $signature = 'bp:setup {--recipe= : public-saas|invitation-only|backoffice|vanilla} {--without-teams : Backoffice without the teams tier} {--dry-run} {--force}';
 
     protected $description = 'Configure a fresh clone for a supported app recipe (interactive).';
 
     /**
-     * @var array<string, array{label: string, creation?: string, members?: bool, admins?: bool, fallback: string, teams?: bool, registration?: bool, landing?: bool}>
+     * `teams`: whether the recipe keeps the tier (true), drops it (false) or
+     * leaves it to the operator ('optional', Backoffice).
+     *
+     * @var array<string, array{label: string, creation?: string, members?: bool, admins?: bool, fallback: string, teams: bool|'optional', login_only?: bool}>
      */
     private const RECIPES = [
-        'public-saas' => ['label' => 'Public SaaS — anyone signs up and creates their own team', 'creation' => 'self-service', 'members' => true, 'admins' => true, 'fallback' => 'home'],
-        'invitation-only' => ['label' => 'Invitation-only — admins seed teams, members invite', 'creation' => 'admin-only', 'members' => true, 'admins' => true, 'fallback' => 'home'],
-        'backoffice' => ['label' => 'Backoffice — admins create everything, no public surface', 'creation' => 'admin-only', 'members' => false, 'admins' => false, 'fallback' => 'reject', 'registration' => false, 'landing' => false],
-        'vanilla' => ['label' => 'Vanilla — no teams tier', 'fallback' => 'home', 'teams' => false],
+        'public-saas' => ['label' => 'Public SaaS: anyone signs up and creates their own team', 'creation' => 'self-service', 'members' => true, 'admins' => true, 'fallback' => 'home', 'teams' => true],
+        'invitation-only' => ['label' => 'Invitation-only: admins seed teams, members invite', 'creation' => 'admin-only', 'members' => true, 'admins' => true, 'fallback' => 'home', 'teams' => true],
+        'backoffice' => ['label' => 'Backoffice: login-only, admins create every account', 'creation' => 'admin-only', 'members' => false, 'admins' => false, 'fallback' => 'reject', 'teams' => 'optional', 'login_only' => true],
+        'vanilla' => ['label' => 'Vanilla: no teams tier', 'fallback' => 'home', 'teams' => false],
     ];
 
     /** @var array<string, string|bool> */
@@ -58,16 +60,36 @@ class SetupCommand extends Command
         }
 
         $config = self::RECIPES[$recipe];
+        $teamsInstalled = File::isDirectory(base_path('packages/teams'));
+
+        if ($config['teams'] === true && $this->option('without-teams')) {
+            $this->error('The '.$recipe.' recipe needs the teams tier, so --without-teams doesn\'t apply. It is for the backoffice recipe.');
+
+            return self::FAILURE;
+        }
+
+        if ($config['teams'] === true && ! $teamsInstalled) {
+            $this->error('The '.$recipe.' recipe needs the teams tier, which this app no longer has.');
+
+            return self::FAILURE;
+        }
 
         $this->askApplication();
-        $this->collectRecipe($config);
+        $withTeams = $teamsInstalled && $this->keepsTeams($config);
+        $this->collectRecipe($config, $withTeams);
+        $removeTeams = $teamsInstalled && ! $withTeams;
+        $loginOnly = $config['login_only'] ?? false;
 
         if ($this->option('dry-run')) {
             info('Dry run — would set in .env:');
             collect($this->env)->each(fn ($v, $k) => $this->line('  '.$k.'='.(is_bool($v) ? ($v ? 'true' : 'false') : $v)));
 
-            if (($config['teams'] ?? true) === false) {
+            if ($removeTeams) {
                 $this->line('  …and run bp:remove-teams.');
+            }
+
+            if ($loginOnly) {
+                $this->line('  …and run bp:make-login-only.');
             }
         } else {
             if (! $this->option('force') && ! confirm('Write this configuration to .env?', default: true)) {
@@ -79,16 +101,19 @@ class SetupCommand extends Command
             File::put(base_path('.env'), (new EnvEditor)->apply(File::get(base_path('.env')), $this->env));
             info('.env configured for the '.$recipe.' recipe.');
 
-            if (($config['teams'] ?? true) === false && $this->call('bp:remove-teams', ['--force' => true]) !== self::SUCCESS) {
+            if ($removeTeams && $this->call('bp:remove-teams', ['--force' => true]) !== self::SUCCESS) {
+                return self::FAILURE;
+            }
+
+            if ($loginOnly && $this->call('bp:make-login-only', ['--force' => true]) !== self::SUCCESS) {
                 return self::FAILURE;
             }
 
             $this->ensureAppKey();
         }
 
-        // Guidance + finishing steps print on both paths, so a dry run previews the whole picture.
-        $this->structuralGuidance($config);
-        $this->nextSteps();
+        // Finishing steps print on both paths, so a dry run previews the whole picture.
+        $this->nextSteps($removeTeams);
 
         return self::SUCCESS;
     }
@@ -129,13 +154,31 @@ class SetupCommand extends Command
         $this->env['APP_NAME'] = text('Application name', default: (string) config('app.name'), required: true);
     }
 
-    /** @param array{creation?: string, members?: bool, admins?: bool, fallback: string, teams?: bool} $config */
-    private function collectRecipe(array $config): void
+    /**
+     * Whether an installed teams tier stays, for a recipe that leaves it optional.
+     *
+     * @param  array{teams: bool|'optional'}  $config
+     */
+    private function keepsTeams(array $config): bool
+    {
+        if ($config['teams'] !== 'optional') {
+            return $config['teams'];
+        }
+
+        if ($this->option('without-teams')) {
+            return false;
+        }
+
+        return $this->option('force') || confirm('Keep the teams tier? (No removes it with bp:remove-teams.)', default: true);
+    }
+
+    /** @param array{creation?: string, members?: bool, admins?: bool, fallback: string} $config */
+    private function collectRecipe(array $config, bool $withTeams): void
     {
         $this->env['LOGIN_FALLBACK'] = $config['fallback'];
 
-        if (($config['teams'] ?? true) === false) {
-            return; // vanilla: no teams keys; bp:remove-teams handles the rest
+        if (! $withTeams) {
+            return; // no teams keys; bp:remove-teams handles the rest
         }
 
         $this->env['TEAMS_CREATION'] = $config['creation'];
@@ -157,31 +200,14 @@ class SetupCommand extends Command
         }
     }
 
-    /** @param array{registration?: bool, landing?: bool} $config */
-    private function structuralGuidance(array $config): void
-    {
-        if (($config['registration'] ?? true) && ($config['landing'] ?? true)) {
-            return;
-        }
-
-        $this->newLine();
-        warning('This recipe is login-only. Two structural edits are yours to make (one-time, see docs/config-recipes.md):');
-
-        if (($config['registration'] ?? true) === false) {
-            $this->line('  • Disable public registration — remove `Features::registration()` from config/fortify.php (and any "Register" links in the auth/welcome views).');
-        }
-
-        if (($config['landing'] ?? true) === false) {
-            $this->line('  • Drop the public landing page — point the `/` route (routes/web.php) at login instead of the Home page.');
-        }
-    }
-
-    private function nextSteps(): void
+    private function nextSteps(bool $removedTeams): void
     {
         $this->newLine();
         info('To finish setup, run:');
         $this->line('  • npm install && npm run build   (build the front-end assets)');
-        $this->line('  • php artisan migrate --seed     (create and seed the database)');
-        $this->line('  • php artisan bp:make-admin      (create the first admin user)');
+        $this->line($removedTeams
+            ? '  • php artisan migrate:fresh --seed  (rebuild the database without the teams tables)'
+            : '  • php artisan migrate --seed     (create and seed the database)');
+        $this->line('  • php artisan bp:make-admin      (create the first admin user, a super admin)');
     }
 }

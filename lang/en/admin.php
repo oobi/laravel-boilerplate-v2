@@ -73,6 +73,7 @@ return [
     'email_marked_verified' => 'Email marked as verified.',
     'impersonating' => 'Impersonating',
     'stop_impersonating' => 'Stop Impersonating',
+    'impersonation_ended_no_access' => ':name can\'t reach anything in this app, so impersonation ended. Give them a role to let them in.',
 
     'search_placeholder' => 'Search users by name or email...',
     'no_users_found' => 'No users found',

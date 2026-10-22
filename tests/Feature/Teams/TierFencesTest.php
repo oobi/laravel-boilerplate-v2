@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Teams;
 
 use App\Console\Commands\RemoveTeamsCommand;
-use App\Support\Teams\MarkerStripper;
+use App\Support\Setup\MarkerStripper;
 use App\Support\Teams\TierReferences;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;

@@ -51,7 +51,9 @@ return [
     'views' => true,
 
     'features' => [
+        // public:start (bp:make-login-only strips public sign-up: admins create every account)
         Features::registration(),
+        // public:end
         Features::resetPasswords(),
         Features::emailVerification(),
         // No updateProfileInformation() or updatePasswords(): the profile pages

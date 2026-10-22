@@ -9,10 +9,8 @@ use App\Models\User;
 use App\Support\Auth\Destination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
-use Laravel\Fortify\Fortify;
 
 /**
  * Where a user lands after logging in. The cascade is fixed: a system role goes
@@ -35,7 +33,7 @@ class LoginResponse implements LoginResponseContract, TwoFactorLoginResponseCont
         $target = $this->destinationFor($user);
 
         if ($target === null) {
-            return $this->reject($request);
+            return (new NoWorkspaceResponse)->toResponse($request);
         }
 
         return $request->wantsJson()
@@ -51,21 +49,5 @@ class LoginResponse implements LoginResponseContract, TwoFactorLoginResponseCont
         }
 
         return LoginFallback::current() === LoginFallback::REJECT ? null : route('home');
-    }
-
-    /** Log the user back out (no home to send them to) with a "contact an admin" notice. */
-    private function reject($request): RedirectResponse|JsonResponse
-    {
-        Auth::guard()->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        if ($request->wantsJson()) {
-            return new JsonResponse(['message' => __('auth.no_workspace')], 403);
-        }
-
-        return redirect()->route('login')->withErrors([
-            Fortify::username() => __('auth.no_workspace'),
-        ]);
     }
 }

@@ -44,7 +44,7 @@ return [
     |
     */
 
-    // Admin is the default for full-page components; override with ->layout('layouts.public') for public-facing ones.
+    // Admin is the default for full-page components; override with ->layout() for public-facing ones.
     'component_layout' => 'layouts.admin',
 
     /*

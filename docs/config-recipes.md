@@ -4,7 +4,8 @@ Common application shapes and the settings that produce them. Each recipe is
 just a combination of switches — none of them is a mode that silently changes
 the others, so mix them freely. Runtime settings live in `.env`; the two
 *structural* choices (public landing page, public registration) are one-time
-scaffolding, handled by the setup recipe rather than a runtime flag.
+scaffolding rather than a runtime flag: `bp:make-login-only` removes both, and
+`bp:setup` runs it for the Backoffice recipe.
 
 ## The settings
 
@@ -13,9 +14,9 @@ scaffolding, handled by the setup recipe rather than a runtime flag.
 | `TEAMS_CREATION` | `.env` | Who may create a team: `self-service` (any user) or `admin-only` (admins, via Admin › Teams). |
 | `TEAMS_MEMBER_INVITATIONS` | `.env` | Whether a team's owner/admins can invite people by email from the team area. |
 | `TEAMS_ADMIN_INVITATIONS` | `.env` | Whether a system admin can invite people by email from Admin › Teams. |
-| `LOGIN_FALLBACK` | `.env` | Where a user with no system role and no team lands: `home` (public page) or `reject` (logged back out — no public surface). |
-| Public registration | scaffold | Fortify's `registration` feature — open self-signup, or accounts created only by admins. |
-| Public landing page | scaffold | Whether `/` is a public page or the app is login-only. |
+| `LOGIN_FALLBACK` | `.env` | Where a user with no system role and no team lands: `home` (the public page; in a login-only app, signed out like `reject`) or `reject` (logged back out with a "contact an admin" notice). |
+| Public registration | scaffold | Fortify's `registration` feature: open self-signup, or accounts created only by admins. `bp:make-login-only` removes it. |
+| Public landing page | scaffold | Whether `/` is a public page or the app is login-only (`/` sends a guest to login and a signed-in user where they belong). `bp:make-login-only` removes it. |
 
 Default destinations (not configurable, but not forced either): on a bare login,
 a user with a system role lands on the admin dashboard and a non-admin with (or
@@ -84,10 +85,18 @@ invitations still let a team owner bring colleagues in.
 ### Backoffice / administration platform
 
 A purely internal tool (e.g. managing a chain of salons). Everything is behind
-a login; admins create the accounts and the teams and add staff directly.
+a login; admins create the accounts (and the teams, if any) and add staff
+directly. Only a user with a system role gets in, landing on the admin
+dashboard.
+
+```bash
+php artisan bp:setup --recipe=backoffice                  # keep the teams tier
+php artisan bp:setup --recipe=backoffice --without-teams  # drop it too
+```
 
 | Setting | Value |
 |---|---|
+| Teams tier | optional (asked, or `--without-teams`) |
 | `TEAMS_CREATION` | `admin-only` |
 | `TEAMS_MEMBER_INVITATIONS` | `false` |
 | `TEAMS_ADMIN_INVITATIONS` | `false` |
@@ -100,7 +109,8 @@ existing accounts to teams instead; `reject` + no public page means an
 unprovisioned login is turned away with a "contact an admin" notice rather than
 dumped on a page that isn't there. (If the teams tier is installed, an
 unprovisioned user instead lands on its "ask an admin" onboarding, so `reject`
-mainly matters for a teams-less build.)
+mainly matters for a teams-less build.) Without the tier, no `TEAMS_*` keys are
+written. (`BackofficeAppTest`, and `BackofficeTest` with the tier.)
 
 ## Secondary knobs
 

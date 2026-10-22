@@ -9,6 +9,7 @@ use App\Livewire\Admin\Users\ShowUser;
 use App\Models\User;
 use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Fortify\Features;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -34,6 +35,8 @@ class PasswordPolicyTest extends TestCase
 
     public function test_sign_up_reset_and_profile_follow_it(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         // All three share Fortify's PasswordValidationRules; sign-up is the one without a token or session.
         $attempt = fn (string $password) => $this->post('/register', [
             'first_name' => 'A', 'last_name' => 'B', 'email' => 'new@example.com',
@@ -52,11 +55,6 @@ class PasswordPolicyTest extends TestCase
     {
         $hint = __('auth.password_min_hint', ['min' => 12]);
 
-        $this->get(route('register'))
-            ->assertSee($hint)
-            ->assertSeeHtml('minlength="12"')
-            ->assertSeeHtml('aria-describedby="password-hint');
-
         $this->actingAs(User::factory()->create())->get(route('profile.password'))
             ->assertSee($hint)
             ->assertSeeHtml('minlength="12"')
@@ -65,6 +63,16 @@ class PasswordPolicyTest extends TestCase
         Livewire::actingAs(User::factory()->superAdmin()->create())->test(CreateUser::class)
             ->assertSee($hint)
             ->assertSeeHtml('minlength="12"');
+    }
+
+    public function test_the_sign_up_form_says_the_minimum(): void
+    {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
+        $this->get(route('register'))
+            ->assertSee(__('auth.password_min_hint', ['min' => 12]))
+            ->assertSeeHtml('minlength="12"')
+            ->assertSeeHtml('aria-describedby="password-hint');
     }
 
     public function test_creating_a_user_follows_it(): void

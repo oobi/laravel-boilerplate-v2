@@ -3,6 +3,9 @@
 use App\Enums\SystemPermission;
 use App\Http\Controllers\GoogleLoginController;
 use App\Http\Controllers\ImpersonationController;
+// public:start
+// public:canonical: use App\Http\Controllers\LoginOnlyHomeController;
+// public:end
 use App\Http\Middleware\DenyLowAssuranceSessions;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Roles\CreateRole;
@@ -11,7 +14,9 @@ use App\Livewire\Admin\Users\CreateUser;
 use App\Livewire\Admin\Users\EditUser;
 use App\Livewire\Admin\Users\ListUsers;
 use App\Livewire\Admin\Users\ShowUser;
+// public:start
 use App\Livewire\Home;
+// public:end
 use App\Livewire\Profile\EditPassword;
 use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\TwoFactorAuthentication;
@@ -39,9 +44,14 @@ $adminHost = $hostMode ? config('teams.domains.admin_host') : null;
 $adminPath = $hostMode ? '' : 'admin';
 // teams:end
 
-// Public landing page — reachable by guests and authenticated users alike (see layouts.public).
+// `/`, the `home` route: the public landing page, reachable by guests and signed-in users
+// alike. A login-only app (bp:make-login-only) has none: `/` sends a guest to login and a
+// signed-in user where they belong, signing out one nothing claims.
 Route::domain($apexHost)->group(function (): void {
+    // public:start
+    // public:canonical: Route::get('/', LoginOnlyHomeController::class)->name('home');
     Route::get('/', Home::class)->name('home');
+    // public:end
 });
 
 // Self-service account management — any signed-in, verified user, not just admin-panel

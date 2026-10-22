@@ -111,7 +111,8 @@ The steps the command performs, for doing it by hand:
    (`CoreTestsStandAloneTest` keeps it that way), and `VanillaAppTest` is the
    vanilla contract.
 5. **`.env`** — no `TEAMS_*` keys are needed; set `LOGIN_FALLBACK=home` and keep
-   registration as your app requires. See [config-recipes.md](config-recipes.md)
+   registration as your app requires (`bp:make-login-only` removes it and the
+   public landing page for a login-only app). See [config-recipes.md](config-recipes.md)
    (Vanilla).
 6. **Migrations** — teams migrations are loaded *from the package*, so once it's
    gone they no longer run on a fresh install. An existing database keeps its

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Support\Teams\MarkerStripper;
+use App\Console\Concerns\TransformsSourceFiles;
+use App\Support\Setup\MarkerStripper;
 use App\Support\Teams\TierReferences;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
@@ -34,6 +35,8 @@ use function Laravel\Prompts\warning;
  */
 class RemoveTeamsCommand extends Command
 {
+    use TransformsSourceFiles;
+
     protected $signature = 'bp:remove-teams {--dry-run : Show what would change without touching anything} {--force : Skip the confirmation prompt}';
 
     protected $description = 'Remove the teams tier and make the boilerplate vanilla.';
@@ -129,15 +132,6 @@ class RemoveTeamsCommand extends Command
         return self::SUCCESS;
     }
 
-    private function strip(MarkerStripper $stripper, string $file, string $contents): string
-    {
-        try {
-            return $stripper->strip($contents);
-        } catch (RuntimeException $e) {
-            throw new RuntimeException($this->relative($file).': '.$e->getMessage(), previous: $e);
-        }
-    }
-
     /**
      * Why the stripped files wouldn't work without the tier, if anything.
      *
@@ -148,9 +142,8 @@ class RemoveTeamsCommand extends Command
     {
         $problems = collect($stripped)
             ->flatMap(function (string $contents, string $file) use ($references): array {
-                $lint = Process::run([PHP_BINARY, '-l', $file]);
-
-                return collect($lint->failed() ? [trim($lint->output().$lint->errorOutput())] : [])
+                return collect([$this->lint($file)])
+                    ->filter()
                     ->merge(collect($references->in($contents))->map(fn (string $reference): string => 'still needs the tier at '.$reference))
                     ->map(fn (string $problem): string => $this->relative($file).': '.$problem)
                     ->all();
@@ -189,37 +182,6 @@ class RemoveTeamsCommand extends Command
         }
     }
 
-    /**
-     * Run an artisan command in a fresh process, so it boots from the files on disk.
-     *
-     * @param  array<string, string>  $environment
-     */
-    private function runArtisan(string $command, ?string &$output = null, array $environment = []): bool
-    {
-        $result = Process::path(base_path())->env($environment)->run([PHP_BINARY, 'artisan', $command, '--no-interaction']);
-        $output = trim($result->errorOutput() ?: $result->output());
-
-        return $result->successful();
-    }
-
-    /** @param  array<string, string>  $contents */
-    private function write(array $contents): void
-    {
-        collect($contents)->each(fn (string $content, string $file) => File::put($file, $content));
-    }
-
-    /**
-     * @param  list<string>  $files
-     * @return array<string, string>
-     */
-    private function read(array $files): array
-    {
-        return collect($files)
-            ->filter(File::exists(...))
-            ->mapWithKeys(fn (string $file): array => [$file => File::get($file)])
-            ->all();
-    }
-
     /** Drop the package's path repository through composer, so the lock's hash stays in step. */
     private function dropPathRepository(): bool
     {
@@ -244,10 +206,5 @@ class RemoveTeamsCommand extends Command
         }
 
         return true;
-    }
-
-    private function relative(string $path): string
-    {
-        return str_replace(base_path().DIRECTORY_SEPARATOR, '', $path);
     }
 }

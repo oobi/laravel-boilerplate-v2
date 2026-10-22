@@ -24,8 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // A signed-in user opening a guest page (login, register, reset) goes
         // where they belong, not to the admin dashboard (which 403s a non-admin).
         // One nothing claims (a remember-me login under LOGIN_FALLBACK=reject)
-        // still lands on the public home; an app with no public page should
-        // send `/` somewhere that signs them out.
+        // lands on `home`: the public page, or in a login-only app
+        // (bp:make-login-only) LoginOnlyHomeController, which signs them out.
         $middleware->redirectUsersTo(fn (Request $request): string => Destination::home($request->user()));
 
         // AuthenticateSession stamps the user's password hash into the session

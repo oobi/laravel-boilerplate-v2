@@ -54,7 +54,7 @@ class InactiveUserAccessTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get('/')
+            ->get(route('profile.edit'))
             ->assertOk();
     }
 
@@ -240,11 +240,11 @@ class InactiveUserAccessTest extends TestCase
         $this->assertSame('AllowedChange', $user->fresh()->first_name);
     }
 
-    public function test_inactive_pending_challenge_does_not_interrupt_public_pages(): void
+    public function test_inactive_pending_challenge_does_not_interrupt_guest_pages(): void
     {
         $user = User::factory()->inactive()->twoFactorEnabled()->create();
 
-        $this->withSession(['login.id' => $user->id])->get('/')->assertOk();
+        $this->withSession(['login.id' => $user->id])->get(route('login'))->assertOk();
 
         $this->assertGuest();
     }
