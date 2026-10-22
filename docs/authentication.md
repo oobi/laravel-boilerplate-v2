@@ -14,6 +14,15 @@ two-factor** (per-role 2FA with a grace period). See
 `docs/permissions.md` and `.ai/rules/policies.md` for the RBAC model these
 build on.
 
+## Password rule
+
+One rule wherever a password is chosen (sign-up, reset, the profile, an admin
+creating a user or setting a password, `bp:make-admin`): a minimum length,
+`auth.password_min_length` (`AUTH_PASSWORD_MIN_LENGTH`). Unset, it's 12 in
+production and 8 elsewhere. No composition rules and no breach check, by
+choice. It's applied through `Password::defaults()` in `AppServiceProvider`,
+so a new path should use `Password::default()`, never its own `min:`.
+
 ## Password changes
 
 There are three distinct paths a password can change through. They differ in

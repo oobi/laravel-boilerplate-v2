@@ -63,7 +63,8 @@ class FormFieldErrorsTest extends TestCase
         $html = $this->get(route($page))->getContent();
 
         foreach ($fields as $field) {
-            $this->assertStringContainsString('aria-describedby="'.$field.'-error"', $html, "{$page}: {$field}");
+            // Among the field's descriptions (a hint may come first).
+            $this->assertMatchesRegularExpression('/aria-describedby="[^"]*\\b'.preg_quote($field, '/').'-error\\b/', $html, "{$page}: {$field}");
             $this->assertStringContainsString('id="'.$field.'-error"', $html, "{$page}: {$field}");
         }
     }
@@ -74,7 +75,8 @@ class FormFieldErrorsTest extends TestCase
             $source = file_get_contents(resource_path('views/'.str_replace('.', '/', $view).'.blade.php'));
 
             foreach ($fields as $field) {
-                $this->assertStringContainsString("@error('{$field}') aria-invalid=\"true\" aria-describedby=\"{$field}-error\" @enderror", $source, "{$view}: {$field}");
+                $this->assertMatchesRegularExpression("/@error\\('{$field}'\\)[^@]*aria-invalid=\"true\"[^@]*@enderror/", $source, "{$view}: {$field}");
+                $this->assertMatchesRegularExpression("/aria-describedby=\"[^\"]*{$field}-error/", $source, "{$view}: {$field}");
                 $this->assertStringContainsString("<x-form-error for=\"{$field}\"", $source, "{$view}: {$field}");
             }
         }

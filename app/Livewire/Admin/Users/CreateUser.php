@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Component;
 
 class CreateUser extends Component implements HasSchemas
@@ -65,7 +66,9 @@ class CreateUser extends Component implements HasSchemas
                             ->password()
                             ->revealable()
                             ->required()
-                            ->minLength(8)
+                            ->minLength(fn (): int => config()->integer('auth.password_min_length'))
+                            ->helperText(fn (): string => __('auth.password_min_hint', ['min' => config()->integer('auth.password_min_length')]))
+                            ->rule(Password::default())
                             ->same('password_confirmation'),
 
                         Forms\Components\TextInput::make('password_confirmation')

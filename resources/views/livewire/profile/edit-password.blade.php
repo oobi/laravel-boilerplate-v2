@@ -23,6 +23,8 @@
                         type="password"
                         :label="__('admin.new_password')"
                         :floating="false"
+                        :hint="__('auth.password_min_hint', ['min' => config('auth.password_min_length')])"
+                        :minlength="config('auth.password_min_length')"
                         autocomplete="new-password"
                         wire:model="password"
                     />

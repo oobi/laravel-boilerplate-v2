@@ -96,6 +96,7 @@ list with the reason. See `.ai/rules/views.md`.
 | `<x-form-textarea>` | labelled `<textarea>` | same props as `<x-form-input>`; slot is initial content |
 | `<x-form-select>` | labelled `<select>` | same props as `<x-form-input>`; slot is the `<option>` list |
 | `<x-form-error>` | a hand-rolled `@error … <p class="text-error">` under a field you wrote yourself (the form components above already include it) | `for` (the field name), `id` (the field's id when it isn't the name), `bag` (a Livewire error bag); renders nothing without an error. Give the field `@error('x') aria-invalid="true" aria-describedby="x-error" @enderror` so the message is read with it |
+| `<x-form-hint>` | guidance text you'd hand-roll under a field (e.g. a password's minimum length); `<x-form-input>` takes it as `hint` | `for` (the field name), `id` (the field's id when it isn't the name); slot: the text. Add `{id}-hint` to the field's `aria-describedby` so it's read with the field |
 | `<x-form-errors>` | an `@if ($errors->any())` alert listing every error at the top of a hand-rolled form | `fields` (the names whose errors already show under their field); lists only the rest, so no error appears twice; renders nothing when there are none |
 | `<x-skip-link>` | nothing (every layout needs one) | none; the first thing in `<body>`, pointing at `<main id="main-content" tabindex="-1">` |
 

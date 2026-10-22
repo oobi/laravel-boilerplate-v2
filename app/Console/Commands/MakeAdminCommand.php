@@ -10,6 +10,7 @@ use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
@@ -72,7 +73,7 @@ class MakeAdminCommand extends Command
             required: true,
             validate: fn (string $value): ?string => Validator::make(
                 ['password' => $value],
-                ['password' => ['required', 'string', 'min:8']]
+                ['password' => ['required', 'string', Password::default()]]
             )->errors()->first('password'),
         );
 

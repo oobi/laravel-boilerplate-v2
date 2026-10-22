@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Livewire\Component;
 
 class ShowUser extends Component implements HasActions, HasSchemas
@@ -257,7 +258,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
                         ->password()
                         ->revealable()
                         ->required()
-                        ->minLength(8)
+                        ->minLength(fn (): int => config()->integer('auth.password_min_length'))
+                        ->helperText(fn (): string => __('auth.password_min_hint', ['min' => config()->integer('auth.password_min_length')]))
+                        ->rule(PasswordRule::default())
                         ->confirmed(),
                     Forms\Components\TextInput::make('password_confirmation')
                         ->label(__('admin.confirm_password'))

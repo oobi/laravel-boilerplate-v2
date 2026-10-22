@@ -30,7 +30,8 @@
 
         <fieldset class="fieldset">
             <label class="label" for="password">{{ __('Password') }}</label>
-            <input id="password" class="input w-full @error('password') input-error @enderror" type="password" name="password" required autocomplete="new-password" @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+            <input id="password" class="input w-full @error('password') input-error @enderror" type="password" name="password" required autocomplete="new-password" minlength="{{ config('auth.password_min_length') }}" aria-describedby="password-hint{{ $errors->has('password') ? ' password-error' : '' }}" @error('password') aria-invalid="true" @enderror>
+            <x-form-hint for="password">{{ __('auth.password_min_hint', ['min' => config('auth.password_min_length')]) }}</x-form-hint>
             <x-form-error for="password" />
         </fieldset>
 
