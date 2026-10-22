@@ -333,6 +333,13 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(10)->by('register-ip:'.$request->ip()),
         ]);
 
+        // Log in with Google: per browser session, plus a ceiling per address loose
+        // enough for an office behind one (each login is two requests).
+        RateLimiter::for('google-login', fn (Request $request) => [
+            Limit::perMinute(10)->by('google-login:'.$request->session()->getId()),
+            Limit::perMinute(60)->by('google-login-ip:'.$request->ip()),
+        ]);
+
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });

@@ -6,7 +6,9 @@ namespace App\Livewire\Profile;
 
 use App\Livewire\Concerns\ConfirmsPassword;
 use App\Livewire\Concerns\RequiresFullSession;
+use App\Support\Auth\GoogleLogin;
 use App\Support\TwoFactor\GracePeriod;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
@@ -23,7 +25,9 @@ use Livewire\Component;
  * action that sets up or tears down a second factor (enabling, disabling,
  * regenerating recovery codes, or revealing the existing codes) is guarded by
  * an inline password prompt (see the ConfirmsPassword trait); the current user
- * must re-enter their password each time. See EditProfile for why this renders
+ * must re-enter their password each time. Linking and unlinking a Google
+ * account (the other way in, see GoogleLoginController) sit here too, behind
+ * the same prompt. See EditProfile for why this renders
  * in the neutral account layout rather than the admin shell.
  */
 #[Layout('layouts.account')]
@@ -82,6 +86,19 @@ class TwoFactorAuthentication extends Component
         $this->startConfirmingPassword('showRecoveryCodes');
     }
 
+    /** Adds a way into the account, so it asks for the password like 2FA changes do. */
+    public function linkGoogle(): void
+    {
+        abort_unless(GoogleLogin::enabled(), 404);
+
+        $this->startConfirmingPassword('linkGoogle');
+    }
+
+    public function unlinkGoogle(): void
+    {
+        $this->startConfirmingPassword('unlinkGoogle');
+    }
+
     /** Only during a setup. Entering a valid TOTP code is itself proof of possession, so no password prompt. */
     public function confirmTwoFactorAuthentication(): void
     {
@@ -121,6 +138,8 @@ class TwoFactorAuthentication extends Component
     {
         return view('livewire.profile.two-factor-authentication', [
             'mayDisable' => ! GracePeriod::mandated(Auth::user()),
+            'googleEnabled' => GoogleLogin::enabled(),
+            'googleAccount' => Auth::user()->googleAccount,
         ]);
     }
 
@@ -131,6 +150,8 @@ class TwoFactorAuthentication extends Component
             'disable' => $this->performDisable(),
             'regenerate' => $this->performRegenerate(),
             'showRecoveryCodes' => $this->performShowRecoveryCodes(),
+            'linkGoogle' => $this->performLinkGoogle(),
+            'unlinkGoogle' => $this->performUnlinkGoogle(),
             default => abort(403),
         };
     }
@@ -171,6 +192,27 @@ class TwoFactorAuthentication extends Component
     protected function performShowRecoveryCodes(): void
     {
         $this->showingRecoveryCodes = true;
+    }
+
+    /**
+     * Off to Google, marking the link in the session for the callback to
+     * finish. Straight from here, so the password just checked opens no
+     * shared confirmation window (Fortify's 2FA routes honour one).
+     */
+    protected function performLinkGoogle(): void
+    {
+        abort_unless(GoogleLogin::enabled(), 404);
+
+        session()->put(GoogleLogin::LINKING_KEY, Auth::id());
+
+        $this->redirect(GoogleLogin::driver()->redirect()->getTargetUrl());
+    }
+
+    protected function performUnlinkGoogle(): void
+    {
+        Auth::user()->googleAccount()->delete();
+
+        Notification::make()->title(__('auth.google_unlinked'))->success()->send();
     }
 
     /**

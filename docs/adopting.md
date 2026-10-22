@@ -143,6 +143,21 @@ only go out while a worker runs (`php artisan queue:work`; `composer run dev`
 starts one locally). Laravel Cloud and Forge can run it for you. Without one,
 nobody can verify their address or reset their password.
 
+## 9. Optional: log in with Google
+
+Off until configured. To turn it on:
+
+1. In Google Cloud Console, create an OAuth client (APIs & Services >
+   Credentials > Create credentials > OAuth client ID, type "Web
+   application").
+2. Under "Authorized redirect URIs" add `https://<your host>/auth/google/callback`
+   (the account host in teams host mode), and the local URL for development.
+3. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Optionally set
+   `GOOGLE_ALLOWED_DOMAINS` to your Workspace domain(s).
+
+It signs in existing accounts only. See
+[authentication.md](authentication.md#log-in-with-google) for the rules.
+
 ## Checklist
 
 - [ ] Cloned with history, `upstream` remote set
@@ -150,6 +165,7 @@ nobody can verify their address or reset their password.
 - [ ] `.env` configured, theme-demo kept or removed
 - [ ] A queue worker runs in production (verification and reset emails depend on it)
 - [ ] Behind a proxy: `TRUSTED_PROXIES` set (not needed on Cloud, or Forge/Vapor's own domains); `SESSION_SECURE_COOKIE=true` in production
+- [ ] Log in with Google: OAuth client created and `GOOGLE_*` set, or left off on purpose
 - [ ] Client features registered from a client service provider
 - [ ] Upstream merged regularly with `git merge --no-ff upstream/main`
 - [ ] Generic fixes land in the boilerplate and are merged back down

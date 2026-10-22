@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Fortify;
 
-use App\Enums\LoginFallback;
 use App\Models\User;
-use App\Support\Auth\Destination;
-use App\Support\TwoFactor\GracePeriod;
+use App\Support\Auth\LoginEligibility;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,17 +39,10 @@ class AuthenticateUser
             $this->fail($request, $user);
         }
 
-        if (GracePeriod::locksOut($user)) {
+        // The rest (2FA grace lockout, LOGIN_FALLBACK=reject) is shared with Google's callback.
+        if ($refusal = LoginEligibility::refusal($user)) {
             throw ValidationException::withMessages([
-                Fortify::username() => [__('auth.two_factor_locked_out')],
-            ]);
-        }
-
-        // Somewhere to land, or with LOGIN_FALLBACK=reject refused here, before
-        // they're logged in (or sent to the two-factor challenge).
-        if (Destination::claimed($user) === null && LoginFallback::current() === LoginFallback::REJECT) {
-            throw ValidationException::withMessages([
-                Fortify::username() => [__('auth.no_workspace')],
+                Fortify::username() => [__($refusal)],
             ]);
         }
 
