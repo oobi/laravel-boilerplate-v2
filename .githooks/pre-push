@@ -1,9 +1,9 @@
 #!/bin/sh
 # Runs the full test suite before allowing a push. Bypass with `git push --no-verify`.
 #
-# This is the project's only automated gate — there is no CI — so it guards the
-# boundary that matters: work leaving your machine. Pint and formatting are
-# handled earlier, in .githooks/pre-commit.
+# CI (.github/workflows/tests.yml) runs the same suite, on SQLite and MySQL, for
+# every push and PR; this catches a failure before it leaves your machine. Pint
+# and formatting are handled earlier, in .githooks/pre-commit.
 #
 # The suite runs in parallel (brianium/paratest) across all available cores.
 # Tests use an in-memory SQLite database, so each worker gets its own isolated

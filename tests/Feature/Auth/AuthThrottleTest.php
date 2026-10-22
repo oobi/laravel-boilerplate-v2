@@ -151,4 +151,31 @@ class AuthThrottleTest extends TestCase
         $attempt('user11@example.com', '203.0.113.9')->assertStatus(429);
         $attempt('user11@example.com', '203.0.113.10')->assertStatus(302);
     }
+
+    /** Five wrong passwords for one email from one address, then 429 (#45). */
+    public function test_login_is_throttled_per_email_after_five_attempts(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (range(1, 5) as $try) {
+            $this->post('/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(302);
+        }
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertStatus(429);
+        $this->assertGuest();
+    }
+
+    /** The two-factor challenge allows five codes per pending login, then 429 (#45). */
+    public function test_the_two_factor_challenge_is_throttled(): void
+    {
+        $user = User::factory()->twoFactorEnabled()->create();
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect('/two-factor-challenge');
+
+        foreach (range(1, 5) as $try) {
+            $this->post('/two-factor-challenge', ['code' => '000000'])->assertStatus(302);
+        }
+
+        $this->post('/two-factor-challenge', ['code' => '000000'])->assertStatus(429);
+        $this->assertGuest();
+    }
 }

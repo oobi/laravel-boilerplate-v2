@@ -1,0 +1,87 @@
+# The gate every push and PR passes, not just the local hooks (which
+# `--no-verify` skips). Two jobs: SQLite (what developers run) and MySQL (what
+# production runs), so SQLite can't hide a MySQL-only failure. GitHub #45.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (${{ matrix.database }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [sqlite, mysql]
+
+    services:
+      mysql:
+        # An empty image skips the service, so the sqlite leg doesn't wait for MySQL.
+        image: ${{ matrix.database == 'mysql' && 'mysql:8.4' || '' }}
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -ppassword"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, zip, fileinfo, pdo_sqlite, pdo_mysql
+          coverage: none
+
+      - name: Find the Composer cache
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # The Vite manifest is needed by every test that renders a page.
+      - run: npm ci && npm run build
+
+      - run: cp .env.example .env && php artisan key:generate
+
+      - name: Code style
+        if: matrix.database == 'sqlite'
+        run: vendor/bin/pint --test
+
+      - name: Test suite
+        run: php artisan test --parallel --compact
+        env:
+          DB_CONNECTION: ${{ matrix.database }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: ${{ matrix.database == 'mysql' && 'testing' || ':memory:' }}
+          DB_USERNAME: root
+          DB_PASSWORD: password
