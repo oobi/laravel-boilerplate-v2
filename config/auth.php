@@ -116,6 +116,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Minimum Password Length
+    |--------------------------------------------------------------------------
+    |
+    | The one password rule, applied wherever a password is chosen (sign-up,
+    | reset, profile, admin create and set, bp:make-admin) through
+    | Password::defaults() in AppServiceProvider. Length only: no composition
+    | rules, no breach check. Unset (or blank, or not a number), it is 12 in
+    | production (which a missing APP_ENV counts as) and 8 elsewhere, so local
+    | logins like `password` keep working. It never goes below 8.
+    |
+    */
+
+    'password_min_length' => max(8, is_numeric(env('AUTH_PASSWORD_MIN_LENGTH'))
+        ? (int) env('AUTH_PASSWORD_MIN_LENGTH')
+        : (env('APP_ENV', 'production') === 'production' ? 12 : 8)),
+
+    /*
+    |--------------------------------------------------------------------------
     | Mandatory two-factor authentication
     |--------------------------------------------------------------------------
     | Which users must set up 2FA is decided per role (`requires_two_factor`,

@@ -18,4 +18,5 @@ return [
     'two_factor_grace_ended' => 'Your two factor authentication grace period has ended. Set it up now, or you will not be able to log in again without an administrator.',
     'two_factor_required_super_admin' => 'Two factor authentication is required for this account. Please set it up to protect it.',
     'two_factor_setup_cta' => 'Set Up Two Factor Authentication',
+    'password_min_hint' => 'At least :min characters.',
 ];

@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
@@ -76,6 +77,9 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentRestoreDefaults();
         $this->registerNotifications();
         $this->registerQueryMacros();
+
+        // One password rule for every path that sets a password (#41); see config/auth.php.
+        Password::defaults(fn (): Password => Password::min(config()->integer('auth.password_min_length')));
 
         AdminRoleScopes::define();
 
