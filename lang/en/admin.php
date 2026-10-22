@@ -170,6 +170,14 @@ return [
     'two_factor_disable' => 'Disable',
     'two_factor_required_cannot_disable' => 'Your role requires two factor authentication, so it can\'t be turned off. If you lose your device, ask an administrator to reset it.',
 
+    'google_account' => 'Google Account',
+    'google_info' => 'Link your Google account to log in with it instead of typing your password. Two factor authentication, if it\'s on, still applies.',
+    'google_linked_as' => 'Linked to :email.',
+    'google_link' => 'Link Google Account',
+    'google_unlink' => 'Unlink Google Account',
+    'linked' => 'Linked',
+    'not_linked' => 'Not linked',
+
     'statistics' => 'Statistics',
     'account_age' => 'Account Age',
     'security' => 'Security',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SocialProvider;
 use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
 use App\Models\Concerns\HasProfilePhoto;
@@ -16,6 +17,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -226,6 +228,16 @@ class User extends Authenticatable implements MustVerifyEmail
         // Never a super admin, and never someone with access the actor lacks:
         // impersonating them would be a way to borrow it.
         return ! $this->isSuperAdmin() && Coverage::coversUser($actor, $this);
+    }
+
+    /**
+     * The Google account this user can sign in with, if any (see docs/authentication.md).
+     *
+     * @return HasOne<SocialAccount, $this>
+     */
+    public function googleAccount(): HasOne
+    {
+        return $this->hasOne(SocialAccount::class)->where('provider', SocialProvider::GOOGLE);
     }
 
     /** Queued, so a mail outage can't make sign-up or an email change 500 (#46). */

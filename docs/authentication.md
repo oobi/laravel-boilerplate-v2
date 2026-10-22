@@ -173,6 +173,52 @@ password reset, outside the impersonation trail.
   so a mail outage can't break sign-up or a save, and failed sends retry. A
   queue worker must run in production (see [adopting.md](adopting.md#8-run-a-queue-worker)).
 
+## Log in with Google
+
+Optional. Off until `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set
+(setup in [adopting.md](adopting.md#9-optional-log-in-with-google)); until
+then the button is hidden and the routes return 404. Built on Laravel
+Socialite with PKCE (`App\Support\Auth\GoogleLogin`,
+`GoogleLoginController`, `app/Actions/GoogleLogin/`).
+
+- **Existing accounts only.** Google never creates an account. A user signing
+  up still uses the password form.
+- **Matched on Google's id, not the email.** The link lives in
+  `social_accounts`. Once linked, either address can change and the link
+  still works.
+- **The first link is by email, only where Google runs the mailbox, and only
+  to a verified account.** It needs Google to vouch for the address
+  (`email_verified`), the address to be Gmail or a Google Workspace account
+  (`hd` set), and the account's own address to be verified here. A Google
+  account made on any other address (Microsoft 365, a custom domain) was
+  checked against it once, at sign up, and stays with whoever made it after
+  they lose the mailbox, so it never links itself: those users link Google
+  from their profile, behind their password. An unverified account here may
+  have been opened by someone else in the owner's name with a password they
+  know, so it's refused too: verify first, then use Google. The link is saved
+  before any two-factor challenge, so a user with 2FA who abandons the
+  challenge is still linked (and told by email).
+- **Every password-login rule applies.** Inactive accounts, the 2FA grace
+  lockout and `LOGIN_FALLBACK=reject` are checked by
+  `App\Support\Auth\LoginEligibility`, shared with `AuthenticateUser`. A
+  user with 2FA on still gets the two-factor challenge. A Google login is
+  never remembered.
+- **Workspace domains.** `GOOGLE_ALLOWED_DOMAINS` limits sign-in to those
+  domains, checked on Google's `hd` claim at every login and link.
+- **Linking from the profile** (Authentication tab) asks for the password
+  first, every time, and goes straight to Google from there, so a stolen
+  session alone can't add a way in. It opens no shared password-confirmation
+  window (Fortify's 2FA routes would honour one). Any verified Google address
+  can be linked this way, Gmail or not. Impersonated sessions are refused.
+  Unlinking also asks for the password.
+- **Every link is announced** by email to the account's address
+  (`GoogleAccountLinked`, queued), so a link the owner didn't make is noticed.
+- **Failures land back on the login page** with a message: cancelled at
+  Google, an expired or forged `state`, Google unreachable, no matching
+  account. Never an error page.
+- **Throttled** (`google-login`): 10 requests a minute per browser session,
+  60 per address. Each login is two requests (out to Google and back).
+
 ## Links sent by email
 
 Reset, verification and team invitation links are built from `APP_URL`

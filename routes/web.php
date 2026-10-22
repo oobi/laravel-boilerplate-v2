@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\SystemPermission;
+use App\Http\Controllers\GoogleLoginController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Middleware\DenyLowAssuranceSessions;
 use App\Livewire\Admin\Dashboard;
@@ -57,6 +58,15 @@ Route::domain($accountHost)->middleware(['auth', DenyLowAssuranceSessions::class
 Route::domain($accountHost)->middleware(['auth', 'verified', DenyLowAssuranceSessions::class])->group(function (): void {
     Route::get('/profile/password', EditPassword::class)->name('profile.password');
     Route::get('/profile/two-factor', TwoFactorAuthentication::class)->name('profile.two-factor');
+});
+
+// Log in with Google (off, and these 404, until GOOGLE_CLIENT_ID/SECRET are set), on the
+// account host beside Fortify's login. One callback serves a login and a link started
+// from the profile's Authentication tab (behind its password prompt). See
+// docs/authentication.md.
+Route::domain($accountHost)->middleware('throttle:google-login')->group(function (): void {
+    Route::get('/auth/google/redirect', [GoogleLoginController::class, 'redirect'])->middleware('guest')->name('google.redirect');
+    Route::get('/auth/google/callback', [GoogleLoginController::class, 'callback'])->name('google.callback');
 });
 
 // The admin area requires an active system role (e.g. dashboard, users) — route names keep their existing flat prefixes regardless of the URL path.
