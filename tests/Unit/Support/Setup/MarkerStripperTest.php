@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Unit\Support\Teams;
+namespace Tests\Unit\Support\Setup;
 
-use App\Support\Teams\MarkerStripper;
+use App\Support\Setup\MarkerStripper;
 use RuntimeException;
 use Tests\TestCase;
 

@@ -80,4 +80,26 @@ class MakeAdminCommandTest extends TestCase
 
         $this->assertSame(1, User::count());
     }
+
+    public function test_name_and_email_options_skip_their_prompts(): void
+    {
+        $this->artisan('bp:make-admin', ['--first-name' => 'Ada', '--last-name' => 'Lovelace', '--email' => ' Ada@Example.TEST '])
+            ->expectsQuestion('Password', 'password')
+            ->assertSuccessful();
+
+        $this->assertSame('ada@example.test', User::sole()->email);
+        $this->assertSame('Ada Lovelace', User::sole()->name);
+    }
+
+    public function test_a_taken_email_option_fails_without_creating_anyone(): void
+    {
+        User::factory()->create(['email' => 'ada@example.test']);
+
+        // Refused before the name prompts: the blank --first-name would otherwise be asked for.
+        $this->artisan('bp:make-admin', ['--first-name' => ' ', '--email' => 'ADA@example.test'])
+            ->expectsOutputToContain('already been taken')
+            ->assertFailed();
+
+        $this->assertSame(1, User::count());
+    }
 }

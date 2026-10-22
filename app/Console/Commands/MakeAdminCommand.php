@@ -17,7 +17,9 @@ use function Laravel\Prompts\text;
 
 /**
  * Interactive, one-shot admin bootstrap — never a seeder, never hardcoded
- * credentials. The operator supplies real ones at the terminal.
+ * credentials. The operator supplies real ones at the terminal. Name and email
+ * can be passed as options to skip their prompts; the password is always
+ * prompted, so it never lands in shell history.
  *
  * By default the account is a SUPER ADMIN: the first account should be one,
  * because only a super admin can grant super admin and untangle any role
@@ -29,6 +31,9 @@ use function Laravel\Prompts\text;
 class MakeAdminCommand extends Command
 {
     protected $signature = 'bp:make-admin
+                            {--first-name= : Skip the first name prompt}
+                            {--last-name= : Skip the last name prompt}
+                            {--email= : Skip the email prompt}
                             {--administrator : Put the user on the seeded Administrator role instead of the super-admin flag}';
 
     protected $description = 'Create an admin user interactively — a super admin, or with --administrator the seeded Administrator role.';
@@ -53,20 +58,29 @@ class MakeAdminCommand extends Command
             $this->warn('A super admin already exists. Routine admins should be Administrators, not super admins — consider --administrator.');
         }
 
-        $firstName = text(label: 'First name', required: true);
-
-        $lastName = text(label: 'Last name', required: true);
-
         // Validated in its normalized form so the uniqueness check matches the
         // stored value, whatever casing or padding the operator typed.
-        $email = User::normalizeEmail(text(
-            label: 'Email',
-            required: true,
-            validate: fn (string $value): ?string => Validator::make(
-                ['email' => User::normalizeEmail($value)],
-                ['email' => ['required', 'email', 'unique:users,email']]
-            )->errors()->first('email'),
-        ));
+        $emailError = fn (string $value): ?string => Validator::make(
+            ['email' => User::normalizeEmail($value)],
+            ['email' => ['required', 'email', 'unique:users,email']]
+        )->errors()->first('email') ?: null;
+
+        // Options are checked before any prompt, so a bad one fails before the operator types anything.
+        [$firstName, $lastName, $email] = collect(['first-name', 'last-name', 'email'])
+            ->map(fn (string $option): string => trim((string) $this->option($option)))
+            ->all();
+
+        if ($email !== '' && ($error = $emailError($email)) !== null) {
+            $this->error($error);
+
+            return self::FAILURE;
+        }
+
+        $firstName = $firstName !== '' ? $firstName : text(label: 'First name', required: true);
+
+        $lastName = $lastName !== '' ? $lastName : text(label: 'Last name', required: true);
+
+        $email = User::normalizeEmail($email !== '' ? $email : text(label: 'Email', required: true, validate: $emailError));
 
         $plainPassword = password(
             label: 'Password',

@@ -29,7 +29,7 @@ class CoreTestsStandAloneTest extends TestCase
     private const ALLOWED = [
         'tests/Feature/Console/RemoveTeamsCommandTest.php',
         'tests/Unit/Support/Teams/CoreTestsStandAloneTest.php',
-        'tests/Unit/Support/Teams/MarkerStripperTest.php',
+        'tests/Unit/Support/Setup/MarkerStripperTest.php',
         'tests/Unit/Support/Teams/TierReferencesTest.php',
     ];
 

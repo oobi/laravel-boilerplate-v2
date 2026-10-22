@@ -53,7 +53,7 @@ class RemoveTeamsCommandTest extends TestCase
         $this->writeFile('app/Models/User.php', self::USER);
         $this->writeFile('app/Plain.php', "<?php\n// mentions teams:start mid-line, so not a fence\n");
         $this->writeFile('tests/Feature/Teams/TeamTest.php', '<?php');
-        $this->writeFile('tests/Unit/Support/Teams/MarkerStripperTest.php', "<?php\n// use Concise\\Teams\\Bar;\n");
+        $this->writeFile('tests/Unit/Support/Setup/MarkerStripperTest.php', "<?php\n// use Concise\\Teams\\Bar;\n");
         $this->writeFile('packages/teams/composer.json', '{}');
         $this->writeFile('composer.json', json_encode([
             'repositories' => [['type' => 'path', 'url' => 'packages/teams']],
@@ -116,7 +116,7 @@ class RemoveTeamsCommandTest extends TestCase
         $this->assertStringContainsString("\$adminPath = 'admin';", $this->contents('routes/web.php'));
         $this->assertStringContainsString('    use HasRoles;', $this->contents('app/Models/User.php'));
         $this->assertDirectoryDoesNotExist($this->root.'/tests/Feature/Teams');
-        $this->assertFileExists($this->root.'/tests/Unit/Support/Teams/MarkerStripperTest.php', 'only tests/Feature/Teams goes');
+        $this->assertFileExists($this->root.'/tests/Unit/Support/Setup/MarkerStripperTest.php', 'only tests/Feature/Teams goes');
         $this->assertDirectoryDoesNotExist($this->root.'/packages/teams');
 
         // Caches cleared first so the check reads the stripped files; the repository goes through composer so the lock stays in step.

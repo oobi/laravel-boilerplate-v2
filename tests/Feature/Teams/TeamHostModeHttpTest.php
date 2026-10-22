@@ -213,9 +213,10 @@ class TeamHostModeHttpTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_the_public_landing_is_served_from_the_apex(): void
+    public function test_the_home_route_is_served_from_the_apex(): void
     {
-        $this->get('http://'.self::BASE.'/')->assertOk();
+        // The public landing, or in a login-only app (bp:make-login-only) a redirect to login.
+        $this->assertContains($this->get('http://'.self::BASE.'/')->getStatusCode(), [200, 302]);
     }
 
     public function test_the_settings_page_offers_domains_as_a_tab(): void

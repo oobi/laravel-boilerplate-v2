@@ -7,6 +7,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use App\Support\Auth\PasswordChecks;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 /**
@@ -73,9 +74,11 @@ class AuthThrottleTest extends TestCase
             ->assertDontSee('Back to sign in');
     }
 
-    /** Sign-up is on in the boilerplate: per email and address, then per address below. */
+    /** Sign-up (when on): per email and address, then per address below. */
     public function test_sign_up_is_throttled_per_email_and_address(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         $attempt = fn (string $email) => $this->post('/register', ['first_name' => 'A', 'last_name' => 'B', 'email' => $email, 'password' => 'x', 'password_confirmation' => 'y']);
 
         foreach (range(1, 5) as $try) {
@@ -128,6 +131,8 @@ class AuthThrottleTest extends TestCase
 
     public function test_sign_up_has_a_ceiling_per_address(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         $attempt = fn (string $email, string $address) => $this->withServerVariables(['REMOTE_ADDR' => $address])
             ->post('/register', ['first_name' => 'A', 'last_name' => 'B', 'email' => $email, 'password' => 'x', 'password_confirmation' => 'y']);
 

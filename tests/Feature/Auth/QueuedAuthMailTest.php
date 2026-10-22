@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 /**
@@ -23,6 +24,8 @@ class QueuedAuthMailTest extends TestCase
 
     public function test_sign_up_queues_the_verification_email(): void
     {
+        $this->skipUnlessFortifyFeature(Features::registration());
+
         Queue::fake();
 
         $this->post('/register', [
