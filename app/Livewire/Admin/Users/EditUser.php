@@ -73,8 +73,18 @@ class EditUser extends Component implements HasSchemas
 
         $this->user->update($data);
 
+        // A new address is unproven however it got there, as with a self-service
+        // change: the user verifies it (#40). "Mark as verified" is #55.
+        $emailChanged = $this->user->wasChanged('email');
+
+        if ($emailChanged) {
+            $this->user->forceFill(['email_verified_at' => null])->save();
+            $this->user->sendEmailVerificationNotification();
+        }
+
         Notification::make()
             ->title(__('admin.user_updated'))
+            ->body($emailChanged ? __('admin.user_email_needs_verifying') : null)
             ->success()
             ->send();
 

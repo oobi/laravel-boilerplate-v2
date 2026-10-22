@@ -41,7 +41,9 @@ class CreateRole extends Component implements HasSchemas
     {
         Gate::authorize(SystemPermission::MANAGE_ROLES);
 
-        $this->scopeKey = (string) request()->query('scope', RoleScopeRegistry::default()->key());
+        $scope = request()->query('scope', RoleScopeRegistry::default()->key());
+        abort_unless(is_string($scope), 404); // ?scope[]=x is an array: not found, not a 500
+        $this->scopeKey = $scope;
 
         abort_if(RoleScopeRegistry::find($this->scopeKey) === null, 404);
         abort_unless($this->roleScope()->mayManage(Auth::user()), 403);

@@ -11,7 +11,8 @@ use Illuminate\Auth\Events\Login;
 /**
  * Starts a subject user's mandatory-2FA grace clock at their first login while
  * subject. Login fires for password and remember-me logins alike, so either
- * way in starts the runway.
+ * way in starts the runway. A clock left from a mandate that has since lapsed
+ * is cleared here too, catching any change made without clearing it.
  */
 class StartTwoFactorGracePeriod
 {
@@ -23,5 +24,7 @@ class StartTwoFactorGracePeriod
         if (GracePeriod::applies($user)) {
             GracePeriod::start($user);
         }
+
+        GracePeriod::clearIfNotRequired($user);
     }
 }

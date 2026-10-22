@@ -80,11 +80,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         return $query->orderBy('last_name', $direction);
                     })
                     ->searchable(query: function (Builder $query, string $search): Builder {
-                        return $query->where(function ($q) use ($search) {
-                            $q->where('first_name', 'like', "%{$search}%")
-                                ->orWhere('last_name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                        });
+                        return $query->whereAnyContains(['first_name', 'last_name', 'email'], $search);
                     }),
 
                 Tables\Columns\TextColumn::make('role_summary')

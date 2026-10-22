@@ -9,8 +9,10 @@ use App\Support\Panels\Contracts\FormSection;
 use App\Support\Panels\Registry\PanelRegistry;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -63,6 +65,39 @@ class EditUserTest extends TestCase
 
         $target->refresh();
         $this->assertSame('Updated Name', $target->name);
+    }
+
+    /** A new address is unproven, as with a self-service change: verified again by the user (#40). */
+    public function test_an_admin_email_change_asks_the_user_to_verify_the_new_address(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->superAdmin()->create();
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $user])
+            ->set('data.email', 'new@example.com')
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertNull($user->fresh()->email_verified_at);
+        Notification::assertSentTo($user->fresh(), VerifyEmail::class);
+    }
+
+    public function test_an_admin_edit_that_keeps_the_email_keeps_it_verified(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->superAdmin()->create();
+        $user = User::factory()->create(['email' => 'same@example.com']);
+
+        Livewire::actingAs($admin)
+            ->test(EditUser::class, ['user' => $user])
+            ->set('data.first_name', 'Renamed')
+            ->set('data.email', ' Same@Example.com ')
+            ->call('save');
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        Notification::assertNothingSent();
     }
 
     /** Your own email changes on your profile, which asks for the current password (GitHub #17). */

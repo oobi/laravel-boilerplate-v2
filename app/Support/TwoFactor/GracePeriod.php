@@ -18,8 +18,9 @@ use Illuminate\Support\Facades\Cache;
  * email, and hold a role flagged `requires_two_factor`. Super admin is not a
  * role, so a super admin is subject only if they also hold a flagged role or
  * `auth.two_factor.super_admins` is on.
- * The grace clock starts at their first login while subject; once it runs out
- * a subject user is refused at login until an admin resets it. Super admins
+ * The grace clock starts at their first login while subject and is cleared
+ * once they stop being subject; once it runs out a subject user is refused at
+ * login until an admin resets it. Super admins
  * are never refused, so someone can always get in to reset everyone else.
  */
 final class GracePeriod
@@ -59,6 +60,15 @@ final class GracePeriod
         }
 
         return $user->getRoleNames()->intersect($required)->isNotEmpty();
+    }
+
+    /**
+     * Whether a role (or the super-admin switch) requires this user to keep 2FA,
+     * confirmed or not: they can't turn it off themselves (#40).
+     */
+    public static function mandated(User $user): bool
+    {
+        return config()->boolean('auth.two_factor.enforcement_enabled') && self::subjectByRole($user);
     }
 
     /** Whether the user is subject to the mandate at all, and so sees the nag. */
@@ -115,6 +125,24 @@ final class GracePeriod
         }
 
         $user->forceFill(['two_factor_grace_started_at' => now()])->save();
+    }
+
+    /**
+     * Clear a clock left over from a mandate that has ended (2FA confirmed, or
+     * no flagged role any more), so a later mandate starts a full window rather
+     * than inheriting an expired one (GitHub #40). Deliberately narrower than
+     * applies(): the kill switch or an unverified email pause the mandate
+     * without ending it, so they keep the clock (re-verifying an email must not
+     * buy a fresh window).
+     */
+    public static function clearIfNotRequired(User $user): void
+    {
+        if ($user->two_factor_grace_started_at === null
+            || ($user->two_factor_confirmed_at === null && self::subjectByRole($user))) {
+            return;
+        }
+
+        $user->forceFill(['two_factor_grace_started_at' => null])->save();
     }
 
     /** Admin reset: a full fresh window from now, which also lifts a lockout. */

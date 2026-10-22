@@ -8,6 +8,9 @@ use App\Enums\LoginFallback;
 use App\Models\User;
 use App\Support\Auth\Destination;
 use App\Support\TwoFactor\GracePeriod;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
@@ -31,11 +34,11 @@ class AuthenticateUser
         $user = User::where(Fortify::username(), $request->{Fortify::username()})->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            $this->fail();
+            $this->fail($request, $user);
         }
 
         if (! $user->active) {
-            $this->fail();
+            $this->fail($request, $user);
         }
 
         if (GracePeriod::locksOut($user)) {
@@ -52,11 +55,26 @@ class AuthenticateUser
             ]);
         }
 
+        // Laravel's own login upgrades an outdated hash once the password checks out.
+        if (config('hashing.rehash_on_login', true)) {
+            Auth::guard(config('fortify.guard'))->getProvider()->rehashPasswordIfRequired($user, ['password' => $request->password]);
+        }
+
         return $user;
     }
 
-    private function fail(): never
+    /**
+     * One message for a wrong password and an inactive account, so neither is
+     * revealed. Laravel's Failed event still fires, as it does when Fortify
+     * refuses a login itself, for anything listening (lockouts, audit).
+     */
+    private function fail(Request $request, ?User $user): never
     {
+        event(new Failed(config('fortify.guard'), $user, [
+            Fortify::username() => $request->{Fortify::username()},
+            'password' => $request->password,
+        ]));
+
         throw ValidationException::withMessages([
             Fortify::username() => [__('auth.inactive')],
         ]);

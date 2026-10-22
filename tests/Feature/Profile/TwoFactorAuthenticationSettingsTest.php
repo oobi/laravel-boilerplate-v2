@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Profile;
 
 use App\Livewire\Profile\TwoFactorAuthentication;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\Auth\PasswordChecks;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,7 +94,10 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
             ->set('confirmablePassword', 'password')
             ->call('confirmPassword')
             ->assertSet('confirmingPassword', false)
-            ->assertSet('showingConfirmation', true);
+            ->assertSet('showingConfirmation', true)
+            // What the page shows, not just its state: the QR step and the code field.
+            ->assertSee(__('admin.two_factor_setup_key'))
+            ->assertSeeHtml('id="code"');
 
         $user = $user->fresh();
         $this->assertNotNull($user->two_factor_secret);
@@ -119,6 +123,24 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
         $this->assertNotNull($user->fresh()->two_factor_confirmed_at);
     }
 
+    /** A wrong code is told so, by the field, rather than nothing happening (#40). */
+    public function test_a_wrong_code_shows_why_it_was_refused(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(TwoFactorAuthentication::class)
+            ->call('enableTwoFactorAuthentication')
+            ->set('confirmablePassword', 'password')
+            ->call('confirmPassword')
+            ->set('code', '000000')
+            ->call('confirmTwoFactorAuthentication')
+            ->assertSee(__('The provided two factor authentication code was invalid.'))
+            ->assertSeeHtml('aria-describedby="code-error"');
+
+        $this->assertNull($user->fresh()->two_factor_confirmed_at);
+    }
+
     public function test_an_unconfirmed_setup_can_be_cancelled_without_a_password(): void
     {
         $user = User::factory()->create();
@@ -129,7 +151,9 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
             ->set('confirmablePassword', 'password')
             ->call('confirmPassword')
             ->call('cancelSetup')
-            ->assertSet('showingConfirmation', false);
+            ->assertSet('showingConfirmation', false)
+            ->assertSeeHtml('wire:click="enableTwoFactorAuthentication"')
+            ->assertDontSee(__('admin.two_factor_setup_key'));
 
         $this->assertNull($user->fresh()->two_factor_secret);
     }
@@ -251,7 +275,9 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
             ->call('disableTwoFactorAuthentication')
             ->assertSet('confirmingPassword', true)
             ->set('confirmablePassword', 'password')
-            ->call('confirmPassword');
+            ->call('confirmPassword')
+            ->assertSeeHtml('wire:click="enableTwoFactorAuthentication"')
+            ->assertDontSeeHtml('wire:click="disableTwoFactorAuthentication"');
 
         $this->assertNull($user->fresh()->two_factor_secret);
     }
@@ -296,5 +322,45 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
         }
 
         $this->assertFalse(PasswordChecks::tooMany($user));
+    }
+
+    // --- A role that requires 2FA keeps it on (#40) ---------------------------
+
+    private function mandatedUser(): User
+    {
+        return tap(User::factory()->twoFactorEnabled()->create())
+            ->assignRole(Role::create(['name' => 'Admin', 'requires_two_factor' => true]));
+    }
+
+    public function test_a_user_whose_role_requires_two_factor_is_not_offered_disable(): void
+    {
+        Livewire::actingAs($this->mandatedUser())
+            ->test(TwoFactorAuthentication::class)
+            ->assertDontSeeHtml('wire:click="disableTwoFactorAuthentication"')
+            ->assertSee(__('admin.two_factor_required_cannot_disable'));
+    }
+
+    public function test_a_user_whose_role_requires_two_factor_cant_disable_it(): void
+    {
+        $user = $this->mandatedUser();
+
+        Livewire::actingAs($user)->test(TwoFactorAuthentication::class)
+            ->call('disableTwoFactorAuthentication')
+            ->assertForbidden();
+
+        $this->actingAs($user)->withSession(['auth.password_confirmed_at' => time()])
+            ->deleteJson(route('two-factor.disable'))
+            ->assertForbidden();
+
+        $this->assertNotNull($user->fresh()->two_factor_confirmed_at);
+    }
+
+    public function test_with_the_kill_switch_off_a_mandated_user_may_disable(): void
+    {
+        config()->set('auth.two_factor.enforcement_enabled', false);
+
+        Livewire::actingAs($this->mandatedUser())
+            ->test(TwoFactorAuthentication::class)
+            ->assertSeeHtml('wire:click="disableTwoFactorAuthentication"');
     }
 }

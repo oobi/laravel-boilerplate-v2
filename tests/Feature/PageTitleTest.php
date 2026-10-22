@@ -40,7 +40,7 @@ class PageTitleTest extends TestCase
         $this->assertTitled(__('admin.edit')." · Siobhan O'Brien & Co · ".__('admin.users'), route('users.edit', $user));
         $this->assertTitled(__('admin.roles'), route('roles.index'));
         $this->assertTitled('Lead · '.__('admin.roles'), route('roles.edit', Role::create(['name' => 'Lead'])));
-        $this->assertTitled(__('admin.password').' · '.__('admin.my_profile'), route('profile.password'));
+        $this->assertTitled('Password · '.__('admin.my_profile'), route('profile.password')); // not "Reset Password" (#40)
     }
 
     public function test_an_edited_record_is_a_linked_breadcrumb(): void

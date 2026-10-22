@@ -90,6 +90,25 @@ class ListUsersTest extends TestCase
             ->assertDontSee($other->name);
     }
 
+    /** `%` and `_` are searched for literally, not as LIKE wildcards (#40). */
+    public function test_search_treats_wildcard_characters_literally(): void
+    {
+        $admin = User::factory()->superAdmin()->create(['first_name' => 'Admin', 'last_name' => 'Person']);
+        $percent = User::factory()->create(['first_name' => 'Fifty%', 'last_name' => 'Off']);
+        $plain = User::factory()->create(['first_name' => 'Plain', 'last_name' => 'Name']);
+        $marked = User::factory()->create(['first_name' => 'Wow!_Co', 'last_name' => 'Ltd']); // `!` is the escape character
+
+        Livewire::actingAs($admin)->test(ListUsers::class)
+            ->set('tableSearch', '%')
+            ->assertCanSeeTableRecords([$percent])
+            ->assertCanNotSeeTableRecords([$plain, $admin, $marked])
+            ->set('tableSearch', 'Pl_in')
+            ->assertCanNotSeeTableRecords([$plain])
+            ->set('tableSearch', '!_')
+            ->assertCanSeeTableRecords([$marked])
+            ->assertCanNotSeeTableRecords([$plain, $percent]);
+    }
+
     public function test_selected_users_can_be_bulk_activated(): void
     {
         $admin = User::factory()->superAdmin()->create();

@@ -27,6 +27,7 @@ class CreateRoleTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->get('/admin/roles/create?scope=nope')->assertNotFound();
+        $this->actingAs($admin)->get('/admin/roles/create?scope[]=nope')->assertNotFound(); // an array, not a 500 (#40)
     }
 
     public function test_super_admins_can_create_a_role_with_permissions(): void

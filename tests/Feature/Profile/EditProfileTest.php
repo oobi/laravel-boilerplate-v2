@@ -161,6 +161,22 @@ class EditProfileTest extends TestCase
         $this->assertSame('old@example.com', $user->fresh()->email);
     }
 
+    /** A save that succeeds after a refused one leaves no old error showing (#40). */
+    public function test_a_successful_save_clears_an_earlier_error(): void
+    {
+        $user = User::factory()->create(['email' => 'old@example.com']);
+
+        Livewire::actingAs($user)
+            ->test(EditProfile::class)
+            ->set('email', 'new@example.com')
+            ->set('current_password', 'not-my-password')
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasErrors(['current_password'])
+            ->set('current_password', 'password')
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasNoErrors();
+    }
+
     public function test_the_password_field_appears_only_once_the_email_changes(): void
     {
         $user = User::factory()->create(['email' => 'old@example.com']);

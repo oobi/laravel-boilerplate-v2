@@ -44,10 +44,10 @@
                                         autocomplete="one-time-code"
                                         wire:model="code"
                                         wire:keydown.enter="confirmTwoFactorAuthentication"
-                                        class="input w-full @error('code', 'confirmTwoFactorAuthentication') input-error @enderror"
-                                        @error('code', 'confirmTwoFactorAuthentication') aria-invalid="true" aria-describedby="code-error" @enderror
+                                        class="input w-full @error('code') input-error @enderror"
+                                        @error('code') aria-invalid="true" aria-describedby="code-error" @enderror
                                     >
-                                    <x-form-error for="code" bag="confirmTwoFactorAuthentication" />
+                                    <x-form-error for="code" />
                                 </fieldset>
                             @endif
                         @endif
@@ -61,6 +61,10 @@
                                 @endforeach
                             </div>
                         @endif
+                    @endif
+
+                    @if ($this->enabled && ! $showingConfirmation && ! $mayDisable)
+                        <p class="ui-subtle">{{ __('admin.two_factor_required_cannot_disable') }}</p>
                     @endif
 
                     <div class="flex flex-wrap gap-3">
@@ -86,9 +90,11 @@
                                     </x-button.secondary>
                                 @endif
 
-                                <x-button.danger type="button" wire:click="disableTwoFactorAuthentication">
-                                    {{ __('admin.two_factor_disable') }}
-                                </x-button.danger>
+                                @if ($mayDisable)
+                                    <x-button.danger type="button" wire:click="disableTwoFactorAuthentication">
+                                        {{ __('admin.two_factor_disable') }}
+                                    </x-button.danger>
+                                @endif
                             @endif
                         @endif
                     </div>

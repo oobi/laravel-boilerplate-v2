@@ -6,6 +6,7 @@ namespace App\Livewire\Profile;
 
 use App\Livewire\Concerns\ConfirmsPassword;
 use App\Livewire\Concerns\RequiresFullSession;
+use App\Support\TwoFactor\GracePeriod;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
@@ -63,8 +64,11 @@ class TwoFactorAuthentication extends Component
         $this->startConfirmingPassword('enable');
     }
 
+    /** Not while a role requires it (#40): an admin can still force-disable. */
     public function disableTwoFactorAuthentication(): void
     {
+        abort_if(GracePeriod::mandated(Auth::user()), 403);
+
         $this->startConfirmingPassword('disable');
     }
 
@@ -97,10 +101,17 @@ class TwoFactorAuthentication extends Component
         $this->ensureSettingUp();
 
         app(DisableTwoFactorAuthentication::class)(Auth::user());
+        unset($this->enabled);
 
         $this->resetSetupState();
     }
 
+    /**
+     * Livewire memoizes this for the whole request, so every method that turns
+     * 2FA on or off forgets it (`unset($this->enabled)`). Otherwise a value read
+     * before the change (performEnable()'s guard) renders the page as if
+     * nothing happened: no QR code, no code field.
+     */
     public function getEnabledProperty(): bool
     {
         return ! empty(Auth::user()->two_factor_secret);
@@ -108,7 +119,9 @@ class TwoFactorAuthentication extends Component
 
     public function render(): View
     {
-        return view('livewire.profile.two-factor-authentication');
+        return view('livewire.profile.two-factor-authentication', [
+            'mayDisable' => ! GracePeriod::mandated(Auth::user()),
+        ]);
     }
 
     protected function dispatchConfirmedAction(string $action, array $arguments): void
@@ -127,6 +140,7 @@ class TwoFactorAuthentication extends Component
         abort_if($this->enabled, 403);
 
         app(EnableTwoFactorAuthentication::class)(Auth::user());
+        unset($this->enabled);
 
         $this->showingQrCode = true;
 
@@ -139,7 +153,10 @@ class TwoFactorAuthentication extends Component
 
     protected function performDisable(): void
     {
+        abort_if(GracePeriod::mandated(Auth::user()), 403);
+
         app(DisableTwoFactorAuthentication::class)(Auth::user());
+        unset($this->enabled);
 
         $this->resetSetupState();
     }

@@ -241,6 +241,7 @@ class ManageRolesTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->get('/admin/roles?scope=nope')->assertNotFound();
+        $this->actingAs($admin)->get('/admin/roles?scope[]=nope')->assertNotFound(); // an array, not a 500 (#40)
     }
 
     public function test_a_role_in_an_unregistered_scope_cannot_be_edited_here(): void

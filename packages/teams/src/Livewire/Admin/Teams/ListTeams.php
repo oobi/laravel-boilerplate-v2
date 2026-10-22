@@ -66,10 +66,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                     ->label(team_trans('admin.name'))
                     ->view('teams::filament.tables.columns.team-column')
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('name', $direction))
-                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
-                        $q->where('name', 'like', "%{$search}%")
-                            ->orWhere('slug', 'like', "%{$search}%");
-                    })),
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereAnyContains(['name', 'slug'], $search)),
 
                 // The owner as a person (avatar, linked name, email) — the user column accepts a related User as its state.
                 Tables\Columns\ViewColumn::make('owner')
@@ -241,11 +238,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
     private function searchUsers(string $search): array
     {
         return User::query()
-            ->where(function (Builder $query) use ($search): void {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            })
+            ->whereAnyContains(['first_name', 'last_name', 'email'], $search)
             ->orderBy('last_name')
             ->limit(20)
             ->get()

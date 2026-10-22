@@ -230,6 +230,22 @@ class ShowUserTest extends TestCase
         $this->assertNull($target->two_factor_confirmed_at);
     }
 
+    /** A role requiring 2FA stops the user turning it off, never an admin (#40). */
+    public function test_admins_can_still_force_disable_for_a_user_whose_role_requires_it(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = tap(User::factory()->twoFactorEnabled()->create())
+            ->assignRole(Role::create(['name' => 'Admin', 'requires_two_factor' => true]));
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->call('callPanelAction', 'security', 'force-disable-2fa')
+            ->set('confirmablePassword', 'password')
+            ->call('confirmPassword');
+
+        $this->assertNull($target->fresh()->two_factor_secret);
+    }
+
     public function test_force_disabling_two_factor_does_nothing_until_the_password_is_confirmed(): void
     {
         $admin = User::factory()->superAdmin()->create();
@@ -443,6 +459,17 @@ class ShowUserTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $admin])
             ->assertActionHidden('resetPassword');
+    }
+
+    /** A view-only admin isn't offered force-disable at all (#40). */
+    public function test_a_viewer_isnt_offered_force_disable(): void
+    {
+        $viewer = User::factory()->withPermission(SystemPermission::VIEW_USERS)->create();
+        $user = User::factory()->twoFactorEnabled()->create();
+
+        Livewire::actingAs($viewer)
+            ->test(ShowUser::class, ['user' => $user])
+            ->assertDontSeeText(__('admin.force_disable_2fa'));
     }
 
     public function test_an_admin_cant_force_disable_their_own_two_factor(): void
