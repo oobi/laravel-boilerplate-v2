@@ -155,6 +155,21 @@ password reset, outside the impersonation trail.
 - A user whose email is not verified can't be impersonated: they could only
   be shown the verify-email page.
 
+## Email verification
+
+- **Until it's verified**, a user can open only the Profile tab, so someone who
+  mistyped their address at sign-up can fix it (changing it needs the current
+  password and sends a new link). Password, two-factor, profile photos and the
+  admin area wait for verification. The verify page links to the profile.
+- **Support can mark an address verified** from the user's Show page (Mark Email
+  as Verified): `manage users` plus coverage, never your own address. The
+  impersonation note for an unverified user points to it.
+- **An admin email change** unverifies the address and sends a link, as a
+  self-service change does.
+- **Verification and reset emails are queued** (`App\Notifications\Auth\Queued*`),
+  so a mail outage can't break sign-up or a save, and failed sends retry. A
+  queue worker must run in production (see [adopting.md](adopting.md#8-run-a-queue-worker)).
+
 ## Links sent by email
 
 Reset, verification and team invitation links are built from `APP_URL`

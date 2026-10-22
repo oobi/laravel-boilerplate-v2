@@ -33,6 +33,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -126,9 +127,11 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->modalHeading(fn (): string => $this->user->hasVerifiedEmail()
                 ? __('admin.impersonate_heading', ['name' => $this->user->name])
                 : __('admin.impersonate_unverified_heading', ['name' => $this->user->name]))
-            ->modalDescription(fn (): string => $this->user->hasVerifiedEmail()
-                ? __('admin.impersonate_confirm', ['name' => $this->user->name])
-                : __('admin.impersonate_unverified'))
+            ->modalDescription(fn (): string => match (true) {
+                $this->user->hasVerifiedEmail() => __('admin.impersonate_confirm', ['name' => $this->user->name]),
+                Gate::allows(UserAbility::VERIFY_EMAIL, $this->user) => __('admin.impersonate_unverified').' '.__('admin.impersonate_unverified_can_verify'),
+                default => __('admin.impersonate_unverified'),
+            })
             ->modalSubmitActionLabel(__('admin.impersonate'))
             ->modalSubmitAction(fn (): ?bool => $this->user->hasVerifiedEmail() ? null : false)
             ->action(fn () => app(StartImpersonation::class)->handle($this->user))
@@ -300,6 +303,34 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
                 Notification::make()
                     ->title(__('admin.password_reset_link_sent'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /** Support unblocks a user stuck on "verify your email" (#55); see UserPolicy::verifyEmail(). */
+    public function verifyEmailAction(): Action
+    {
+        return AdminAction::make('verifyEmail')
+            ->label(__('admin.mark_email_verified'))
+            ->icon('heroicon-o-check-badge')
+            ->visible(fn (): bool => ! $this->user->trashed()
+                && ! $this->user->hasVerifiedEmail()
+                && Gate::allows(UserAbility::VERIFY_EMAIL, $this->user))
+            ->requiresConfirmation()
+            ->modalIcon('heroicon-o-check-badge')
+            ->modalDescription(fn (): string => __('admin.mark_email_verified_confirm', ['email' => $this->user->email]))
+            ->action(function (): void {
+                abort_if($this->user->trashed(), 404);
+                Gate::authorize(UserAbility::VERIFY_EMAIL, $this->user);
+
+                // Verified fires as it does when the user follows their own link.
+                if ($this->user->markEmailAsVerified()) {
+                    event(new Verified($this->user));
+                }
+
+                Notification::make()
+                    ->title(__('admin.email_marked_verified'))
                     ->success()
                     ->send();
             });

@@ -7,8 +7,8 @@ use App\Enums\UserAbility;
 use App\Livewire\Admin\Users\ShowUser;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\Auth\QueuedResetPassword;
 use App\Support\TwoFactor\GracePeriod;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -500,7 +500,7 @@ class ShowUserTest extends TestCase
             ->callAction('resetPassword');
 
         $this->assertSame($originalPassword, $target->fresh()->password);
-        Notification::assertSentTo($target, ResetPassword::class);
+        Notification::assertSentTo($target, QueuedResetPassword::class);
     }
 
     public function test_the_demo_team_memberships_panel_renders(): void

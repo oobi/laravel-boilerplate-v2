@@ -38,6 +38,7 @@
                 $userActions = collect([
                     $this->restoreAction,
                     $this->impersonateAction,
+                    $this->verifyEmailAction,
                     $this->manageRolesAction,
                     $this->resetPasswordAction,
                 ])->filter(fn ($action): bool => $action->isVisible());

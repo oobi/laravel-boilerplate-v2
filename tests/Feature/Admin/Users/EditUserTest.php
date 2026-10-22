@@ -4,12 +4,12 @@ namespace Tests\Feature\Admin\Users;
 
 use App\Livewire\Admin\Users\EditUser;
 use App\Models\User;
+use App\Notifications\Auth\QueuedVerifyEmail;
 use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\FormSection;
 use App\Support\Panels\Registry\PanelRegistry;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -81,7 +81,7 @@ class EditUserTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertNull($user->fresh()->email_verified_at);
-        Notification::assertSentTo($user->fresh(), VerifyEmail::class);
+        Notification::assertSentTo($user->fresh(), QueuedVerifyEmail::class);
     }
 
     public function test_an_admin_edit_that_keeps_the_email_keeps_it_verified(): void

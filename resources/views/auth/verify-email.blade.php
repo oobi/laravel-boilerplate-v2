@@ -9,6 +9,11 @@
         {{ __("Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn't receive the email, we will gladly send you another.") }}
     </p>
 
+    <p class="text-sm">
+        {{ __('auth.verify_wrong_address') }}
+        <a class="link" href="{{ route('profile.edit') }}">{{ __('auth.verify_change_address') }}</a>
+    </p>
+
     @if (session('status') === 'verification-link-sent')
         <x-alert color="success">
             {{ __('A new verification link has been sent to the email address you provided during registration.') }}

@@ -67,6 +67,10 @@ return [
     'impersonate_confirm' => 'You will use the app as :name until you choose Stop Impersonating.',
     'impersonate_unverified_heading' => ':name can\'t be impersonated yet',
     'impersonate_unverified' => 'Their email address is not verified. You can impersonate them once they verify it.',
+    'impersonate_unverified_can_verify' => 'If you know the address is right, use Mark Email as Verified.',
+    'mark_email_verified' => 'Mark Email as Verified',
+    'mark_email_verified_confirm' => 'Treat :email as verified without the user following their link. Only do this if you know the address is theirs.',
+    'email_marked_verified' => 'Email marked as verified.',
     'impersonating' => 'Impersonating',
     'stop_impersonating' => 'Stop Impersonating',
 

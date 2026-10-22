@@ -22,6 +22,7 @@ enum UserAbility: string
     case GRANT_SUPER_ADMIN = 'grantSuperAdmin';
     case UPDATE_PASSWORD_DIRECTLY = 'updatePasswordDirectly';
     case SEND_PASSWORD_RESET_LINK = 'sendPasswordResetLink';
+    case VERIFY_EMAIL = 'verifyEmail';
     case TOGGLE_ACTIVE = 'toggleActive';
     case RESET_TWO_FACTOR_AUTHENTICATION = 'resetTwoFactorAuthentication';
     case MANAGE_TWO_FACTOR_GRACE = 'manageTwoFactorGrace';

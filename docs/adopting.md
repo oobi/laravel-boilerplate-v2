@@ -136,11 +136,19 @@ the proxy's address and plain HTTP unless it trusts that proxy's
 
 In production also set `SESSION_SECURE_COOKIE=true`.
 
+## 8. Run a queue worker
+
+Verification, password reset and team invitation emails are queued, so they
+only go out while a worker runs (`php artisan queue:work`; `composer run dev`
+starts one locally). Laravel Cloud and Forge can run it for you. Without one,
+nobody can verify their address or reset their password.
+
 ## Checklist
 
 - [ ] Cloned with history, `upstream` remote set
 - [ ] `composer run setup`, `bp:setup`, `db:seed`, `bp:make-admin` run, in that order
 - [ ] `.env` configured, theme-demo kept or removed
+- [ ] A queue worker runs in production (verification and reset emails depend on it)
 - [ ] Behind a proxy: `TRUSTED_PROXIES` set (not needed on Cloud, or Forge/Vapor's own domains); `SESSION_SECURE_COOKIE=true` in production
 - [ ] Client features registered from a client service provider
 - [ ] Upstream merged regularly with `git merge --no-ff upstream/main`

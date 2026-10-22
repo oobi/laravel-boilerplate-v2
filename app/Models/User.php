@@ -6,6 +6,8 @@ use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
 use App\Models\Concerns\HasProfilePhoto;
 use App\Models\Concerns\HasSuperAdminFlag;
+use App\Notifications\Auth\QueuedResetPassword;
+use App\Notifications\Auth\QueuedVerifyEmail;
 use App\Support\Roles\Coverage;
 // teams:start
 use Concise\Teams\Concerns\HasTeams;
@@ -224,5 +226,17 @@ class User extends Authenticatable implements MustVerifyEmail
         // Never a super admin, and never someone with access the actor lacks:
         // impersonating them would be a way to borrow it.
         return ! $this->isSuperAdmin() && Coverage::coversUser($actor, $this);
+    }
+
+    /** Queued, so a mail outage can't make sign-up or an email change 500 (#46). */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new QueuedVerifyEmail);
+    }
+
+    /** Queued, like verification (#46). */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new QueuedResetPassword($token));
     }
 }
