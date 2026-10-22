@@ -45,8 +45,6 @@ class ComponentUsageTest extends TestCase
      * @var array<string, list<string>>
      */
     private const ALLOWED = [
-        // A file input needs a <label> to open the picker; no button component renders one.
-        'resources/views/livewire/profile/edit-profile.blade.php' => ['<x-button'],
         // Clickable colour swatches, a picker built on badge styles, not a badge.
         'resources/views/filament/forms/components/role-color-swatches.blade.php' => ['<x-badge>'],
     ];

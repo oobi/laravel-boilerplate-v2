@@ -25,22 +25,33 @@
                             </div>
                         </div>
 
-                        <label class="btn btn-sm btn-outline">
+                        {{-- A real button opens the hidden file input, so the picker is reachable
+                             and operable from the keyboard (a hidden input isn't, and a label
+                             can't take focus; #52). Errors are announced on the button. --}}
+                        <x-button.secondary
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            x-on:click="$refs.photo.click()"
+                            :aria-describedby="$errors->has('photo') ? 'photo-error' : null"
+                        >
                             {{ __('admin.select_new_photo') }}
-                            <input
-                                id="photo"
-                                type="file"
-                                wire:model="photo"
-                                @error('photo') aria-invalid="true" aria-describedby="photo-error" @enderror
-                                x-on:change="
-                                    const reader = new FileReader();
-                                    reader.onload = (e) => { preview = e.target.result };
-                                    reader.readAsDataURL($event.target.files[0]);
-                                "
-                                class="hidden"
-                                accept="image/png, image/jpeg"
-                            >
-                        </label>
+                        </x-button.secondary>
+                        <input
+                            id="photo"
+                            x-ref="photo"
+                            type="file"
+                            wire:model="photo"
+                            x-on:change="
+                                const reader = new FileReader();
+                                reader.onload = (e) => { preview = e.target.result };
+                                reader.readAsDataURL($event.target.files[0]);
+                            "
+                            class="hidden"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            accept="image/png, image/jpeg"
+                        >
 
                         @if (Auth::user()->profile_photo_path)
                             <x-button.danger type="button" wire:click="removeProfilePhoto" variant="outline" size="sm">
