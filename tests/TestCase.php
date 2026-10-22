@@ -21,8 +21,8 @@ abstract class TestCase extends BaseTestCase
      * by the end of a serial run the user page resolves thousands of duplicate
      * panels and a single render takes seconds. Flushing before the boot gives
      * every test the registrations a real request would see. Core registries
-     * only: bp:remove-teams deletes any test file that names the teams tier, so
-     * the tier's own TeamNavRegistry relies on NavGroup::add() replacing by name.
+     * only: core tests must pass without the teams tier (CoreTestsStandAloneTest),
+     * so the tier's own TeamNavRegistry relies on NavGroup::add() replacing by name.
      */
     protected function setUp(): void
     {

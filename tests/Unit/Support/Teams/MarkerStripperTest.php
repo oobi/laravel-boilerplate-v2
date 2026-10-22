@@ -3,11 +3,12 @@
 namespace Tests\Unit\Support\Teams;
 
 use App\Support\Teams\MarkerStripper;
+use RuntimeException;
 use Tests\TestCase;
 
 /**
- * The pure content transform behind bp:remove-teams — verified here on strings
- * so the destructive command's core logic is covered without touching files.
+ * The pure content transform behind bp:remove-teams, verified on strings. The
+ * repo's real fences are in Tests\Feature\Teams\TierFencesTest.
  */
 class MarkerStripperTest extends TestCase
 {
@@ -66,5 +67,13 @@ class MarkerStripperTest extends TestCase
         $in = "line1\n\n\nline2\n"; // triple newline but no markers → unchanged
 
         $this->assertSame($in, (new MarkerStripper)->strip($in));
+    }
+
+    public function test_an_unterminated_fence_throws_instead_of_truncating(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unterminated teams:start at line 2');
+
+        (new MarkerStripper)->strip("a\n// teams:start\nb\nc\n");
     }
 }
