@@ -124,6 +124,12 @@ class GoogleLoginTest extends TestCase
         $this->assertNull($user->googleAccount);
     }
 
+    /** The same answer whether or not an account uses the address, so it reveals nothing. */
+    public function test_an_outside_address_gets_the_same_refusal_with_no_account(): void
+    {
+        $this->assertRefused($this->returnFromGoogle(['hd' => null]), __('auth.google_link_from_profile'));
+    }
+
     /** Once linked from the profile, it signs in like any other link. */
     public function test_a_linked_google_account_on_an_outside_address_signs_in(): void
     {

@@ -122,6 +122,7 @@ class GoogleAccountLinkTest extends TestCase
         $this->returnFromGoogleLinking($user);
 
         $this->assertTrue($user->fresh()->googleAccount->is($existing));
+        $this->assertSame(__('auth.google_already_linked'), session('filament.notifications')[0]['title'] ?? null);
         Notification::assertNothingSent();
     }
 

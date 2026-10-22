@@ -31,15 +31,16 @@ class AuthenticateWithGoogle
         $email = GoogleLogin::verifiedEmail($googleUser);
         $account = GoogleLogin::findAccount($googleUser);
 
+        // Before any lookup, so it doesn't tell whoever holds the Google account whether an account here uses the address.
+        if ($account === null && ! GoogleLogin::ownsAddress($googleUser)) {
+            GoogleLogin::refuse('auth.google_link_from_profile');
+        }
+
         // A trashed user is out of reach of the relation, so reads as no account.
         $user = $account !== null ? $account->user : User::where('email', $email)->first();
 
         if ($user === null) {
             GoogleLogin::refuse('auth.google_no_account');
-        }
-
-        if ($account === null && ! GoogleLogin::ownsAddress($googleUser)) {
-            GoogleLogin::refuse('auth.google_link_from_profile');
         }
 
         if ($account === null && ! $user->hasVerifiedEmail()) {

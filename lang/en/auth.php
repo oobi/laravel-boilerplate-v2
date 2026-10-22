@@ -33,7 +33,7 @@ return [
     'google_unverified_email' => 'Google hasn’t verified the email address on that account, so it can’t be used to log in.',
     'google_domain_not_allowed' => 'Log in with your :domains Google account.',
     'google_no_account' => 'No account here uses that Google address. Log in with your password, or ask an administrator for an account.',
-    'google_link_from_profile' => 'Log in with your password, then link your Google account on your profile. You can then log in with Google.',
+    'google_link_from_profile' => 'That Google account can’t be used to log in yet. Log in with your password, then link it on your profile.',
     'google_unverified_account' => 'Log in with your password and verify your email address first. You can then log in with Google.',
     'google_linked_elsewhere' => 'That Google account is already linked to another account.',
     'google_already_linked' => 'A Google account is already linked. Unlink it first.',
