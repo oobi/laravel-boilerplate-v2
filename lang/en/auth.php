@@ -21,4 +21,7 @@ return [
     'password_min_hint' => 'At least :min characters.',
     'verify_wrong_address' => 'Wrong address?',
     'verify_change_address' => 'Change it on your profile.',
+    'email_changed_subject' => 'Your email address was changed',
+    'email_changed_line' => 'The email address on your :app account was changed to :email.',
+    'email_changed_not_you' => 'If you made this change, there is nothing else to do. If you didn\'t, contact an administrator straight away.',
 ];

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\User;
+use App\Notifications\Auth\EmailAddressChanged;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Throwable;
 
 class UserObserver
@@ -18,6 +20,10 @@ class UserObserver
      */
     public function updated(User $user): void
     {
+        if ($user->wasChanged('email')) {
+            $this->tellPreviousAddress($user);
+        }
+
         if (! $user->wasChanged('active') || $user->active) {
             return;
         }
@@ -25,6 +31,19 @@ class UserObserver
         $this->purgeDatabaseSessions($user);
 
         $user->forceFill(['remember_token' => null])->saveQuietly();
+    }
+
+    /**
+     * Every email change, by the user or an admin, is told to the address it
+     * replaced (#49); here so no path that changes the email can skip it.
+     */
+    private function tellPreviousAddress(User $user): void
+    {
+        $previous = $user->getOriginal('email');
+
+        if (is_string($previous) && $previous !== '') {
+            Notification::route('mail', $previous)->notify(new EmailAddressChanged($user->email));
+        }
     }
 
     /**
