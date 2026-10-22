@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Panels\Users;
 
 use App\Enums\UserAbility;
+use App\Support\Auth\GoogleLogin;
 use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Two-factor authentication status, with an admin "force disable" escape hatch,
- * plus the mandatory-2FA grace status and the reset that lifts a lockout.
+ * plus the mandatory-2FA grace status and the reset that lifts a lockout, and
+ * the user's Google link with an unlink (#61).
  */
 class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
 {
@@ -62,6 +64,16 @@ class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
                     ->success()
                     ->send();
             },
+            'unlink-google' => function (Model $subject): void {
+                Gate::authorize(UserAbility::UNLINK_GOOGLE_ACCOUNT, $subject);
+
+                GoogleLogin::unlink($subject);
+
+                Notification::make()
+                    ->title(__('auth.google_unlinked'))
+                    ->success()
+                    ->send();
+            },
             'reset-2fa-grace' => function (Model $subject): void {
                 Gate::authorize(UserAbility::MANAGE_TWO_FACTOR_GRACE, $subject);
 
@@ -75,9 +87,9 @@ class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
         ];
     }
 
-    /** Wiping another user's second factor, or lifting their lockout, demands the admin re-enter their own password first. */
+    /** Wiping another user's second factor or Google link, or lifting their lockout, demands the admin re-enter their own password first. */
     public function guardedActions(): array
     {
-        return ['force-disable-2fa', 'reset-2fa-grace'];
+        return ['force-disable-2fa', 'reset-2fa-grace', 'unlink-google'];
     }
 }

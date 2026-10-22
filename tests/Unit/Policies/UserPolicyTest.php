@@ -140,15 +140,15 @@ class UserPolicyTest extends TestCase
         $this->assertTrue(Gate::forUser($setter)->allows('updatePasswordDirectly', $target));
     }
 
-    /** Your own password and two-factor change on your profile, which asks for the current password (GitHub #17). */
-    public function test_nobody_manages_their_own_password_or_two_factor_from_the_admin_area(): void
+    /** Your own password, two-factor and Google link change on your profile, which asks for the current password (GitHub #17). */
+    public function test_nobody_manages_their_own_password_two_factor_or_google_link_from_the_admin_area(): void
     {
         $actors = [
             User::factory()->superAdmin()->create(),
             User::factory()->withPermission(SystemPermission::SET_USER_PASSWORDS, SystemPermission::MANAGE_USERS)->create(),
         ];
 
-        $abilities = [UserAbility::UPDATE_PASSWORD_DIRECTLY, UserAbility::SEND_PASSWORD_RESET_LINK, UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, UserAbility::MANAGE_TWO_FACTOR_GRACE];
+        $abilities = [UserAbility::UPDATE_PASSWORD_DIRECTLY, UserAbility::SEND_PASSWORD_RESET_LINK, UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, UserAbility::MANAGE_TWO_FACTOR_GRACE, UserAbility::UNLINK_GOOGLE_ACCOUNT];
 
         foreach ($actors as $actor) {
             foreach ($abilities as $ability) {

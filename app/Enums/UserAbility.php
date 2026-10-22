@@ -26,6 +26,7 @@ enum UserAbility: string
     case TOGGLE_ACTIVE = 'toggleActive';
     case RESET_TWO_FACTOR_AUTHENTICATION = 'resetTwoFactorAuthentication';
     case MANAGE_TWO_FACTOR_GRACE = 'manageTwoFactorGrace';
+    case UNLINK_GOOGLE_ACCOUNT = 'unlinkGoogleAccount';
     case DELETE = 'delete';
     case RESTORE = 'restore';
     case FORCE_DELETE = 'forceDelete';

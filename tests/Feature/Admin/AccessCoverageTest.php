@@ -63,7 +63,7 @@ class AccessCoverageTest extends TestCase
     {
         $this->actingAs($this->support);
 
-        foreach ([UserAbility::UPDATE, UserAbility::ASSIGN_ROLE, UserAbility::TOGGLE_ACTIVE, UserAbility::SEND_PASSWORD_RESET_LINK, UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, UserAbility::IMPERSONATE] as $ability) {
+        foreach ([UserAbility::UPDATE, UserAbility::ASSIGN_ROLE, UserAbility::TOGGLE_ACTIVE, UserAbility::SEND_PASSWORD_RESET_LINK, UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, UserAbility::UNLINK_GOOGLE_ACCOUNT, UserAbility::IMPERSONATE] as $ability) {
             $this->assertFalse(Gate::allows($ability, $this->administrator), $ability->value);
         }
 

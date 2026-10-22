@@ -120,6 +120,17 @@ class UserPolicy
             && $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
     }
 
+    /**
+     * Removing another user's Google link, so a link someone else made can't
+     * outlive the account's recovery (#61). Never your own: the profile asks
+     * for the password.
+     */
+    public function unlinkGoogleAccount(User $actor, User $target): bool
+    {
+        return $actor->id !== $target->id
+            && $actor->checkPermissionTo(SystemPermission::MANAGE_USERS->value) && Coverage::coversUser($actor, $target);
+    }
+
     /** Nobody may delete their own account, including a super admin. */
     public function delete(User $actor, User $target): bool
     {

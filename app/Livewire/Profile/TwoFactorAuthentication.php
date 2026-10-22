@@ -210,7 +210,7 @@ class TwoFactorAuthentication extends Component
 
     protected function performUnlinkGoogle(): void
     {
-        Auth::user()->googleAccount()->delete();
+        GoogleLogin::unlink(Auth::user());
 
         Notification::make()->title(__('auth.google_unlinked'))->success()->send();
     }
