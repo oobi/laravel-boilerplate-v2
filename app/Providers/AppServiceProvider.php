@@ -9,6 +9,7 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Enums\UserAbility;
 use App\Http\Middleware\DenyLowAssuranceSessions;
+use App\Http\Middleware\KeepMandatedTwoFactor;
 use App\Http\Middleware\LeaveImpersonationOnLogout;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\PasswordResetLinkResponse;
@@ -35,6 +36,7 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route as RouteDefinition;
 use Illuminate\Support\Facades\Gate;
@@ -73,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentBulkActionDefaults();
         $this->registerFilamentRestoreDefaults();
         $this->registerNotifications();
+        $this->registerQueryMacros();
 
         AdminRoleScopes::define();
 
@@ -173,6 +176,24 @@ class AppServiceProvider extends ServiceProvider
         ));
     }
 
+    /**
+     * `whereAnyContains(['first_name', 'email'], $term)`: rows where any column
+     * contains $term as typed. `%` and `_` in the term are matched literally,
+     * not as LIKE wildcards (#40), with an explicit ESCAPE because SQLite has
+     * no default escape character.
+     */
+    private function registerQueryMacros(): void
+    {
+        QueryBuilder::macro('whereAnyContains', function (array $columns, string $term): QueryBuilder {
+            /** @var QueryBuilder $this */
+            $pattern = '%'.strtr($term, ['!' => '!!', '%' => '!%', '_' => '!_']).'%';
+
+            return $this->where(fn (QueryBuilder $query) => collect($columns)->each(
+                fn (string $column) => $query->orWhereRaw($query->getGrammar()->wrap($column)." like ? escape '!'", [$pattern]),
+            ));
+        });
+    }
+
     /** Sortable-but-unsorted columns get a double chevron; once sorted, a single chevron shows the direction (daisyUI style). */
     private function registerFilamentIcons(): void
     {
@@ -252,8 +273,8 @@ class AppServiceProvider extends ServiceProvider
         // Middleware Fortify's own routes lack, added once every route is
         // registered (a cached route table carries it): impersonated sessions
         // stay off the two-factor routes, logging out while impersonating
-        // only stops impersonating, and the password and sign-up endpoints
-        // get throttles.
+        // only stops impersonating, a user whose role requires 2FA can't
+        // disable it, and the password and sign-up endpoints get throttles.
         if (! $this->app->routesAreCached()) {
             $this->app->booted(function (): void {
                 $throttles = [
@@ -270,6 +291,10 @@ class AppServiceProvider extends ServiceProvider
 
                     if ($route->getName() === 'logout') {
                         $route->middleware(LeaveImpersonationOnLogout::class);
+                    }
+
+                    if ($route->getName() === 'two-factor.disable') {
+                        $route->middleware(KeepMandatedTwoFactor::class);
                     }
 
                     if (isset($throttles[$route->getName()])) {

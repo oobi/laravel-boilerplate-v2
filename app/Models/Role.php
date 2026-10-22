@@ -55,8 +55,37 @@ class Role extends SpatieRole
      */
     protected static function booted(): void
     {
-        static::saved(fn () => GracePeriod::forgetRequiredRoleNames());
+        static::saved(function (Role $role): void {
+            GracePeriod::forgetRequiredRoleNames();
+
+            if ($role->wasChanged('requires_two_factor') && ! $role->requires_two_factor) {
+                $role->clearMembersGracePeriods($role->users()->pluck('id')->all());
+            }
+        });
         static::deleted(fn () => GracePeriod::forgetRequiredRoleNames());
+    }
+
+    /** Members are noted first: spatie's own deleting hook detaches them before any of ours runs. */
+    public function delete(): ?bool
+    {
+        $members = $this->users()->pluck('id')->all();
+
+        return tap(parent::delete(), function (?bool $deleted) use ($members): void {
+            if ($deleted) {
+                $this->clearMembersGracePeriods($members);
+            }
+        });
+    }
+
+    /**
+     * A member's mandate may have ended with this role's (#40).
+     *
+     * @param  list<int>  $userIds
+     */
+    private function clearMembersGracePeriods(array $userIds): void
+    {
+        User::query()->whereIn('id', $userIds)->whereNotNull('two_factor_grace_started_at')->get()
+            ->each(fn (User $user) => GracePeriod::clearIfNotRequired($user));
     }
 
     /** Falls back to neutral for roles created before the color field existed. */

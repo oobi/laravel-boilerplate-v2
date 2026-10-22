@@ -19,6 +19,7 @@ use App\Support\Panels\Contracts\ShowPanel;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\Coverage;
 use App\Support\Theme\DaisyColor;
+use App\Support\TwoFactor\GracePeriod;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -218,6 +219,9 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
                     $this->user->forceFill(['is_super_admin' => (bool) $data['is_super_admin']])->save();
                 }
+
+                // Either change can end a 2FA mandate; a clock left from it is cleared (#40).
+                GracePeriod::clearIfNotRequired($this->user);
 
                 Notification::make()
                     ->title(__('admin.roles_updated'))

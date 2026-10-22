@@ -96,11 +96,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                 Tables\Columns\ViewColumn::make('user_composite')
                     ->label(__('admin.user'))
                     ->view('filament.tables.columns.user-column')
-                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
-                        $q->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    })),
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereAnyContains(['first_name', 'last_name', 'email'], $search)),
 
                 Tables\Columns\TextColumn::make('team_role')
                     ->label(Team::allowsMultipleRoles() ? team_trans('members.roles') : team_trans('members.role'))

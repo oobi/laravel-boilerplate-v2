@@ -6,11 +6,14 @@ namespace Tests\Feature\Auth;
 
 use App\Actions\Impersonation\StartImpersonation;
 use App\Enums\SystemPermission;
+use App\Livewire\Admin\Users\ShowUser;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\TestResponse;
+use Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class TwoFactorGracePeriodTest extends TestCase
@@ -263,5 +266,71 @@ class TwoFactorGracePeriodTest extends TestCase
 
         $this->login($user)->assertSessionHasNoErrors();
         $this->get('/profile')->assertDontSee(__('auth.two_factor_setup_cta'));
+    }
+
+    // --- A clock from a mandate that ended is cleared (#40) -----------------
+
+    public function test_confirming_two_factor_clears_the_clock(): void
+    {
+        $user = $this->subjectUser(graceStartedDaysAgo: 5);
+
+        $user->forceFill(['two_factor_secret' => encrypt('secret'), 'two_factor_confirmed_at' => now()])->save();
+        event(new TwoFactorAuthenticationConfirmed($user));
+
+        $this->assertNull($user->fresh()->two_factor_grace_started_at);
+    }
+
+    public function test_a_re_mandate_after_unflagging_starts_a_fresh_window(): void
+    {
+        $user = $this->subjectUser(graceStartedDaysAgo: 20);
+        $role = Role::findByName('Admin');
+
+        $role->update(['requires_two_factor' => false]);
+        $this->assertNull($user->fresh()->two_factor_grace_started_at);
+
+        $role->update(['requires_two_factor' => true]);
+        $this->login($user)->assertSessionHasNoErrors();
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_deleting_the_flagged_role_clears_its_members_clocks(): void
+    {
+        $user = $this->subjectUser(graceStartedDaysAgo: 5);
+
+        Role::findByName('Admin')->delete();
+
+        $this->assertNull($user->fresh()->two_factor_grace_started_at);
+    }
+
+    public function test_taking_the_flagged_role_away_clears_the_clock(): void
+    {
+        $user = $this->subjectUser(graceStartedDaysAgo: 5);
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ShowUser::class, ['user' => $user])
+            ->callAction('manageRoles', data: ['roles' => []]);
+
+        $this->assertNull($user->fresh()->two_factor_grace_started_at);
+    }
+
+    public function test_a_stale_clock_is_cleared_at_login(): void
+    {
+        // A mandate ended some way that cleared nothing, e.g. a role taken away in tinker.
+        $user = $this->subjectUser(graceStartedDaysAgo: 5);
+        $user->roles()->detach();
+
+        $this->login($user);
+
+        $this->assertNull($user->fresh()->two_factor_grace_started_at);
+    }
+
+    public function test_the_kill_switch_pauses_the_clock_without_clearing_it(): void
+    {
+        config()->set('auth.two_factor.enforcement_enabled', false);
+        $user = $this->subjectUser(graceStartedDaysAgo: 5);
+
+        $this->login($user);
+
+        $this->assertNotNull($user->fresh()->two_factor_grace_started_at);
     }
 }

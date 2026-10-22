@@ -3,7 +3,11 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -54,5 +58,35 @@ class LoginTest extends TestCase
 
         $this->assertGuest();
         $response->assertSessionHasErrors('email');
+    }
+
+    /** Laravel's Failed event fires for a refused login, so lockout or audit listeners hear it (#40). */
+    public function test_a_wrong_password_or_an_inactive_account_fires_the_failed_event(): void
+    {
+        Event::fake([Failed::class]);
+        $user = User::factory()->create();
+        $inactive = User::factory()->inactive()->create();
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'wrong-password']);
+        $this->post('/login', ['email' => $inactive->email, 'password' => 'password']);
+        $this->post('/login', ['email' => 'nobody@example.com', 'password' => 'password']);
+
+        Event::assertDispatchedTimes(Failed::class, 3);
+        Event::assertDispatched(Failed::class, fn (Failed $event): bool => $event->user?->is($user) === true);
+    }
+
+    /** An outdated hash is upgraded at login, as Laravel's own login does (#40). */
+    public function test_an_outdated_password_hash_is_upgraded_at_login(): void
+    {
+        // Written past the model's `hashed` cast, which refuses a hash made with other settings.
+        $user = User::factory()->create();
+        DB::table('users')->where('id', $user->id)->update(['password' => Hash::make('password', ['rounds' => 5])]);
+        $this->assertTrue(Hash::needsRehash($user->fresh()->password));
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertFalse(Hash::needsRehash($user->fresh()->password));
+        $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 }

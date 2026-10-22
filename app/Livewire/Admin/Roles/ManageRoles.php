@@ -69,9 +69,9 @@ class ManageRoles extends Component implements HasActions, HasSchemas
         // instantiates an empty, unsaved Role for the nullable type-hint instead of passing
         // null — treat that the same as "no role selected" and fall back to the first one.
         $this->editingRole = (bool) $role?->exists;
-        $this->scopeKey = $role?->exists
-            ? $role->scope
-            : (string) request()->query('scope', RoleScopeRegistry::default()->key());
+        $scope = $role?->exists ? $role->scope : request()->query('scope', RoleScopeRegistry::default()->key());
+        abort_unless(is_string($scope), 404); // ?scope[]=x is an array: not found, not a 500
+        $this->scopeKey = $scope;
 
         // A role whose scope no registered RoleScope owns (an add-on since removed) can't be
         // edited with the right vocabulary — 404 rather than silently use the wrong one.
