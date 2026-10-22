@@ -72,6 +72,24 @@ class EditProfileTest extends TestCase
         Storage::disk('public')->assertExists($user->profile_photo_path);
     }
 
+    /** The picker is a real button opening the file input, so the keyboard can reach it (#52). */
+    public function test_the_photo_picker_is_a_button_that_announces_its_error(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(EditProfile::class)
+            ->assertSeeHtml('x-on:click="$refs.photo.click()"')
+            ->assertSeeHtml('x-ref="photo"')
+            ->assertDontSeeHtml('<label class="btn')
+            ->set('photo', UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'))
+            ->call('updateProfileInformation', app(UpdatesUserProfileInformation::class))
+            ->assertHasErrors('photo')
+            ->assertSeeHtml('aria-describedby="photo-error"')
+            ->assertSeeHtml('id="photo-error"');
+    }
+
     public function test_users_can_remove_their_profile_photo(): void
     {
         Storage::fake('public');
