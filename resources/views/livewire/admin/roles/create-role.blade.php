@@ -6,12 +6,12 @@
     <form wire:submit="create">
         {{ $this->form }}
 
-        <div class="mt-6 flex items-center gap-4">
+        <x-form-actions>
             <x-button.action type="submit">
                 {{ __('admin.add_role') }}
             </x-button.action>
 
             <x-button.cancel href="{{ $cancelUrl }}" />
-        </div>
+        </x-form-actions>
     </form>
 </div>

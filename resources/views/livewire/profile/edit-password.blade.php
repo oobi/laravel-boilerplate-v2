@@ -38,11 +38,11 @@
                         wire:model="password_confirmation"
                     />
 
-                    <div>
+                    <x-form-actions>
                         <x-button.action type="submit">
                             {{ __('admin.update_password') }}
                         </x-button.action>
-                    </div>
+                    </x-form-actions>
                 </form>
             </x-slot:content>
         </x-tabs-nav>

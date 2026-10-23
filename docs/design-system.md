@@ -113,6 +113,36 @@ the explanation as its content and an `actions` slot.
 
 Demos of all of these are in the style demo's component gallery.
 
+## Form actions
+
+A page form's action row is **`<x-form-actions>`**, never a hand-rolled
+`<div class="mt-6 flex gap-4">`. On a long form it sticks to the bottom of the
+screen, so Save stays in reach, until the end of the form scrolls into view;
+on a short form it sits where it is. A top edge shows only while it's stuck,
+its background matches what's behind it (the page, or a card or tabs panel),
+and the scrolling area keeps a focused field clear of it.
+
+The main action comes first, then Cancel or Back. Another action on the record
+(Delete, Retire) goes in the `secondary` slot: the far end on wider screens,
+its own row under a divider on a phone.
+
+```blade
+<form wire:submit="save">
+    {{ $this->form }}
+
+    <x-form-actions>
+        <x-button.action type="submit">Save changes</x-button.action>
+        <x-button.cancel href="{{ route('users.show', $user) }}" />
+    </x-form-actions>
+</form>
+```
+
+Like a card's `sticky-footer`, it sticks within the nearest scrolling
+ancestor, so nothing between it and the page may set `overflow: hidden` or
+`auto`. Dialogs keep their own footer (`<x-modal>`), and a card's actions stay
+in its `footer` slot. `ComponentUsageTest` fails on a submit button in a
+Livewire view outside these.
+
 ## Form errors and page landmarks
 
 - A field you build by hand (not `<x-form-input>` / `-select` / `-textarea`, which do this

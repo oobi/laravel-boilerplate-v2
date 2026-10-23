@@ -101,6 +101,33 @@ class ComponentUsageTest extends TestCase
     }
 
     /**
+     * A page form's submit sits in <x-form-actions>, which keeps it in reach
+     * on a long form, never a hand-rolled row. Livewire views only (the auth
+     * pages are short guest cards); a modal's or card's footer slot is its
+     * own action row, so it's spared.
+     */
+    public function test_page_form_submits_sit_in_form_actions(): void
+    {
+        $found = collect([resource_path('views/livewire'), ...glob(base_path('packages/*/resources/views/livewire'))])
+            ->flatMap(fn (string $directory): array => File::allFiles($directory))
+            ->filter(fn (SplFileInfo $file): bool => str_ends_with($file->getFilename(), '.blade.php') && self::hasLooseSubmit($file->getContents()))
+            ->map(fn (SplFileInfo $file): string => str_replace(base_path().'/', '', $file->getPathname()))
+            ->values();
+
+        $this->assertSame([], $found->all(), "Put the form's submit in <x-form-actions> (see .ai/rules/views.md):\n".$found->implode("\n"));
+    }
+
+    public function test_the_form_actions_check_catches_a_loose_submit_and_spares_footers(): void
+    {
+        $this->assertTrue(self::hasLooseSubmit("<div class=\"mt-6 flex gap-4\">\n    <x-button.action type=\"submit\">Save</x-button.action>\n</div>"));
+        $this->assertTrue(self::hasLooseSubmit('<x-button type="submit">Save</x-button>'));
+
+        $this->assertFalse(self::hasLooseSubmit("<x-form-actions>\n    <x-button.action type=\"submit\">Save</x-button.action>\n</x-form-actions>"));
+        $this->assertFalse(self::hasLooseSubmit("<x-slot:footer>\n    <x-button.action type=\"submit\">Save</x-button.action>\n</x-slot:footer>"));
+        $this->assertFalse(self::hasLooseSubmit('<x-button.danger type="button" wire:click="remove">Remove</x-button.danger>'));
+    }
+
+    /**
      * The theme CSS and the core components use text-muted too: the view check
      * above skips both (package components it already covers). CSS has no
      * decorative-icon exception, so nothing lighter either; a component's icon
@@ -123,6 +150,17 @@ class ComponentUsageTest extends TestCase
             ->values();
 
         $this->assertSame([], $found->all(), "Use text-muted (see .ai/rules/views.md):\n".$found->implode("\n"));
+    }
+
+    /**
+     * Whether this markup has a submit button outside <x-form-actions> and
+     * footer slots.
+     */
+    private static function hasLooseSubmit(string $contents): bool
+    {
+        $contents = preg_replace('/<x-form-actions\b.*?<\/x-form-actions>|<x-slot:footer\b.*?<\/x-slot(:footer)?>/s', '', $contents);
+
+        return preg_match('/<x-button[\w.-]*\b[^>]*\btype="submit"/', $contents) === 1;
     }
 
     /**
