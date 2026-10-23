@@ -198,6 +198,21 @@
                 @endforeach
             </div>
         </div>
+
+        {{-- Dropdown: actions on one thing behind an icon button, coloured by intent like the buttons. --}}
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Menu') }}</div>
+            <p class="ui-subtle mb-2 text-sm">{{ __('The dropdown keeps the actions on one thing (a section, a row) behind an icon button. Items take the button intents\' colours.') }}</p>
+            {{-- The menu opens from the button's end, so it sits at the end of its row, as in a section header. --}}
+            <div class="flex max-w-md items-center justify-between rounded-box border border-base-300 px-4 py-2">
+                <span class="font-semibold">{{ __('Pricing') }}</span>
+                <x-dropdown :label="__('Actions for Pricing')">
+                    <x-dropdown.item>{{ __('Propose change') }}</x-dropdown.item>
+                    <x-dropdown.item color="warning">{{ __('Retire this section') }}</x-dropdown.item>
+                    <x-dropdown.item color="danger">{{ __('Delete') }}</x-dropdown.item>
+                </x-dropdown>
+            </div>
+        </div>
     </x-card>
 
     {{-- Badges --}}
