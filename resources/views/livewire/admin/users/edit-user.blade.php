@@ -17,12 +17,12 @@
     <form wire:submit="save">
         {{ $this->form }}
 
-        <div class="mt-6 flex items-center gap-4">
+        <x-form-actions>
             <x-button.action type="submit">
                 {{ __('admin.save_changes') }}
             </x-button.action>
 
             <x-button.cancel href="{{ route('users.show', $user) }}" />
-        </div>
+        </x-form-actions>
     </form>
 </div>

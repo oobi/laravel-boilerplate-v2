@@ -7,9 +7,9 @@
         {{ $this->form }}
 
         @if ($this->canUpdate())
-            <div class="mt-6">
+            <x-form-actions>
                 <x-button.action type="submit">{{ team_trans('settings.save') }}</x-button.action>
-            </div>
+            </x-form-actions>
         @endif
     </form>
 

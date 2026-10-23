@@ -4,6 +4,7 @@ namespace Tests\Feature\ThemeDemo;
 
 use App\Models\User;
 use Concise\ThemeDemo\Livewire\FilamentModalGallery;
+use Concise\ThemeDemo\Livewire\Forms\DaisyForm;
 use Concise\ThemeDemo\Livewire\ModalGallery;
 use Concise\ThemeDemo\Livewire\Tables\FilamentTable;
 use Concise\ThemeDemo\Livewire\Tables\MaximalistTable;
@@ -147,6 +148,20 @@ class StyleDemoAccessTest extends TestCase
             ->call('confirmPassword')
             ->assertSet('confirmingPassword', false)
             ->assertNotified();
+    }
+
+    public function test_the_daisy_form_clear_action_empties_the_fields_and_keeps_the_variant_and_error_example(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        Livewire::test(DaisyForm::class, ['variant' => 'standard'])
+            ->set('text', 'Something')
+            ->set('toggle', true)
+            ->call('clear')
+            ->assertSet('text', '')
+            ->assertSet('toggle', false)
+            ->assertSet('variant', 'standard')
+            ->assertHasErrors('errorExample');
     }
 
     /** @return array<string, array{string}> */

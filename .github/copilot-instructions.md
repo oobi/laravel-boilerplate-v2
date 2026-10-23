@@ -68,7 +68,7 @@ currently registered.
   writing any markup, check the component table in
   [the design-system skill](../.ai/skills/design-system/SKILL.md) and use
   `<x-banner>`, `<x-alert>`, `<x-card>` (`inset`, `accent`, `footer`, `href`),
-  `<x-empty-state>`,
+  `<x-empty-state>`, `<x-form-actions>` (a page form's submit row),
   `<x-badge>`, the `<x-button.*>` intents, `<x-button-group>` (segmented
   controls) and `<x-avatar icon>` (icon tiles). No raw daisyUI `btn` / `alert` /
   `card` / `badge` / `join` classes, and no status strips built from a coloured

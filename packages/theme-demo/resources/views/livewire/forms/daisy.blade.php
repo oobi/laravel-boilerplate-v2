@@ -70,9 +70,13 @@
 
                 <x-form-input name="errorExample" type="text" label="{{ __('theme-demo::messages.field_error_example') }}" wire:model="errorExample" :floating="$variant === 'floating'" />
 
-                <div class="flex justify-end md:col-span-2">
+                <x-form-actions class="md:col-span-2">
                     <x-button.action type="submit">{{ __('Submit') }}</x-button.action>
-                </div>
+
+                    <x-slot:secondary>
+                        <x-button.warning variant="soft" size="sm" wire:click="clear">{{ __('theme-demo::messages.forms_daisy_clear') }}</x-button.warning>
+                    </x-slot:secondary>
+                </x-form-actions>
             </form>
         </x-slot:content>
     </x-tabs-nav>

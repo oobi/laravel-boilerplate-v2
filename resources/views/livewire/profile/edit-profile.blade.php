@@ -87,11 +87,11 @@
                             </div>
                         @endif
 
-                        <div>
+                        <x-form-actions>
                             <x-button.action type="submit">
                                 {{ __('admin.save_changes') }}
                             </x-button.action>
-                        </div>
+                        </x-form-actions>
                     </div>
                 </form>
             </x-slot:content>

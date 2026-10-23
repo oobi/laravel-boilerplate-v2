@@ -14,3 +14,6 @@ Use `text-muted` (the utility in `resources/css/theme/tokens.css`) for descripti
 
 ## Field hints go under the field, never above it
 A form field reads label, field, hint, then error, top to bottom. Filament's helperText() already renders below the field; any hand-rolled field (Blade or a JavaScript widget) follows the same order, and a fieldset of choices puts its hint and error after the choices. Never put a hint between the label and the field (settled 2026-10-09).
+
+## A page form's actions go in `<x-form-actions>`
+The submit row at the end of a page form (Livewire views) is `<x-form-actions>`, never a hand-rolled flex row: it sticks to the bottom of the screen on a long form so Save stays in reach, and sits in place on a short one. Main action first, then Cancel or Back; other actions on the record go in its `secondary` slot (far end of the row; behind a "More actions" button on a phone, so the row is always one line). Dialogs keep the `<x-modal>` footer and cards their `footer` slot. `ComponentUsageTest` fails on a submit outside these (settled 2026-10-23).

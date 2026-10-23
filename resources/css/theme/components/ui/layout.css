@@ -15,10 +15,12 @@
        so a vh shell hides its bottom behind the toolbar (#47). */
     .ui-app {
         @apply min-h-dvh;
-        background-color: #f7f8fc;
+        /* A variable, so solid surfaces that must match the page (a stuck form action row) can use it. */
+        --ui-app-bg: #f7f8fc;
+        background-color: var(--ui-app-bg);
 
         @variant dark {
-            background-color: #000;
+            --ui-app-bg: #000;
         }
     }
 
