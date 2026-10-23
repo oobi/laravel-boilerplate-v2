@@ -14,9 +14,8 @@
         bottom: -1px;
         z-index: 10;
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem 1rem;
+        align-items: flex-start;
+        gap: 1rem;
         margin-top: 0.5rem;
         /* A little wider than the content, so a card's shadow doesn't peek past a stuck row. */
         margin-inline: -0.5rem;
@@ -46,10 +45,22 @@
         }
     }
 
+    /* The main action and Cancel or Back: they wrap among themselves in a
+       narrow space, so the secondary actions keep their place on the first line. */
+    .ui-form-actions-main {
+        display: flex;
+        flex: 1 1 auto;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1rem;
+        min-width: 0;
+    }
+
     /* Other actions on the record: the far end of the row. On a phone they fold
        into a panel above the More actions button, so the row stays one line. */
     .ui-form-actions-secondary {
         position: relative;
+        flex: none;
         margin-left: auto;
     }
 
@@ -87,8 +98,9 @@
         }
     }
 
-    /* Keep a focused field clear of the stuck row when tabbing scrolls it into view. */
+    /* Keep a focused field clear of the stuck row when tabbing scrolls it into view,
+       room for two rows of buttons (a narrow space wraps Cancel under the main action). */
     :where(main, html):has(.ui-form-actions) {
-        scroll-padding-bottom: 6rem;
+        scroll-padding-bottom: 9rem;
     }
 }

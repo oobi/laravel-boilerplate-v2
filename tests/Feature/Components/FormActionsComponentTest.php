@@ -13,7 +13,7 @@ class FormActionsComponentTest extends TestCase
         $this->blade('<x-form-actions class="md:col-span-2"><button>Save</button><a>Cancel</a></x-form-actions>')
             ->assertSee('ui-form-actions md:col-span-2', false)
             ->assertSee('IntersectionObserver', false)
-            ->assertSeeInOrder(['<button>Save</button>', '<a>Cancel</a>'], false)
+            ->assertSeeInOrder(['ui-form-actions-main', '<button>Save</button>', '<a>Cancel</a>'], false)
             ->assertDontSee('ui-form-actions-secondary', false);
     }
 

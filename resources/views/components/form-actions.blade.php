@@ -8,7 +8,8 @@
     - default: the main action first, then Cancel or Back
     - secondary: other actions on the record (e.g. Delete), kept apart from
       that pair at the far end. On a phone they fold behind a "More actions"
-      button, so the row is always one line tall; choosing one closes it
+      button, so they never take a row of their own; choosing one closes it.
+      In a narrow space the main action and Cancel wrap among themselves.
 
     It sticks within the nearest scrolling ancestor, so nothing between it and
     the page may set overflow hidden/auto (use overflow-clip instead).
@@ -31,7 +32,9 @@
     x-bind:class="{ 'is-stuck': stuck }"
     {{ $attributes->class('ui-form-actions') }}
 >
-    {{ $slot }}
+    <div class="ui-form-actions-main">
+        {{ $slot }}
+    </div>
 
     @isset($secondary)
         {{-- A disclosure on a phone, like the account menu: opens on click, closes on Escape (focus back to the button), a click outside or Tabbing out.

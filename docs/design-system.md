@@ -125,7 +125,8 @@ and the scrolling area keeps a focused field clear of it.
 The main action comes first, then Cancel or Back. Other actions on the record
 (Delete, Retire) go in the `secondary` slot, at the far end of the row. On a
 phone they fold behind a "More actions" button that opens a panel above it,
-so the row is always one line tall and the space it takes is predictable.
+so they never take a row of their own. In a narrow space the main action and
+Cancel wrap among themselves, and More actions keeps its place on the first line.
 
 ```blade
 <form wire:submit="save">
