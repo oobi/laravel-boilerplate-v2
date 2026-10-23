@@ -17,9 +17,10 @@ class FormActionsComponentTest extends TestCase
             ->assertDontSee('ui-form-actions-secondary', false);
     }
 
-    public function test_another_action_on_the_record_is_kept_apart_after_the_pair(): void
+    public function test_other_actions_on_the_record_sit_apart_behind_a_named_more_actions_button(): void
     {
         $this->blade('<x-form-actions><button>Save</button><x-slot:secondary><button>Delete</button></x-slot:secondary></x-form-actions>')
-            ->assertSeeInOrder(['<button>Save</button>', 'ui-form-actions-secondary', '<button>Delete</button>'], false);
+            ->assertSeeInOrder(['<button>Save</button>', 'ui-form-actions-secondary', 'aria-label="More actions"', 'ui-form-actions-more', '<button>Delete</button>'], false)
+            ->assertSee('aria-expanded="false"', false);
     }
 }

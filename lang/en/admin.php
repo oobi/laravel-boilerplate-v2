@@ -60,6 +60,7 @@ return [
     'joined' => 'Joined',
     'user_information' => 'User Information',
     'actions' => 'Actions',
+    'more_actions' => 'More actions',
     'view' => 'View',
     'impersonate' => 'Impersonate',
     'impersonate_user' => 'Impersonate User',

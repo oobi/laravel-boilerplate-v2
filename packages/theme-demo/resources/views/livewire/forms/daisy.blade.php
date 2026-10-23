@@ -72,6 +72,10 @@
 
                 <x-form-actions class="md:col-span-2">
                     <x-button.action type="submit">{{ __('Submit') }}</x-button.action>
+
+                    <x-slot:secondary>
+                        <x-button.warning variant="soft" size="sm" wire:click="clear">{{ __('theme-demo::messages.forms_daisy_clear') }}</x-button.warning>
+                    </x-slot:secondary>
                 </x-form-actions>
             </form>
         </x-slot:content>

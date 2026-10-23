@@ -122,9 +122,10 @@ on a short form it sits where it is. A top edge shows only while it's stuck,
 its background matches what's behind it (the page, or a card or tabs panel),
 and the scrolling area keeps a focused field clear of it.
 
-The main action comes first, then Cancel or Back. Another action on the record
-(Delete, Retire) goes in the `secondary` slot: the far end on wider screens,
-its own row under a divider on a phone.
+The main action comes first, then Cancel or Back. Other actions on the record
+(Delete, Retire) go in the `secondary` slot, at the far end of the row. On a
+phone they fold behind a "More actions" button that opens a panel above it,
+so the row is always one line tall and the space it takes is predictable.
 
 ```blade
 <form wire:submit="save">
@@ -140,8 +141,9 @@ its own row under a divider on a phone.
 Like a card's `sticky-footer`, it sticks within the nearest scrolling
 ancestor, so nothing between it and the page may set `overflow: hidden` or
 `auto`. Dialogs keep their own footer (`<x-modal>`), and a card's actions stay
-in its `footer` slot. `ComponentUsageTest` fails on a submit button in a
-Livewire view outside these.
+in its `footer` slot, which may right-align (as the Filament demo form does).
+`ComponentUsageTest` fails on a submit button in a Livewire view outside
+these.
 
 ## Form errors and page landmarks
 

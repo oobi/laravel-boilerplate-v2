@@ -121,6 +121,7 @@ class ComponentUsageTest extends TestCase
     {
         $this->assertTrue(self::hasLooseSubmit("<div class=\"mt-6 flex gap-4\">\n    <x-button.action type=\"submit\">Save</x-button.action>\n</div>"));
         $this->assertTrue(self::hasLooseSubmit('<x-button type="submit">Save</x-button>'));
+        $this->assertTrue(self::hasLooseSubmit('<button type="submit" class="ui-x">Save</button>'));
 
         $this->assertFalse(self::hasLooseSubmit("<x-form-actions>\n    <x-button.action type=\"submit\">Save</x-button.action>\n</x-form-actions>"));
         $this->assertFalse(self::hasLooseSubmit("<x-slot:footer>\n    <x-button.action type=\"submit\">Save</x-button.action>\n</x-slot:footer>"));
@@ -160,7 +161,7 @@ class ComponentUsageTest extends TestCase
     {
         $contents = preg_replace('/<x-form-actions\b.*?<\/x-form-actions>|<x-slot:footer\b.*?<\/x-slot(:footer)?>/s', '', $contents);
 
-        return preg_match('/<x-button[\w.-]*\b[^>]*\btype="submit"/', $contents) === 1;
+        return preg_match('/<(x-button[\w.-]*|button)\b[^>]*\btype="submit"/', $contents) === 1;
     }
 
     /**

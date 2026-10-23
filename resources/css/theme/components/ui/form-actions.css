@@ -31,6 +31,10 @@
         background-color: var(--color-base-100);
     }
 
+    .card-inset .ui-form-actions {
+        background-color: var(--ui-inset-bg);
+    }
+
     .ui-form-actions.is-stuck {
         border-top-color: var(--color-base-300);
         box-shadow: 0 -6px 12px -10px rgb(0 0 0 / 0.25);
@@ -42,8 +46,45 @@
         }
     }
 
+    /* Other actions on the record: the far end of the row. On a phone they fold
+       into a panel above the More actions button, so the row stays one line. */
     .ui-form-actions-secondary {
-        @apply w-full border-t border-base-300 pt-3 sm:ml-auto sm:w-auto sm:border-0 sm:pt-0;
+        position: relative;
+        margin-left: auto;
+    }
+
+    .ui-form-actions-more {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 0.5rem);
+        z-index: 20;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        min-width: 12rem;
+        padding: 0.5rem;
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-box);
+        background-color: var(--color-base-100);
+        box-shadow: var(--ui-island-shadow-xs);
+
+        &.is-open {
+            display: flex;
+        }
+
+        @variant sm {
+            position: static;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background-color: transparent;
+            box-shadow: none;
+        }
     }
 
     /* Keep a focused field clear of the stuck row when tabbing scrolls it into view. */

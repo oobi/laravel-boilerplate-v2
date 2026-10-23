@@ -57,7 +57,7 @@ class DaisyForm extends Component
 
         $this->variant = $variant;
 
-        $this->addError('errorExample', __('theme-demo::messages.field_error_message'));
+        $this->showErrorExample();
     }
 
     public function submit(): void
@@ -65,6 +65,25 @@ class DaisyForm extends Component
         $this->validate();
 
         session()->flash('status', __('Form submitted (demo only — nothing was saved).'));
+    }
+
+    /**
+     * Empty every field (the demo's secondary action), keeping the label
+     * variant and the error example.
+     */
+    public function clear(): void
+    {
+        $this->resetExcept('variant');
+        $this->resetValidation();
+        $this->showErrorExample();
+    }
+
+    /**
+     * The field that always shows an error, so the gallery has the state.
+     */
+    private function showErrorExample(): void
+    {
+        $this->addError('errorExample', __('theme-demo::messages.field_error_message'));
     }
 
     public function render(): View

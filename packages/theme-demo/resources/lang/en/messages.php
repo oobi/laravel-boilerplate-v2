@@ -42,6 +42,7 @@ return [
     'forms_daisy_description' => 'Every native daisyUI field type in one form, including an error state.',
     'forms_daisy_tab_floating' => 'Floating labels',
     'forms_daisy_tab_standard' => 'Standard labels',
+    'forms_daisy_clear' => 'Clear form',
 
     'filament_form_title' => 'Filament Form',
     'filament_form_description' => 'The same fields as the daisyUI form, built with Filament form components — plus two Filament-exclusive extras (tags, markdown).',
