@@ -118,7 +118,7 @@ list with the reason. See `.ai/rules/views.md`.
 
 | Component | Use instead of | Key props |
 |---|---|---|
-| `<x-tabs-nav>` | tabs as a bordered "island" attached to their own panel (never a floating bar over a separate box) | `scrollable` (default true); slot: `content` |
+| `<x-tabs-nav>` | tabs as a bordered "island" attached to their own panel (never a floating bar over a separate box) | `scrollable` (default true; pages never pass it, so the default sets it app-wide), `flush`; slot: `content` |
 | `<x-tabs-item>` | a single `role="tab"` link | `active`, `href`, `icon`, `badge` |
 
 ### Admin shell (usually wired via a registry, not hand-written in a page)

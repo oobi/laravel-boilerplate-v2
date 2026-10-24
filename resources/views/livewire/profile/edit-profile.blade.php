@@ -4,7 +4,7 @@
     <x-page-header :title="__('admin.my_profile')" />
 
     <div class="w-full max-w-3xl">
-        <x-tabs-nav :scrollable="false">
+        <x-tabs-nav>
             @include('livewire.profile.partials.tabs')
 
             <x-slot:content>

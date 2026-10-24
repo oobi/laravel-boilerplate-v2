@@ -17,3 +17,6 @@ A form field reads label, field, hint, then error, top to bottom. Filament's hel
 
 ## A page form's actions go in `<x-form-actions>`
 The submit row at the end of a page form (Livewire views) is `<x-form-actions>`, never a hand-rolled flex row: it sticks to the bottom of the screen on a long form so Save stays in reach, and sits in place on a short one. Main action first, then Cancel or Back; other actions on the record go in its `secondary` slot (far end of the row; behind a "More actions" button on a phone, so they never take a row of their own). Dialogs keep the `<x-modal>` footer and cards their `footer` slot. `ComponentUsageTest` fails on a submit outside these (settled 2026-10-23).
+
+## Tabs follow the `<x-tabs-nav>` default; pages don't pass `scrollable`
+Overflowing tabs scroll sideways (swipe hint on a phone, shown only when they overflow) because `scrollable` defaults to true. Pages never pass the prop, so the app is consistent and flipping the default in tabs-nav.blade.php changes every page at once. Every page used to pass `:scrollable="false"` and wrapped to two rows on a phone (settled 2026-10-24).

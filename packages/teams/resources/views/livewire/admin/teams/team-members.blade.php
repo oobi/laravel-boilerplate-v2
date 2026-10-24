@@ -5,7 +5,7 @@
 
     @include('teams::livewire.admin.teams.partials.header', ['team' => $team, 'current' => 'members'])
 
-    <x-tabs-nav :scrollable="false">
+    <x-tabs-nav>
         @include('teams::livewire.admin.teams.partials.tabs', ['team' => $team, 'current' => 'members'])
 
         <x-slot:content>

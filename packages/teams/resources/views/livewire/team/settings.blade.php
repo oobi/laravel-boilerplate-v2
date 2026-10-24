@@ -11,7 +11,7 @@
     @php($showDomainsTab = \Concise\Teams\Support\DomainPolicy::customDomainsEnabled() && \Illuminate\Support\Facades\Gate::allows(\Concise\Teams\Enums\TeamAbility::MANAGE_DOMAINS, $team))
 
     @if ($showDomainsTab)
-        <x-tabs-nav :scrollable="false">
+        <x-tabs-nav>
             @include('teams::livewire.team.partials.settings-tabs', ['team' => $team, 'current' => 'settings'])
 
             <x-slot:content>

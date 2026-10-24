@@ -13,7 +13,7 @@
 
     @if ($tabs->isNotEmpty())
         {{-- One tab per registered RoleScope (core's system scope plus any add-on's). --}}
-        <x-tabs-nav :scrollable="false">
+        <x-tabs-nav>
             @foreach ($tabs as $tab)
                 <x-tabs-item :active="$tab['active']" :href="$tab['href']" :badge="$tab['badge']">
                     {{ $tab['label'] }}
