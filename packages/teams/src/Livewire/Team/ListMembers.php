@@ -27,17 +27,21 @@ class ListMembers extends Component
     public function mount(Team $team): void
     {
         $this->team = $team;
-        Gate::authorize(TeamAbility::VIEW_MEMBERS, $team);
     }
 
     /**
-     * Re-establish the team scope on every request. The route middleware sets it
-     * for the initial render, but Livewire's update requests bypass that route —
-     * so anything team-scoped here (disk, cache) would otherwise fail loud.
+     * Re-establish the team scope on every request, then re-check access.
+     * ResolveTeamContext runs on Livewire updates too (persistent middleware)
+     * but clears the scope when it finishes, so it is set again here; and it
+     * checks membership, not this page's team ability, which is asked here
+     * after mount() and on every update, so a role taken away mid-session is
+     * refused at the next click.
      */
     public function booted(): void
     {
         app(TeamContext::class)->set($this->team);
+
+        Gate::authorize(TeamAbility::VIEW_MEMBERS, $this->team);
     }
 
     public function render(): View

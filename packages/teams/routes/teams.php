@@ -108,10 +108,12 @@ Route::middleware(['web', 'signed'])
     });
 
 // The system admin area: "all teams", in the admin shell, gated by the `view
-// teams` system permission at each page (never by membership); edits need
-// `manage teams` and the finer team permissions. Flat `teams.*` route names so
-// Breadcrumbs derives the parent crumb.
-Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])
+// teams` system permission on the route and at each page (never by
+// membership); edits need `manage teams` and the finer team permissions. The
+// route's `can:` is re-run on every Livewire update, so access lost mid-session
+// is refused at the next click. Flat `teams.*` route names so Breadcrumbs
+// derives the parent crumb.
+Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value, 'can:'.SystemPermission::VIEW_TEAMS->value])
     ->domain($adminHost)
     ->prefix($adminTeamsPrefix)
     ->name('teams.')

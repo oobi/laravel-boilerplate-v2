@@ -78,7 +78,11 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     public function mount(Team $team): void
     {
         $this->team = $team;
+    }
 
+    /** After mount() and on every Livewire update, so access taken away mid-session is refused at the next click. */
+    public function booted(): void
+    {
         abort_unless($this->canView(), 403);
     }
 

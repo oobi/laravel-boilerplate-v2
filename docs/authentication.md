@@ -141,8 +141,10 @@ password reset, outside the impersonation trail.
   Fortify's two-factor routes (attached in `AppServiceProvider`). It also covers
   passkey management and Fortify's profile and password routes, should those
   features be switched on.
-- Livewire updates skip route middleware, so every profile component uses the
-  `RequiresFullSession` trait, which re-checks on each request.
+- It is registered as persistent Livewire middleware, so Livewire re-runs it
+  on a profile page's updates too. Every profile component also uses the
+  `RequiresFullSession` trait, which re-checks on each request whatever route
+  renders it.
 - Fortify's `updateProfileInformation()` and `updatePasswords()` features are
   off: the pages call the actions directly.
 - Changing the email asks for the current password.

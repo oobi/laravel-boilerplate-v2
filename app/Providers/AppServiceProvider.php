@@ -53,6 +53,7 @@ use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
 use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract;
 use Laravel\Fortify\Fortify;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -71,6 +72,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerAuthorization();
         $this->registerFortify();
+
+        // Livewire re-runs only its persistent middleware (auth, `can:`, bindings)
+        // on an update request; our own route middleware has to be added.
+        Livewire::addPersistentMiddleware(DenyLowAssuranceSessions::class);
         $this->registerFilamentIcons();
         $this->registerFilamentModalDefaults();
         $this->registerFilamentBulkActionDefaults();

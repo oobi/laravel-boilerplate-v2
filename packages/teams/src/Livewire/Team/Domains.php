@@ -34,10 +34,13 @@ class Domains extends Component
         $this->team = $team;
     }
 
-    /** See ListMembers::booted() — keep the team scope across Livewire updates. */
+    /** See ListMembers::booted(): the team scope, then this page's access, on every request. */
     public function booted(): void
     {
         app(TeamContext::class)->set($this->team);
+
+        abort_unless(DomainPolicy::customDomainsEnabled(), 404);
+        Gate::authorize(TeamAbility::MANAGE_DOMAINS, $this->team);
     }
 
     public function render(): View

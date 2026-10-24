@@ -88,14 +88,17 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
         Route::get('/', fn () => redirect()->route('dashboard'));
         Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
-        Route::prefix('users')->name('users.')->group(function (): void {
+        // Each area's read floor is on its route, not only in the page's mount():
+        // Livewire re-runs `can:` middleware on every update request, so access
+        // lost mid-session is refused at the next click (docs/permissions.md).
+        Route::prefix('users')->name('users.')->middleware('can:'.SystemPermission::VIEW_USERS->value)->group(function (): void {
             Route::get('/', ListUsers::class)->name('index');
             Route::get('/create', CreateUser::class)->name('create');
             Route::get('/{user}', ShowUser::class)->name('show');
             Route::get('/{user}/edit', EditUser::class)->name('edit');
         });
 
-        Route::prefix('roles')->name('roles.')->group(function (): void {
+        Route::prefix('roles')->name('roles.')->middleware('can:'.SystemPermission::MANAGE_ROLES->value)->group(function (): void {
             Route::get('/', ManageRoles::class)->name('index');
             Route::get('/create', CreateRole::class)->name('create');
             Route::get('/{role}/edit', ManageRoles::class)->name('edit');

@@ -133,9 +133,37 @@ Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);
 
 ...in a route-group `can:` middleware (see `routes/web.php`'s admin group,
 which gates the whole shell on panel entry) or a Livewire component's
-`mount()` (`ListUsers`/`ShowUser` authorize the area's read floor,
-`VIEW_USERS`) is enough — no extra registration required for a
+`mount()` is enough: no extra registration is required for a
 `SystemPermission` case to become checkable.
+
+### Access lost while a page is open
+
+A Livewire page makes more requests after it loads (a filter change, paging,
+an action), and Livewire sends them to its own update route, not the page's.
+On each one it re-runs only the page route's **persistent middleware**:
+`auth`, `can:` (`Illuminate\Auth\Middleware\Authorize`), route model
+binding and a few others, plus what the app registers with
+`Livewire::addPersistentMiddleware()`. A check in `mount()` runs once, on the
+page load. So:
+
+- **An area's read floor goes on its route** as `can:` middleware (the users
+  group: `view users`; roles: `manage roles`; the teams admin group:
+  `view teams`), as well as in the page's `mount()`. Someone who loses it with
+  the page open is refused at their next click, not at their next reload.
+- **Our own route middleware is registered as persistent**:
+  `DenyLowAssuranceSessions` (AppServiceProvider) and the teams tier's
+  `ResolveTeamContext` (membership and an active team, TeamsServiceProvider).
+- **A read restriction that can't sit on a route** (one record, or one team
+  ability such as a team page's `viewMembers`) goes in the component's
+  `booted()`, which Livewire calls
+  after `mount()` and on every update. A check in `mount()` alone is the gap
+  this section is about.
+- **A write check** (one record's ability, such as `UserAbility::UPDATE` on
+  Edit user) goes in each action, which re-authorizes when it runs.
+
+Livewire::test() skips all of this. To test it, render the page with
+`$this->get()` and send an update with the `livewireUpdate()` helper in
+`tests/TestCase.php`, as `LivewireUpdateAuthorizationTest` does.
 
 Inside a Policy checking a role's or user's permission directly, call
 **`checkPermissionTo()`**, never `hasPermissionTo()`:
@@ -248,8 +276,10 @@ generic "update a user" ability.
    written, also `php artisan bp:roles:sync-implications` so existing roles
    gain what the new arm implies.
 3. Check it somewhere with `Gate::authorize()` / `Gate::allows()` /
-   `checkPermissionTo()`, same as any existing case. A new area's pages
-   authorize its read floor in `mount()`, never `ACCESS_ADMIN_PANEL`.
+   `checkPermissionTo()`, same as any existing case. A new area's routes
+   carry its read floor as `can:` middleware and its pages authorize it in
+   `mount()`, never `ACCESS_ADMIN_PANEL` (see "Access lost while a page is
+   open" above).
 
 To **remove** a permission nothing checks any more, delete its case (label,
 category, `implies()` arm, lang line) and add its value to

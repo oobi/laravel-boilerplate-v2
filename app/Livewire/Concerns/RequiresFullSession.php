@@ -8,8 +8,9 @@ use App\Support\Auth\SessionAssurance;
 
 /**
  * Account-security pages: refuse impersonated sessions on every request,
- * Livewire updates included (they skip route middleware). The route group
- * carries DenyLowAssuranceSessions for the page load.
+ * Livewire updates included. The route group carries DenyLowAssuranceSessions,
+ * which Livewire also re-runs on updates (it is registered as persistent
+ * middleware); this trait keeps the rule on the component itself.
  */
 trait RequiresFullSession
 {
