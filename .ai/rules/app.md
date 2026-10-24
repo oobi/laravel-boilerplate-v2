@@ -23,3 +23,6 @@ Any new form or action that accepts an email must therefore validate uniqueness 
 
 ## Check the installed Filament API before writing Filament code
 Filament is v5 here (check composer.lock) and its API differs from earlier versions and from memory (e.g. helperText() is stored as a below-content schema, so there is no getHelperText(); select search waits searchDebounce, 1000 ms by default). Before using or asserting any Filament method (components, actions, tables, schemas, notifications, testing helpers), confirm it exists in the installed version: search-docs with packages ['filament/filament'], or grep vendor/filament/*/src. Applies equally to packages/*/src and tests/**. Don't guess a method name and iterate on failures.
+
+## Never pass intval(...) straight to collect()->map()
+Collection::map() calls the callback with ($value, $key), so `->map(intval(...))` uses each key as intval's base: the item at key 0 converts, later ones become 0. Write `->map(fn (int|string $id): int => (int) $id)`. (`array_map(intval(...), ...)` is fine: it passes only the value.) Found in ss-salon-admin.
