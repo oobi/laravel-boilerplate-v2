@@ -16,7 +16,7 @@
     (`.ui-flush-content`, filament-table.css) so the panel's border frames it.
 
     scrollable (default true): one horizontal row at every screen size.
-    Overflow controls sit beside the viewport in space reserved from first paint.
+    Arrow buttons sit beside the viewport, shown only when the tabs overflow.
     Explicit false retains the plain, wrapping tab layout without scroll controls.
     Pages don't pass it, so this default sets the behaviour app-wide.
 --}}
@@ -35,8 +35,8 @@
             </div>
 
             @if ($scrollable)
-                {{-- Visibility changes without removing the space reserved for these controls. --}}
-                <div class="tab-scroll-controls" style="visibility: hidden;">
+                {{-- Shown by tab-scroll.js only when the tabs overflow, so a strip that fits keeps the full width. --}}
+                <div class="tab-scroll-controls" style="display: none;">
                     <x-button.icon class="tab-scroll-left" :aria-label="__('admin.scroll_tabs_left')" disabled>
                         <x-heroicon-o-chevron-left class="h-4 w-4" aria-hidden="true" />
                     </x-button.icon>
