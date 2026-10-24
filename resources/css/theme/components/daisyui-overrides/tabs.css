@@ -61,3 +61,20 @@
 .tabs-connected__divider {
     border-color: color-mix(in oklab, var(--color-base-300) 86%, var(--color-base-content));
 }
+
+.tabs-connected__header .tabs--scrollable {
+    flex-wrap: nowrap;
+    min-width: max-content;
+
+    > .tab {
+        @apply shrink-0 flex-nowrap whitespace-nowrap;
+
+        @variant max-sm {
+            min-height: 3rem;
+        }
+    }
+}
+
+.tab-scroll-controls > .btn {
+    @apply h-11 w-11 min-h-11 shrink-0;
+}

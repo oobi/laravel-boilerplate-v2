@@ -15,35 +15,16 @@
     full width, and lets a table inside drop its own border and corners
     (`.ui-flush-content`, filament-table.css) so the panel's border frames it.
 
-    scrollable (default true): tabs that don't fit scroll sideways, with a
-    "Swipe for more tabs" hint on a phone and arrow indicators for a mouse,
-    both shown only when the tabs overflow. false wraps them onto more rows.
+    scrollable (default true): one horizontal row at every screen size.
+    Overflow controls sit beside the viewport in space reserved from first paint.
+    Explicit false retains the plain, wrapping tab layout without scroll controls.
     Pages don't pass it, so this default sets the behaviour app-wide.
 --}}
 @props(['scrollable' => true, 'flush' => false])
-{{-- overflow-clip, not overflow-hidden: it clips to the rounded corners the same way, but
-     isn't a scroll container, so sticky content inside (a card's footer) follows the page. --}}
+{{-- overflow-clip keeps sticky content inside the panel attached to the page scroller. --}}
 <div {{ $attributes->class(['tabs-connected overflow-clip rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
-    @if ($scrollable)
-        {{-- Mobile swipe hint: tab-scroll.js shows it only when the tabs overflow; no pulse for reduced motion. --}}
-        <div class="tab-swipe-hint sm:hidden text-center text-xs text-muted pt-3 px-4" style="display:none;">
-            <div class="inline-flex items-center justify-center gap-1 bg-base-200/50 rounded-full py-1 px-3">
-                <svg class="w-3 h-3 motion-safe:animate-pulse" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                <span class="font-medium">{{ __('admin.swipe_for_more_tabs') }}</span>
-                <svg class="w-3 h-3 motion-safe:animate-pulse" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </div>
-        </div>
-    @endif
-
-    <div class="tabs-connected__header @if ($scrollable) tabs-connected__header--scrollable @endif px-3 pt-3 sm:px-6 sm:pt-3">
+    <div class="tabs-connected__header px-3 pt-3 sm:px-6 sm:pt-3">
         <div class="tabs-connected__scroll-shell @if ($scrollable) tabs-connected__scroll-shell--scrollable @endif">
-            {{-- data-tab-scroll must sit on the overflow container, one level
-                 above [role="tablist"], so tab-scroll.js can query it as a
-                 descendant rather than querying the element itself. --}}
             <div
                 class="tabs-connected__scroll-viewport @if ($scrollable) tabs-connected__scroll-viewport--scrollable @endif"
                 @if ($scrollable) data-tab-scroll @endif
@@ -54,16 +35,14 @@
             </div>
 
             @if ($scrollable)
-                {{-- Mouse helpers only (aria-hidden): keyboard users reach every tab with Tab, which scrolls it into view. --}}
-                <div class="tab-scroll-indicator tab-scroll-left" style="display:none;" aria-hidden="true">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </div>
-                <div class="tab-scroll-indicator tab-scroll-right" aria-hidden="true">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
+                {{-- Visibility changes without removing the space reserved for these controls. --}}
+                <div class="tab-scroll-controls" style="visibility: hidden;">
+                    <x-button.icon class="tab-scroll-left" :aria-label="__('admin.scroll_tabs_left')" disabled>
+                        <x-heroicon-o-chevron-left class="h-4 w-4" aria-hidden="true" />
+                    </x-button.icon>
+                    <x-button.icon class="tab-scroll-right" :aria-label="__('admin.scroll_tabs_right')" disabled>
+                        <x-heroicon-o-chevron-right class="h-4 w-4" aria-hidden="true" />
+                    </x-button.icon>
                 </div>
             @endif
         </div>

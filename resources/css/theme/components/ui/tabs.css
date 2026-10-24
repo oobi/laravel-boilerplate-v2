@@ -1,64 +1,22 @@
 /* Tab Navigation Styles */
 @layer components {
-    /* Scrollable tabs modifier */
+    .tabs-connected__scroll-shell--scrollable {
+        @apply grid min-w-0 max-w-full items-center;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
     .tabs-connected__scroll-viewport--scrollable {
         @apply min-w-0 max-w-full overflow-x-auto;
         overscroll-behavior-x: contain;
-        touch-action: pan-x;
-        /* Hide scrollbar but allow scrolling on mobile */
         scrollbar-width: none;
-        -ms-overflow-style: none;
-        /* Smooth scrolling and snap on mobile */
-        scroll-behavior: smooth;
+        scroll-behavior: auto;
     }
 
     .tabs-connected__scroll-viewport--scrollable::-webkit-scrollbar {
         display: none;
     }
 
-    .tabs--scrollable {
-        min-width: max-content;
-    }
-
-    /* Tab scroll indicators (left/right arrow buttons). Theme colours, so they follow the app's
-       light/dark choice rather than the system's (data-theme, not prefers-color-scheme). */
-    .tab-scroll-indicator {
-        @apply absolute top-1/2 transform -translate-y-1/2 z-10;
-        @apply px-1 py-2 flex items-center justify-center cursor-pointer;
-        @apply opacity-75 hover:opacity-100 transition-opacity duration-200;
-        @apply active:scale-95 select-none;
-        @apply text-muted;
-        display: none;
-        backdrop-filter: blur(4px);
-        touch-action: manipulation;
-    }
-
-    .tab-scroll-left {
-        left: 0;
-        background: linear-gradient(
-            to right,
-            color-mix(in oklab, var(--color-base-100) 95%, transparent) 0%,
-            color-mix(in oklab, var(--color-base-100) 75%, transparent) 70%,
-            transparent 100%
-        );
-    }
-
-    .tab-scroll-right {
-        right: 0;
-        background: linear-gradient(
-            to left,
-            color-mix(in oklab, var(--color-base-100) 95%, transparent) 0%,
-            color-mix(in oklab, var(--color-base-100) 75%, transparent) 70%,
-            transparent 100%
-        );
-    }
-
-    /* Container for scrollable tabs */
-    .tabs-connected__header--scrollable {
-        @apply relative;
-    }
-
-    .tabs-connected__scroll-shell--scrollable {
-        @apply relative min-w-0 max-w-full;
+    .tab-scroll-controls {
+        @apply flex items-center;
     }
 }

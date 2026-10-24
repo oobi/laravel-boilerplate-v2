@@ -10,13 +10,12 @@ export class TabScrollController {
         const indicatorRoot = element.parentElement;
         this.leftIndicator = indicatorRoot?.querySelector('.tab-scroll-left');
         this.rightIndicator = indicatorRoot?.querySelector('.tab-scroll-right');
-        this.swipeHint = element.closest('.tabs-connected')?.querySelector('.tab-swipe-hint');
+        this.controls = indicatorRoot?.querySelector('.tab-scroll-controls');
 
         // Configurable options
         this.options = {
-            leftThreshold: 40,
-            rightThreshold: 10,
-            updateDelay: 100,
+            leftThreshold: 1,
+            rightThreshold: 1,
             ...options
         };
 
@@ -44,14 +43,20 @@ export class TabScrollController {
             this.rightIndicator.addEventListener('click', this.scrollRight);
         }
 
-        // Wait for the tab layout before revealing the active tab and indicators.
-        this.initTimeout = setTimeout(() => {
-            this.scrollActiveTabIntoView();
-            this.updateScrollIndicators();
-        }, this.options.updateDelay);
+        this.handleResize();
 
-        // Update on window resize
-        window.addEventListener('resize', this.handleResize);
+        // Container changes and font loading can change the available space without a window resize.
+        this.resizeObserver = new ResizeObserver(this.handleResize);
+        this.resizeObserver.observe(this.element);
+        this.resizeObserver.observe(this.nav);
+
+        this.selectionObserver = new MutationObserver(this.handleResize);
+        this.selectionObserver.observe(this.nav, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['class', 'aria-current', 'aria-selected'],
+        });
     }
 
     handleScroll() {
@@ -65,57 +70,36 @@ export class TabScrollController {
     }
 
     handleResize() {
-        // Debounce resize updates
-        if (this.resizeTimeout) {
-            clearTimeout(this.resizeTimeout);
-        }
-
-        this.resizeTimeout = setTimeout(() => {
-            this.updateScrollIndicators();
-        }, this.options.updateDelay);
+        this.scrollActiveTabIntoView();
+        this.updateScrollIndicators();
     }
 
     updateScrollIndicators() {
-        if (!this.nav || !this.leftIndicator || !this.rightIndicator) return;
+        if (!this.nav || !this.controls || !this.leftIndicator || !this.rightIndicator) return;
 
         const isAtStart = this.element.scrollLeft <= this.options.leftThreshold;
         const isAtEnd = this.element.scrollLeft >= (this.element.scrollWidth - this.element.clientWidth - this.options.rightThreshold);
         const hasOverflow = this.element.scrollWidth > this.element.clientWidth;
 
-        // The swipe hint (phones) only means something when there's more to swipe to.
-        if (this.swipeHint) {
-            this.swipeHint.style.display = hasOverflow ? '' : 'none';
-        }
-
-        // Only show indicators if there's actually overflow
-        if (!hasOverflow) {
-            this.leftIndicator.style.display = 'none';
-            this.rightIndicator.style.display = 'none';
-            return;
-        }
-
-        // Show/hide indicators based on scroll position and thresholds
-        this.leftIndicator.style.display = isAtStart ? 'none' : 'flex';
-        this.rightIndicator.style.display = isAtEnd ? 'none' : 'flex';
+        this.controls.style.visibility = hasOverflow ? 'visible' : 'hidden';
+        this.leftIndicator.disabled = !hasOverflow || isAtStart;
+        this.rightIndicator.disabled = !hasOverflow || isAtEnd;
     }
 
     scrollActiveTabIntoView() {
-        const activeTab = this.nav.querySelector('[role="tab"][aria-current="page"], [role="tab"].tab-active');
+        const activeTab = this.nav.querySelector('[role="tab"]:is([aria-current="page"], [aria-current="true"], [aria-selected="true"], .tab-active)');
 
         if (!activeTab) return;
 
-        const tabStart = activeTab.offsetLeft;
-        const tabEnd = tabStart + activeTab.offsetWidth;
+        const tabBounds = activeTab.getBoundingClientRect();
+        const viewportBounds = this.element.getBoundingClientRect();
+        const tabStart = tabBounds.left - viewportBounds.left + this.element.scrollLeft;
+        const tabEnd = tabStart + tabBounds.width;
         const viewportStart = this.element.scrollLeft;
         const viewportEnd = viewportStart + this.element.clientWidth;
 
         if (tabStart < viewportStart || tabEnd > viewportEnd) {
-            const scrollLeft = Math.max(0, tabStart - (this.element.clientWidth - activeTab.offsetWidth) / 2);
-            const previousBehavior = this.element.style.scrollBehavior;
-
-            this.element.style.scrollBehavior = 'auto';
-            this.element.scrollLeft = scrollLeft;
-            this.element.style.scrollBehavior = previousBehavior;
+            this.element.scrollLeft = Math.max(0, tabStart - Math.max(0, (this.element.clientWidth - tabBounds.width) / 2));
         }
     }
 
@@ -126,7 +110,7 @@ export class TabScrollController {
 
         this.element.scrollTo({
             left: this.element.scrollLeft - scrollDistance,
-            behavior: 'smooth'
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
         });
     }
 
@@ -137,7 +121,7 @@ export class TabScrollController {
 
         this.element.scrollTo({
             left: this.element.scrollLeft + scrollDistance,
-            behavior: 'smooth'
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
         });
     }
 
@@ -150,9 +134,7 @@ export class TabScrollController {
     }
 
     destroy() {
-        // Same bound references used at init(), so these actually detach —
-        // in particular the window resize handler, which otherwise keeps this
-        // controller (and its detached DOM) alive after the tabs are replaced.
+        // Release listeners and observers when Livewire replaces the tab strip.
         this.element.removeEventListener('scroll', this.handleScroll);
 
         if (this.leftIndicator) {
@@ -163,11 +145,9 @@ export class TabScrollController {
             this.rightIndicator.removeEventListener('click', this.scrollRight);
         }
 
-        window.removeEventListener('resize', this.handleResize);
-
-        clearTimeout(this.initTimeout);
+        this.resizeObserver?.disconnect();
+        this.selectionObserver?.disconnect();
         clearTimeout(this.scrollTimeout);
-        clearTimeout(this.resizeTimeout);
     }
 }
 
