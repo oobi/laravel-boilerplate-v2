@@ -311,11 +311,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
     {
         return User::query()
             ->whereDoesntHave('teams', fn (Builder $query) => $query->whereKey($this->team->getKey()))
-            ->where(function (Builder $query) use ($search): void {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            })
+            ->whereAnyContains(['first_name', 'last_name', 'email'], $search)
             ->orderBy('last_name')
             ->limit(20)
             ->get()
