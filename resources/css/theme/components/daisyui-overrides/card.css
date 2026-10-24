@@ -12,6 +12,24 @@
 
 /*
 |--------------------------------------------------------------------------
+| .card — tighter padding on a phone
+|--------------------------------------------------------------------------
+| daisyUI pads `.card-body` with `--card-p` (1.5rem at every width). On a phone
+| that is wider than the page gutter, so nested content gets squeezed. Set on
+| `.card` so the footer and the flush-table rule, which read `--card-p` from
+| outside `.card-body`, follow it too. A size modifier (`card-sm` etc.) sets it
+| on `.card-body` and still wins.
+*/
+.card {
+    --card-p: 1rem;
+
+    @variant sm {
+        --card-p: 1.5rem;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
 | .ui-card-link: a whole card as a link (<x-card href>)
 |--------------------------------------------------------------------------
 | The border turns primary on hover, and keyboard focus gets a visible ring.

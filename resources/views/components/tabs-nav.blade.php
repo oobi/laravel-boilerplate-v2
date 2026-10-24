@@ -23,7 +23,7 @@
 @props(['scrollable' => true, 'flush' => false])
 {{-- overflow-clip keeps sticky content inside the panel attached to the page scroller. --}}
 <div {{ $attributes->class(['tabs-connected overflow-clip rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
-    <div class="tabs-connected__header px-3 pt-3 sm:px-6 sm:pt-3">
+    <div class="tabs-connected__header px-4 pt-3 sm:px-6">
         <div class="tabs-connected__scroll-shell @if ($scrollable) tabs-connected__scroll-shell--scrollable @endif">
             <div
                 class="tabs-connected__scroll-viewport @if ($scrollable) tabs-connected__scroll-viewport--scrollable @endif"
@@ -61,7 +61,7 @@
         {{-- Forces display regardless of which tab is "active" — daisyUI's own
              show/hide-on-checked wiring is for co-located panels; ours are
              separate pages, so there's always exactly one panel to show. --}}
-        <div @class(['tab-content tabs-connected__content bg-base-100', 'p-6' => ! $flush, 'ui-flush-content' => $flush]) style="display: block">
+        <div @class(['tab-content tabs-connected__content bg-base-100', 'p-4 sm:p-6' => ! $flush, 'ui-flush-content' => $flush]) style="display: block">
             {{ $content }}
         </div>
     @endisset
