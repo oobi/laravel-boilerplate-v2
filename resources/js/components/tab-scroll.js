@@ -79,9 +79,11 @@ export class TabScrollController {
 
         const isAtStart = this.element.scrollLeft <= this.options.leftThreshold;
         const isAtEnd = this.element.scrollLeft >= (this.element.scrollWidth - this.element.clientWidth - this.options.rightThreshold);
-        const hasOverflow = this.element.scrollWidth > this.element.clientWidth;
+        // Measure against the whole row, not the viewport, so showing the arrows (which
+        // narrows the viewport) can't keep them showing once the tabs would fit without them.
+        const hasOverflow = this.nav.getBoundingClientRect().width > this.element.parentElement.clientWidth + 0.5;
 
-        this.controls.style.visibility = hasOverflow ? 'visible' : 'hidden';
+        this.controls.style.display = hasOverflow ? '' : 'none';
         this.leftIndicator.disabled = !hasOverflow || isAtStart;
         this.rightIndicator.disabled = !hasOverflow || isAtEnd;
     }

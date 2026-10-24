@@ -28,11 +28,12 @@ class TabsNavComponentTest extends TestCase
             ->assertSeeInOrder(['href="/current"', 'aria-current="page"', 'Current', 'href="/versions"', 'Versions', 'badge', '4', 'href="/changes"', 'Proposed changes', 'Current document'], false);
     }
 
-    public function test_scroll_controls_are_named_buttons_after_the_tab_viewport(): void
+    public function test_scroll_controls_are_named_buttons_after_the_tab_viewport_hidden_until_the_tabs_overflow(): void
     {
         $this->blade('<x-tabs-nav :scrollable="true"><x-tabs-item href="/overview">Overview</x-tabs-item></x-tabs-nav>')
             ->assertSee('data-tab-scroll', false)
             ->assertSee('tabs--scrollable', false)
+            ->assertSee('class="tab-scroll-controls" style="display: none;"', false)
             ->assertSeeInOrder(['Overview', '</div>', '</div>', 'tab-scroll-controls', 'type="button"', 'aria-label="Scroll tabs left"', 'type="button"', 'aria-label="Scroll tabs right"'], false)
             ->assertDontSee('tab-swipe-hint', false);
     }
