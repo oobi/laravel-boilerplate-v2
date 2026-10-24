@@ -6,7 +6,7 @@
         :description="team_trans('settings.description', ['name' => $team->name])"
     />
 
-    <x-tabs-nav :scrollable="false">
+    <x-tabs-nav>
         @include('teams::livewire.team.partials.settings-tabs', ['team' => $team, 'current' => 'domains'])
 
         <x-slot:content>

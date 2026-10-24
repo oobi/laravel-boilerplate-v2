@@ -15,11 +15,10 @@
     full width, and lets a table inside drop its own border and corners
     (`.ui-flush-content`, filament-table.css) so the panel's border frames it.
 
-    Optional scrollable tabs on mobile:
-    - Use scrollable="true" attribute to enable horizontal scroll/swipe behavior
-    - On mobile: tabs scroll horizontally with "Swipe for more tabs" hint
-    - On desktop: all tabs visible with optional scroll indicators
-    - Example: <x-tabs-nav scrollable="true">{{ $slot }}</x-tabs-nav>
+    scrollable (default true): tabs that don't fit scroll sideways, with a
+    "Swipe for more tabs" hint on a phone and arrow indicators for a mouse,
+    both shown only when the tabs overflow. false wraps them onto more rows.
+    Pages don't pass it, so this default sets the behaviour app-wide.
 --}}
 @props(['scrollable' => true, 'flush' => false])
 {{-- overflow-clip, not overflow-hidden: it clips to the rounded corners the same way, but

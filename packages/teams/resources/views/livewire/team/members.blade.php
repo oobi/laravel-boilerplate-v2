@@ -10,7 +10,7 @@
     @php($showInvitationsTab = \Concise\Teams\Support\InvitationPolicy::membersMayInvite() && \Illuminate\Support\Facades\Gate::allows(\Concise\Teams\Enums\TeamAbility::INVITE, $team))
 
     @if ($showInvitationsTab)
-        <x-tabs-nav :scrollable="false">
+        <x-tabs-nav>
             @include('teams::livewire.team.partials.members-tabs', ['team' => $team, 'current' => 'members'])
 
             <x-slot:content>
