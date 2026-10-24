@@ -15,6 +15,28 @@
 
 /*
 |--------------------------------------------------------------------------
+| Tighter padding on a phone, matching `.card` (daisyui-overrides/card.css)
+|--------------------------------------------------------------------------
+| Filament pads a section 1.5rem at every width; below `sm` that is wider than
+| the page gutter. Drop it to Filament's own compact 1rem. The flush-table rule
+| below is more specific, so a table section stays edge to edge.
+*/
+@media (width < 40rem) {
+    .fi-section:not(.fi-section-not-contained):not(.fi-compact) {
+        &:not(.fi-aside) > .fi-section-header,
+        & > .fi-section-content-ctn > .fi-section-footer {
+            padding-inline: 1rem;
+        }
+
+        &:not(.fi-divided) > .fi-section-content-ctn > .fi-section-content,
+        &.fi-divided > .fi-section-content-ctn > .fi-section-content > * {
+            padding: 1rem;
+        }
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
 | Nested sections — recessed, not a second floating island
 |--------------------------------------------------------------------------
 | When a section sits inside another island — a `.card` body or the tab panel
