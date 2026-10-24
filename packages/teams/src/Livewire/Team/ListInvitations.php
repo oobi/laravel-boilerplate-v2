@@ -27,15 +27,15 @@ class ListInvitations extends Component
     public function mount(Team $team): void
     {
         $this->team = $team;
-
-        abort_unless(InvitationPolicy::membersMayInvite(), 404);
-        Gate::authorize(TeamAbility::INVITE, $team);
     }
 
-    /** See ListMembers::booted(). */
+    /** See ListMembers::booted(): the team scope, then this page's access, on every request. */
     public function booted(): void
     {
         app(TeamContext::class)->set($this->team);
+
+        abort_unless(InvitationPolicy::membersMayInvite(), 404);
+        Gate::authorize(TeamAbility::INVITE, $this->team);
     }
 
     public function render(): View

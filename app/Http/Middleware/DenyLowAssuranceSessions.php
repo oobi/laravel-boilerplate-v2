@@ -11,8 +11,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Keeps impersonated sessions off account-security routes
- * (the profile pages and Fortify's two-factor endpoints). Livewire updates
- * skip route middleware, so the profile components also use RequiresFullSession.
+ * (the profile pages and Fortify's two-factor endpoints). Registered as
+ * persistent Livewire middleware (AppServiceProvider), so it also runs on a
+ * profile page's Livewire updates; the components' RequiresFullSession trait
+ * is defence in depth, and covers a component rendered outside these routes.
  */
 class DenyLowAssuranceSessions
 {

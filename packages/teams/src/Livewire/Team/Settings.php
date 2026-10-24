@@ -54,10 +54,12 @@ class Settings extends Component implements HasActions, HasSchemas
         $this->form->fill(['name' => $team->name, 'slug' => $team->slug]);
     }
 
-    /** See ListMembers::booted() — keep the team scope across Livewire updates. */
+    /** See ListMembers::booted(): the team scope, then this page's access, on every request. */
     public function booted(): void
     {
         app(TeamContext::class)->set($this->team);
+
+        Gate::authorize(TeamAbility::VIEW_SETTINGS, $this->team);
     }
 
     /** May the viewer edit team details (else the form is read-only)? */

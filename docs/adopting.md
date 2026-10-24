@@ -87,7 +87,10 @@ git fetch upstream && git merge --no-ff upstream/main
 
 Always use `--no-ff` so each upstream sync is a visible merge commit. After
 merging, resolve any conflicts, then run `composer install`, `npm install`,
-`php artisan migrate`, and the test suite before pushing.
+`php artisan migrate`, `php artisan bp:roles:sync-implications` and the test
+suite before pushing. The sync gives roles saved before an implication was
+added the permissions it now carries: for example, a role written with
+`manage users` alone gains `view users`, which the users routes require.
 
 ## 5. Send fixes back to the boilerplate
 

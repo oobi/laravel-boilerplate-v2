@@ -14,6 +14,7 @@ use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Http\Middleware\ResolveTeamContext;
 use Concise\Teams\Livewire\Admin\UserMemberships;
 use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Livewire\Team\ManageOwnership;
@@ -89,6 +90,11 @@ class TeamsServiceProvider extends ServiceProvider
         Livewire::component('teams-manage-domains', ManageDomains::class);
         Livewire::component('teams-manage-ownership', ManageOwnership::class);
         Livewire::component('teams-user-memberships', UserMemberships::class);
+
+        // Livewire re-runs only its persistent middleware on an update request.
+        // Membership and the team's active flag are checked here, so without this
+        // someone removed from a team keeps reading its pages until they reload.
+        Livewire::addPersistentMiddleware(ResolveTeamContext::class);
 
         Gate::policy(Team::class, TeamPolicy::class);
 
