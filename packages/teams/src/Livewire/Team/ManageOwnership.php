@@ -198,11 +198,7 @@ class ManageOwnership extends Component implements HasActions, HasSchemas
             ->required()
             ->searchable()
             ->getSearchResultsUsing(fn (string $search): array => $this->members($activeOnly, $excludeOwners)
-                ->where(function (Builder $query) use ($search): void {
-                    $query->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                })
+                ->whereAnyContains(['first_name', 'last_name', 'email'], $search)
                 ->limit(20)
                 ->get()
                 ->mapWithKeys(fn (User $user): array => [$user->id => "{$user->name} — {$user->email}"])
