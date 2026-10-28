@@ -187,19 +187,23 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * `whereAnyContains(['first_name', 'email'], $term)`: rows where any column
-     * contains $term as typed. `%` and `_` in the term are matched literally,
-     * not as LIKE wildcards (#40), with an explicit ESCAPE because SQLite has
-     * no default escape character.
+     * contains $term as typed, ignoring case. `%` and `_` in the term are
+     * matched literally, not as LIKE wildcards (#40), with an explicit ESCAPE
+     * because SQLite has no default escape character. Postgres's `like` is
+     * case-sensitive, so it gets `ilike` on the column as text, as Laravel's
+     * own whereLike does there.
      */
     private function registerQueryMacros(): void
     {
         QueryBuilder::macro('whereAnyContains', function (array $columns, string $term): QueryBuilder {
             /** @var QueryBuilder $this */
             $pattern = '%'.strtr($term, ['!' => '!!', '%' => '!%', '_' => '!_']).'%';
+            $isPostgres = $this->getConnection()->getDriverName() === 'pgsql';
 
-            return $this->where(fn (QueryBuilder $query) => collect($columns)->each(
-                fn (string $column) => $query->orWhereRaw($query->getGrammar()->wrap($column)." like ? escape '!'", [$pattern]),
-            ));
+            return $this->where(fn (QueryBuilder $query) => collect($columns)->each(function (string $column) use ($query, $pattern, $isPostgres): void {
+                $wrapped = $query->getGrammar()->wrap($column);
+                $query->orWhereRaw($isPostgres ? "{$wrapped}::text ilike ? escape '!'" : "{$wrapped} like ? escape '!'", [$pattern]);
+            }));
         });
     }
 
