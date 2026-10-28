@@ -77,7 +77,8 @@ class ListUsersTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_the_table_can_search_users_by_name(): void
+    /** In any case: Postgres's `like` is case-sensitive, so the search must not be. */
+    public function test_the_table_can_search_users_by_name_in_any_case(): void
     {
         $admin = User::factory()->superAdmin()->create();
         $match = User::factory()->create(['first_name' => 'Findable', 'last_name' => 'Person']);
@@ -85,7 +86,7 @@ class ListUsersTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListUsers::class)
-            ->set('tableSearch', 'Findable')
+            ->set('tableSearch', 'findable')
             ->assertSee($match->name)
             ->assertDontSee($other->name);
     }
