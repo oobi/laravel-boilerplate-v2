@@ -165,6 +165,7 @@ return [
         'role_not_allowed' => 'You can\'t invite someone as :role. That role has permissions you don\'t hold.',
         'resend' => 'Resend',
         'resent_to' => 'Invitation re-sent to :email',
+        'throttled' => 'Too many invitations have been sent just now. Try again in a little while.',
         'revoke' => 'Revoke',
         'revoke_confirm' => 'Revoke the invitation for :email?',
         'revoked' => 'Invitation revoked',

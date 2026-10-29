@@ -123,12 +123,21 @@ return [
     | again or resending starts the clock again). Expired invitations are pruned
     | 30 days later by the scheduler.
     |
+    | Sending (and resending) is throttled per hour: 'per_inviter' for each
+    | person sending, 'per_address' for each address within one team (per team
+    | so one team can't use it up and block another's invitations). The
+    | minimum is 1; there is no setting to turn the throttle off.
+    |
     */
 
     'invitations' => [
         'members' => (bool) env('TEAMS_MEMBER_INVITATIONS', true),
         'admins' => (bool) env('TEAMS_ADMIN_INVITATIONS', true),
         'expires_after_days' => (int) env('TEAMS_INVITATION_EXPIRY_DAYS', 7),
+        'throttle' => [
+            'per_inviter' => (int) env('TEAMS_INVITATIONS_PER_INVITER_PER_HOUR', 20),
+            'per_address' => (int) env('TEAMS_INVITATIONS_PER_ADDRESS_PER_HOUR', 3),
+        ],
     ],
 
     /*
