@@ -9,12 +9,23 @@ use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Tests\TestCase;
 
 /** The demo seeder is the unit under test here, not fixture setup (tests.md). */
 class TeamDemoSeederTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_it_refuses_to_run_in_production(): void
+    {
+        $this->app->detectEnvironment(fn (): string => 'production');
+
+        $this->assertThrows(fn () => (new TeamSeeder)->run(), RuntimeException::class, 'will not run in production');
+
+        $this->assertSame(0, Team::query()->count());
+        $this->assertSame(0, User::query()->count());
+    }
 
     public function test_it_seeds_teams_with_an_owner_and_members_across_the_available_roles(): void
     {
