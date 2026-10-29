@@ -1,7 +1,7 @@
 {{--
     <x-button.cancel> — dismiss / abort (cancel, close, discard). One canonical
     cancel treatment (neutral outline) so every cancel looks identical. Defaults
-    its label to "Cancel"; pass a slot to override. See docs/design-system.md.
+    its label to "Cancel"; pass a slot to override. See docs/boilerplate/design-system.md.
 --}}
 @props(['href' => null])
 

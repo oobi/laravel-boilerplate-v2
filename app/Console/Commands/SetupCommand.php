@@ -16,7 +16,7 @@ use function Laravel\Prompts\warning;
 
 /**
  * First-run wizard for a fresh clone: asks the key shaping questions (app
- * name, the recipe from docs/config-recipes.md, optional teams relabelling)
+ * name, the recipe from docs/boilerplate/config-recipes.md, optional teams relabelling)
  * and writes them to `.env`. Without the teams tier (the Vanilla recipe, or
  * Backoffice when told to drop it) it hands off to bp:remove-teams; for the
  * login-only Backoffice recipe it hands off to bp:make-login-only. It also

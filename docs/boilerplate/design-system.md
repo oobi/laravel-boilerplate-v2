@@ -3,8 +3,8 @@
 Why the app has semantic button components and a single modal shell instead of
 raw daisyUI markup, and when to use each. The living, rendered reference is the
 **Modals & buttons** page in the theme demo (`/admin/style-demo/modals/daisy`).
-Component-authoring rules live in [.ai/rules/components.md](../.ai/rules/components.md);
-colours in [.ai/rules/boost](../.ai/rules) and the theme CSS.
+Component-authoring rules live in [.ai/rules/components.md](../../.ai/rules/components.md);
+colours in [.ai/rules/boost](../../.ai/rules) and the theme CSS.
 
 ## Semantic buttons
 

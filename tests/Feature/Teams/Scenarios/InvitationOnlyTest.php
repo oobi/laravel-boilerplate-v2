@@ -15,7 +15,7 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Scenario 3 — Invitation-only (docs/config-recipes.md).
+ * Scenario 3 — Invitation-only (docs/boilerplate/config-recipes.md).
  *
  * admin-only creation + member & admin invitations on + public login fallback:
  * admins seed the teams, and existing members grow them by invitation. Users

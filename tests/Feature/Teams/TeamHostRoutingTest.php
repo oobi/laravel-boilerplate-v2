@@ -21,7 +21,7 @@ use Tests\TestCase;
 
 /**
  * Host-mode resolution and routing for the custom-domain overlay (see
- * docs/teams-domains.md): a request host is
+ * docs/boilerplate/teams-domains.md): a request host is
  * mapped to its team (verified custom domain, or {slug}.{base}), the admin
  * host / account host / apex and anything else resolve to nothing, and the
  * boot-time config guard fails loud when the overlay is on without its

@@ -27,7 +27,7 @@ use Throwable;
  * profile. Both come back to one callback; a link, started behind the password
  * prompt on the profile's Authentication tab, is marked in the session
  * (GoogleLogin::LINKING_KEY). Every route 404s while the feature is off
- * (GoogleLogin::enabled()). See docs/authentication.md.
+ * (GoogleLogin::enabled()). See docs/boilerplate/authentication.md.
  */
 class GoogleLoginController extends Controller
 {

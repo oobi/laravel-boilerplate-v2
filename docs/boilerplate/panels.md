@@ -120,7 +120,7 @@ under `PanelRegistry::for('users.show')`. Add-on panel: call
 from your own provider's `boot()`.
 
 Generate the boilerplate for this with `php artisan bp:make:panel` — see
-`docs/commands.md`.
+`docs/boilerplate/commands.md`.
 
 ## Panel-triggered actions (e.g. "force disable 2FA")
 

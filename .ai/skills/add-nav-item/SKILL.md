@@ -5,7 +5,7 @@ description: 'Add or edit a link, group, or section in the admin sidebar nav. Us
 
 # Add a sidebar nav item
 
-Full reference: [docs/navigation.md](../../../docs/navigation.md) — read it
+Full reference: [docs/boilerplate/navigation.md](../../../docs/boilerplate/navigation.md) — read it
 before making changes, it covers permissions, active-state, and rendering
 in detail. This skill is the short procedure.
 

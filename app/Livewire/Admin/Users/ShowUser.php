@@ -59,7 +59,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
         $this->user = $user;
     }
 
-    /** The one place a viewer can edit this user from — see docs/panels.md "UX flow". */
+    /** The one place a viewer can edit this user from — see docs/boilerplate/panels.md "UX flow". */
     public function canEditUser(): bool
     {
         return ! $this->user->trashed() && Gate::allows(UserAbility::UPDATE, $this->user);

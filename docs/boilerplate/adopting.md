@@ -23,7 +23,7 @@ the database, since `composer run setup` migrates:
 ```bash
 cp .env.example .env        # then edit it
 composer run setup          # install, key, migrate, npm build
-php artisan bp:setup        # pick a recipe, see docs/config-recipes.md
+php artisan bp:setup        # pick a recipe, see docs/boilerplate/config-recipes.md
 php artisan db:seed         # permissions and default roles (after the recipe, so roles take its labels)
 php artisan bp:make-admin   # first super admin
 ```
@@ -65,6 +65,9 @@ way `packages/teams` does:
   `tests/Feature/{Area}/{Domain}`), following the "group by domain" rule.
 - Put client copy in new lang keys rather than rewriting boilerplate strings.
 - Put client settings in `.env`, not in edits to boilerplate config defaults.
+- Put client docs in `docs/` (outside `docs/boilerplate/`), which upstream
+  never touches. A client README replacing the boilerplate's will conflict
+  when upstream edits its README; keep the client's version.
 - When a core edit is unavoidable, keep it small and in its own commit so the
   conflict is easy to resolve later.
 
@@ -72,7 +75,7 @@ way `packages/teams` does:
 
 Run each Claude Code session from the project's own root. Its Boost MCP
 server, database, and `.env` belong to that app. The clone already carries
-`AGENTS.md`, `.ai/rules/`, `docs/`, and the skills, so it knows the
+`AGENTS.md`, `.ai/rules/`, `docs/boilerplate/`, and the skills, so it knows the
 boilerplate's conventions. When porting a fix, give the session the other
 repo with `/add-dir` instead of running one session across both.
 
@@ -91,6 +94,14 @@ merging, resolve any conflicts, then run `composer install`, `npm install`,
 suite before pushing. The sync gives roles saved before an implication was
 added the permissions it now carries: for example, a role written with
 `manage users` alone gains `view users`, which the users routes require.
+
+If the merge moved or renamed a boilerplate doc (they live in
+`docs/boilerplate/`), git carries the move but not the client's own links
+to it. Find any left pointing at the old path and fix them:
+
+```bash
+git grep -nE "docs/[a-z-]+\.md" | grep -v "docs/boilerplate/"
+```
 
 ## 5. Send fixes back to the boilerplate
 

@@ -35,7 +35,7 @@ use Spatie\Permission\PermissionRegistrar;
  * assignment is the membership's own pivot (team_user_role — a foreign key to
  * a role row, never a `role` string). spatie's teams feature is not used, so
  * system roles resolve exactly as spatie documents. No tenancy package. See
- * docs/permissions.md and .ai/rules/teams.md.
+ * docs/boilerplate/permissions.md and .ai/rules/teams.md.
  *
  * @property int $id
  * @property string $name

@@ -18,7 +18,7 @@ use function Laravel\Prompts\warning;
 
 /**
  * Make the app login-only: no public landing page and no public sign-up, the
- * structural half of the Backoffice recipe (docs/config-recipes.md). A
+ * structural half of the Backoffice recipe (docs/boilerplate/config-recipes.md). A
  * one-shot, setup-time transform like bp:remove-teams. It consumes the
  * `public:start`/`public:end` markers (the `/` route becomes
  * LoginOnlyHomeController, Features::registration() goes) and deletes the files

@@ -11,7 +11,7 @@ use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Removes the fenced marker blocks that delimit an optional part of core files:
- * the teams tier's contributions (`teams`, see docs/teams-distribution.md) and
+ * the teams tier's contributions (`teams`, see docs/boilerplate/teams-distribution.md) and
  * the public landing page and sign-up (`public`). A pure string transform so
  * the removal logic is testable without touching the filesystem; the commands
  * (bp:remove-teams, bp:make-login-only) wire it to real files.

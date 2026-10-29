@@ -14,7 +14,7 @@ return [
     | the UI and lang lines (as :team / :member / :owner placeholders, plus their
     | plural and capitalised forms), so a project can call a team a "salon", its
     | members "stylists" and its owner a "manager" without renaming any class or
-    | table. See docs/config-recipes.md.
+    | table. See docs/boilerplate/config-recipes.md.
     |
     */
 
@@ -192,7 +192,7 @@ return [
     |    has effect when `enabled` is on. A verified custom domain on a *different*
     |    registrable domain can't share the `.{base}` session cookie, so a member
     |    there can't yet hold a session (the session-handoff work is deferred — see
-    |    docs/teams-domains.md); leave it off unless teams live on the
+    |    docs/boilerplate/teams-domains.md); leave it off unless teams live on the
     |    same registrable domain as `base`. With it off, the Domain model and its
     |    UI/verification are dormant and no host but `{slug}.{base}` resolves.
     |
@@ -207,7 +207,7 @@ return [
     |    e.g. `admin.myapp.com` — dashboard, users, roles, the system "all teams"
     |    area, impersonation. Never derived from APP_URL — it is stated so a team
     |    can never claim it. Nothing else routes here: no login form, no profile,
-    |    no invitation link — see docs/teams-domains.md for why (it's
+    |    no invitation link — see docs/boilerplate/teams-domains.md for why (it's
     |    what makes the host safe to fence to a VPN/IP range later).
     |  - `base`         the registrable base every team's default subdomain hangs
     |    off, e.g. `myapp.com` → a team is reachable at `{slug}.myapp.com` with no

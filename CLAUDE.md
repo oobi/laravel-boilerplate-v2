@@ -15,6 +15,8 @@ duplicated. Both files below are imported verbatim — edit *them*, not this fil
 - Relative links inside these files resolve from *their own* location:
   `.github/copilot-instructions.md` uses `../docs/...` (= `docs/` at the repo
   root), and each `SKILL.md` uses `../../../docs/...` (also the repo root).
+- The boilerplate's own docs live in `docs/boilerplate/`. The rest of `docs/`
+  belongs to the project built from it, so upstream merges never collide there.
 - Laravel Boost's MCP server is wired up in `.mcp.json`. If `search-docs`,
   `database-query`, `database-schema`, or `tinker` aren't available, the server
   didn't start — say so rather than falling back to raw SQL or shell guesswork.

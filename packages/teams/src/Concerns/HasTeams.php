@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * The one team-aware seam on the core User model. Added by the teams tier and
  * fenced in User.php so an uninstall can strip it cleanly (see
- * docs/teams-distribution.md); core stays teams-agnostic without it.
+ * docs/boilerplate/teams-distribution.md); core stays teams-agnostic without it.
  *
  * There is deliberately no "current team" pointer on the user: the active team
  * is always resolved from the request (the {team} slug in path mode, the host in

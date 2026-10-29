@@ -231,7 +231,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * The Google account this user can sign in with, if any (see docs/authentication.md).
+     * The Google account this user can sign in with, if any (see docs/boilerplate/authentication.md).
      *
      * @return HasOne<SocialAccount, $this>
      */

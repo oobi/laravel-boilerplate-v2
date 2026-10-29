@@ -14,7 +14,7 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Scenario 4 — Backoffice / administration platform (docs/config-recipes.md).
+ * Scenario 4 — Backoffice / administration platform (docs/boilerplate/config-recipes.md).
  *
  * admin-only creation + both invitation switches OFF + reject fallback: a
  * purely internal tool. Admins create the accounts and the teams and add staff

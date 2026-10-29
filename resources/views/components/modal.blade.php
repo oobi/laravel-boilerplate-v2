@@ -20,7 +20,7 @@
     render; give it a different wire:key or wire:model to change them while open.
 
     Slots: default = body; `footer` = action buttons (rendered cancel-left,
-    action-right; see docs/design-system.md). Buttons may call `open = false`
+    action-right; see docs/boilerplate/design-system.md). Buttons may call `open = false`
     (Alpine) to dismiss.
 --}}
 @props([

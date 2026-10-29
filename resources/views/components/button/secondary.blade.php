@@ -4,7 +4,7 @@
     natural partner to <x-button.action>'s primary: "primary action → primary,
     secondary action → secondary". A filled brand button, so it never reads like
     <x-button.cancel> (neutral outline). Passes everything through.
-    See docs/design-system.md.
+    See docs/boilerplate/design-system.md.
 --}}
 @props(['href' => null])
 

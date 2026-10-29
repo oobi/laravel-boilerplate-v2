@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * Scenario: Backoffice without the teams tier (docs/config-recipes.md).
+ * Scenario: Backoffice without the teams tier (docs/boilerplate/config-recipes.md).
  *
  * `bp:setup --recipe=backoffice --without-teams`: login-only, admins create
  * every account, LOGIN_FALLBACK=reject. Only a user with a system role gets

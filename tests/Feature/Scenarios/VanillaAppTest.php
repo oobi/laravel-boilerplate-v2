@@ -9,7 +9,7 @@ use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 /**
- * Scenario 1 — Vanilla app, no teams tier (docs/config-recipes.md).
+ * Scenario 1 — Vanilla app, no teams tier (docs/boilerplate/config-recipes.md).
  *
  * The base boilerplate with the teams package NOT installed: public
  * registration, and login routing that knows only "system role → dashboard,

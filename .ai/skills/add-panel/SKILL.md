@@ -5,7 +5,7 @@ description: 'Add a card to a Show page or a field/section to an Edit form on th
 
 # Add an admin panel (Show card / Edit form section)
 
-Full reference: [docs/panels.md](../../../docs/panels.md) — read it before
+Full reference: [docs/boilerplate/panels.md](../../../docs/boilerplate/panels.md) — read it before
 making changes, it covers regions, panel-triggered actions, and the one
 deliberate exception (`ShowUser::userInfolist()`). This skill is the short
 procedure.
