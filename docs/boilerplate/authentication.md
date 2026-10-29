@@ -173,7 +173,7 @@ password reset, outside the impersonation trail.
   noticed. Sent from `UserObserver`, so no path can skip it.
 - **Verification and reset emails are queued** (`App\Notifications\Auth\Queued*`),
   so a mail outage can't break sign-up or a save, and failed sends retry. A
-  queue worker must run in production (see [adopting.md](adopting.md#8-run-a-queue-worker)).
+  queue worker must run in production (see [adopting.md](adopting.md#8-run-a-queue-worker-and-the-scheduler)).
 
 ## Log in with Google
 

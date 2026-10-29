@@ -118,11 +118,17 @@ return [
     | A backoffice turns both off (admins create accounts and add them to teams);
     | a typical SaaS leaves both on. Off = no invitation surface for that party.
     |
+    | An invitation link also lets its holder sign up while public registration
+    | is closed, so it expires: 'expires_after_days' after it is sent (inviting
+    | again or resending starts the clock again). Expired invitations are pruned
+    | 30 days later by the scheduler.
+    |
     */
 
     'invitations' => [
         'members' => (bool) env('TEAMS_MEMBER_INVITATIONS', true),
         'admins' => (bool) env('TEAMS_ADMIN_INVITATIONS', true),
+        'expires_after_days' => (int) env('TEAMS_INVITATION_EXPIRY_DAYS', 7),
     ],
 
     /*

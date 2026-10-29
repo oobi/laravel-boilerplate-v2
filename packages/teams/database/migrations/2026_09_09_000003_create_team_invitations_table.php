@@ -14,6 +14,8 @@ return new class extends Migration
             $table->string('email');
             // The spatie role name to grant (scoped to the team) on accept.
             $table->string('role')->nullable();
+            // The link stops working after this; inviting again or resending moves it on.
+            $table->timestamp('expires_at')->index();
             $table->timestamps();
 
             $table->unique(['team_id', 'email']);

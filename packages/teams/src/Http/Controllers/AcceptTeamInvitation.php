@@ -10,7 +10,6 @@ use Concise\Teams\Models\TeamInvitation;
 use Filament\Notifications\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 
 /**
  * The signed accept link from the invitation email. The signature (route
@@ -51,6 +50,6 @@ class AcceptTeamInvitation
                 ]));
         }
 
-        return redirect()->to(URL::signedRoute('team.invitations.register', ['invitation' => $invitation]));
+        return redirect()->to($invitation->registerUrl());
     }
 }

@@ -6,6 +6,7 @@ namespace Concise\Teams\Livewire\Team;
 
 use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
+use Concise\Teams\Actions\InviteMember;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Livewire\Concerns\HasInviteAction;
 use Concise\Teams\Models\Team;
@@ -25,6 +26,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
+use InvalidArgumentException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -88,6 +90,17 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                     ->label(team_trans('invitations.sent'))
                     ->since()
                     ->sortable(),
+
+                // The date the link stops working; once past, an "Expired" badge (Resend starts it again).
+                // Formatted as ->date() would (display timezone and format), which can't take the override.
+                Tables\Columns\TextColumn::make('expires_at')
+                    ->label(team_trans('invitations.expires'))
+                    ->formatStateUsing(fn (Tables\Columns\TextColumn $column, TeamInvitation $record): string => $record->isExpired()
+                        ? team_trans('invitations.expired_badge')
+                        : $record->expires_at->copy()->setTimezone($column->getTimezone())->translatedFormat($column->getTable()->getDefaultDateDisplayFormat()))
+                    ->badge(fn (TeamInvitation $record): bool => $record->isExpired())
+                    ->color(fn (TeamInvitation $record): ?string => $record->isExpired() ? DaisyColor::WARNING->toFilamentColor() : null)
+                    ->sortable(),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -97,7 +110,16 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                         ->action(function (TeamInvitation $record): void {
                             abort_unless($this->canManage(), 403);
 
-                            $record->send();
+                            // Through the write boundary, as a fresh invite: role rules re-checked, expiry restarted.
+                            try {
+                                app(InviteMember::class)($this->team, $record->email, $record->role, auth()->user());
+                            } catch (InvalidArgumentException $exception) {
+                                Notification::make()->title($exception->getMessage())->danger()->send();
+
+                                return;
+                            }
+
+                            $this->dispatch('team-invitations-updated');
 
                             Notification::make()
                                 ->title(team_trans('invitations.resent_to', ['email' => $record->email]))

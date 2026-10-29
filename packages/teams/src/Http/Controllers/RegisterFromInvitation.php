@@ -12,7 +12,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\URL;
 
 /**
  * Registration through an invitation: the invitee sets a name and password;
@@ -33,7 +32,7 @@ class RegisterFromInvitation
 
         return view('teams::auth.register-from-invitation', [
             'invitation' => $invitation,
-            'action' => URL::signedRoute('team.invitations.register.store', ['invitation' => $invitation]),
+            'action' => $invitation->registerUrl(store: true),
         ]);
     }
 

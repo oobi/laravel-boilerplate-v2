@@ -14,6 +14,7 @@ scaffolding rather than a runtime flag: `bp:make-login-only` removes both, and
 | `TEAMS_CREATION` | `.env` | Who may create a team: `self-service` (any user) or `admin-only` (admins, via Admin › Teams). |
 | `TEAMS_MEMBER_INVITATIONS` | `.env` | Whether a team's owner/admins can invite people by email from the team area. |
 | `TEAMS_ADMIN_INVITATIONS` | `.env` | Whether a system admin can invite people by email from Admin › Teams. |
+| `TEAMS_INVITATION_EXPIRY_DAYS` | `.env` | Days an invitation link works (default 7). The link also lets its holder sign up while public registration is closed, so keep it short. Resending starts it again; expired invitations are pruned 30 days later by the scheduler. |
 | `LOGIN_FALLBACK` | `.env` | Where a user with no system role and no team lands: `home` (the public page; in a login-only app, signed out like `reject`) or `reject` (logged back out with a "contact an admin" notice). |
 | Public registration | scaffold | Fortify's `registration` feature: open self-signup, or accounts created only by admins. `bp:make-login-only` removes it. |
 | Public landing page | scaffold | Whether `/` is a public page or the app is login-only (`/` sends a guest to login and a signed-in user where they belong). `bp:make-login-only` removes it. |

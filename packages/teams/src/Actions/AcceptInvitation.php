@@ -20,10 +20,14 @@ use Illuminate\Auth\Access\AuthorizationException;
 class AcceptInvitation
 {
     /**
-     * @throws AuthorizationException when the account's email isn't the invited one
+     * @throws AuthorizationException when the invitation has expired or the account's email isn't the invited one
      */
     public function __invoke(TeamInvitation $invitation, User $user): Team
     {
+        if ($invitation->isExpired()) {
+            throw new AuthorizationException(team_trans('invitations.expired.title'));
+        }
+
         if (! $invitation->isFor($user)) {
             throw new AuthorizationException(team_trans('invitations.wrong_account'));
         }
