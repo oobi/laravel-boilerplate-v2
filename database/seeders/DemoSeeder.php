@@ -6,11 +6,14 @@ namespace Database\Seeders;
 use Concise\Teams\Database\Seeders\Demo\TeamSeeder;
 use Concise\Teams\Database\Seeders\TeamRolesSeeder;
 // teams:end
+use Database\Seeders\Demo\RefusesProduction;
 use Database\Seeders\Demo\UserSeeder;
 use Illuminate\Database\Seeder;
 
 class DemoSeeder extends Seeder
 {
+    use RefusesProduction;
+
     // Deliberately NOT WithoutModelEvents — see DatabaseSeeder.
 
     /**
@@ -18,6 +21,8 @@ class DemoSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->refuseProduction();
+
         $this->call(PermissionSeeder::class);
         $this->call(SystemRolesSeeder::class);
 

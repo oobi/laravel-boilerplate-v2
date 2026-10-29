@@ -8,8 +8,12 @@ use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
+    use RefusesProduction;
+
     public function run(): void
     {
+        $this->refuseProduction();
+
         // Super admin — the flag, the one exception. Every other admin capability
         // is a role (seeded by SystemRolesSeeder), demonstrated by the two below.
         User::factory()->create([

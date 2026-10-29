@@ -8,6 +8,7 @@ use App\Models\User;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\TeamsServiceProvider;
+use Database\Seeders\Demo\RefusesProduction;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -22,6 +23,8 @@ use Illuminate\Support\Str;
  */
 class TeamSeeder extends Seeder
 {
+    use RefusesProduction;
+
     private const TEAMS = 5;
 
     private const MEMBERS_PER_TEAM = 5;
@@ -31,6 +34,8 @@ class TeamSeeder extends Seeder
 
     public function run(): void
     {
+        $this->refuseProduction();
+
         if (! TeamsServiceProvider::isActive()) {
             $this->command?->warn('Teams tier is not active — skipping demo teams.');
 
