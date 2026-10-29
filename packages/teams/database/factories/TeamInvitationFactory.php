@@ -22,6 +22,13 @@ class TeamInvitationFactory extends Factory
             'team_id' => Team::factory(),
             'email' => fake()->unique()->safeEmail(),
             'role' => null,
+            'expires_at' => now()->addDays(TeamInvitation::lifetimeInDays()),
         ];
+    }
+
+    /** Sent long enough ago that its link no longer works. */
+    public function expired(): static
+    {
+        return $this->state(fn (): array => ['expires_at' => now()->subMinute()]);
     }
 }

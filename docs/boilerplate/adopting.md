@@ -165,12 +165,15 @@ the proxy's address and plain HTTP unless it trusts that proxy's
 
 In production also set `SESSION_SECURE_COOKIE=true`.
 
-## 8. Run a queue worker
+## 8. Run a queue worker and the scheduler
 
 Verification, password reset and team invitation emails are queued, so they
 only go out while a worker runs (`php artisan queue:work`; `composer run dev`
 starts one locally). Laravel Cloud and Forge can run it for you. Without one,
 nobody can verify their address or reset their password.
+
+Run the scheduler too (`* * * * * php artisan schedule:run`; Cloud and Forge
+have a switch for it). With teams on, it prunes expired invitations daily.
 
 ## 9. Optional: log in with Google
 
@@ -193,6 +196,7 @@ It signs in existing accounts only. See
 - [ ] `.env` created first, then `composer run setup`, `bp:setup`, `db:seed` (`migrate:fresh --seed` if teams was removed), `bp:make-admin`, in that order
 - [ ] theme-demo kept or removed
 - [ ] A queue worker runs in production (verification and reset emails depend on it)
+- [ ] The scheduler runs in production (`schedule:run` every minute)
 - [ ] Behind a proxy: `TRUSTED_PROXIES` set (not needed on Cloud, or Forge/Vapor's own domains); `SESSION_SECURE_COOKIE=true` in production
 - [ ] Log in with Google: OAuth client created and `GOOGLE_*` set, or left off on purpose
 - [ ] Client features registered from a client service provider

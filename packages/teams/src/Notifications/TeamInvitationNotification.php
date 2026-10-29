@@ -40,6 +40,7 @@ class TeamInvitationNotification extends Notification implements ShouldQueue
             ->line(team_trans('invitations.mail.intro', ['name' => $team->name, 'app' => config('app.name')]))
             ->line(team_trans('invitations.mail.account', ['email' => $this->invitation->email]))
             ->action(team_trans('invitations.mail.action'), $this->invitation->acceptUrl())
+            ->line(team_trans('invitations.mail.expires', ['date' => $this->invitation->expires_at->toFormattedDateString()]))
             ->line(team_trans('invitations.mail.ignore'));
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\SystemPermission;
 use Concise\Teams\Http\Controllers\AcceptTeamInvitation;
 use Concise\Teams\Http\Controllers\RegisterFromInvitation;
 use Concise\Teams\Http\Controllers\TeamRedirect;
+use Concise\Teams\Http\Middleware\EnsureInvitationIsCurrent;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
 use Concise\Teams\Livewire\Admin\Teams\ListTeams;
 use Concise\Teams\Livewire\Admin\Teams\ShowTeam;
@@ -96,8 +97,9 @@ if ($hostMode) {
 // Invitation links: signed, and deliberately NOT behind auth. The signature is
 // what authorizes them (it's the emailed link); AcceptTeamInvitation then routes
 // a guest to sign in or to register through the invitation, and holds a
-// signed-in account to the invited email.
-Route::middleware(['web', 'signed'])
+// signed-in account to the invited email. A genuine but expired link gets its
+// own page (EnsureInvitationIsCurrent, ahead of `signed`).
+Route::middleware(['web', EnsureInvitationIsCurrent::class, 'signed'])
     ->domain($accountHost)
     ->prefix($invitationPrefix)
     ->name('team.invitations.')

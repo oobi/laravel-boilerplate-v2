@@ -16,11 +16,12 @@ use RuntimeException;
 
 /**
  * Invite an email address to a team: records (or refreshes) the pending
- * invitation and emails the signed accept link. The write boundary for
- * invitations. The UI's form rules give the same messages; this enforces the
- * same rules regardless of caller. Its refusals are translated, since the
- * invite dialog shows any that reach it as they are. Whether the inviter is a
- * system admin or a member decides which switch gates them (see
+ * invitation, starts its expiry clock again and emails the signed accept
+ * link. Resending a pending invitation comes through here too. The write
+ * boundary for invitations. The UI's form rules give the same messages; this
+ * enforces the same rules regardless of caller. Its refusals are translated,
+ * since the invite dialog shows any that reach it as they are. Whether the
+ * inviter is a system admin or a member decides which switch gates them (see
  * InvitationPolicy).
  */
 class InviteMember
@@ -50,8 +51,11 @@ class InviteMember
             throw new InvalidArgumentException(team_trans('invitations.role_not_allowed', ['role' => $role]));
         }
 
-        // Re-inviting the same address refreshes the role and re-sends, rather than failing on the unique index.
-        $invitation = $team->invitations()->updateOrCreate(['email' => $email], ['role' => $role]);
+        // Re-inviting the same address refreshes the role and expiry and re-sends, rather than failing on the unique index.
+        $invitation = $team->invitations()->updateOrCreate(['email' => $email], [
+            'role' => $role,
+            'expires_at' => now()->addDays(TeamInvitation::lifetimeInDays()),
+        ]);
 
         $invitation->send();
 

@@ -155,6 +155,8 @@ return [
         'email' => 'Email',
         'role' => 'Role',
         'sent' => 'Sent',
+        'expires' => 'Expires',
+        'expired_badge' => 'Expired',
         'invite' => 'Invite',
         'invite_heading' => 'Invite someone to :name',
         'already_member' => 'That person already belongs to this :team.',
@@ -176,7 +178,14 @@ return [
             'intro' => 'You have been invited to join the :name :team on :app.',
             'account' => 'If you already have an account for :email, you’ll be asked to sign in; if not, the link lets you create one.',
             'action' => 'Accept invitation',
+            'expires' => 'This invitation expires on :date.',
             'ignore' => 'If you weren’t expecting this invitation, you can ignore this email.',
+        ],
+
+        'expired' => [
+            'title' => 'This invitation has expired',
+            'body' => 'Ask the person who invited you to :name to send you a new one.',
+            'sign_in' => 'Go to sign in',
         ],
 
         'register' => [

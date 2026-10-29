@@ -21,6 +21,7 @@ use Concise\Teams\Livewire\Team\ManageOwnership;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Panels\Users\TeamMembershipsPanel;
 use Concise\Teams\Policies\TeamPolicy;
 use Concise\Teams\Support\Dns\DnsResolver;
@@ -31,6 +32,7 @@ use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamDestination;
 use Concise\Teams\Support\TeamLabels;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -117,6 +119,12 @@ class TeamsServiceProvider extends ServiceProvider
         });
 
         $this->registerTeamNavigation();
+
+        // Expired invitations are listed as expired for a while, then removed.
+        // model:prune only finds app/Models by itself, so name the model.
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('model:prune', ['--model' => [TeamInvitation::class]])->daily();
+        });
     }
 
     /**
