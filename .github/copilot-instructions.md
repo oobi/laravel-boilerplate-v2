@@ -1,7 +1,7 @@
 # Project guidelines
 
 Laravel 12 admin boilerplate. Everything lives in this app directly — no
-first-party Composer packages for core features (see [docs/architecture.md](../docs/architecture.md)
+first-party Composer packages for core features (see [docs/boilerplate/architecture.md](../docs/boilerplate/architecture.md)
 for the full stack rationale).
 
 This project uses [Laravel Boost](https://laravel.com/docs/boost) — see
@@ -30,13 +30,13 @@ quietly baking a compromise into the foundation.
 
 | You're adding... | Goes in | Docs |
 |---|---|---|
-| A sidebar link/section | `App\Support\Navigation\AdminNav` via `NavRegistry` | [docs/navigation.md](../docs/navigation.md) |
-| A card/field on a Users Show/Edit page | `app/Panels/Users/*` registered in `App\Support\Panels\AdminPanels` | [docs/panels.md](../docs/panels.md) |
-| A new `bp:` artisan command | `app/Console/Commands/*`, document it | [docs/commands.md](../docs/commands.md) |
+| A sidebar link/section | `App\Support\Navigation\AdminNav` via `NavRegistry` | [docs/boilerplate/navigation.md](../docs/boilerplate/navigation.md) |
+| A card/field on a Users Show/Edit page | `app/Panels/Users/*` registered in `App\Support\Panels\AdminPanels` | [docs/boilerplate/panels.md](../docs/boilerplate/panels.md) |
+| A new `bp:` artisan command | `app/Console/Commands/*`, document it | [docs/boilerplate/commands.md](../docs/boilerplate/commands.md) |
 | A Livewire full-page component | `app/Livewire/{Area}/{Domain}/*` (e.g. `app/Livewire/Admin/Users/*`) | — |
-| RBAC checks | Global abilities: `Gate::authorize(SystemPermission::X)` (or a route's `can:` middleware) in routes and components, `$user->hasSystemPermission(SystemPermission::X)` on a User (spatie/laravel-permission behind the Gate). Never `hasPermissionTo()`: it throws for an unseeded permission. Per-instance User abilities (edit/activate/delete a specific user): `App\Policies\UserPolicy` via `Gate::authorize(UserAbility::X, $target)`. Super admin bypasses both via a global `Gate::before()`; it's a hardcoded flag, never a role | [.ai/rules/app.md](../.ai/rules/app.md), [.ai/rules/policies.md](../.ai/rules/policies.md), [docs/permissions.md](../docs/permissions.md) |
-| A new role or permission | Admin > Roles screen (`app/Livewire/Admin/Roles/*`) — never hardcode a new role in PHP. New *permissions* are still code (a `SystemPermission` case + seeder entry); role -> permission assignment is admin-configurable | [docs/permissions.md](../docs/permissions.md), [.ai/rules/policies.md](../.ai/rules/policies.md) |
-| A new *family* of roles (a tab on the Roles screen) | An `App\Support\Roles\RoleScope` registered via `RoleScopeRegistry::register()` — core's in `AdminRoleScopes`, add-ons from their own provider (e.g. the teams tier's `TeamRoleScope`) | [docs/permissions.md](../docs/permissions.md) |
+| RBAC checks | Global abilities: `Gate::authorize(SystemPermission::X)` (or a route's `can:` middleware) in routes and components, `$user->hasSystemPermission(SystemPermission::X)` on a User (spatie/laravel-permission behind the Gate). Never `hasPermissionTo()`: it throws for an unseeded permission. Per-instance User abilities (edit/activate/delete a specific user): `App\Policies\UserPolicy` via `Gate::authorize(UserAbility::X, $target)`. Super admin bypasses both via a global `Gate::before()`; it's a hardcoded flag, never a role | [.ai/rules/app.md](../.ai/rules/app.md), [.ai/rules/policies.md](../.ai/rules/policies.md), [docs/boilerplate/permissions.md](../docs/boilerplate/permissions.md) |
+| A new role or permission | Admin > Roles screen (`app/Livewire/Admin/Roles/*`) — never hardcode a new role in PHP. New *permissions* are still code (a `SystemPermission` case + seeder entry); role -> permission assignment is admin-configurable | [docs/boilerplate/permissions.md](../docs/boilerplate/permissions.md), [.ai/rules/policies.md](../.ai/rules/policies.md) |
+| A new *family* of roles (a tab on the Roles screen) | An `App\Support\Roles\RoleScope` registered via `RoleScopeRegistry::register()` — core's in `AdminRoleScopes`, add-ons from their own provider (e.g. the teams tier's `TeamRoleScope`) | [docs/boilerplate/permissions.md](../docs/boilerplate/permissions.md) |
 
 ## Group by domain, not by type
 

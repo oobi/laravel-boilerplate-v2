@@ -60,7 +60,7 @@ each saying "Included with …" on hover. Never resolve implications at check
 time; a check asks for exactly one permission. Any new path that grants
 system permissions must call `withImplied()`. Changing the map later is a code
 change plus `php artisan bp:roles:sync-implications` with that deploy (see
-`docs/commands.md`).
+`docs/boilerplate/commands.md`).
 
 This enum is the single source of truth — permission strings are never
 hand-typed at a call site. Each case also declares:
@@ -119,7 +119,7 @@ tier's `TeamRolesSeeder` does the same for team roles.
 
 `bp:make-admin` makes the first account a super admin; `bp:make-admin
 --administrator` puts each later admin on the Administrator role instead (see
-`docs/commands.md`).
+`docs/boilerplate/commands.md`).
 
 ## Checking a permission: `Gate::authorize()` / `checkPermissionTo()`
 

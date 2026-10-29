@@ -75,7 +75,7 @@ Route::middleware(['web', 'auth', 'verified'])
 
 if ($hostMode) {
     // Host mode: the team is implied by the request host — same route names, no
-    // {team} path segment (see docs/teams-domains.md). {teamHost} matches a
+    // {team} path segment (see docs/boilerplate/teams-domains.md). {teamHost} matches a
     // full dotted host via the Route::pattern above.
     Route::middleware(['web', 'auth', 'verified', ResolveTeamContext::class])
         ->domain('{teamHost}')

@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
-/** Scaffolds a new admin page panel (see docs/architecture.md). */
+/** Scaffolds a new admin page panel (see docs/boilerplate/architecture.md). */
 class MakePanelCommand extends Command
 {
     protected $signature = 'bp:make:panel {name? : The class name, e.g. TeamMembershipsPanel}';

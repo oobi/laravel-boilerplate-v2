@@ -32,7 +32,7 @@ $adminPath = 'admin';
 // account_host (default the apex, overridable for a headless-apex deployment)
 // is the account layer everyone needs (auth, profile, team picker/onboarding,
 // invitations — see routes/teams.php); admin_host is the admin area ONLY —
-// nothing else may ever link to it (see docs/teams-domains.md).
+// nothing else may ever link to it (see docs/boilerplate/teams-domains.md).
 // config() is null-safe when the teams package is absent, so every host is
 // null in path mode and the groups below carry no host constraint — the default.
 $hostMode = (bool) config('teams.domains.enabled', false);
@@ -55,7 +55,7 @@ Route::domain($apexHost)->group(function (): void {
 });
 
 // Self-service account management — any signed-in, verified user, not just admin-panel
-// staff (see docs/architecture.md). One route per tab; each 2FA action is guarded by its
+// staff (see docs/boilerplate/architecture.md). One route per tab; each 2FA action is guarded by its
 // own inline password prompt. Deliberately NOT behind ACCESS_ADMIN_PANEL: a profile is not
 // an admin page, and in host mode this group binds to account_host, never admin_host.
 // Impersonated sessions are refused: only the account holder manages it. The profile tab
@@ -73,7 +73,7 @@ Route::domain($accountHost)->middleware(['auth', 'verified', DenyLowAssuranceSes
 // Log in with Google (off, and these 404, until GOOGLE_CLIENT_ID/SECRET are set), on the
 // account host beside Fortify's login. One callback serves a login and a link started
 // from the profile's Authentication tab (behind its password prompt). See
-// docs/authentication.md.
+// docs/boilerplate/authentication.md.
 Route::domain($accountHost)->middleware('throttle:google-login')->group(function (): void {
     Route::get('/auth/google/redirect', [GoogleLoginController::class, 'redirect'])->middleware('guest')->name('google.redirect');
     Route::get('/auth/google/callback', [GoogleLoginController::class, 'callback'])->name('google.callback');
@@ -90,7 +90,7 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
 
         // Each area's read floor is on its route, not only in the page's mount():
         // Livewire re-runs `can:` middleware on every update request, so access
-        // lost mid-session is refused at the next click (docs/permissions.md).
+        // lost mid-session is refused at the next click (docs/boilerplate/permissions.md).
         Route::prefix('users')->name('users.')->middleware('can:'.SystemPermission::VIEW_USERS->value)->group(function (): void {
             Route::get('/', ListUsers::class)->name('index');
             Route::get('/create', CreateUser::class)->name('create');
@@ -111,7 +111,7 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
 // so no plain navigation can trigger it (GitHub #11). Leaving is a POST — never
 // GET — driven by the banner's CSRF-protected "stop impersonating" form. It lives
 // on the ACCOUNT host, never the (fenceable) admin host, so an impersonator can
-// always exit even off the admin network (see docs/teams-domains.md). Behind
+// always exit even off the admin network (see docs/boilerplate/teams-domains.md). Behind
 // `auth` only: the masqueraded user may be a non-admin. $accountHost is null in
 // path mode (unconstrained).
 Route::domain($accountHost)->middleware('auth')->prefix('users')->name('users.')->group(function (): void {

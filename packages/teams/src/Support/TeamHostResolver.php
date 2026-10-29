@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  *
  * The control-plane host (`admin_host`) and anything else resolve to null, so the
  * caller (ResolveTeamContext) 404s rather than leaking a team. See
- * docs/teams-domains.md.
+ * docs/boilerplate/teams-domains.md.
  */
 final class TeamHostResolver
 {

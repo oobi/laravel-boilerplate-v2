@@ -39,7 +39,7 @@ use Livewire\Livewire;
  * The teams tier's single wiring point. Auto-discovered when the package is
  * required. It owns everything teams needs so core stays teams-agnostic: the
  * only core touch-points are the fenced HasTeams seam on User and the two root
- * composer.json entries that install this package (see docs/teams-distribution.md).
+ * composer.json entries that install this package (see docs/boilerplate/teams-distribution.md).
  */
 class TeamsServiceProvider extends ServiceProvider
 {

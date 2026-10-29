@@ -13,7 +13,7 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Scenario 2 — Public SaaS, the default shipped shape (docs/config-recipes.md).
+ * Scenario 2 — Public SaaS, the default shipped shape (docs/boilerplate/config-recipes.md).
  *
  * self-service creation + member & admin invitations on + public login
  * fallback: anyone signs up, creates their own team, and invites their staff.

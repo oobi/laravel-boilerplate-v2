@@ -27,7 +27,7 @@ use Tests\TestCase;
 
 /**
  * Team roles are centrally defined and scoped apart from system roles, so the
- * two schemes never bleed into each other (see docs/permissions.md). The
+ * two schemes never bleed into each other (see docs/boilerplate/permissions.md). The
  * seeder tests below invoke TeamRolesSeeder directly because it is the unit
  * under test — not as fixture setup (see tests.md).
  */

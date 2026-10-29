@@ -33,7 +33,7 @@
         <div class="flex flex-col gap-6">
             {{-- Actions — every operation on this user in one place. Lives on the
                  host component (not a registered panel) because Filament actions
-                 need the HasActions component's context; see docs/panels.md. --}}
+                 need the HasActions component's context; see docs/boilerplate/panels.md. --}}
             @php
                 $userActions = collect([
                     $this->restoreAction,

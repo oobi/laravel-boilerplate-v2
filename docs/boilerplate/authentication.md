@@ -11,7 +11,7 @@ This doc focuses on the flows that are easy to get subtly wrong: **password
 changes** (who can change whose password, and how other sessions are cut off),
 **account inactivation** (how access is revoked mid-session), and **mandatory
 two-factor** (per-role 2FA with a grace period). See
-`docs/permissions.md` and `.ai/rules/policies.md` for the RBAC model these
+`docs/boilerplate/permissions.md` and `.ai/rules/policies.md` for the RBAC model these
 build on.
 
 ## Password rule
@@ -48,7 +48,7 @@ Typing a new password straight into another user's account needs the **`set
 user passwords`** permission (and a super admin always can), gated by the
 `updatePasswordDirectly` policy ability. Like every act on another user, it
 also needs the actor to cover the target: hold every permission they hold
-(see docs/permissions.md), so nobody sets the password of someone with more
+(see docs/boilerplate/permissions.md), so nobody sets the password of someone with more
 access than themselves. Never your own account, a super admin included: your
 own password changes only through path 1, which asks for the current one.
 

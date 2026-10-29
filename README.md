@@ -9,11 +9,11 @@ accessible and consistent out of the box.
 ## Start a project
 
 A project is its own repository that shares git history with this one, so
-fixes can flow both ways. See [docs/adopting.md](docs/adopting.md), then:
+fixes can flow both ways. See [docs/boilerplate/adopting.md](docs/boilerplate/adopting.md), then:
 
 ```bash
 composer run setup          # install, .env, key, migrate, npm build
-php artisan bp:setup        # pick a recipe (docs/config-recipes.md)
+php artisan bp:setup        # pick a recipe (docs/boilerplate/config-recipes.md)
 php artisan db:seed         # permissions and default roles, named by the recipe
 php artisan bp:make-admin   # the first super admin
 composer run dev            # server, queue, logs and Vite together
@@ -33,17 +33,17 @@ php artisan test --parallel --compact                         # before merging
 
 | Topic | Doc |
 |---|---|
-| Stack and in-house pieces | [architecture.md](docs/architecture.md) |
-| Starting a project, taking upstream fixes | [adopting.md](docs/adopting.md) |
-| Recipes (SaaS, invitation-only, back office, vanilla) | [config-recipes.md](docs/config-recipes.md) |
-| Roles and permissions | [permissions.md](docs/permissions.md) |
-| Login, passwords, two-factor, impersonation | [authentication.md](docs/authentication.md) |
-| Sidebar navigation | [navigation.md](docs/navigation.md) |
-| Show and Edit page panels | [panels.md](docs/panels.md) |
-| Components and styling | [design-system.md](docs/design-system.md) |
-| `bp:` commands | [commands.md](docs/commands.md) |
-| Removing or ejecting the teams tier | [teams-distribution.md](docs/teams-distribution.md) |
-| Team subdomains and custom domains | [teams-domains.md](docs/teams-domains.md) |
+| Stack and in-house pieces | [architecture.md](docs/boilerplate/architecture.md) |
+| Starting a project, taking upstream fixes | [adopting.md](docs/boilerplate/adopting.md) |
+| Recipes (SaaS, invitation-only, back office, vanilla) | [config-recipes.md](docs/boilerplate/config-recipes.md) |
+| Roles and permissions | [permissions.md](docs/boilerplate/permissions.md) |
+| Login, passwords, two-factor, impersonation | [authentication.md](docs/boilerplate/authentication.md) |
+| Sidebar navigation | [navigation.md](docs/boilerplate/navigation.md) |
+| Show and Edit page panels | [panels.md](docs/boilerplate/panels.md) |
+| Components and styling | [design-system.md](docs/boilerplate/design-system.md) |
+| `bp:` commands | [commands.md](docs/boilerplate/commands.md) |
+| Removing or ejecting the teams tier | [teams-distribution.md](docs/boilerplate/teams-distribution.md) |
+| Team subdomains and custom domains | [teams-domains.md](docs/boilerplate/teams-domains.md) |
 
 Guidance for coding agents lives in [AGENTS.md](AGENTS.md),
 [.github/copilot-instructions.md](.github/copilot-instructions.md) and the

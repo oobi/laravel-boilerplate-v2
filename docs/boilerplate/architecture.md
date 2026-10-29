@@ -10,7 +10,7 @@ Not exhaustive.
 - **Laravel Fortify** — headless auth backend (login, registration, password
   reset, email verification, two-factor auth). It ships no UI; all views under
   `resources/views/auth/*` are our own daisyUI-styled Blade, not Jetstream's.
-  See `docs/authentication.md` for how the password-change paths and account
+  See `docs/boilerplate/authentication.md` for how the password-change paths and account
   inactivation (session invalidation) work.
 - **Livewire 4** — powers the interactive screens (admin CRUD, auth forms).
   Full-page components live in `app/Livewire/*`, grouped by domain once an
@@ -50,8 +50,8 @@ Not exhaustive.
   system; a member's assignment is the membership's own pivot (`team_user_role`),
   and spatie's teams feature stays off so system roles resolve exactly as spatie
   documents. Removing or ejecting the tier is driven by `// teams:start/end`
-  markers — see `docs/teams-distribution.md`; its subdomain/custom-domain
-  routing is in `docs/teams-domains.md`. Per-team isolation helpers, for
+  markers — see `docs/boilerplate/teams-distribution.md`; its subdomain/custom-domain
+  routing is in `docs/boilerplate/teams-domains.md`. Per-team isolation helpers, for
   features that keep data per team: `team_disk($team)` (a filesystem under
   `teams/{id}/` on `TEAMS_FILESYSTEM_DISK`), `team_cache($team)` (cache keys
   namespaced to the team), and the `InteractsWithTeamContext` job trait with its
@@ -63,11 +63,11 @@ Not exhaustive.
 - **Admin page composition (panels)** — Show/Edit admin pages are built
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own
-  cards/fields later without patching core files. See `docs/panels.md`.
+  cards/fields later without patching core files. See `docs/boilerplate/panels.md`.
 - **Sidebar navigation** — the app curates its menu declaratively in
   `App\Support\Navigation\AdminNav`; add-ons contribute via
   `NavRegistry::item()`/`group()` rather than editing
-  `admin-sidebar-nav.blade.php`. See `docs/navigation.md`.
+  `admin-sidebar-nav.blade.php`. See `docs/boilerplate/navigation.md`.
 
 ## Scope: staff back-office, not a customer frontend
 
@@ -79,7 +79,7 @@ shell, reachable by any signed-in user via `/profile` (admin or not; until
 the email is verified only the Profile tab, to fix a mistyped address). Only the admin area proper (dashboard, users, roles, …) sits behind
 `ACCESS_ADMIN_PANEL`. In the teams tier's host mode this also means the
 account routes (auth, profile, the team picker) are quarantined onto their
-own host, separate from the admin-only host — see `docs/teams-domains.md`.
+own host, separate from the admin-only host — see `docs/boilerplate/teams-domains.md`.
 
 A **customer-facing frontend is deliberately out of scope**: a real app's public
 UI is unpredictable (Blade, Livewire, Inertia, or a headless Nuxt/SPA), so the

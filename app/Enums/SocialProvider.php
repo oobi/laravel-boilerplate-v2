@@ -6,7 +6,7 @@ namespace App\Enums;
 
 /**
  * An outside identity provider a user can sign in with
- * (`social_accounts.provider`). Only Google today; see docs/authentication.md.
+ * (`social_accounts.provider`). Only Google today; see docs/boilerplate/authentication.md.
  */
 enum SocialProvider: string
 {

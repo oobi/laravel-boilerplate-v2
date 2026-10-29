@@ -23,7 +23,7 @@ use function Laravel\Prompts\warning;
 
 /**
  * Turn the boilerplate vanilla by removing the teams tier: the one-shot,
- * setup-time transform documented in docs/teams-distribution.md. It consumes
+ * setup-time transform documented in docs/boilerplate/teams-distribution.md. It consumes
  * the `teams:start`/`teams:end` markers, so it stays correct as the seams
  * evolve rather than hardcoding line numbers. Besides the core PHP files, the
  * markers fence the tier's settings in `.env.example`, `phpunit.xml` and a
