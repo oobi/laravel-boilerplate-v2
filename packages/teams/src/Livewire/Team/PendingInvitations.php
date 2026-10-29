@@ -25,6 +25,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 use Livewire\Attributes\Locked;
@@ -113,7 +114,7 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                             // Through the write boundary, as a fresh invite: role rules re-checked, expiry restarted.
                             try {
                                 app(InviteMember::class)($this->team, $record->email, $record->role, auth()->user());
-                            } catch (InvalidArgumentException $exception) {
+                            } catch (InvalidArgumentException|ThrottleRequestsException $exception) {
                                 Notification::make()->title($exception->getMessage())->danger()->send();
 
                                 return;

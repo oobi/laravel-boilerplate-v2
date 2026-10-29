@@ -14,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use InvalidArgumentException;
 
 /**
@@ -71,7 +72,7 @@ trait HasInviteAction
                 // didn't catch becomes a message rather than an error page.
                 try {
                     $invitation = app(InviteMember::class)($this->team, $data['email'], $data['role'] ?: null, auth()->user());
-                } catch (InvalidArgumentException $exception) {
+                } catch (InvalidArgumentException|ThrottleRequestsException $exception) {
                     Notification::make()->title($exception->getMessage())->danger()->send();
                     $action->halt();
                 }
