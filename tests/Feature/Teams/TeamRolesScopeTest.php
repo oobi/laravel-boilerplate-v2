@@ -372,13 +372,16 @@ class TeamRolesScopeTest extends TestCase
         $this->assertTrue($role->checkPermissionTo(TeamPermission::INVITE_MEMBERS->value));
     }
 
-    public function test_a_team_roles_holders_are_its_memberships_in_every_team(): void
+    public function test_a_team_roles_holders_are_people_in_every_team_counted_once(): void
     {
         $role = Team::createRole('Stylist', [TeamPermission::MANAGE_MEMBERS]);
         foreach (range(1, 3) as $index) {
             Team::factory()->create()->addMember(User::factory()->create(), 'Stylist');
         }
+        $inTwoTeams = User::factory()->create();
+        Team::factory()->create()->addMember($inTwoTeams, 'Stylist');
+        Team::factory()->create()->addMember($inTwoTeams, 'Stylist');
 
-        $this->assertSame(3, (new TeamRoleScope)->holderCount($role));
+        $this->assertSame(4, (new TeamRoleScope)->holderCount($role));
     }
 }
