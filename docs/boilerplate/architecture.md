@@ -68,6 +68,10 @@ Not exhaustive.
   `App\Support\Navigation\AdminNav`; add-ons contribute via
   `NavRegistry::item()`/`group()` rather than editing
   `admin-sidebar-nav.blade.php`. See `docs/boilerplate/navigation.md`.
+- **System permissions**: core's are the `SystemPermission` enum; an add-on
+  registers its own enum with `SystemPermissionRegistry::register()` and its
+  permissions list, seed and imply like core's (the teams tier's
+  `TeamSystemPermission`). See `docs/boilerplate/permissions.md`.
 
 ## Scope: staff back-office, not a customer frontend
 

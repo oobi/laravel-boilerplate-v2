@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Admin\Teams;
 
-use App\Enums\SystemPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -20,7 +20,7 @@ class TeamMembers extends Component
 
     public function mount(Team $team): void
     {
-        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
+        Gate::authorize(TeamSystemPermission::VIEW_TEAMS->value);
 
         $this->team = $team;
     }

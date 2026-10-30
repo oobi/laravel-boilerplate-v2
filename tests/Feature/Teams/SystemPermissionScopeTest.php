@@ -6,6 +6,7 @@ use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
@@ -31,7 +32,7 @@ class SystemPermissionScopeTest extends TestCase
     private function systemAdmin(): User
     {
         return User::factory()
-            ->withPermission(SystemPermission::ACCESS_ADMIN_PANEL, SystemPermission::MANAGE_TEAMS)
+            ->withPermission(SystemPermission::ACCESS_ADMIN_PANEL, TeamSystemPermission::MANAGE_TEAMS)
             ->create();
     }
 
@@ -41,10 +42,10 @@ class SystemPermissionScopeTest extends TestCase
         $team = Team::factory()->create();
         $team->addMember($admin);
 
-        $this->assertTrue($admin->hasSystemPermission(SystemPermission::MANAGE_TEAMS));
+        $this->assertTrue($admin->hasSystemPermission(TeamSystemPermission::MANAGE_TEAMS));
 
         $inside = app(TeamContext::class)->run($team, fn (): array => [
-            Gate::forUser($admin)->allows(SystemPermission::MANAGE_TEAMS->value),
+            Gate::forUser($admin)->allows(TeamSystemPermission::MANAGE_TEAMS->value),
             $admin->hasSystemPermission(SystemPermission::ACCESS_ADMIN_PANEL),
             $admin->canAccessAdmin(),
         ]);
@@ -52,7 +53,7 @@ class SystemPermissionScopeTest extends TestCase
         $this->assertSame([true, true, true], $inside);
 
         // And entering a team context leaves nothing behind.
-        $this->assertTrue(Gate::forUser($admin)->allows(SystemPermission::MANAGE_TEAMS->value));
+        $this->assertTrue(Gate::forUser($admin)->allows(TeamSystemPermission::MANAGE_TEAMS->value));
     }
 
     public function test_the_admin_dashboard_link_survives_entering_a_team(): void
@@ -81,7 +82,7 @@ class SystemPermissionScopeTest extends TestCase
         $team->addMember($user, 'Manager');
 
         $this->assertFalse(Gate::forUser($user)->allows(TeamPermission::MANAGE_MEMBERS->value), 'not held at the system scope');
-        $this->assertFalse($user->hasSystemPermission(SystemPermission::MANAGE_TEAMS));
+        $this->assertFalse($user->hasSystemPermission(TeamSystemPermission::MANAGE_TEAMS));
         $this->assertTrue(Gate::forUser($user)->allows(TeamAbility::MANAGE_MEMBERS, $team), 'held in its team');
     }
 
@@ -107,7 +108,7 @@ class SystemPermissionScopeTest extends TestCase
 
     public function test_view_teams_grants_the_read_abilities_and_nothing_else(): void
     {
-        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $viewer = User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create();
         $team = Team::factory()->create();
         $this->assertFalse($team->hasUser($viewer));
 
@@ -122,7 +123,7 @@ class SystemPermissionScopeTest extends TestCase
 
     public function test_delete_teams_grants_delete_and_nothing_else_in_the_policy(): void
     {
-        $admin = User::factory()->withPermission(SystemPermission::DELETE_TEAMS)->create();
+        $admin = User::factory()->withPermission(TeamSystemPermission::DELETE_TEAMS)->create();
         $team = Team::factory()->create();
 
         $this->assertTrue(Gate::forUser($admin)->allows(TeamAbility::DELETE, $team));
@@ -132,7 +133,7 @@ class SystemPermissionScopeTest extends TestCase
 
     public function test_manage_team_ownership_grants_the_two_ownership_abilities_and_nothing_else(): void
     {
-        $admin = User::factory()->withPermission(SystemPermission::MANAGE_TEAM_OWNERSHIP)->create();
+        $admin = User::factory()->withPermission(TeamSystemPermission::MANAGE_TEAM_OWNERSHIP)->create();
         $team = Team::factory()->create();
 
         $this->assertTrue(Gate::forUser($admin)->allows(TeamAbility::MANAGE_OWNERS, $team));

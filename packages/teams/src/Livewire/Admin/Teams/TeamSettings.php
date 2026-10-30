@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Admin\Teams;
 
-use App\Enums\SystemPermission;
 use App\Support\Filament\AdminAction;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -48,7 +48,7 @@ class TeamSettings extends Component implements HasActions, HasSchemas
 
     public function mount(Team $team): void
     {
-        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
+        Gate::authorize(TeamSystemPermission::VIEW_TEAMS->value);
 
         $this->team = $team;
 
@@ -61,7 +61,7 @@ class TeamSettings extends Component implements HasActions, HasSchemas
     /** May the viewer edit team details (else the form is read-only)? */
     public function canUpdate(): bool
     {
-        return Gate::allows(SystemPermission::MANAGE_TEAMS->value);
+        return Gate::allows(TeamSystemPermission::MANAGE_TEAMS->value);
     }
 
     /** Whether to render the ownership section: `manage team ownership`, via TeamPolicy::before. The child aborts otherwise. */
@@ -72,12 +72,12 @@ class TeamSettings extends Component implements HasActions, HasSchemas
 
     public function canDeactivate(): bool
     {
-        return Gate::allows(SystemPermission::DEACTIVATE_TEAMS->value);
+        return Gate::allows(TeamSystemPermission::DEACTIVATE_TEAMS->value);
     }
 
     public function canDelete(): bool
     {
-        return Gate::allows(SystemPermission::DELETE_TEAMS->value);
+        return Gate::allows(TeamSystemPermission::DELETE_TEAMS->value);
     }
 
     /** The danger-zone card exists only for a viewer who may do something in it; a read-only viewer gets the full-width form. */
@@ -116,7 +116,7 @@ class TeamSettings extends Component implements HasActions, HasSchemas
 
     public function save(): void
     {
-        Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+        Gate::authorize(TeamSystemPermission::MANAGE_TEAMS->value);
 
         $data = $this->form->getState();
 
@@ -143,7 +143,7 @@ class TeamSettings extends Component implements HasActions, HasSchemas
                 ? team_trans('admin.deactivate_confirm', ['name' => $this->team->name])
                 : team_trans('admin.reactivate_confirm', ['name' => $this->team->name]))
             ->action(function (): void {
-                Gate::authorize(SystemPermission::DEACTIVATE_TEAMS->value);
+                Gate::authorize(TeamSystemPermission::DEACTIVATE_TEAMS->value);
 
                 $this->team->update(['active' => ! $this->team->active]);
 
@@ -168,7 +168,7 @@ class TeamSettings extends Component implements HasActions, HasSchemas
             ->requiresConfirmation()
             ->modalDescription(fn (): string => Team::deleteWarning($this->team))
             ->action(function (): void {
-                Gate::authorize(SystemPermission::DELETE_TEAMS->value);
+                Gate::authorize(TeamSystemPermission::DELETE_TEAMS->value);
                 abort_if($this->team->active, 403, team_trans('admin.deactivate_before_delete'));
 
                 $this->team->delete();

@@ -8,6 +8,7 @@ use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Membership;
 use Concise\Teams\Models\Team;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -89,7 +90,7 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
                     ->label(team_trans('admin.name'))
                     ->view('teams::filament.tables.columns.membership-team-column')
                     ->width('100%')
-                    ->viewData(['linked' => Gate::allows(SystemPermission::VIEW_TEAMS->value)]),
+                    ->viewData(['linked' => Gate::allows(TeamSystemPermission::VIEW_TEAMS->value)]),
 
                 Tables\Columns\TextColumn::make('standing')
                     ->label(team_trans('members.roles'))

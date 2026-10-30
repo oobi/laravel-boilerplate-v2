@@ -11,6 +11,7 @@ use App\Support\Theme\DaisyColor;
 use Concise\Teams\Database\Seeders\TeamRolesSeeder;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
@@ -62,7 +63,7 @@ class TeamRolesScopeTest extends TestCase
         (new SystemRolesSeeder)->run();
 
         $support = Role::systemRoles()->where('name', 'Support')->firstOrFail();
-        $this->assertFalse($support->hasPermissionTo(SystemPermission::VIEW_TEAMS->value));
+        $this->assertFalse($support->hasPermissionTo(TeamSystemPermission::VIEW_TEAMS->value));
     }
 
     public function test_the_seeder_does_nothing_when_the_teams_tier_is_not_active(): void

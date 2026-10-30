@@ -13,7 +13,9 @@ use App\Support\Navigation\Registry\NavItem;
 use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
+use App\Support\Roles\SystemPermissionRegistry;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
 use Concise\Teams\Livewire\Admin\UserMemberships;
 use Concise\Teams\Livewire\Team\ManageDomains;
@@ -100,8 +102,10 @@ class TeamsServiceProvider extends ServiceProvider
 
         Gate::policy(Team::class, TeamPolicy::class);
 
-        // Team roles get their own tab on the admin Roles screen.
+        // Team roles get their own tab on the admin Roles screen; the system-level
+        // "manage all teams" permissions join core's on the system tab.
         RoleScopeRegistry::register(TeamRoleScope::class);
+        SystemPermissionRegistry::register(TeamSystemPermission::class);
 
         $this->registerSystemAdminArea();
         $this->registerAccountMenu();
@@ -227,7 +231,7 @@ class TeamsServiceProvider extends ServiceProvider
                 ->route('teams.index')
                 ->icon('heroicon-o-user-group')
                 ->active('teams.*')
-                ->can(SystemPermission::VIEW_TEAMS)
+                ->can(TeamSystemPermission::VIEW_TEAMS)
                 ->order(30),
         );
 

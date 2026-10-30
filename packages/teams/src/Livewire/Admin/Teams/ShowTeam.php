@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Concise\Teams\Livewire\Admin\Teams;
 
 use App\Actions\Impersonation\StartImpersonation;
-use App\Enums\SystemPermission;
 use App\Enums\UserAbility;
 use App\Support\Theme\DaisyColor;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\InvitationPolicy;
 use Filament\Actions\Action;
@@ -38,7 +38,7 @@ class ShowTeam extends Component implements HasActions, HasSchemas
 
     public function mount(Team $team): void
     {
-        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
+        Gate::authorize(TeamSystemPermission::VIEW_TEAMS->value);
 
         $this->team = $team;
     }

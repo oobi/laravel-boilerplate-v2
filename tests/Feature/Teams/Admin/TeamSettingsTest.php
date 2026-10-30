@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Teams\Admin;
 
-use App\Enums\SystemPermission;
 use App\Models\User;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Admin\Teams\TeamSettings;
 use Concise\Teams\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,7 +70,7 @@ class TeamSettingsTest extends TestCase
 
     public function test_view_teams_opens_settings_read_only(): void
     {
-        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $viewer = User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create();
 
         $this->actingAs($viewer)->get(route('teams.settings', $this->team))
             ->assertOk()
@@ -90,7 +90,7 @@ class TeamSettingsTest extends TestCase
 
     public function test_manage_teams_edits_details_but_cannot_deactivate_or_delete(): void
     {
-        $manager = User::factory()->withPermission(SystemPermission::MANAGE_TEAMS)->create();
+        $manager = User::factory()->withPermission(TeamSystemPermission::MANAGE_TEAMS)->create();
 
         Livewire::actingAs($manager)
             ->test(TeamSettings::class, ['team' => $this->team])
@@ -108,7 +108,7 @@ class TeamSettingsTest extends TestCase
 
     public function test_deactivate_teams_alone_runs_the_toggle(): void
     {
-        $operator = User::factory()->withPermission(SystemPermission::DEACTIVATE_TEAMS)->create();
+        $operator = User::factory()->withPermission(TeamSystemPermission::DEACTIVATE_TEAMS)->create();
 
         Livewire::actingAs($operator)
             ->test(TeamSettings::class, ['team' => $this->team])

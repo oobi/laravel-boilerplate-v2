@@ -8,6 +8,7 @@ use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
+use App\Support\Roles\SystemPermissionRegistry;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Testing\TestResponse;
@@ -21,7 +22,8 @@ abstract class TestCase extends BaseTestCase
      * flush the panels, nav items and login redirects pile up test after test:
      * by the end of a serial run the user page resolves thousands of duplicate
      * panels and a single render takes seconds. Flushing before the boot gives
-     * every test the registrations a real request would see. Core registries
+     * every test the registrations a real request would see (and drops any
+     * fixture add-on a previous test registered). Core registries
      * only: core tests must pass without the teams tier (CoreTestsStandAloneTest),
      * so the tier's own TeamNavRegistry relies on NavGroup::add() replacing by name.
      */
@@ -31,6 +33,7 @@ abstract class TestCase extends BaseTestCase
         NavRegistry::flush();
         AccountMenuRegistry::flush();
         RoleScopeRegistry::flush();
+        SystemPermissionRegistry::flush();
         LoginRedirectRegistry::flush();
         Breadcrumbs::flush();
 

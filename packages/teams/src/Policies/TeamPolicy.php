@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Policies;
 
-use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamCreationMode;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 
 /**
@@ -53,22 +53,22 @@ class TeamPolicy
         // teams or hand ownership around, and a stats-only admin can't browse
         // teams at all. The super-admin bypass has already run before this.
         if (in_array($ability, self::READ_ONLY, true)
-            && $user->hasSystemPermission(SystemPermission::VIEW_TEAMS)) {
+            && $user->hasSystemPermission(TeamSystemPermission::VIEW_TEAMS)) {
             return true;
         }
 
-        if ($user->hasSystemPermission(SystemPermission::MANAGE_TEAMS)
+        if ($user->hasSystemPermission(TeamSystemPermission::MANAGE_TEAMS)
             && ! in_array($ability, self::PRIMARY_OWNER_ONLY, true)) {
             return true;
         }
 
         if ($ability === TeamAbility::DELETE->value
-            && $user->hasSystemPermission(SystemPermission::DELETE_TEAMS)) {
+            && $user->hasSystemPermission(TeamSystemPermission::DELETE_TEAMS)) {
             return true;
         }
 
         if (in_array($ability, [TeamAbility::MANAGE_OWNERS->value, TeamAbility::TRANSFER_OWNERSHIP->value], true)
-            && $user->hasSystemPermission(SystemPermission::MANAGE_TEAM_OWNERSHIP)) {
+            && $user->hasSystemPermission(TeamSystemPermission::MANAGE_TEAM_OWNERSHIP)) {
             return true;
         }
 

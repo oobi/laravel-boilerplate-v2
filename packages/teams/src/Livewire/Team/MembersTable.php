@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Concise\Teams\Livewire\Team;
 
 use App\Actions\Impersonation\StartImpersonation;
-use App\Enums\SystemPermission;
 use App\Enums\UserAbility;
 use App\Enums\UserStatus;
 use App\Models\Role;
@@ -13,6 +12,7 @@ use App\Models\User;
 use App\Support\Auth\Destination;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamCoverage;
 use Concise\Teams\Support\TeamRoleField;
@@ -273,7 +273,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ->icon('heroicon-o-user-plus')
             ->modalHeading(team_trans('members.add_heading', ['name' => $this->team->name]))
             ->modalWidth(Width::Medium)
-            ->visible(fn (): bool => Gate::allows(SystemPermission::MANAGE_TEAMS->value))
+            ->visible(fn (): bool => Gate::allows(TeamSystemPermission::MANAGE_TEAMS->value))
             ->schema([
                 Select::make('user_id')
                     ->label(__('admin.user'))
@@ -287,7 +287,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                 TeamRoleField::make(),
             ])
             ->action(function (array $data): void {
-                Gate::authorize(SystemPermission::MANAGE_TEAMS->value);
+                Gate::authorize(TeamSystemPermission::MANAGE_TEAMS->value);
 
                 $user = User::query()->findOrFail($data['user_id']);
                 $this->team->addMember($user, TeamRoleField::selected($data));
@@ -380,7 +380,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
      */
     private function canActOn(User $member, TeamAbility $ability = TeamAbility::MANAGE_MEMBERS): bool
     {
-        if ($member->is(auth()->user()) && ! Gate::allows(SystemPermission::MANAGE_TEAMS->value)) {
+        if ($member->is(auth()->user()) && ! Gate::allows(TeamSystemPermission::MANAGE_TEAMS->value)) {
             return false;
         }
 

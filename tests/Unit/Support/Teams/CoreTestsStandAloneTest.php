@@ -21,8 +21,6 @@ class CoreTestsStandAloneTest extends TestCase
         '/Concise\\\\Teams\b/',
         '/\b(team_trans|team_trans_choice|team_route|current_team|team_disk|team_cache)\(/',
         '/\b(route|to_route|signedRoute|temporarySignedRoute|assertRedirectToRoute)\(\s*[\'"]teams?\./',
-        // The tier's SystemPermission cases are stripped with it.
-        '/SystemPermission::\w*TEAM/',
     ];
 
     /** Files that mention the tier as data, not a dependency. */

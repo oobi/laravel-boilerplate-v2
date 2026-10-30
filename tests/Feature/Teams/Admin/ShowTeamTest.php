@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Teams\Admin;
 
-use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Admin\Teams\ShowTeam;
 use Concise\Teams\Livewire\Admin\Teams\TeamDomains;
 use Concise\Teams\Livewire\Admin\Teams\TeamSettings;
@@ -51,7 +51,7 @@ class ShowTeamTest extends TestCase
 
     public function test_view_teams_opens_every_tab_read_only(): void
     {
-        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $viewer = User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create();
         $member = User::factory()->create(['first_name' => 'Mia', 'last_name' => 'Member']);
         $this->team->addMember($member, 'Member');
 
@@ -102,7 +102,7 @@ class ShowTeamTest extends TestCase
 
     public function test_a_viewer_who_cannot_impersonate_is_not_offered_it(): void
     {
-        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $viewer = User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create();
 
         Livewire::actingAs($viewer)
             ->test(ShowTeam::class, ['team' => $this->team])

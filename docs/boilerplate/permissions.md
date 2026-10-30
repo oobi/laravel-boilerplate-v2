@@ -6,11 +6,14 @@ Policy-level conventions this builds on.
 
 ## The fixed vocabulary: `App\Enums\SystemPermission`
 
-Every real, code-checked ability in the app is a case on the
-`SystemPermission` string-backed enum (`app/Enums/SystemPermission.php`):
+Every real, code-checked ability in core is a case on the
+`SystemPermission` string-backed enum (`app/Enums/SystemPermission.php`).
+An add-on brings its own enum and registers it (see "Adding a permission from
+an add-on" below), so the full vocabulary is core's cases plus every
+registered add-on's, read from `App\Support\Roles\SystemPermissionRegistry`:
 
 ```php
-enum SystemPermission: string
+enum SystemPermission: string implements SystemPermissionDefinition
 {
     case ACCESS_ADMIN_PANEL = 'access admin panel';
     case VIEW_USERS = 'view users';
@@ -20,18 +23,17 @@ enum SystemPermission: string
     case IMPERSONATE_USERS = 'impersonate users';
     case SET_USER_PASSWORDS = 'set user passwords';
     case MANAGE_ROLES = 'manage roles';
-    // The teams tier adds its area (removed with it):
-    case VIEW_TEAMS = 'view teams';
-    case MANAGE_TEAMS = 'manage teams';
-    case DEACTIVATE_TEAMS = 'deactivate teams';
-    case DELETE_TEAMS = 'delete teams';
-    case MANAGE_TEAM_OWNERSHIP = 'manage team ownership';
 
     public function label(): string { /* ... */ }
     public function category(): string { /* ... */ }
     public function implies(): array { /* ... */ }
 }
 ```
+
+The teams tier's area (`view teams`, `manage teams`, `deactivate teams`,
+`delete teams`, `manage team ownership`) is its own registered enum,
+`Concise\Teams\Enums\TeamSystemPermission`, so a call site names
+`TeamSystemPermission::MANAGE_TEAMS` and core never names a teams permission.
 
 ### Shape: panel entry, a read floor per area, actions on top
 
@@ -48,11 +50,11 @@ data. A teams administrator holds `access admin panel` + `view teams` and never
 sees the user roster; a support desk holds `view users` + `manage users` +
 `suspend users` and nothing about teams.
 
-**Implications keep that shape honest.** `SystemPermission::implies()`
+**Implications keep that shape honest.** Each permission's `implies()`
 declares, one hop at a time, that every action carries its area's read floor
 and every read floor carries panel entry. It is applied when a role is
 *written* — the Roles form, `SystemRolesSeeder`, `UserFactory::withPermission()`
-— through `SystemPermission::withImplied()` (transitive, via
+— through `SystemPermissionRegistry::withImplied()` (transitive, via
 `App\Support\Roles\Implications`), so a stored grant is always reachable and
 `checkPermissionTo()` and the Gate agree. The form shows the chain: tick
 `delete users` and `view users` and `access admin panel` tick and lock with it,
@@ -67,8 +69,9 @@ hand-typed at a call site. Each case also declares:
 
 - **`label()`** — the human-readable name shown on the Manage Roles screen.
 - **`category()`** — which functional-area tab the permission is grouped
-  under (e.g. `User Management`, `System Administration`). `byCategory()`
-  groups all cases by this for the roles form; adding a new category is just
+  under (e.g. `User Management`, `System Administration`).
+  `SystemPermissionRegistry::byCategory()` groups the whole vocabulary by this
+  for the roles form, core's categories first; adding a new category is just
   a new string returned from `category()` — a tab for it appears
   automatically, no other wiring needed.
 
@@ -87,12 +90,13 @@ every call site below — treat that as a deliberate, separate change.
 ## Seeding: one Permission row per case
 
 `database/seeders/PermissionSeeder.php` calls `Permission::findOrCreate()`
-for every `SystemPermission` case. It's idempotent, so adding a new case and
+for every system permission, core's and every registered add-on's. It's
+idempotent, so adding a new case and
 re-running the seeder (or `migrate:fresh --seed`) is all that's needed to
 make a new permission assignable — nothing else registers permission rows.
 
 ```php
-foreach (SystemPermission::cases() as $permission) {
+foreach (SystemPermissionRegistry::all() as $permission) {
     Permission::findOrCreate($permission->value);
 }
 ```
@@ -104,8 +108,8 @@ foreach (SystemPermission::cases() as $permission) {
 ### Default roles: `SystemRolesSeeder`
 
 A fresh install also gets two system roles from
-`database/seeders/SystemRolesSeeder.php`: **Administrator** (every
-`SystemPermission`, including `manage roles` and `set user passwords`; the gap
+`database/seeders/SystemRolesSeeder.php`: **Administrator** (every system
+permission, add-ons' included, including `manage roles` and `set user passwords`; the gap
 from a super admin is the one act that isn't a permission, granting super
 admin, plus the super admin's reach over anyone, since an Administrator acts
 only on users and roles whose permissions it holds) and a limited **Support** (manage and suspend users, impersonate,
@@ -198,7 +202,7 @@ Role -> permission assignment is 100% admin-configurable and only happens in
 one place: `App\Livewire\Admin\Roles\ManageRoles` (route names `roles.index`
 / `roles.edit`, both render the same component — there's no separate roles
 list page, a dropdown at the top switches which role is being edited). It
-renders one row per `SystemPermission::category()`, each with a "select all"
+renders one row per category in `SystemPermissionRegistry::byCategory()`, each with a "select all"
 toggle and a checkbox list, and calls `$role->syncPermissions(...)` on save.
 
 Creating a new role (`App\Livewire\Admin\Roles\CreateRole`, route
@@ -289,3 +293,34 @@ screen and grants nothing.
 
 No route, form, or Manage Roles change is required — the new permission
 appears automatically as a checkbox under its category's tab.
+
+## Adding a permission from an add-on
+
+An add-on never edits `SystemPermission`. It declares its own string-backed
+enum implementing `App\Support\Roles\SystemPermissionDefinition` (`label()`,
+`category()`, `implies()`) and registers it from its service provider's
+`boot()`:
+
+```php
+SystemPermissionRegistry::register(AuditLogPermission::class);
+```
+
+Its cases then behave exactly like core's: they list on the Roles screen
+under their own category (after core's), `PermissionSeeder` creates their
+rows, the Administrator role in `SystemRolesSeeder` holds them, every write
+path closes grants over their `implies()`, and they're checked like any other
+permission: `Gate::authorize(AuditLogPermission::VIEW_AUDIT_LOG)`,
+`$user->hasSystemPermission(AuditLogPermission::VIEW_AUDIT_LOG)`. An
+implication may name a core case: a new area's read floor carries
+`SystemPermission::ACCESS_ADMIN_PANEL`. Core code never names an add-on's
+permission; the add-on names core's. The teams tier's `TeamSystemPermission`
+is the worked example.
+
+A permission name already defined (by core or another add-on) is refused at
+registration with a `LogicException`: one spatie row can't have two labels or
+two implication lists.
+
+On an install that already has its roles, no role gains the new permissions
+automatically. Run `php artisan db:seed --class=PermissionSeeder` to create
+their rows, then grant them on the Roles screen. (Until then a check simply
+denies, and saving a role with one creates its row.)
