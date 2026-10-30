@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Admin\Teams;
 
-use App\Enums\SystemPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\InvitationPolicy;
 use Illuminate\Contracts\View\View;
@@ -23,7 +23,7 @@ class TeamInvitations extends Component
 
     public function mount(Team $team): void
     {
-        Gate::authorize(SystemPermission::VIEW_TEAMS->value);
+        Gate::authorize(TeamSystemPermission::VIEW_TEAMS->value);
         abort_unless(InvitationPolicy::adminsMayInvite(), 404);
 
         $this->team = $team;

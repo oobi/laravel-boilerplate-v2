@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Livewire\Team;
 
-use App\Enums\SystemPermission;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Actions\InviteMember;
 use Concise\Teams\Enums\TeamAbility;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Concerns\HasInviteAction;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
@@ -164,7 +164,7 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
      */
     private function canManage(): bool
     {
-        if (Gate::allows(SystemPermission::MANAGE_TEAMS->value)) {
+        if (Gate::allows(TeamSystemPermission::MANAGE_TEAMS->value)) {
             return InvitationPolicy::adminsMayInvite();
         }
 

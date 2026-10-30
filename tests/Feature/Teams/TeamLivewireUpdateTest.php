@@ -7,6 +7,7 @@ namespace Tests\Feature\Teams;
 use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\PermissionRegistrar;
@@ -68,7 +69,7 @@ class TeamLivewireUpdateTest extends TestCase
 
     public function test_losing_view_teams_with_the_admin_teams_list_open_refuses_the_next_update(): void
     {
-        $admin = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $admin = User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create();
         $page = $this->actingAs($admin)->get(route('teams.index'))->assertOk();
 
         $admin->syncPermissions([SystemPermission::ACCESS_ADMIN_PANEL->value]);

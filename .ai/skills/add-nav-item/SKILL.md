@@ -23,8 +23,8 @@ in detail. This skill is the short procedure.
    this to add into `business` or `people-access` rather than creating a duplicate
    section. `add()` replaces an item with the same name in place, so an add-on
    can override a core item by reusing its name.
-4. Gate visibility with `->can('permission-name')` (a `SystemPermission`
-   value) on the item or group — omit it entirely for always-visible.
+4. Gate visibility with `->can(SystemPermission::X)` (or an add-on's own
+   permission enum case, e.g. `TeamSystemPermission::VIEW_TEAMS`) on the item or group — omit it entirely for always-visible.
 5. Icons are heroicon component names (e.g. `heroicon-o-user`).
 6. Don't hand-set a group's active state unless it needs to diverge from
    the union of its items' `active()` routes — the default already keeps

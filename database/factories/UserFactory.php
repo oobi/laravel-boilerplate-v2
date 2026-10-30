@@ -2,9 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Roles\SystemPermissionDefinition;
+use App\Support\Roles\SystemPermissionRegistry;
 use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -64,17 +65,17 @@ class UserFactory extends Factory
     }
 
     /**
-     * Grants the given SystemPermission(s) directly, creating the Permission
+     * Grants the given system permission(s) directly, creating the Permission
      * rows on demand and closing over their implications like every granting
      * path — `withPermission(MANAGE_TEAMS)` reaches the teams area because it
      * also holds `view teams` and `access admin panel`.
      */
-    public function withPermission(SystemPermission ...$permissions): static
+    public function withPermission(SystemPermissionDefinition ...$permissions): static
     {
         return $this->afterCreating(function (User $user) use ($permissions): void {
             $user->givePermissionTo(array_map(
-                fn (SystemPermission $permission) => Permission::findOrCreate($permission->value),
-                SystemPermission::withImplied($permissions),
+                fn (SystemPermissionDefinition $permission) => Permission::findOrCreate($permission->value),
+                SystemPermissionRegistry::withImplied($permissions),
             ));
         });
     }
@@ -101,8 +102,8 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(function (User $user) use ($name): void {
             $role = Role::findOrCreate($name);
-            $role->givePermissionTo(collect(SystemPermission::withImplied(SystemRolesSeeder::defaults()[$name]['permissions']))
-                ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value))
+            $role->givePermissionTo(collect(SystemPermissionRegistry::withImplied(SystemRolesSeeder::defaults()[$name]['permissions']))
+                ->map(fn (SystemPermissionDefinition $permission): Permission => Permission::findOrCreate($permission->value))
                 ->all());
 
             $user->assignRole($role);

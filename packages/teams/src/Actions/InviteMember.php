@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Actions;
 
-use App\Enums\SystemPermission;
 use App\Models\User;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Support\InvitationPolicy;
@@ -35,7 +35,7 @@ class InviteMember
      */
     public function __invoke(Team $team, string $email, ?string $role = null, ?User $inviter = null): TeamInvitation
     {
-        $isSystemAdmin = $inviter !== null && Gate::forUser($inviter)->allows(SystemPermission::MANAGE_TEAMS->value);
+        $isSystemAdmin = $inviter !== null && Gate::forUser($inviter)->allows(TeamSystemPermission::MANAGE_TEAMS->value);
 
         $allowed = $isSystemAdmin ? InvitationPolicy::adminsMayInvite() : InvitationPolicy::membersMayInvite();
 

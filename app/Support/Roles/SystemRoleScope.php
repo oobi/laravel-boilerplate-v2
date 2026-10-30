@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Support\Roles;
 
-use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
 
-/** The app-wide roles: what a user can do across the whole system (SystemPermission). */
+/** The app-wide roles: what a user can do across the whole system (SystemPermissionRegistry: core's SystemPermission plus add-ons'). */
 final class SystemRoleScope implements RoleScope
 {
     public function key(): string
@@ -28,17 +27,17 @@ final class SystemRoleScope implements RoleScope
 
     public function permissions(): array
     {
-        return collect(SystemPermission::byCategory())
+        return collect(SystemPermissionRegistry::byCategory())
             ->map(fn (array $permissions): array => collect($permissions)
-                ->mapWithKeys(fn (SystemPermission $permission): array => [$permission->value => $permission->label()])
+                ->mapWithKeys(fn (SystemPermissionDefinition $permission): array => [$permission->value => $permission->label()])
                 ->all())
             ->all();
     }
 
-    /** An action carries its area's read floor, a read floor carries panel entry — SystemPermission::implies(). */
+    /** An action carries its area's read floor, a read floor carries panel entry, per each definition's implies(). */
     public function implications(): array
     {
-        return SystemPermission::implicationMap();
+        return SystemPermissionRegistry::implicationMap();
     }
 
     /** Every system permission always applies. */

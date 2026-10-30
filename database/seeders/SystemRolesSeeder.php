@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Enums\SystemPermission;
 use App\Models\Role;
+use App\Support\Roles\SystemPermissionDefinition;
+use App\Support\Roles\SystemPermissionRegistry;
 use App\Support\Theme\DaisyColor;
 use Illuminate\Database\Seeder;
 use RuntimeException;
@@ -28,11 +30,11 @@ class SystemRolesSeeder extends Seeder
     public const ADMINISTRATOR = 'Administrator';
 
     /**
-     * Role name => badge colour and the SystemPermission cases it holds. Public
+     * Role name => badge colour and the system permissions it holds. Public
      * and static so it is the ONE definition of these roles: UserFactory's
      * `support()` state builds its fixture from it rather than repeating the list.
      *
-     * @return array<string, array{color: DaisyColor, permissions: list<SystemPermission>}>
+     * @return array<string, array{color: DaisyColor, permissions: list<SystemPermissionDefinition>}>
      */
     public static function defaults(): array
     {
@@ -40,10 +42,11 @@ class SystemRolesSeeder extends Seeder
             // Everything a role can grant, roles and passwords included. The gap
             // from a super admin is granting super admin, acting on a super admin,
             // and the policy bypass itself: an Administrator runs the platform
-            // without holding the master key.
+            // without holding the master key. Add-ons' registered permissions
+            // included.
             self::ADMINISTRATOR => [
                 'color' => DaisyColor::ERROR,
-                'permissions' => SystemPermission::cases(),
+                'permissions' => SystemPermissionRegistry::all()->all(),
             ],
             // A limited desk role: manage and suspend users, and impersonate to
             // reproduce a problem — not delete or teams. The read floor
@@ -90,8 +93,8 @@ class SystemRolesSeeder extends Seeder
             // Closed over implications like every write path (an action carries its
             // area's read floor, a read floor carries panel entry), so a seeded grant
             // is always reachable.
-            $created->syncPermissions(collect(SystemPermission::withImplied($role['permissions']))
-                ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value, $guard))
+            $created->syncPermissions(collect(SystemPermissionRegistry::withImplied($role['permissions']))
+                ->map(fn (SystemPermissionDefinition $permission): Permission => Permission::findOrCreate($permission->value, $guard))
                 ->all());
         }
 

@@ -8,10 +8,13 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Roles\AdminRoleScopes;
 use App\Support\Roles\RoleScopeRegistry;
+use App\Support\Roles\SystemPermissionDefinition;
+use App\Support\Roles\SystemPermissionRegistry;
 use App\Support\Theme\DaisyColor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
+use Tests\Fixtures\AuditPermission;
 use Tests\TestCase;
 
 class ManageRolesTest extends TestCase
@@ -65,6 +68,26 @@ class ManageRolesTest extends TestCase
         $this->assertFalse($role->fresh()->checkPermissionTo(SystemPermission::MANAGE_USERS->value));
     }
 
+    public function test_a_registered_add_on_permission_is_offered_in_its_own_category_and_saved_with_its_implications(): void
+    {
+        SystemPermissionRegistry::register(AuditPermission::class);
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Auditor');
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSee('Audit log')
+            ->assertSee(AuditPermission::EXPORT_AUDIT_LOG->label())
+            ->set('data.permissions_audit_log', [AuditPermission::EXPORT_AUDIT_LOG->value])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEqualsCanonicalizing(
+            [AuditPermission::EXPORT_AUDIT_LOG->value, AuditPermission::VIEW_AUDIT_LOG->value, SystemPermission::ACCESS_ADMIN_PANEL->value],
+            $role->fresh()->permissions->pluck('name')->all(),
+        );
+    }
+
     public function test_ticking_an_action_ticks_and_locks_its_read_floor_and_panel_entry_across_categories(): void
     {
         // delete users → view users (same category) → access admin panel (another category).
@@ -77,9 +100,9 @@ class ManageRolesTest extends TestCase
             ->assertSet('data.permissions_user_management', [SystemPermission::VIEW_USERS->value, SystemPermission::DELETE_USERS->value])
             ->assertSet('data.permissions_system_administration', [SystemPermission::ACCESS_ADMIN_PANEL->value])
             // Panel entry says on hover which permissions carry it (every read floor, in vocabulary order).
-            ->assertSeeHtml('title="'.e(__('admin.included_with', ['permissions' => collect(SystemPermission::cases())
-                ->filter(fn (SystemPermission $permission): bool => in_array(SystemPermission::ACCESS_ADMIN_PANEL, $permission->implies(), true))
-                ->map(fn (SystemPermission $permission): string => $permission->label())
+            ->assertSeeHtml('title="'.e(__('admin.included_with', ['permissions' => SystemPermissionRegistry::all()
+                ->filter(fn (SystemPermissionDefinition $permission): bool => in_array(SystemPermission::ACCESS_ADMIN_PANEL, $permission->implies(), true))
+                ->map(fn (SystemPermissionDefinition $permission): string => $permission->label())
                 ->implode(', ')])).'"');
 
         // …and both implied options render disabled on screen, in their own categories,

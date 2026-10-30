@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Support;
 
-use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
 use Illuminate\Support\Collection;
 use WeakMap;
@@ -122,6 +122,6 @@ final class TeamCoverage
     {
         self::$headOffice ??= new WeakMap;
 
-        return self::$headOffice[$actor] ??= $actor->isSuperAdmin() || $actor->hasSystemPermission(SystemPermission::MANAGE_TEAMS);
+        return self::$headOffice[$actor] ??= $actor->isSuperAdmin() || $actor->hasSystemPermission(TeamSystemPermission::MANAGE_TEAMS);
     }
 }

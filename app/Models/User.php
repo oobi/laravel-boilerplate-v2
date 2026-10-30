@@ -10,6 +10,7 @@ use App\Models\Concerns\HasSuperAdminFlag;
 use App\Notifications\Auth\QueuedResetPassword;
 use App\Notifications\Auth\QueuedVerifyEmail;
 use App\Support\Roles\Coverage;
+use App\Support\Roles\SystemPermissionDefinition;
 // teams:start
 use Concise\Teams\Concerns\HasTeams;
 // teams:end
@@ -182,12 +183,11 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Whether the user holds an application-wide permission, asked through the
      * Gate rather than spatie directly so every hook that qualifies the answer
-     * applies — the super-admin bypass, and (with the teams tier) the pin that
-     * resolves a SystemPermission at the system scope even inside a team route.
-     * Use this, not checkPermissionTo(), for any SystemPermission check on a
-     * User; checkPermissionTo() answers at whatever scope is current.
+     * applies, the super-admin bypass above all. Takes core's SystemPermission
+     * or an add-on's registered enum case. Use this, not checkPermissionTo(),
+     * for any system permission check on a User.
      */
-    public function hasSystemPermission(SystemPermission $permission): bool
+    public function hasSystemPermission(SystemPermissionDefinition $permission): bool
     {
         return Gate::forUser($this)->allows($permission->value);
     }

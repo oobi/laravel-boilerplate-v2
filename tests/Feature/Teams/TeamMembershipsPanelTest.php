@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Teams;
 
-use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Admin\UserMemberships;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\TeamContext;
@@ -119,7 +119,7 @@ class TeamMembershipsPanelTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs(User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create());
+        $this->actingAs(User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create());
 
         Livewire::test(UserMemberships::class, ['user' => $user])->assertForbidden();
     }

@@ -8,6 +8,7 @@ use App\Livewire\Admin\Roles\ManageRoles;
 use App\Models\User;
 use Concise\Teams\Actions\InviteMember;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
@@ -100,7 +101,7 @@ class TeamRoleCoverageTest extends TestCase
 
     public function test_head_office_running_teams_gives_any_role(): void
     {
-        Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_TEAMS)->create())
+        Livewire::actingAs(User::factory()->withPermission(TeamSystemPermission::MANAGE_TEAMS)->create())
             ->test(MembersTable::class, ['team' => $this->team])
             ->callAction(TestAction::make('changeRole')->table($this->member), data: $this->roles('Manager'))
             ->assertHasNoFormErrors();
@@ -117,7 +118,7 @@ class TeamRoleCoverageTest extends TestCase
         // Holding a team role, they could otherwise give it every team permission.
         $this->actingAs($editor)->get(route('roles.edit', $coordinator))->assertForbidden();
 
-        $runner = User::factory()->withPermission(SystemPermission::MANAGE_ROLES, SystemPermission::MANAGE_TEAMS)->create();
+        $runner = User::factory()->withPermission(SystemPermission::MANAGE_ROLES, TeamSystemPermission::MANAGE_TEAMS)->create();
         $this->actingAs($runner)->get(route('roles.edit', $coordinator))->assertOk();
     }
 
@@ -135,7 +136,7 @@ class TeamRoleCoverageTest extends TestCase
             ->test(CreateRole::class)
             ->assertForbidden();
 
-        $this->member->givePermissionTo(Permission::findOrCreate(SystemPermission::MANAGE_TEAMS->value));
+        $this->member->givePermissionTo(Permission::findOrCreate(TeamSystemPermission::MANAGE_TEAMS->value));
 
         $this->assertTrue(Livewire::actingAs($this->member->fresh())->test(ManageRoles::class, ['role' => $memberRole])->instance()->canEditRole());
     }
@@ -233,7 +234,7 @@ class TeamRoleCoverageTest extends TestCase
 
         $this->assertFalse($this->team->fresh()->hasUser($other));
 
-        Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_TEAMS)->create())
+        Livewire::actingAs(User::factory()->withPermission(TeamSystemPermission::MANAGE_TEAMS)->create())
             ->test(MembersTable::class, ['team' => $this->team])
             ->callAction(TestAction::make('remove')->table($this->manager));
 

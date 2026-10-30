@@ -5,6 +5,7 @@ namespace Tests\Feature\Teams\Admin;
 use App\Enums\SystemPermission;
 use App\Models\User;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Admin\Teams\ListTeams;
 use Concise\Teams\Models\Team;
 use Filament\Actions\Testing\TestAction;
@@ -20,7 +21,7 @@ class ListTeamsTest extends TestCase
     private function teamManager(): User
     {
         return User::factory()
-            ->withPermission(SystemPermission::ACCESS_ADMIN_PANEL, SystemPermission::MANAGE_TEAMS)
+            ->withPermission(SystemPermission::ACCESS_ADMIN_PANEL, TeamSystemPermission::MANAGE_TEAMS)
             ->create();
     }
 
@@ -49,7 +50,7 @@ class ListTeamsTest extends TestCase
 
     public function test_view_teams_opens_the_list_read_only(): void
     {
-        $viewer = User::factory()->withPermission(SystemPermission::VIEW_TEAMS)->create();
+        $viewer = User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create();
         $team = Team::factory()->create(['name' => 'Northwind', 'active' => false]);
 
         $this->actingAs($viewer)->get(route('teams.index'))->assertOk()->assertSee('Northwind');

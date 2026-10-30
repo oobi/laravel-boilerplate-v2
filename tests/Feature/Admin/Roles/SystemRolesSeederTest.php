@@ -4,12 +4,14 @@ namespace Tests\Feature\Admin\Roles;
 
 use App\Enums\SystemPermission;
 use App\Models\Role;
+use App\Support\Roles\SystemPermissionRegistry;
 use App\Support\Theme\DaisyColor;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
 use Spatie\Permission\Models\Permission;
+use Tests\Fixtures\AuditPermission;
 use Tests\TestCase;
 
 /**
@@ -36,8 +38,8 @@ class SystemRolesSeederTest extends TestCase
         $this->assertSame(DaisyColor::ERROR, $admin->color);
 
         // Administrator holds every system capability — the gap from super admin
-        // is the acts that aren't permissions at all.
-        foreach (SystemPermission::cases() as $permission) {
+        // is the acts that aren't permissions at all. Add-ons' registered ones included.
+        foreach (SystemPermissionRegistry::all() as $permission) {
             $this->assertTrue($admin->hasPermissionTo($permission->value), $permission->value);
         }
 
@@ -100,5 +102,22 @@ class SystemRolesSeederTest extends TestCase
 
         $this->assertFalse(Permission::query()->where('name', 'view system analytics')->exists());
         $this->assertSame([], $role->fresh()->permissions->pluck('name')->all());
+    }
+
+    public function test_seeding_creates_registered_add_on_permissions_and_grants_them_to_administrator(): void
+    {
+        SystemPermissionRegistry::register(AuditPermission::class);
+
+        (new PermissionSeeder)->run();
+
+        foreach (AuditPermission::cases() as $permission) {
+            $this->assertTrue(Permission::query()->where('name', $permission->value)->exists(), $permission->value);
+        }
+
+        $this->runSeeder();
+
+        $admin = Role::systemRoles()->where('name', SystemRolesSeeder::ADMINISTRATOR)->firstOrFail();
+        $this->assertTrue($admin->hasPermissionTo(AuditPermission::EXPORT_AUDIT_LOG->value));
+        $this->assertTrue($admin->hasPermissionTo(AuditPermission::VIEW_AUDIT_LOG->value));
     }
 }
