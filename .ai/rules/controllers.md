@@ -1,6 +1,6 @@
 ---
 paths:
-  - 'app/Actions/Impersonation/**,app/Http/Controllers/ImpersonationController.php,routes/web.php'
+  - 'app/Actions/Impersonation/**,app/Http/Controllers/ImpersonationController.php,app/Http/Middleware/EnsureAccountIsActive.php,routes/web.php'
 ---
 
 # Controllers
@@ -10,3 +10,6 @@ Starting impersonation must never be a navigable GET (GitHub #11: a GET take rou
 
 ## Impersonation exits go through StopImpersonation; logout never logs out an impersonated user
 Every way out of impersonation calls App\Actions\Impersonation\StopImpersonation::handle() (lab404's quiet guard swap, returns the leave destination): the banner's POST users.impersonate.leave and Fortify's `logout`, which AppServiceProvider::registerFortify() wraps in LeaveImpersonationOnLogout. A real logout while impersonating would end the impersonator's session and rotate the target's remember_token (signing them out on their own devices). Every layout an impersonated session can reach (app-shell, public, error, login) renders <x-impersonation-banner /> plus the is-impersonating body class. A new layout must too. Unverified users can't be impersonated (User::canBeImpersonated()). Triggers require confirmation. ShowUser keeps the action visible for an unverified target via canBeImpersonatedOnceVerified() and explains why in a modal with no submit button.
+
+## A forced logout while impersonating is quiet and does not restore the admin
+EnsureAccountIsActive ends the whole session when the impersonator or target is deactivated or deleted. While impersonating it calls lab404's quietLogout(), never logout(): the guard holds the impersonated user, so logout() would rotate their remember_token (GitHub oobi#57). It deliberately does not go through StopImpersonation, because the admin must not be restored. quietLogout() fires no Logout event; the session invalidate() that follows clears lab404's impersonation keys.

@@ -47,9 +47,21 @@ class EnsureAccountIsActive
         return $next($request);
     }
 
+    /**
+     * While impersonating, the guard holds the impersonated user, so a real
+     * logout would rotate their remember token and sign them out on their own
+     * devices (GitHub oobi#57). lab404's quietLogout() clears the session and
+     * remember cookie the same way, without touching the token. It fires no
+     * Logout event; the invalidate() below clears lab404's impersonation keys.
+     */
     private function logout(Request $request): Response
     {
-        Auth::guard('web')->logout();
+        if ($this->impersonation->isImpersonating()) {
+            Auth::guard('web')->quietLogout();
+        } else {
+            Auth::guard('web')->logout();
+        }
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
