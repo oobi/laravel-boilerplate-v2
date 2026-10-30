@@ -151,6 +151,21 @@ class InactiveUserAccessTest extends TestCase
         $this->assertGuest();
     }
 
+    /** The forced logout must not sign the impersonated user out of their own remembered sessions (GitHub oobi#57). */
+    #[DataProvider('sessionDrivers')]
+    public function test_deactivating_the_impersonator_leaves_the_targets_remember_token_alone(string $driver): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create(['remember_token' => 'targets-own-device']);
+        $sessionId = $this->startImpersonation($driver, $admin, $target);
+        $admin->update(['active' => false]);
+
+        $this->resumeSession($sessionId)->get('/')->assertRedirect('/login');
+
+        $this->assertGuest();
+        $this->assertSame('targets-own-device', $target->fresh()->remember_token);
+    }
+
     #[DataProvider('sessionDrivers')]
     public function test_deleted_impersonator_ends_session_without_a_redirect_loop(string $driver): void
     {
