@@ -90,9 +90,16 @@ final class TeamRoleScope implements RoleScope
         return $actor->hasSystemPermission(SystemPermission::MANAGE_TEAMS);
     }
 
-    /** Memberships holding the role, across every team (team roles live on the membership, not the user). */
+    /**
+     * People holding the role in any team, each counted once. Team roles live
+     * on the membership, so count distinct users through it, not memberships.
+     */
     public function holderCount(Role $role): int
     {
-        return DB::table('team_user_role')->where('role_id', $role->getKey())->count();
+        return DB::table('team_user_role')
+            ->join('team_user', 'team_user.id', '=', 'team_user_role.team_user_id')
+            ->where('team_user_role.role_id', $role->getKey())
+            ->distinct()
+            ->count('team_user.user_id');
     }
 }

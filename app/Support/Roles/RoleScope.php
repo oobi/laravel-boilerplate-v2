@@ -83,6 +83,6 @@ interface RoleScope
      */
     public function mayManage(User $actor): bool;
 
-    /** How many hold this role (users; for a team scope, memberships across every team): what deleting it takes away. */
+    /** How many people hold this role, each counted once however many teams they hold it in: what deleting it takes away. */
     public function holderCount(Role $role): int;
 }
