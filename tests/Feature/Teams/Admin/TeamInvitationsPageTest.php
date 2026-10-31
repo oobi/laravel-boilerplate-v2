@@ -4,6 +4,7 @@ namespace Tests\Feature\Teams\Admin;
 
 use App\Models\User;
 use Concise\Teams\Actions\InviteMember;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Team\PendingInvitations;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
@@ -51,6 +52,27 @@ class TeamInvitationsPageTest extends TestCase
             ->callAction(TestAction::make('revoke')->table($pending));
 
         $this->assertModelMissing($pending);
+    }
+
+    /** Read-only, like the other admin team tabs (GitHub concise-dot-digital/laravel-boilerplate-v2#6): listed, but no invite, resend or revoke. */
+    public function test_an_admin_who_can_only_view_teams_sees_invitations_read_only(): void
+    {
+        $viewer = User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create();
+        $pending = TeamInvitation::factory()->create(['team_id' => $this->team->id, 'email' => 'pending@example.com']);
+
+        $this->actingAs($viewer)
+            ->get(route('teams.invitations', $this->team))
+            ->assertOk()
+            ->assertSee('pending@example.com');
+
+        Livewire::actingAs($viewer)
+            ->test(PendingInvitations::class, ['team' => $this->team])
+            ->assertCanSeeTableRecords([$pending])
+            ->assertActionHidden('invite')
+            ->assertActionHidden(TestAction::make('resend')->table($pending))
+            ->assertActionHidden(TestAction::make('revoke')->table($pending));
+
+        $this->assertModelExists($pending);
     }
 
     public function test_a_system_admin_can_still_invite_when_only_member_invitations_are_off(): void

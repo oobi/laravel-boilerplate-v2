@@ -37,7 +37,9 @@ use Livewire\Component;
  * revoke, shared by the team area's Invitations page and the system admin's
  * Invitations tab. Authorized for either audience against the matching
  * invitation switch: the `manage teams` system permission when admin invites
- * are on, or the team's invite ability when member invites are on.
+ * are on, or the team's invite ability when member invites are on. An admin
+ * with only `view teams` sees the list read-only, like the other admin team
+ * tabs (GitHub concise-dot-digital/laravel-boilerplate-v2#6).
  */
 class PendingInvitations extends Component implements HasActions, HasSchemas, HasTable
 {
@@ -57,7 +59,7 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
     /** After mount() and on every Livewire update, so access taken away mid-session is refused at the next click. */
     public function booted(): void
     {
-        abort_unless($this->canManage(), 403);
+        abort_unless($this->canView(), 403);
     }
 
     /** "Invite" lives in this table's toolbar; whoever may manage invitations may send one. */
@@ -108,6 +110,7 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                     Action::make('resend')
                         ->label(team_trans('invitations.resend'))
                         ->icon('heroicon-o-envelope')
+                        ->visible(fn (): bool => $this->canManage())
                         ->action(function (TeamInvitation $record): void {
                             abort_unless($this->canManage(), 403);
 
@@ -131,6 +134,7 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                     Action::make('revoke')
                         ->label(team_trans('invitations.revoke'))
                         ->icon('heroicon-o-x-circle')
+                        ->visible(fn (): bool => $this->canManage())
                         ->color(DaisyColor::ERROR->toFilamentColor())
                         ->requiresConfirmation()
                         ->modalDescription(fn (TeamInvitation $record): string => team_trans('invitations.revoke_confirm', ['email' => $record->email]))
@@ -156,7 +160,18 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
     }
 
     /**
-     * Which invitation switch applies is decided by WHO the viewer is — a system
+     * Who may see the list: whoever may manage it, or (read-only) a system
+     * admin with `view teams` while admin invitations are on, which is when
+     * the admin Invitations tab exists at all.
+     */
+    private function canView(): bool
+    {
+        return $this->canManage()
+            || (Gate::allows(TeamSystemPermission::VIEW_TEAMS->value) && InvitationPolicy::adminsMayInvite());
+    }
+
+    /**
+     * Which invitation switch applies is decided by WHO the viewer is: a system
      * admin is governed by `invitations.admins`, a member by `invitations.members`
      * (InvitationPolicy). That's why this one asks the system permission
      * directly rather than relying on TeamPolicy::before granting `invite` to

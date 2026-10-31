@@ -55,7 +55,7 @@ class ShowTeamTest extends TestCase
         $member = User::factory()->create(['first_name' => 'Mia', 'last_name' => 'Member']);
         $this->team->addMember($member, 'Member');
 
-        foreach (['teams.show', 'teams.members', 'teams.settings'] as $route) {
+        foreach (['teams.show', 'teams.members', 'teams.invitations', 'teams.settings'] as $route) {
             $this->actingAs($viewer)->get(route($route, $this->team))->assertOk();
         }
 
