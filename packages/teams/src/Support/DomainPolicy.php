@@ -130,20 +130,24 @@ final class DomainPolicy
     }
 
     /**
-     * Whether a team may not take this slug in host mode, where the slug is its
-     * `{slug}.base` subdomain: a reserved label, or one that would land on the
-     * admin or account host (which never resolve to a team). Always false in
-     * path mode.
+     * Whether a team may not take this slug: a reserved label, in every mode,
+     * so switching host mode on later can't strand a team (GitHub oobi#29);
+     * and in host mode, where the slug is its `{slug}.base` subdomain, one that
+     * would land on the admin or account host (which never resolve to a team).
      */
     public static function isReservedSlug(string $slug): bool
     {
+        if (self::isReservedLabel($slug)) {
+            return true;
+        }
+
         if (! self::enabled()) {
             return false;
         }
 
         $host = Str::lower(trim($slug)).'.'.self::base();
 
-        return self::isReservedLabel($slug) || in_array($host, [self::adminHost(), self::accountHost()], true);
+        return in_array($host, [self::adminHost(), self::accountHost()], true);
     }
 
     /** Normalise a configured host to bare lowercase (no scheme/path), or null when blank. */

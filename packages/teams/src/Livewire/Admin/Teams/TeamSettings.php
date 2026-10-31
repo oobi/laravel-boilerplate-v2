@@ -9,6 +9,7 @@ use App\Support\Theme\DaisyColor;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamSlugField;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -101,13 +102,7 @@ class TeamSettings extends Component implements HasActions, HasSchemas
                                     ->required()
                                     ->maxLength(255),
 
-                                TextInput::make('slug')
-                                    ->label(team_trans('admin.slug'))
-                                    ->helperText(team_trans('admin.slug_help'))
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->alphaDash()
-                                    ->unique(table: 'teams', column: 'slug', ignoreRecord: true),
+                                TeamSlugField::make(team_trans('admin.slug_help')),
                             ]),
                     ]),
             ])

@@ -83,9 +83,14 @@ distinct from each other and from the account host — the app fails loud at boo
 `APP_URL`; the hosts are explicit. Fortify's auth host follows the account host
 automatically (`config/fortify.php`) — you don't set it twice.
 
+A team's slug is its `{slug}.{base}` subdomain in host mode, so it's held to a
+DNS label in every mode: lowercase letters, digits and hyphens, not starting or
+ending with a hyphen, at most 63 characters. That way switching host mode on
+later can't strand a team.
+
 Reserved leftmost labels (`www`, `admin`, `mail`, and the rest of
 `teams.domains.reserved`) can never be claimed by a team, as a custom domain's
-label or a `{slug}.{base}` subdomain. Nor can the hosts the platform owns: a
+label or a slug (in either mode). Nor can the hosts the platform owns: a
 custom domain may not be `{base}`, the app, admin or account host, anything
 under them (so never another team's `{slug}.{base}`), or a parent of them; a
 slug may not put a team on the admin or account host. A host at or under

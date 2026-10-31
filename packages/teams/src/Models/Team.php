@@ -14,6 +14,7 @@ use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamLabels;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -119,6 +120,26 @@ class Team extends Model
         });
     }
 
+    /**
+     * A slug is a DNS label in host mode (`{slug}.base`), so it's held to one
+     * in every mode: lowercase letters, digits and hyphens, not starting or
+     * ending with a hyphen, at most 63 characters (GitHub oobi#29).
+     */
+    public const SLUG_PATTERN = '/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/';
+
+    public const SLUG_MAX_LENGTH = 63;
+
+    public static function normalizeSlug(string $slug): string
+    {
+        return Str::lower(trim($slug));
+    }
+
+    /** Stored lower-cased and trimmed, whatever wrote it (null is left for `creating` to generate). */
+    protected function slug(): Attribute
+    {
+        return Attribute::make(set: fn (?string $value): ?string => $value === null ? null : static::normalizeSlug($value));
+    }
+
     /** Why this deleted team can't be restored yet (its owner is deleted), or null. */
     public function restoreBlockedReason(): ?string
     {
@@ -148,12 +169,13 @@ class Team extends Model
     /** A URL-safe, collision-free slug derived from the given base string. */
     public static function uniqueSlug(string $base): string
     {
-        $slug = Str::slug($base) ?: 'team';
+        $slug = rtrim(Str::limit(Str::slug($base), self::SLUG_MAX_LENGTH, ''), '-') ?: 'team';
         $candidate = $slug;
         $suffix = 2;
 
         while (static::slugUnavailable($candidate)) {
-            $candidate = "{$slug}-{$suffix}";
+            // Shorten the base so the suffix still fits in one DNS label.
+            $candidate = rtrim(Str::limit($slug, self::SLUG_MAX_LENGTH - strlen("-{$suffix}"), ''), '-')."-{$suffix}";
             $suffix++;
         }
 
@@ -161,9 +183,9 @@ class Team extends Model
     }
 
     /**
-     * A slug is unavailable if it's already taken, or (in host mode) reserved,
-     * since a reserved `{slug}.base` never routes to a team (TeamHostResolver),
-     * so generating such a slug would strand the team.
+     * A slug is unavailable if it's already taken or reserved: a reserved
+     * `{slug}.base` never routes to a team (TeamHostResolver), so it would
+     * strand the team once host mode is on.
      */
     private static function slugUnavailable(string $slug): bool
     {

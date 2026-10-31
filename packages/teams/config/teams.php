@@ -244,8 +244,9 @@ return [
     | is — a team can never claim it as a domain or `{slug}.base`.
     |
     | `reserved` is a blacklist of leftmost labels a team may never claim as a
-    | domain (infra/system names). Matched case-insensitively against the first
-    | label, so it blocks e.g. `admin.acme.com` and `mail.acme.com`. Extend it
+    | domain or as its slug, in path mode too (infra/system names). Matched
+    | case-insensitively against the first label, so it blocks e.g.
+    | `admin.acme.com`, `mail.acme.com` and a team slug of `www`. Extend it
     | per project. Beyond the list, a custom domain may never be `base`, the
     | app (APP_URL), admin or account host, anything under them (so never
     | another team's `{slug}.base`), or a parent of them. A slug may never put
