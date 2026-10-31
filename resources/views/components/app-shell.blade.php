@@ -1,3 +1,5 @@
+{{-- width: the content column's cap when there's no sidebar (default about the admin
+     content width); a narrow single-form page such as the profile passes a smaller one. --}}
 @props([
     'home' => null,
     'title' => null,
@@ -5,6 +7,7 @@
     'breadcrumbResource' => true,
     'breadcrumbs' => true,
     'titleContext' => null,
+    'width' => 'max-w-6xl',
 ])
 
 @php
@@ -195,8 +198,8 @@
 
                 <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto focus:outline-none">
                     <div class="py-6">
-                        {{-- No sidebar → cap the width so content isn't spread across the whole viewport (roughly the admin content width). --}}
-                        <div @class(['ui-page flex flex-col gap-4', 'max-w-6xl' => ! $hasNav])>
+                        {{-- No sidebar → cap the width at $width so content isn't spread across the whole viewport. --}}
+                        <div @class(['ui-page flex flex-col gap-4', $width => ! $hasNav])>
                             <x-two-factor-banner />
 
                             @session('status')

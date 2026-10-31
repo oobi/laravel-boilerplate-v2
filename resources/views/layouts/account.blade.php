@@ -4,7 +4,8 @@
      borrow here); :home is resolved via App\Support\Auth\Destination so the logo
      takes the viewer back to wherever they belong (their admin dashboard, their
      team, or the public landing). Shares the same sidebar-less shape as the
-     teams tier's lobby layout. --}}
-<x-app-shell :home="\App\Support\Auth\Destination::home(auth()->user())" :title="$title ?? null" :title-context="__('admin.my_profile')" :breadcrumbs="false">
+     teams tier's lobby layout. The column is the profile form's width (3xl), so
+     the centred page reads as one column with the title over the card. --}}
+<x-app-shell :home="\App\Support\Auth\Destination::home(auth()->user())" :title="$title ?? null" :title-context="__('admin.my_profile')" :breadcrumbs="false" width="max-w-3xl">
     {{ $slot }}
 </x-app-shell>

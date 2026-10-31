@@ -3,6 +3,7 @@
 
     <x-page-header :title="__('admin.my_profile')" />
 
+    {{-- Redundant in the account layout (already 3xl); keeps the form readable inside a sidebar shell. --}}
     <div class="w-full max-w-3xl">
         <x-tabs-nav>
             @include('livewire.profile.partials.tabs')
