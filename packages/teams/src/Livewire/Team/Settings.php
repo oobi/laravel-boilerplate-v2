@@ -6,11 +6,11 @@ namespace Concise\Teams\Livewire\Team;
 
 use App\Support\Filament\AdminAction;
 use App\Support\Theme\DaisyColor;
-use Closure;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\TeamContext;
+use Concise\Teams\Support\TeamSlugField;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -94,20 +94,7 @@ class Settings extends Component implements HasActions, HasSchemas
                                 ->required()
                                 ->maxLength(255),
 
-                            TextInput::make('slug')
-                                ->label(team_trans('admin.slug'))
-                                ->helperText(team_trans(DomainPolicy::enabled() ? 'settings.slug_warning_domains' : 'settings.slug_warning'))
-                                ->required()
-                                ->maxLength(255)
-                                ->alphaDash()
-                                // While the overlay is on the slug is a subdomain, so a reserved
-                                // one can't be used (it would never route, see TeamHostResolver).
-                                ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
-                                    if (DomainPolicy::isReservedSlug((string) $value)) {
-                                        $fail(team_trans('settings.slug_reserved'));
-                                    }
-                                })
-                                ->unique(table: 'teams', column: 'slug', ignoreRecord: true),
+                            TeamSlugField::make(team_trans(DomainPolicy::enabled() ? 'settings.slug_warning_domains' : 'settings.slug_warning')),
                         ]),
                     ]),
             ])

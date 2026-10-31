@@ -142,16 +142,16 @@ class TeamHostRoutingTest extends TestCase
         $this->assertNull(TeamHostResolver::resolve('www.myapp.com'));
     }
 
-    public function test_unique_slug_avoids_reserved_labels_in_host_mode(): void
+    public function test_unique_slug_avoids_reserved_labels_in_every_mode(): void
     {
         $this->enableHostMode();
-        // 'Admin' slugifies to the reserved 'admin', so it must be bumped — otherwise
+        // 'Admin' slugifies to the reserved 'admin', so it must be bumped, otherwise
         // the team would be stranded (admin.myapp.com never resolves to it).
         $this->assertSame('admin-2', Team::uniqueSlug('Admin'));
 
-        // Path mode has no subdomains, so the reserved list doesn't apply.
+        // In path mode too, so switching host mode on later can't strand it (GitHub oobi#29).
         config(['teams.domains.enabled' => false]);
-        $this->assertSame('admin', Team::uniqueSlug('Admin'));
+        $this->assertSame('admin-2', Team::uniqueSlug('Admin'));
     }
 
     public function test_unique_slug_never_lands_on_the_admin_or_account_host(): void

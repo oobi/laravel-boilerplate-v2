@@ -6,6 +6,7 @@ namespace Concise\Teams\Database\Seeders\Demo;
 
 use App\Models\User;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\TeamsServiceProvider;
 use Database\Seeders\Demo\RefusesProduction;
@@ -115,18 +116,19 @@ class TeamSeeder extends Seeder
 
     /**
      * A short, memorable slug from the first word of the team's name (`Krajcik PLC`
-     * → `krajcik`), deduped within the run so two teams never clash.
+     * → `krajcik`), deduped within the run so two teams never clash, and never a
+     * reserved label (which no team may take, see DomainPolicy::isReservedSlug).
      *
      * @param  list<string>  $used
      */
     private function shortSlug(string $name, array &$used): string
     {
-        $base = Str::slug((string) Str::of($name)->before(',')->before(' ')->before('-')) ?: 'team';
+        $base = Str::slug((string) Str::of($name)->before(',')->before(' ')->before('-')) ?: 'demo';
 
         $slug = $base;
         $suffix = 2;
 
-        while (in_array($slug, $used, true)) {
+        while (in_array($slug, $used, true) || DomainPolicy::isReservedSlug($slug)) {
             $slug = $base.'-'.$suffix++;
         }
 
