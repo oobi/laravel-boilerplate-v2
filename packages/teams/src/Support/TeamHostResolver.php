@@ -12,8 +12,9 @@ use Illuminate\Support\Str;
  * Maps a request host to the team it stands for, in host mode (the domains
  * overlay, 5h). Two hosts resolve to a team, in order:
  *
- *   1. a verified custom domain (the row's team) — only when the custom-domains
- *      tier is on; pending/unverified never match;
+ *   1. a verified custom domain (the row's team), only when the custom-domains
+ *      tier is on and the host isn't at or under `base`; pending/unverified
+ *      never match;
  *   2. the platform subdomain `{slug}.base` — no verification, the platform owns
  *      `*.base` via wildcard DNS.
  *
@@ -33,7 +34,8 @@ final class TeamHostResolver
         if (DomainPolicy::customDomainsEnabled()) {
             $primary = $team->primaryDomain();
 
-            if ($primary !== null) {
+            // A primary under `base` never resolves to this team (see resolve()), so it can't be its link host.
+            if ($primary !== null && ! self::isPlatformHost($primary->domain)) {
                 return $primary->domain;
             }
         }
@@ -55,8 +57,10 @@ final class TeamHostResolver
         }
 
         // A verified custom domain only routes when that tier is switched on;
-        // otherwise a team is reachable only at its `{slug}.base` subdomain.
-        if (DomainPolicy::customDomainsEnabled()) {
+        // otherwise a team is reachable only at its `{slug}.base` subdomain. Hosts
+        // at or under `base` belong to the platform, so a custom domain row there
+        // (refused since GitHub oobi#26) can never shadow another team.
+        if (DomainPolicy::customDomainsEnabled() && ! self::isPlatformHost($host)) {
             $domain = Domain::query()
                 ->where('domain', $host)
                 ->whereNotNull('verified_at')
@@ -68,6 +72,14 @@ final class TeamHostResolver
         }
 
         return self::resolveSubdomain($host);
+    }
+
+    /** The base itself or any host under it. */
+    private static function isPlatformHost(string $host): bool
+    {
+        $base = DomainPolicy::base();
+
+        return $base !== null && ($host === $base || Str::endsWith($host, '.'.$base));
     }
 
     /** A `{slug}.base` host → the team with that slug (single label, not the bare base). */

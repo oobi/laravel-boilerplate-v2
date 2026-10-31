@@ -131,13 +131,13 @@ class Team extends Model
     }
 
     /**
-     * A slug is unavailable if it's already taken, or — while the custom-domain
-     * overlay is on — a reserved label, since `{reserved}.base` never routes to a
-     * team (TeamHostResolver), so generating such a slug would strand the team.
+     * A slug is unavailable if it's already taken, or (in host mode) reserved,
+     * since a reserved `{slug}.base` never routes to a team (TeamHostResolver),
+     * so generating such a slug would strand the team.
      */
     private static function slugUnavailable(string $slug): bool
     {
-        if (DomainPolicy::enabled() && DomainPolicy::isReservedLabel($slug)) {
+        if (DomainPolicy::isReservedSlug($slug)) {
             return true;
         }
 

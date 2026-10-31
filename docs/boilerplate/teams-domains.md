@@ -32,16 +32,31 @@ tab/UI are dormant, and only `{slug}.{base}` resolves.
 >
 > **Subdomain mode (`{slug}.{base}`) is production-ready. Custom domains are
 > not.** A team reached on its *own registrable domain* (`acme.com`, not
-> `acme.example.com`) **cannot hold a session today**: the `.{base}` session
+> `acme.example.com`) **cannot hold a session today**: the shared session
 > cookie can't be sent to a different registrable domain, so a member visiting
 > `acme.com` is treated as a guest, is sent to the account host to sign in, is
 > redirected back, and is a guest again — an endless login loop (logout has the
 > same problem). Verification, storage, routing and the management UI all exist,
 > but **without the session handoff a foreign custom domain is unusable.**
 >
-> Leave `TEAMS_DOMAINS_CUSTOM` **off** unless every team lives on the *same*
-> registrable domain as `base` (where the shared cookie already covers them). The
-> Domains screen carries this same warning so no one enables it by accident.
+> Leave `TEAMS_DOMAINS_CUSTOM` **off** unless every team's custom domain is on
+> the *same* registrable domain as `base` (where a shared cookie can cover
+> them). Anything under `base`, the account host, the admin host or the APP_URL
+> host is reserved, so this only works when all four sit below the registrable
+> domain, never on it. For example:
+>
+> | Setting | Value |
+> |---|---|
+> | `TEAMS_DOMAINS_BASE` | `teams.myapp.com` (team Acme at `acme.teams.myapp.com`) |
+> | `TEAMS_DOMAINS_ACCOUNT_HOST` | `account.myapp.com` (not `myapp.com`) |
+> | `TEAMS_DOMAINS_ADMIN_HOST` | `admin.myapp.com` |
+> | `APP_URL` | `https://account.myapp.com` (not `https://myapp.com`) |
+> | `SESSION_DOMAIN` | `.myapp.com` |
+> | Custom domain a team can add | `acme.myapp.com` |
+>
+> If the account host, admin host or APP_URL were `myapp.com`, every
+> `*.myapp.com` custom domain would be refused. The Domains screen carries this same warning so no
+> one enables it by accident.
 > **What it would take to finish it is spelled out in
 > [Completing custom domains](#completing-custom-domains) below.**
 
@@ -68,9 +83,29 @@ distinct from each other and from the account host — the app fails loud at boo
 `APP_URL`; the hosts are explicit. Fortify's auth host follows the account host
 automatically (`config/fortify.php`) — you don't set it twice.
 
-Reserved leftmost labels (`www`, `admin`, `mail`, … — `teams.domains.reserved`)
-and whatever the account host resolves to can never be claimed by a team, as a
-custom domain's label or a `{slug}.{base}` subdomain.
+Reserved leftmost labels (`www`, `admin`, `mail`, and the rest of
+`teams.domains.reserved`) can never be claimed by a team, as a custom domain's
+label or a `{slug}.{base}` subdomain. Nor can the hosts the platform owns: a
+custom domain may not be `{base}`, the app, admin or account host, anything
+under them (so never another team's `{slug}.{base}`), or a parent of them; a
+slug may not put a team on the admin or account host. A host at or under
+`{base}` always resolves by slug, never through a custom domain.
+
+For example, with `base` = `myapp.com`, admin host `admin.myapp.com` and team
+Acme at `acme.myapp.com`, another team trying to add a custom domain gets:
+
+| Custom domain | Result | Why |
+|---|---|---|
+| `evilcorp.com`, `portal.evilcorp.com` | allowed | The team's own domain, verified by DNS |
+| `acme.myapp.com` | refused | Team Acme's platform host (under `base`) |
+| `portal.acme.myapp.com` | refused | Under `base` |
+| `myapp.com` | refused | `base` itself |
+| `admin.myapp.com`, `x.admin.myapp.com` | refused | The admin host and under it (also under `base`) |
+| `mail.evilcorp.com` | refused | Reserved leftmost label |
+
+With `base` = `teams.myapp.com` instead, `myapp.com` is also refused (a parent
+of `base`), while `acme.myapp.com` is allowed. A team slug of `admin` (or
+whatever label the admin and account hosts use under `base`) is refused too.
 
 ## Deployment shapes
 
@@ -81,7 +116,7 @@ custom-domains tier is on** (subject to the status note above).
 | Front end | Custom domains | Shape |
 |---|---|---|
 | Laravel-served | **off** | Laravel serves the landing, the admin area, and teams at `{slug}.{base}` (host mode) or `/teams/{slug}` (path mode). The common shape. |
-| Laravel-served | **on** | As above, plus team hosts on verified custom domains. Only sound when those domains share `base`'s registrable domain (else see the session limitation). Wildcard DNS + TLS. |
+| Laravel-served | **on** | As above, plus team hosts on verified custom domains. Only sound when those domains share `base`'s registrable domain without being under `base` (else see the session limitation). Wildcard DNS + TLS. |
 | Decoupled front end | **off** | The front-end owns the public face (`www`/apex); Laravel is `admin_host` (control plane + API) + team subdomains. Set `account_host` to Laravel's own host so auth/invitations don't land on the front-end's apex. |
 | Decoupled front end | **on** | The headless custom-domain SaaS shape — the one that most wants custom domains, and the one the session handoff is a prerequisite for. |
 
@@ -124,10 +159,13 @@ SESSION_DOMAIN=.example.com
 ## `SESSION_DOMAIN` (host-mode requirement)
 
 Auth lives on the account host while teams live on `{slug}.{base}`, so the
-session cookie must be shared across them: set `SESSION_DOMAIN=.{base}` (leading
-dot). Without it, a login on the account host reads as logged-out on a team
-subdomain. This covers the apex, the admin host, and every `{slug}.{base}`
-subdomain — the whole registrable domain.
+session cookie must be shared across them: set `SESSION_DOMAIN` (leading dot) to
+the registrable domain that covers `{base}`, the account host and the admin
+host. When `{base}` is the apex that's simply `.{base}`, which covers the apex,
+the admin host and every `{slug}.{base}` subdomain. When `{base}` is a subdomain
+(`teams.myapp.com`), use `.myapp.com`; that also covers custom domains such as
+`acme.myapp.com` (see the custom domains note above). Without it, a login on the
+account host reads as logged-out on a team subdomain.
 
 It does **not** cover a custom domain on a *different* registrable domain — which
 is the crux of why custom domains are unfinished.

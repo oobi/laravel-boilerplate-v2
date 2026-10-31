@@ -171,6 +171,21 @@ class TeamSettingsTest extends TestCase
         $this->assertNotSame('mail', $team->fresh()->slug);
     }
 
+    public function test_a_slug_that_would_land_on_the_admin_host_is_rejected(): void
+    {
+        config(['teams.domains.enabled' => true, 'teams.domains.admin_host' => 'console.myapp.com', 'teams.domains.base' => 'myapp.com']);
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        Livewire::actingAs($owner)
+            ->test(Settings::class, ['team' => $team])
+            ->set('data.slug', 'console')
+            ->call('save')
+            ->assertHasErrors('data.slug');
+
+        $this->assertNotSame('console', $team->fresh()->slug);
+    }
+
     protected function tearDown(): void
     {
         app(TeamContext::class)->clear();

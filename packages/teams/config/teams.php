@@ -205,11 +205,15 @@ return [
     |  - `custom_domains` (env TEAMS_DOMAINS_CUSTOM) additionally lets a team route
     |    on its own verified domain (e.g. `acme.com`). Off by default, and only
     |    has effect when `enabled` is on. A verified custom domain on a *different*
-    |    registrable domain can't share the `.{base}` session cookie, so a member
+    |    registrable domain can't share the session cookie, so a member
     |    there can't yet hold a session (the session-handoff work is deferred — see
     |    docs/boilerplate/teams-domains.md); leave it off unless teams live on the
-    |    same registrable domain as `base`. With it off, the Domain model and its
-    |    UI/verification are dormant and no host but `{slug}.{base}` resolves.
+    |    same registrable domain as `base` but not under `base`, the account or
+    |    admin host, or the APP_URL host (e.g. base `teams.myapp.com`, account
+    |    host and APP_URL `account.myapp.com`, admin host `admin.myapp.com`,
+    |    custom domain `acme.myapp.com`). With it
+    |    off, the Domain model and its UI/verification are dormant and no host
+    |    but `{slug}.{base}` resolves.
     |
     | Who may manage a team's domains is runtime authorization, not config: the
     | `MANAGE_DOMAINS` team permission (Roles screen) and system admins. Ownership
@@ -242,7 +246,10 @@ return [
     | `reserved` is a blacklist of leftmost labels a team may never claim as a
     | domain (infra/system names). Matched case-insensitively against the first
     | label, so it blocks e.g. `admin.acme.com` and `mail.acme.com`. Extend it
-    | per project; the application's own host (APP_URL) is always reserved too.
+    | per project. Beyond the list, a custom domain may never be `base`, the
+    | app (APP_URL), admin or account host, anything under them (so never
+    | another team's `{slug}.base`), or a parent of them. A slug may never put
+    | a team on the admin or account host.
     |
     */
 

@@ -129,6 +129,23 @@ final class DomainPolicy
         return in_array(Str::lower(trim($label)), $reserved, true);
     }
 
+    /**
+     * Whether a team may not take this slug in host mode, where the slug is its
+     * `{slug}.base` subdomain: a reserved label, or one that would land on the
+     * admin or account host (which never resolve to a team). Always false in
+     * path mode.
+     */
+    public static function isReservedSlug(string $slug): bool
+    {
+        if (! self::enabled()) {
+            return false;
+        }
+
+        $host = Str::lower(trim($slug)).'.'.self::base();
+
+        return self::isReservedLabel($slug) || in_array($host, [self::adminHost(), self::accountHost()], true);
+    }
+
     /** Normalise a configured host to bare lowercase (no scheme/path), or null when blank. */
     private static function host(mixed $value): ?string
     {

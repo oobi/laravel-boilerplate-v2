@@ -101,9 +101,9 @@ class Settings extends Component implements HasActions, HasSchemas
                                 ->maxLength(255)
                                 ->alphaDash()
                                 // While the overlay is on the slug is a subdomain, so a reserved
-                                // label can't be used (it would never route — TeamHostResolver).
+                                // one can't be used (it would never route, see TeamHostResolver).
                                 ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
-                                    if (DomainPolicy::enabled() && DomainPolicy::isReservedLabel((string) $value)) {
+                                    if (DomainPolicy::isReservedSlug((string) $value)) {
                                         $fail(team_trans('settings.slug_reserved'));
                                     }
                                 })
