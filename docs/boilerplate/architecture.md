@@ -78,9 +78,16 @@ Not exhaustive.
 This is an **admin/back-office** boilerplate, but not everyone who signs in is
 admin staff (an add-on like the teams tier gives ordinary users their own
 area). Self-service account management (profile, password, two-factor) is
-therefore **not** an admin page: it renders in the neutral `layouts.account`
-shell, reachable by any signed-in user via `/profile` (admin or not; until
-the email is verified only the Profile tab, to fix a mistyped address). Only the admin area proper (dashboard, users, roles, …) sits behind
+therefore **not** an admin page: it renders in `layouts.account`, reachable
+by any signed-in user via `/profile` (admin or not; until the email is
+verified only the Profile tab, to fix a mistyped address). Opened from an
+area, it keeps that area's shell (the admin sidebar, or the team's), so the
+user isn't taken out of it; with no area, or one they can no longer enter, it
+is a centred page with no sidebar. Each area records itself in the session
+(core's admin routes carry `RememberAccountArea:admin`; the teams tier's
+`ResolveTeamContext` remembers the team) and registers a resolver with
+`App\Support\AccountArea\AccountAreaRegistry` that re-checks access on every
+render. The last area visited wins, across tabs. Only the admin area proper (dashboard, users, roles, …) sits behind
 `ACCESS_ADMIN_PANEL`. In the teams tier's host mode this also means the
 account routes (auth, profile, the team picker) are quarantined onto their
 own host, separate from the admin-only host — see `docs/boilerplate/teams-domains.md`.

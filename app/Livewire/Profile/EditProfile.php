@@ -23,8 +23,9 @@ use Livewire\WithFileUploads;
  * Fortify actions (same validation/rules a real Fortify update-profile request
  * would run). Password and two-factor management live on their own sibling tabs
  * ({@see EditPassword}, {@see TwoFactorAuthentication}). Open to any signed-in,
- * verified user — not admin-gated — so it renders in the neutral account
- * layout rather than the default admin shell.
+ * verified user (not admin-gated), so it renders in the account layout,
+ * which keeps the shell of the area it was opened from (admin, a team) or
+ * none (App\Support\AccountArea\AccountAreaRegistry).
  */
 #[Layout('layouts.account')]
 class EditProfile extends Component

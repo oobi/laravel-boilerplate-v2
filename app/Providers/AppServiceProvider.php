@@ -17,6 +17,8 @@ use App\Http\Responses\RegisterResponse;
 use App\Http\Responses\VerifyEmailResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Support\AccountArea\AccountAreaRegistry;
+use App\Support\AccountArea\AccountShell;
 use App\Support\Auth\MailedLinks;
 use App\Support\Auth\PasswordChecks;
 use App\Support\Roles\AdminRoleScopes;
@@ -87,6 +89,9 @@ class AppServiceProvider extends ServiceProvider
         Password::defaults(fn (): Password => Password::min(config()->integer('auth.password_min_length')));
 
         AdminRoleScopes::define();
+
+        // Account pages (profile) opened from the admin area keep the admin shell while the user can still enter it.
+        AccountAreaRegistry::register('admin', fn (User $user): ?AccountShell => $user->canAccessAdmin() ? new AccountShell('layouts.admin') : null);
 
         User::observe(UserObserver::class);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Http\Middleware;
 
+use App\Support\AccountArea\AccountAreaRegistry;
 use Closure;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\DomainPolicy;
@@ -46,6 +47,9 @@ class ResolveTeamContext
 
         $context = app(TeamContext::class);
         $context->set($team);
+
+        // The profile opens in this team's shell from here (see TeamsServiceProvider::registerAccountArea()).
+        AccountAreaRegistry::remember('team', $team->getKey());
 
         // In host mode the team is implied by the request host, so the route has a
         // {teamHost} parameter but no {team} one — a page component's

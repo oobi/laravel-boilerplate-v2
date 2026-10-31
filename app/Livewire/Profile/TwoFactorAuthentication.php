@@ -28,7 +28,7 @@ use Livewire\Component;
  * must re-enter their password each time. Linking and unlinking a Google
  * account (the other way in, see GoogleLoginController) sit here too, behind
  * the same prompt. See EditProfile for why this renders
- * in the neutral account layout rather than the admin shell.
+ * in the account layout.
  */
 #[Layout('layouts.account')]
 class TwoFactorAuthentication extends Component
