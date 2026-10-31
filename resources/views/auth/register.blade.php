@@ -11,13 +11,13 @@
         @csrf
 
         <fieldset class="fieldset">
-            <label class="label" for="first_name">{{ __('First Name') }}</label>
+            <label class="label" for="first_name">{{ __('First name') }}</label>
             <input id="first_name" class="input w-full @error('first_name') input-error @enderror" type="text" name="first_name" value="{{ old('first_name') }}" required autofocus autocomplete="given-name" @error('first_name') aria-invalid="true" aria-describedby="first_name-error" @enderror>
             <x-form-error for="first_name" />
         </fieldset>
 
         <fieldset class="fieldset">
-            <label class="label" for="last_name">{{ __('Last Name') }}</label>
+            <label class="label" for="last_name">{{ __('Last name') }}</label>
             <input id="last_name" class="input w-full @error('last_name') input-error @enderror" type="text" name="last_name" value="{{ old('last_name') }}" required autocomplete="family-name" @error('last_name') aria-invalid="true" aria-describedby="last_name-error" @enderror>
             <x-form-error for="last_name" />
         </fieldset>
@@ -36,7 +36,7 @@
         </fieldset>
 
         <fieldset class="fieldset">
-            <label class="label" for="password_confirmation">{{ __('Confirm Password') }}</label>
+            <label class="label" for="password_confirmation">{{ __('Confirm password') }}</label>
             <input id="password_confirmation" class="input w-full @error('password_confirmation') input-error @enderror" type="password" name="password_confirmation" required autocomplete="new-password" @error('password_confirmation') aria-invalid="true" aria-describedby="password_confirmation-error" @enderror>
             <x-form-error for="password_confirmation" />
         </fieldset>

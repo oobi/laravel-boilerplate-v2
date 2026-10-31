@@ -30,7 +30,7 @@ class TeamMembershipsPanelTest extends TestCase
             ->assertOk()
             ->assertSee('Team memberships')
             ->assertSee('Owned Co')
-            ->assertSee('Owner')
+            ->assertSee('Primary owner')
             ->assertSee('Other Co')
             ->assertSee('Team Admin')
             ->assertSee('Member since');

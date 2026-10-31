@@ -1,9 +1,9 @@
 @extends('layouts.login')
 
-@section('page-title', __('Verify Email'))
+@section('page-title', __('Verify email'))
 
 @section('content')
-    <h1 class="text-xl font-semibold">{{ __('Verify Email') }}</h1>
+    <h1 class="text-xl font-semibold">{{ __('Verify email') }}</h1>
 
     <p class="text-sm opacity-70">
         {{ __("Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn't receive the email, we will gladly send you another.") }}
@@ -23,14 +23,14 @@
     <div class="flex items-center justify-between">
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf
-            <x-button.action type="submit">{{ __('Resend Verification Email') }}</x-button.action>
+            <x-button.action type="submit">{{ __('Resend verification email') }}</x-button.action>
         </form>
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <x-button color="neutral" variant="ghost" type="submit">
                 <x-heroicon-o-arrow-right-on-rectangle class="size-4" />
-                {{ __('Log Out') }}
+                {{ __('Log out') }}
             </x-button>
         </form>
     </div>

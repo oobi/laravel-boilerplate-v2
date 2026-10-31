@@ -1,9 +1,9 @@
 @extends('layouts.login')
 
-@section('page-title', __('Two-Factor Confirmation'))
+@section('page-title', __('Two-factor confirmation'))
 
 @section('content')
-    <h1 class="text-xl font-semibold">{{ __('Two-Factor Confirmation') }}</h1>
+    <h1 class="text-xl font-semibold">{{ __('Two-factor confirmation') }}</h1>
 
     <p class="text-sm opacity-70" id="authentication-code-text">
         {{ __('Please confirm access to your account by entering the authentication code provided by your authenticator application.') }}
@@ -25,7 +25,7 @@
         </fieldset>
 
         <fieldset class="fieldset hidden" id="recovery-code-field">
-            <label class="label" for="recovery_code">{{ __('Recovery Code') }}</label>
+            <label class="label" for="recovery_code">{{ __('Recovery code') }}</label>
             <input id="recovery_code" class="input w-full @error('recovery_code') input-error @enderror" type="text" name="recovery_code" autocomplete="one-time-code" @error('recovery_code') aria-invalid="true" aria-describedby="recovery_code-error" @enderror>
             <x-form-error for="recovery_code" />
         </fieldset>

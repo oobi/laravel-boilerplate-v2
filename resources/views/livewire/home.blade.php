@@ -6,7 +6,7 @@
         @if (auth()->user()->canAccessAdmin())
             <div>
                 <x-button href="{{ route('dashboard') }}" color="primary">
-                    {{ __('Go to Admin Dashboard') }}
+                    {{ __('Go to admin dashboard') }}
                 </x-button>
             </div>
         @endif

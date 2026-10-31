@@ -58,8 +58,8 @@ class TeamNavigationTest extends TestCase
         // The picker (team.select), not the front door (team.index): the front door
         // sends an admin to the dashboard, but "My teams" must let anyone pick a team.
         $this->assertSame(route('team.select'), $teams->getUrl());
-        // "My Salons" — distinct from the admin sidebar's "Salons" (manage all).
-        $this->assertSame('My Salons', $teams->getLabel());
+        // "My salons", distinct from the admin sidebar's "Salons" (manage all).
+        $this->assertSame('My salons', $teams->getLabel());
     }
 
     public function test_the_admin_link_appears_in_the_header_for_an_admin_only(): void

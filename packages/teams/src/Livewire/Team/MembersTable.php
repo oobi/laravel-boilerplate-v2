@@ -119,7 +119,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ])
             ->filters([
                 // Mirrors the Users list: a "role" filter (with owners as the structural entry, like
-                // Super Admin there) and a "status" filter.
+                // Super admin there) and a "status" filter.
                 Tables\Filters\SelectFilter::make('role')
                     ->label(team_trans('members.role'))
                     ->options(fn (): array => $this->roleFilterOptions())

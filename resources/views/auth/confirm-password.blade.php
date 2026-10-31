@@ -1,9 +1,9 @@
 @extends('layouts.login')
 
-@section('page-title', __('Confirm Password'))
+@section('page-title', __('Confirm password'))
 
 @section('content')
-    <h1 class="text-xl font-semibold">{{ __('Confirm Password') }}</h1>
+    <h1 class="text-xl font-semibold">{{ __('Confirm password') }}</h1>
 
     <p class="text-sm opacity-70">
         {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}

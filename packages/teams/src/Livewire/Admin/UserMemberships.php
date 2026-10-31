@@ -65,7 +65,7 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
         $this->user = $user;
     }
 
-    /** The table in a section, titled like the page's other sections (User Information). */
+    /** The table in a section, titled like the page's other sections (User information). */
     public function panelSchema(Schema $schema): Schema
     {
         return $schema->components([

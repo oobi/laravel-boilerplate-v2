@@ -17,7 +17,7 @@ return [
     'two_factor_grace_warning' => '{1} Two factor authentication is required for your account. Set it up within :count day, or you will be locked out and need an administrator to restore access.|[2,*] Two factor authentication is required for your account. Set it up within :count days, or you will be locked out and need an administrator to restore access.',
     'two_factor_grace_ended' => 'Your two factor authentication grace period has ended. Set it up now, or you will not be able to log in again without an administrator.',
     'two_factor_required_super_admin' => 'Two factor authentication is required for this account. Please set it up to protect it.',
-    'two_factor_setup_cta' => 'Set Up Two Factor Authentication',
+    'two_factor_setup_cta' => 'Set up two factor authentication',
     'password_min_hint' => 'At least :min characters.',
     'verify_wrong_address' => 'Wrong address?',
     'verify_change_address' => 'Change it on your profile.',
@@ -41,5 +41,10 @@ return [
     'google_unlinked' => 'Google account unlinked.',
     'google_linked_subject' => 'A Google account was linked to your account',
     'google_linked_line' => 'The Google account :email can now log in to your :app account.',
+    // Laravel's reset and verification emails, in the app's sentence case (App\Notifications\Auth).
+    'reset_password_subject' => 'Reset password notification',
+    'reset_password_action' => 'Reset password',
+    'verify_email_subject' => 'Verify email address',
+    'verify_email_action' => 'Verify email address',
     'google_linked_not_you' => 'If you did this, there is nothing else to do. If you didn\'t, change your password, unlink it on your profile and contact an administrator straight away.',
 ];

@@ -139,7 +139,7 @@ need to know anything about the host component.
         wire:click="callPanelAction('security', 'force-disable-2fa')"
         wire:confirm="Are you sure?"
     >
-        Force Disable 2FA
+        Force disable 2FA
     </button>
 @endcan
 ```
@@ -191,7 +191,7 @@ Edit is only the attribute fields.
 
 ## What's deliberately NOT a panel
 
-The "User Information" card on the Show page stays a method
+The "User information" card on the Show page stays a method
 (`ShowUser::userInfolist()`) directly on the host component rather than a
 registered `ShowPanel`. Filament's `InteractsWithSchemas` requires that
 method to live on the `HasSchemas` component itself — it can't be resolved

@@ -20,3 +20,6 @@ The submit row at the end of a page form (Livewire views) is `<x-form-actions>`,
 
 ## Tabs follow the shared scrolling default at every screen size
 x-tabs-nav defaults scrollable to true. Keep one horizontal row for every tab count, with native horizontal scrolling, active-tab reveal, and accessible arrow buttons beside the viewport, shown only when the tabs overflow (a strip that fits keeps the full width, so short strips never scroll for the arrows' sake). No swipe banner, mobile grid, dropdown, or Sections disclosure. Pages omit scrollable so this behaviour stays central to the component; explicit false remains a plain wrapping fallback (settled 2026-10-25).
+
+## Visible text is sentence case
+Labels, headings, buttons, aria-labels and titles are sentence case: capitalise only the first word, proper nouns and acronyms ("Save changes", "My profile", "Set up two factor authentication"). Prefer a lang key over a literal __('...') string. Full rule: .ai/rules/lang.md (#16).

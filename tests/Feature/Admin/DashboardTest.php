@@ -46,8 +46,8 @@ class DashboardTest extends TestCase
 
         $this->actingAs($panelOnly)->get('/admin/dashboard')
             ->assertOk()
-            ->assertSee(__('Total Users'))
-            ->assertDontSee(__('Recent Users'))
+            ->assertSee(__('Total users'))
+            ->assertDontSee(__('Recent users'))
             ->assertDontSee('Roster Person')
             ->assertDontSee(route('users.index'));
     }
@@ -59,7 +59,7 @@ class DashboardTest extends TestCase
 
         $this->actingAs($viewer)->get('/admin/dashboard')
             ->assertOk()
-            ->assertSee(__('Recent Users'))
+            ->assertSee(__('Recent users'))
             ->assertSee('Roster Person');
     }
 

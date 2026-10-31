@@ -172,8 +172,8 @@ class ManageRolesTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ManageRoles::class, ['role' => $role])
-            ->assertSeeHtml('aria-label="Select all User Management"')
-            ->assertSeeHtml('aria-label="Select all System Administration"')
+            ->assertSeeHtml('aria-label="Select all: User management"')
+            ->assertSeeHtml('aria-label="Select all: System administration"')
             // the indeterminate binding watches the category's own list at the form's state path
             ->assertSeeHtml("\$wire.get('data.permissions_user_management')");
     }

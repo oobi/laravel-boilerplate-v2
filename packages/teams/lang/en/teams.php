@@ -26,9 +26,9 @@ return [
         'invitations' => 'Invitations',
         'domains' => 'Domains',
         'settings' => 'Settings',
-        // Account-menu cross-area links. "My :Teams" distinguishes this (enter my workspace)
+        // Account-menu cross-area links. "My :teams" distinguishes this (enter my workspace)
         // from the admin sidebar's ":Teams" (manage every team). "Admin" stays literal.
-        'my_teams' => 'My :Teams',
+        'my_teams' => 'My :teams',
         'admin_dashboard' => 'Admin dashboard',
     ],
 
@@ -39,8 +39,8 @@ return [
     ],
 
     'create' => [
-        'action' => 'Create :Team',
-        'heading' => 'New :Team',
+        'action' => 'Create :team',
+        'heading' => 'New :team',
         'submit' => 'Create',
         'name' => 'Name',
         'name_help' => 'You can change this later.',
@@ -76,8 +76,8 @@ return [
     ],
 
     'settings' => [
-        // The Settings section heading (Settings + Domains tabs) — relabels with the tier, e.g. "Salon Settings".
-        'heading' => ':Team Settings',
+        // The Settings section heading (Settings + Domains tabs); relabels with the tier, e.g. "Salon settings".
+        'heading' => ':Team settings',
         'description' => 'Manage :name’s details and ownership.',
         'save' => 'Save changes',
         'saved' => 'Settings saved',
@@ -90,8 +90,8 @@ return [
 
     'members' => [
         'title' => ':Members',
-        // The Members section heading (Members + Invitations tabs) — relabels with the tier, e.g. "Staff Management".
-        'heading' => ':Member Management',
+        // The Members section heading (Members + Invitations tabs); relabels with the tier, e.g. "Staff management".
+        'heading' => ':Member management',
         'description' => 'Manage the :members who belong to :name and their roles.',
         'search' => 'Search :members…',
         'empty' => 'No :members found',
@@ -101,7 +101,7 @@ return [
         'no_roles' => 'No roles',
         'owners' => ':Owners',
         'suspended' => 'Suspended',
-        'primary_owner' => 'Primary :Owner',
+        'primary_owner' => 'Primary :owner',
         'owner' => ':Owner',
         'change_role' => 'Change role',
         'change_roles' => 'Change roles',
@@ -193,10 +193,10 @@ return [
             'title' => 'Join :name',
             'intro' => 'You’ve been invited to join :name on :app. Create your account to accept.',
             'email' => 'Email',
-            'first_name' => 'First Name',
-            'last_name' => 'Last Name',
+            'first_name' => 'First name',
+            'last_name' => 'Last name',
             'password' => 'Password',
-            'confirm_password' => 'Confirm Password',
+            'confirm_password' => 'Confirm password',
             'already_registered' => 'Already registered?',
             'submit' => 'Create account and join',
         ],
@@ -253,13 +253,13 @@ return [
         'open' => 'Open :team',
         'active' => 'Active',
         'inactive' => 'Inactive',
-        'add' => 'Add :Team',
+        'add' => 'Add :team',
         'created_notice' => ':Team created',
         'updated_notice' => ':Team updated',
         'deleted_notice' => ':Team deleted',
         'page_description' => 'View and manage :team information',
         'settings' => 'Settings',
-        'back' => 'Back to :Teams',
+        'back' => 'Back to :teams',
         'information' => ':Team information',
         'details' => ':Team details',
         'danger_zone' => 'Danger zone',
@@ -270,7 +270,7 @@ return [
         'deactivated' => ':name deactivated',
         'deactivate_first' => 'Deactivate the :team first.',
         'deactivate_before_delete' => 'Deactivate the :team before deleting it.',
-        'delete' => 'Delete :Team',
+        'delete' => 'Delete :team',
         'delete_warning' => '{0} Delete :name? It can be restored from the trash.|{1} Delete :name? Its one :member loses access until it is restored from the trash.|[2,*] Delete :name? Its :count :members lose access until it is restored from the trash.',
         'force_delete_warning' => '{0} Permanently delete :name? This cannot be undone.|{1} Permanently delete :name? Its one :member’s membership and role are erased with it. This cannot be undone.|[2,*] Permanently delete :name? Its :count :members’ memberships and roles are erased with it. This cannot be undone.',
     ],
@@ -286,25 +286,25 @@ return [
     ],
 
     'permissions' => [
-        'view_members' => 'View :Members',
-        'manage_members' => 'Manage :Members',
-        'remove_members' => 'Remove :Members',
-        'invite_members' => 'Invite :Members',
-        'view_settings' => 'View :Team Settings',
-        'update_team' => 'Update :Team Settings',
-        'manage_domains' => 'Manage Domains',
+        'view_members' => 'View :members',
+        'manage_members' => 'Manage :members',
+        'remove_members' => 'Remove :members',
+        'invite_members' => 'Invite :members',
+        'view_settings' => 'View :team settings',
+        'update_team' => 'Update :team settings',
+        'manage_domains' => 'Manage domains',
         'category_members' => ':Members',
-        'category_settings' => ':Team Settings',
+        'category_settings' => ':Team settings',
         // The system-level team-admin permissions' group on the system Roles screen
-        // (parallel to "User Management"). Relabels with the tier, e.g. "Salon Management".
-        'category_teams' => ':Team Management',
+        // (parallel to "User management"). Relabels with the tier, e.g. "Salon management".
+        'category_teams' => ':Team management',
         // Display labels for the five system-level team permissions (Concise\Teams\Enums\TeamSystemPermission).
         // The underlying permission NAMES ('view teams', …) stay fixed — only the label relabels.
-        'system_view_teams' => 'View :Teams',
-        'system_manage_teams' => 'Manage :Teams',
-        'system_deactivate_teams' => 'Deactivate :Teams',
-        'system_delete_teams' => 'Delete :Teams',
-        'system_manage_team_ownership' => 'Manage :Team Ownership',
+        'system_view_teams' => 'View :teams',
+        'system_manage_teams' => 'Manage :teams',
+        'system_deactivate_teams' => 'Deactivate :teams',
+        'system_delete_teams' => 'Delete :teams',
+        'system_manage_team_ownership' => 'Manage :team ownership',
     ],
 
 ];

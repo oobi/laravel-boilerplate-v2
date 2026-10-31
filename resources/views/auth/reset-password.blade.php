@@ -1,9 +1,9 @@
 @extends('layouts.login')
 
-@section('page-title', __('Reset Password'))
+@section('page-title', __('Reset password'))
 
 @section('content')
-    <h1 class="text-xl font-semibold">{{ __('Reset Password') }}</h1>
+    <h1 class="text-xl font-semibold">{{ __('Reset password') }}</h1>
 
     {{-- An expired link or an unknown address is filed under "email" but is about the reset itself:
          it goes in the box at the top. A password's own error shows under it. --}}
@@ -27,13 +27,13 @@
         </fieldset>
 
         <fieldset class="fieldset">
-            <label class="label" for="password_confirmation">{{ __('Confirm Password') }}</label>
+            <label class="label" for="password_confirmation">{{ __('Confirm password') }}</label>
             <input id="password_confirmation" class="input w-full @error('password_confirmation') input-error @enderror" type="password" name="password_confirmation" required autocomplete="new-password" @error('password_confirmation') aria-invalid="true" aria-describedby="password_confirmation-error" @enderror>
             <x-form-error for="password_confirmation" />
         </fieldset>
 
         <div class="flex justify-end">
-            <x-button.action type="submit">{{ __('Reset Password') }}</x-button.action>
+            <x-button.action type="submit">{{ __('Reset password') }}</x-button.action>
         </div>
     </form>
 @endsection

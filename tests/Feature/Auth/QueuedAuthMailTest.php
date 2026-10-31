@@ -57,4 +57,18 @@ class QueuedAuthMailTest extends TestCase
         $this->assertNotNull($payload);
         $this->assertStringNotContainsString('plain-reset-token-123', $payload);
     }
+
+    /** Laravel's subject and button are title case; the app's are sentence case like every other label. */
+    public function test_the_reset_and_verification_emails_use_sentence_case(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $reset = (new QueuedResetPassword('token'))->toMail($user);
+        $this->assertSame(__('auth.reset_password_subject'), $reset->subject);
+        $this->assertSame(__('auth.reset_password_action'), $reset->actionText);
+
+        $verify = (new QueuedVerifyEmail)->toMail($user);
+        $this->assertSame(__('auth.verify_email_subject'), $verify->subject);
+        $this->assertSame(__('auth.verify_email_action'), $verify->actionText);
+    }
 }
