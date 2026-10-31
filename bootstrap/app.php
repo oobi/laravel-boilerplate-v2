@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureRememberedUserIsNotLockedOut;
 use App\Http\Middleware\WarnAboutUntrustedProxy;
 use App\Support\Auth\Destination;
+use App\Support\TrustedHosts;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Answer only to APP_URL (and its subdomains) plus the hosts in
+        // App\Support\TrustedHosts; any other Host gets a 400. Skipped locally.
+        $middleware->trustHosts(at: fn (): array => TrustedHosts::patterns());
+
         // Theme preference is a plain (unencrypted) cookie so it can be read
         // by the blocking inline script in <head> before Alpine/Livewire boot.
         $middleware->encryptCookies(except: ['theme']);

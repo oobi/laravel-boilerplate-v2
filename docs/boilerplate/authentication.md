@@ -238,6 +238,19 @@ sent them, which the sender controls (#58). A route bound to a host (the
 account host in teams host mode) keeps that host. So `APP_URL` must be the
 app's real public address in every environment, scheme included.
 
+As a second layer, the app answers only to hosts it serves (#59): `APP_URL`'s
+host and its subdomains, the teams tier's hosts in host mode, and any listed in
+`TRUSTED_HOSTS` (exact hosts, comma-separated). Any other host, including one a
+trusted proxy forwards in `X-Forwarded-Host`, gets a 400 the first time the app
+reads the host (building a URL, matching a host route), so nothing built from
+it can be attacker-chosen. Laravel skips the check when `APP_ENV=local`. See
+`App\Support\TrustedHosts`.
+
+A load balancer or container health check that calls the server by IP (AWS
+target groups and Kubernetes probes do by default) gets that 400 too, and can
+mark the app unhealthy. Configure it to send the app's host name as the Host
+header, or list its fixed address in `TRUSTED_HOSTS`.
+
 Signed links (verification, invitations) are then checked against the address
 the app sees when they're followed. If that differs from `APP_URL`, they fail
 with a 403: behind a proxy that terminates HTTPS but isn't trusted (the app

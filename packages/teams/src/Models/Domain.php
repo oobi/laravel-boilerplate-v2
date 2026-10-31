@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 /**
@@ -32,6 +33,9 @@ class Domain extends Model
     /** @use HasFactory<DomainFactory> */
     use HasFactory;
 
+    /** Cache key for verifiedHosts(). */
+    public const VERIFIED_HOSTS_CACHE_KEY = 'teams:verified-domains';
+
     /**
      * @var list<string>
      */
@@ -48,6 +52,26 @@ class Domain extends Model
                 $domain->verification_token = Str::lower(Str::random(40));
             }
         });
+
+        // A verified, changed or removed domain is trusted (or not) from the next request.
+        static::saved(fn (): bool => Cache::forget(self::VERIFIED_HOSTS_CACHE_KEY));
+        static::deleted(fn (): bool => Cache::forget(self::VERIFIED_HOSTS_CACHE_KEY));
+    }
+
+    /**
+     * Every verified domain: the teams tier's custom-domain entries in
+     * App\Support\TrustedHosts, read on every request. Cleared whenever a
+     * domain changes; the daily expiry only backstops a request that stored
+     * the old list just as a domain was verified.
+     *
+     * @return list<string>
+     */
+    public static function verifiedHosts(): array
+    {
+        return Cache::remember(self::VERIFIED_HOSTS_CACHE_KEY, now()->addDay(), fn (): array => static::query()
+            ->whereNotNull('verified_at')
+            ->pluck('domain')
+            ->all());
     }
 
     protected function casts(): array

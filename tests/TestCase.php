@@ -10,8 +10,10 @@ use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Roles\SystemPermissionRegistry;
+use App\Support\TrustedHosts;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Http\Request;
 use Illuminate\Testing\TestResponse;
 use Laravel\Fortify\Features;
 
@@ -38,6 +40,9 @@ abstract class TestCase extends BaseTestCase
         LoginRedirectRegistry::flush();
         AccountAreaRegistry::flush();
         Breadcrumbs::flush();
+        TrustedHosts::flush();
+        // Symfony keeps trusted hosts statically too; a test run as production sets them.
+        Request::setTrustedHosts([]);
 
         parent::setUp();
     }

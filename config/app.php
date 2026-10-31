@@ -56,6 +56,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Hosts
+    |--------------------------------------------------------------------------
+    |
+    | Outside `local`, a request for a host the app doesn't serve gets a 400
+    | (App\Support\TrustedHosts). APP_URL's host and its subdomains are always
+    | served, and the teams tier adds its own hosts. List any other host the
+    | app answers on here (TRUSTED_HOSTS, comma-separated), e.g. a second
+    | domain. Entries are exact (`www.second.com` is listed separately). A
+    | health check that calls the server by IP must send the app's Host
+    | header, or its fixed address must be listed here.
+    |
+    */
+
+    'trusted_hosts' => array_values(array_filter(array_map(
+        trim(...),
+        explode(',', (string) env('TRUSTED_HOSTS', '')),
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
