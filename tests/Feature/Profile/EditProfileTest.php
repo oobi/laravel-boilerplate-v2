@@ -36,6 +36,17 @@ class EditProfileTest extends TestCase
         $this->actingAs($admin)->get('/profile')->assertStatus(200);
     }
 
+    /** Sidebar-less, the page column is capped at the form's width so it centres with the title over the card. */
+    public function test_the_profile_column_is_capped_at_the_form_width(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile')
+            ->assertOk()
+            ->assertSee('ui-page flex flex-col gap-4 max-w-3xl', false)
+            ->assertDontSee('max-w-6xl');
+    }
+
     public function test_users_can_update_their_profile_information(): void
     {
         $user = User::factory()->create();
