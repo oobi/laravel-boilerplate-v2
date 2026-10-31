@@ -121,4 +121,6 @@ through the Gate (no `Gate::define()` per permission), plus
   merging: `php artisan test --parallel --compact`. Never a bare serial
   `php artisan test` over the whole suite.
 - CI (`.github/workflows/tests.yml`) runs Pint and the suite on SQLite and
-  MySQL for every push to main and every PR; keep it green.
+  MySQL, plus `composer audit` on the lock file, for every push to main and
+  every PR; keep it green. A red audit means a locked package has a known
+  vulnerability: update that package on its own branch.
