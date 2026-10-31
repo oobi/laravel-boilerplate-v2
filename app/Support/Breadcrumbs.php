@@ -41,16 +41,16 @@ class Breadcrumbs
 
     /**
      * @param  array{label: string, url: ?string}|null  $root  Overrides the root
-     *                                                         crumb (defaults to the "Admin" home). Areas that aren't the system admin
+     *                                                         crumb (defaults to "Admin", linked to the dashboard). Areas that aren't the system admin
      *                                                         (e.g. a team area) pass their own root so the trail reads in their context.
      * @param  bool  $withResource  Whether to auto-derive the `{resource}.index`
      *                              parent crumb from the route name.
-     * @return list<array{label: string, url: ?string}>
+     * @return list<array{label: string, url: ?string}> A crumb pointing at the current page is never linked.
      */
     public static function trail(?array $root = null, bool $withResource = true): array
     {
         $crumbs = [
-            $root ?? ['label' => __('admin.breadcrumb_root'), 'url' => null],
+            $root ?? ['label' => __('admin.breadcrumb_root'), 'url' => route('dashboard')],
         ];
 
         $resource = $withResource ? static::resource() : null;
@@ -75,7 +75,10 @@ class Breadcrumbs
 
         $crumbs[] = ['label' => $page, 'url' => null];
 
-        return $crumbs;
+        // A crumb that names the page you're on (the root on its dashboard, "My Profile" on the Profile tab) isn't a link.
+        return collect($crumbs)
+            ->map(fn (array $crumb): array => $crumb['url'] === url()->current() ? [...$crumb, 'url' => null] : $crumb)
+            ->all();
     }
 
     protected static function resource(): ?string

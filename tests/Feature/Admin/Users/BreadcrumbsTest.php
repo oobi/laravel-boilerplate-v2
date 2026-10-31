@@ -19,7 +19,7 @@ class BreadcrumbsTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/admin/users');
 
-        $response->assertDontSee('<a href="'.route('users.index').'" class="hover:text-base-content">', false);
+        $response->assertDontSee('<a href="'.route('users.index').'" class="ui-link">', false);
         $response->assertSee('<span>Users</span>', false);
     }
 
@@ -31,7 +31,7 @@ class BreadcrumbsTest extends TestCase
         $response = $this->actingAs($admin)->get("/admin/users/{$target->id}/edit");
 
         $response->assertSee(
-            '<a href="'.route('users.index').'" class="hover:text-base-content">Users</a>',
+            '<a href="'.route('users.index').'" class="ui-link">Users</a>',
             false,
         );
         $response->assertSeeInOrder(['Users', $target->name, 'Edit']);
@@ -44,7 +44,7 @@ class BreadcrumbsTest extends TestCase
         $response = $this->actingAs($admin)->get('/admin/users/create');
 
         $response->assertSee(
-            '<a href="'.route('users.index').'" class="hover:text-base-content">Users</a>',
+            '<a href="'.route('users.index').'" class="ui-link">Users</a>',
             false,
         );
         $response->assertSeeInOrder(['Users', 'Create']);
@@ -57,7 +57,7 @@ class BreadcrumbsTest extends TestCase
         $response = $this->actingAs($user)->get('/admin/dashboard');
 
         $response->assertDontSee(
-            '<a href="'.route('users.index').'" class="hover:text-base-content">',
+            '<a href="'.route('users.index').'" class="ui-link">',
             false,
         );
     }
@@ -72,9 +72,29 @@ class BreadcrumbsTest extends TestCase
         Route::getRoutes()->refreshNameLookups();
 
         $this->get('/widgets')->assertExactJson([
-            ['label' => __('admin.breadcrumb_root'), 'url' => null],
+            ['label' => __('admin.breadcrumb_root'), 'url' => route('dashboard')],
             ['label' => 'Widgets', 'url' => null],
             ['label' => 'Widgets over time', 'url' => null],
         ]);
+    }
+
+    public function test_the_root_crumb_links_to_the_dashboard(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get(route('users.index'))->assertSee(
+            '<a href="'.route('dashboard').'" class="ui-link">'.__('admin.breadcrumb_root').'</a>',
+            false,
+        );
+    }
+
+    /** A crumb pointing at the page you're on is plain text, so the dashboard doesn't link to itself. */
+    public function test_no_crumb_links_to_the_current_page(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get(route('dashboard'))
+            ->assertOk()
+            ->assertDontSee('<a href="'.route('dashboard').'" class="ui-link">', false);
     }
 }

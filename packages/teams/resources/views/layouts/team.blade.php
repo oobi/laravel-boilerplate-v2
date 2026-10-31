@@ -8,7 +8,7 @@
     :home="$team ? team_route('team.dashboard', $team) : url('/')"
     :title="$title ?? null"
     :title-context="$team?->name"
-    :breadcrumb-root="$team ? ['label' => \Concise\Teams\Support\TeamLabels::singular(), 'url' => null] : null"
+    :breadcrumb-root="['label' => \Concise\Teams\Support\TeamLabels::singular(), 'url' => $team ? team_route('team.dashboard', $team) : null]"
     :breadcrumb-resource="false"
 >
     @if ($team !== null)
