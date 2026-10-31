@@ -1,6 +1,8 @@
 # The gate every push and PR passes, not just the local hooks (which
-# `--no-verify` skips). Two jobs: SQLite (what developers run) and MySQL (what
-# production runs), so SQLite can't hide a MySQL-only failure. GitHub #45.
+# `--no-verify` skips). Two test jobs: SQLite (what developers run) and MySQL
+# (what production runs), so SQLite can't hide a MySQL-only failure. GitHub #45.
+# A separate audit job fails on a known vulnerability in a locked Composer
+# package, so a new advisory shows as its own red check (GitHub oobi#62).
 name: Tests
 
 on:
@@ -16,6 +18,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      # Reads composer.lock against the advisory database; nothing is installed.
+      - run: composer audit --locked --no-interaction
+
   tests:
     name: Tests (${{ matrix.database }})
     runs-on: ubuntu-latest
