@@ -118,6 +118,20 @@ class TeamRelabelTest extends TestCase
             ->assertSee('Salon settings');
     }
 
+    /** Mid-sentence labels are lower-cased, but an acronym keeps its capitals (#17). */
+    public function test_an_acronym_label_keeps_its_capitals(): void
+    {
+        config(['teams.labels.team.singular' => 'HQ', 'teams.labels.team.plural' => 'HQs']);
+
+        $this->assertSame('My HQs', team_trans('nav.my_teams'));
+        $this->assertSame('Create HQ', team_trans('create.action'));
+        $this->assertSame('HQ settings', team_trans('settings.heading'));
+
+        config(['teams.labels.team.singular' => 'Salon', 'teams.labels.team.plural' => 'Salons']);
+
+        $this->assertSame('My salons', team_trans('nav.my_teams'));
+    }
+
     public function test_the_member_and_owner_words_are_configurable(): void
     {
         config([
