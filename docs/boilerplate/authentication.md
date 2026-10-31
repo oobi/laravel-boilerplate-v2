@@ -163,8 +163,8 @@ password reset, outside the impersonation trail.
   mistyped their address at sign-up can fix it (changing it needs the current
   password and sends a new link). Password, two-factor, profile photos and the
   admin area wait for verification. The verify page links to the profile.
-- **Support can mark an address verified** from the user's Show page (Mark Email
-  as Verified): `manage users` plus coverage, never your own address. The
+- **Support can mark an address verified** from the user's Show page (Mark email
+  as verified): `manage users` plus coverage, never your own address. The
   impersonation note for an unverified user points to it.
 - **An admin email change** unverifies the address and sends a link, as a
   self-service change does.
@@ -286,7 +286,7 @@ A member of a flagged role who hasn't confirmed 2FA (and has a verified email):
    `AuthenticateUser`, plus `EnsureRememberedUserIsNotLockedOut` for
    remember-me logins), so a session already open at the deadline runs until
    it ends.
-3. **Is let back in** only by an admin: **Reset Grace Period** on the Users >
+3. **Is let back in** only by an admin: **Reset grace period** on the Users >
    Security panel gives them a fresh window. It needs `manage users` and
    password re-entry.
 

@@ -276,7 +276,7 @@ class TeamOwnershipTest extends TestCase
         $this->actingAs($this->primary)
             ->get(route('team.members', ['team' => $this->team->slug]))
             ->assertOk()
-            ->assertSee('Primary Owner')
+            ->assertSee('Primary owner')
             ->assertSee('Owner')
             ->assertSee('Member');
     }

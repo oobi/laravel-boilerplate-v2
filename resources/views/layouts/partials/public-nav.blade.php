@@ -25,7 +25,7 @@
                 {{-- The admin area is for panel users only. --}}
                 @if (auth()->user()->canAccessAdmin())
                     <x-button color="neutral" variant="ghost" size="sm" :href="route('dashboard')">
-                        {{ __('Admin Dashboard') }}
+                        {{ __('Admin dashboard') }}
                     </x-button>
                 @endif
 

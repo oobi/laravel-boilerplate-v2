@@ -3,25 +3,25 @@
 declare(strict_types=1);
 
 return [
-    'nav_group' => 'Style Demo',
+    'nav_group' => 'Style demo',
     'nav_overview' => 'Overview',
-    'nav_tables' => 'DaisyUI Tables',
-    'nav_filament_table' => 'Filament Table',
-    'nav_forms_daisy' => 'DaisyUI Form',
-    'nav_filament_form' => 'Filament Form',
-    'nav_components' => 'DaisyUI Components',
-    'nav_filament_components' => 'Filament Components',
-    'nav_modals_daisy' => 'DaisyUI Modals',
-    'nav_modals_filament' => 'Filament Modals',
-    'nav_tab_content' => 'Tab Content',
+    'nav_tables' => 'DaisyUI tables',
+    'nav_filament_table' => 'Filament table',
+    'nav_forms_daisy' => 'DaisyUI form',
+    'nav_filament_form' => 'Filament form',
+    'nav_components' => 'DaisyUI components',
+    'nav_filament_components' => 'Filament components',
+    'nav_modals_daisy' => 'DaisyUI modals',
+    'nav_modals_filament' => 'Filament modals',
+    'nav_tab_content' => 'Tab content',
 
-    'overview_title' => 'Style Demo',
+    'overview_title' => 'Style demo',
     'overview_description' => 'A reference gallery of every daisyUI UI pattern this boilerplate ships — used to keep future Filament equivalents visually aligned. Local/super-admin only; safe to delete wholesale (see packages/theme-demo).',
 
-    'error_pages_title' => 'Error Pages',
+    'error_pages_title' => 'Error pages',
     'error_pages_description' => 'Triggers the real HTTP error response, so it renders resources/views/errors/{status}.blade.php exactly as it would in production.',
 
-    'tables_title' => 'DaisyUI Tables',
+    'tables_title' => 'DaisyUI tables',
     'tables_description' => 'The same list, from an empty state through to a fully-featured one — as tabs.',
 
     'tables_tab_empty' => 'Empty',
@@ -31,27 +31,27 @@ return [
     'tables_tab_simple' => 'Simple',
 
     'tables_tab_maximalist' => 'Maximalist',
-    'tables_tab_custom_header' => 'Custom Header',
+    'tables_tab_custom_header' => 'Custom header',
     'tables_tab_wide' => 'Wide',
     'tables_wide_description' => '~20 columns, to see how it scrolls (or doesn\'t) and how responsive it is (or isn\'t).',
 
-    'filament_table_title' => 'Filament Table',
+    'filament_table_title' => 'Filament table',
     'filament_table_description' => 'The same DemoRows data, rendered with a Filament table — search, sort, filter, bulk actions and pagination all declarative.',
 
-    'forms_daisy_title' => 'DaisyUI Form',
+    'forms_daisy_title' => 'DaisyUI form',
     'forms_daisy_description' => 'Every native daisyUI field type in one form, including an error state.',
     'forms_daisy_tab_floating' => 'Floating labels',
     'forms_daisy_tab_standard' => 'Standard labels',
     'forms_daisy_clear' => 'Clear form',
 
-    'filament_form_title' => 'Filament Form',
+    'filament_form_title' => 'Filament form',
     'filament_form_description' => 'The same fields as the daisyUI form, built with Filament form components — plus two Filament-exclusive extras (tags, markdown).',
 
-    'components_title' => 'DaisyUI Components',
+    'components_title' => 'DaisyUI components',
     'components_description' => 'Avatars, badges, banners, alerts, buttons, pickers and the color matrix at full breadth.',
     'components_buttons_semantic_hint' => 'Reach for intent, not colour: action (affirmative), secondary (alternative), cancel (dismiss), back (return), warning (sensitive but reversible, e.g. impersonate), danger (destructive/irreversible), plus icon for icon-only chrome.',
 
-    'filament_components_title' => 'Filament Components',
+    'filament_components_title' => 'Filament components',
     'filament_components_description' => 'The same buttons, badges and icon-buttons as the daisyUI gallery, built with Filament\'s own components.',
 
     'modals_daisy_title' => 'Modals',
@@ -96,7 +96,7 @@ return [
     'modals_daisy_custom_description' => 'This signs you out everywhere else. Confirm your password to continue.',
     'modals_daisy_confirmed' => 'Confirmed — the guarded action ran.',
 
-    'modals_filament_title' => 'Filament Modals',
+    'modals_filament_title' => 'Filament modals',
     'modals_filament_description' => 'The standard way to confirm an action here: a Filament Action with ->requiresConfirmation(), the destructive variant with custom copy, and a modal that collects input through a schema.',
     'modals_filament_confirm_label' => 'Confirm action',
     'modals_filament_confirm_hint' => 'A plain "are you sure?" modal from ->requiresConfirmation().',
@@ -121,12 +121,12 @@ return [
     'modals_filament_record_delete' => 'Delete',
     'modals_filament_form_confirmed' => 'Archived — reason: :reason',
 
-    'tab_content_title' => 'Tab Content',
+    'tab_content_title' => 'Tab content',
     'tab_content_description' => 'The same connected tabs around a table, form, dashboard-style panels and plain text for responsive spacing comparisons.',
     'tab_content_tab_table' => 'Table',
     'tab_content_tab_form' => 'Form',
     'tab_content_tab_panels' => 'Panels',
-    'tab_content_tab_text' => 'Plain Text',
+    'tab_content_tab_text' => 'Plain text',
 
     'tab_content_form_name' => 'Name',
     'tab_content_form_name_value' => 'Ava Thompson',

@@ -35,8 +35,8 @@ use Illuminate\Support\Str;
  * An option another ticked option carries with it (RoleScope::implications())
  * is ticked along with it, disabled while the implier is on, and says so on
  * hover ("Included with …") — the constraint is explained, never a silent
- * block. Implications cross categories ("delete users" in User Management
- * carries "access admin panel" in System Administration) and chain, so every
+ * block. Implications cross categories ("delete users" in User management
+ * carries "access admin panel" in System administration) and chain, so every
  * list reads and completes the selection of the whole form, not just its own
  * category. A permission that doesn't apply in this environment
  * (RoleScope::unavailable()) isn't offered at all; if the role already holds

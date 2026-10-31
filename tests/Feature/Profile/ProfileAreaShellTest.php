@@ -43,12 +43,12 @@ class ProfileAreaShellTest extends TestCase
             ->assertOk()
             ->assertSee(route('users.index'))
             ->assertDontSee(self::BARE_SHELL, false)
-            // In an area's shell the page sits under "My Profile", in the trail and the tab title.
+            // In an area's shell the page sits under "My profile", in the trail and the tab title.
             ->assertSeeInOrder([__('admin.breadcrumb_root'), __('admin.my_profile'), __('admin.password')])
             ->assertSee('<title>'.e(__('admin.password').' · '.__('admin.my_profile')), false);
     }
 
-    /** "My Profile" leads back to the Profile tab, and is plain text on it. */
+    /** "My profile" leads back to the Profile tab, and is plain text on it. */
     public function test_the_my_profile_crumb_links_to_the_profile_tab(): void
     {
         $admin = User::factory()->superAdmin()->create();

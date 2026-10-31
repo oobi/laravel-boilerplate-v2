@@ -229,7 +229,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->authorizeIndividualRecords(UserAbility::RESTORE),
                 ]),
             ])
-            // Super Admin and your own record cannot be included in bulk action
+            // Super admins and your own record cannot be included in bulk action
             ->checkIfRecordIsSelectableUsing(
                 fn (User $record): bool => ! $record->isSuperAdmin() && $record->id !== Auth::id()
             )
@@ -239,7 +239,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }
 
-    /** Never let "Empty Trash" force-delete the current admin's own trashed account. */
+    /** Never let "Empty trash" force-delete the current admin's own trashed account. */
     protected function emptyTrashQuery(): Builder
     {
         // With what each holds: mayEmpty() asks Coverage about every one.

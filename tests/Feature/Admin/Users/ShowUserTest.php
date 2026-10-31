@@ -421,7 +421,7 @@ class ShowUserTest extends TestCase
 
     /**
      * Regression for a reviewed vulnerability: a support-level actor must not be
-     * able to assign an elevated role or grant super admin — the Manage Roles
+     * able to assign an elevated role or grant super admin: the Manage roles
      * action is hidden from the UI, and both abilities are denied.
      */
     public function test_support_assigns_roles_but_never_grants_super_admin(): void

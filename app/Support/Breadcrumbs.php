@@ -75,7 +75,7 @@ class Breadcrumbs
 
         $crumbs[] = ['label' => $page, 'url' => null];
 
-        // A crumb that names the page you're on (the root on its dashboard, "My Profile" on the Profile tab) isn't a link.
+        // A crumb that names the page you're on (the root on its dashboard, "My profile" on the Profile tab) isn't a link.
         return collect($crumbs)
             ->map(fn (array $crumb): array => $crumb['url'] === url()->current() ? [...$crumb, 'url' => null] : $crumb)
             ->all();

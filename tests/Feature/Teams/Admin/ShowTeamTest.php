@@ -156,7 +156,7 @@ class ShowTeamTest extends TestCase
             ->get(route('teams.members', $this->team))
             ->assertOk()
             ->assertSee('Olive')
-            ->assertSee('Primary Owner')
+            ->assertSee('Primary owner')
             ->assertSee('Mia')
             ->assertSee('Team Admin');
     }

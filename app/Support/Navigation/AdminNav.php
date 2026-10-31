@@ -26,7 +26,7 @@ class AdminNav
             ->order(10);
 
         NavRegistry::group('people-access')
-            ->label(__('People & Access'))
+            ->label(__('People & access'))
             ->can(SystemPermission::ACCESS_ADMIN_PANEL)
             ->order(20)
             ->add(

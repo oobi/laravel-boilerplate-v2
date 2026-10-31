@@ -33,7 +33,7 @@ class AdminNav
             ->order(10);
 
         NavRegistry::group('people-access')
-            ->label(__('People & Access'))
+            ->label(__('People & access'))
             ->can(SystemPermission::ACCESS_ADMIN_PANEL)
             ->order(20)
             ->add(
@@ -75,7 +75,7 @@ Both are plain fluent objects — no interface to implement:
 
 A group's active state is the **union of all its items' `active()` routes**
 unless you give the group an explicit `active(...)` override. This is what
-lets a "People & Access" section stay open whether the current route is
+lets a "People & access" section stay open whether the current route is
 `users.*` or `roles.*` — you never have to maintain that list
 by hand in more than one place.
 

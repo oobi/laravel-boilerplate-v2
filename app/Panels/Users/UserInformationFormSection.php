@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\HtmlString;
 
 /**
- * The core name/email/active fields on the Edit User form. Role and
+ * The core name/email/active fields on the Edit user form. Role and
  * super-admin assignment are their own distinct, separately-authorized
  * actions on ShowUser (manageRolesAction), never part of this generic form state (see
  * UserPolicy::assignRole()/grantSuperAdmin() docblocks).

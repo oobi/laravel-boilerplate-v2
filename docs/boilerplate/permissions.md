@@ -67,9 +67,9 @@ change plus `php artisan bp:roles:sync-implications` with that deploy (see
 This enum is the single source of truth — permission strings are never
 hand-typed at a call site. Each case also declares:
 
-- **`label()`** — the human-readable name shown on the Manage Roles screen.
+- **`label()`**: the human-readable name shown on the Manage roles screen.
 - **`category()`** — which functional-area tab the permission is grouped
-  under (e.g. `User Management`, `System Administration`).
+  under (e.g. `User management`, `System administration`).
   `SystemPermissionRegistry::byCategory()` groups the whole vocabulary by this
   for the roles form, core's categories first; adding a new category is just
   a new string returned from `category()` — a tab for it appears
@@ -196,7 +196,7 @@ to their real Policy check instead. The admin area never manages your own
 password, two-factor or email: that is the profile, which asks for the
 current password.
 
-## Assigning permissions to a role: the Manage Roles screen only
+## Assigning permissions to a role: the Manage roles screen only
 
 Role -> permission assignment is 100% admin-configurable and only happens in
 one place: `App\Livewire\Admin\Roles\ManageRoles` (route names `roles.index`
@@ -291,7 +291,7 @@ category, `implies()` arm, lang line) and add its value to
 every role. Don't seed a permission nothing checks: it shows on the Roles
 screen and grants nothing.
 
-No route, form, or Manage Roles change is required — the new permission
+No route, form, or Manage roles change is required: the new permission
 appears automatically as a checkbox under its category's tab.
 
 ## Adding a permission from an add-on

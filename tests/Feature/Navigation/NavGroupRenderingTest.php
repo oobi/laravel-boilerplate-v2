@@ -26,7 +26,7 @@ class NavGroupRenderingTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSeeInOrder([
-                'People &amp; Access',
+                'People &amp; access',
                 'border-t border-base-300',
                 'Test Group',
                 'Test Item',
@@ -44,7 +44,7 @@ class NavGroupRenderingTest extends TestCase
         $this->actingAs($admin)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSeeInOrder(['Business', 'Business Item', 'People &amp; Access', 'Users', 'Roles'], false);
+            ->assertSeeInOrder(['Business', 'Business Item', 'People &amp; access', 'Users', 'Roles'], false);
     }
 
     public function test_item_level_permission_hides_only_that_item(): void

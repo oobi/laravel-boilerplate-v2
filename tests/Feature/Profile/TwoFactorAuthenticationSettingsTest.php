@@ -38,7 +38,7 @@ class TwoFactorAuthenticationSettingsTest extends TestCase
     {
         $admin = User::factory()->superAdmin()->create();
 
-        // "Two Factor Authentication" (admin.two_factor_authentication) only ever
+        // "Two factor authentication" (admin.two_factor_authentication) only ever
         // rendered via the breadcrumb leaf, which the neutral account layout
         // deliberately doesn't show (see layouts.account); the tab label
         // (admin.two_factor) is what's actually on the page.

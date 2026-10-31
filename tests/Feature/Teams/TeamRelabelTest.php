@@ -53,6 +53,30 @@ class TeamRelabelTest extends TestCase
         $this->assertSame([], $offenders, 'Reword these around the placeholder: '.implode('; ', $offenders));
     }
 
+    public function test_a_capitalised_placeholder_only_starts_a_sentence(): void
+    {
+        // Labels are sentence case: `:Team` capitalises the label, so mid-sentence it
+        // reads "Manage Salons" where "Manage salons" is meant. Only a sentence (or a
+        // pluralisation segment) may start with one.
+        $offenders = [];
+        $strings = (array) __('teams::teams');
+
+        array_walk_recursive(
+            $strings,
+            function (string $line, string $key) use (&$offenders): void {
+                preg_match_all('/:(Team|Teams|Member|Members|Owner|Owners)\b/', $line, $matches, PREG_OFFSET_CAPTURE);
+
+                foreach ($matches[0] as [$placeholder, $offset]) {
+                    if (! preg_match('/(^|[.!?|}\]])\s*$/', substr($line, 0, $offset))) {
+                        $offenders[] = "{$key}: \"{$placeholder}\"";
+                    }
+                }
+            },
+        );
+
+        $this->assertSame([], $offenders, 'Lower-case these mid-sentence placeholders: '.implode('; ', $offenders));
+    }
+
     public function test_the_admin_team_pages_use_the_configured_word(): void
     {
         $team = Team::factory()->create(['name' => 'Chez Claude']);
@@ -61,7 +85,7 @@ class TeamRelabelTest extends TestCase
             ->get(route('teams.show', $team))
             ->assertOk()
             ->assertSee('View and manage salon information')
-            ->assertSee('Back to Salons')
+            ->assertSee('Back to salons')
             ->assertSee('Salon information')
             ->assertSee('Salons') // the breadcrumb parent
             ->assertDontSee('Team information');
@@ -90,8 +114,8 @@ class TeamRelabelTest extends TestCase
             ->withQueryParams(['scope' => Team::ROLE_SCOPE])
             ->test(ManageRoles::class)
             ->assertSee('Define what members can do')
-            ->assertSee('Update Salon Settings')
-            ->assertSee('Salon Settings');
+            ->assertSee('Update salon settings')
+            ->assertSee('Salon settings');
     }
 
     public function test_the_member_and_owner_words_are_configurable(): void
@@ -117,7 +141,7 @@ class TeamRelabelTest extends TestCase
             ->get(route('team.members', ['team' => $team->slug]))
             ->assertOk()
             ->assertSee('stylists')          // the ":members" word in the page description
-            ->assertSee('Primary Manager');  // the ":Owner" badge
+            ->assertSee('Primary manager');  // the "Primary :owner" badge
     }
 
     public function test_the_user_page_and_the_email_use_the_configured_word(): void

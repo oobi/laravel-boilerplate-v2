@@ -121,7 +121,7 @@ Independent of the recipes above, tune per project:
 
 | Setting | Why |
 |---|---|
-| `TEAMS_LABEL_SINGULAR` / `TEAMS_LABEL_PLURAL` | Rename "team" throughout (e.g. "Salon" / "Salons") without touching code. |
+| `TEAMS_LABEL_SINGULAR` / `TEAMS_LABEL_PLURAL` | Rename "team" throughout (e.g. "Salon" / "Salons") without touching code. Use an ordinary noun: labels are lower-cased mid-sentence, so an acronym (HQ) would read "hq". |
 | `TEAMS_MEMBER_LABEL_SINGULAR` / `_PLURAL` | Rename "member" (e.g. "Stylist" / "Stylists") — headings, buttons, emails. |
 | `TEAMS_OWNER_LABEL_SINGULAR` / `_PLURAL` | Rename "owner" (e.g. "Manager" / "Managers"), where a franchise "owns" a location. |
 | `TEAMS_MAX_PER_USER` | Cap how many teams one user may own under self-service (unset = unlimited). |

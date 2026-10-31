@@ -57,7 +57,7 @@ final class TeamRoleScope implements RoleScope
     }
 
     /**
-     * Manage Domains doesn't apply while the custom-domains tier is off, so the
+     * Manage domains doesn't apply while the custom-domains tier is off, so the
      * form doesn't offer it; a role that holds it (granted while the feature was
      * on) keeps it.
      *

@@ -42,7 +42,7 @@ class LandmarksAndLabelsTest extends TestCase
         $this->assertSame([], array_keys(array_filter(array_count_values($ids[1]), fn (int $count): bool => $count > 1)), 'duplicate ids');
     }
 
-    /** "My Profile", like the page it opens and the "My Teams" link beside it. */
+    /** "My profile", like the page it opens and the "My teams" link beside it. */
     public function test_the_account_menu_links_to_my_profile(): void
     {
         $this->actingAs(User::factory()->superAdmin()->create())->get(route('users.index'))
