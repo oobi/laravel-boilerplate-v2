@@ -15,14 +15,15 @@
                     {{ __('Welcome, :name', ['name' => auth()->user()->first_name]) }}
                 </span>
 
-                {{-- Profile now lives inside the admin shell, so only panel users get these links. --}}
-                @if (auth()->user()->canAccessAdmin())
-                    @unless (\App\Support\Auth\SessionAssurance::isLow())
-                        <x-button color="neutral" variant="ghost" size="sm" :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-button>
-                    @endunless
+                {{-- The profile is every signed-in user's, except an impersonated session (refused there). --}}
+                @unless (\App\Support\Auth\SessionAssurance::isLow())
+                    <x-button color="neutral" variant="ghost" size="sm" :href="route('profile.edit')">
+                        {{ __('admin.my_profile') }}
+                    </x-button>
+                @endunless
 
+                {{-- The admin area is for panel users only. --}}
+                @if (auth()->user()->canAccessAdmin())
                     <x-button color="neutral" variant="ghost" size="sm" :href="route('dashboard')">
                         {{ __('Admin Dashboard') }}
                     </x-button>

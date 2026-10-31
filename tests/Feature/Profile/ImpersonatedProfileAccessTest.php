@@ -147,6 +147,14 @@ class ImpersonatedProfileAccessTest extends TestCase
         $this->get(route('dashboard'))->assertOk()->assertDontSee(route('profile.edit'));
     }
 
+    /** The public nav offers the profile to every signed-in user, but not to an impersonated one. */
+    public function test_the_public_nav_hides_profile_while_impersonating(): void
+    {
+        $this->impersonate();
+
+        $this->get('/')->assertOk()->assertDontSee(route('profile.edit'));
+    }
+
     private function impersonate(): void
     {
         $this->actingAs(User::factory()->superAdmin()->create());

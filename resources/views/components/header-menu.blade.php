@@ -16,7 +16,7 @@
         {{-- Impersonated sessions can't open the profile (DenyLowAssuranceSessions). --}}
         @php($showProfile = ! \App\Support\Auth\SessionAssurance::isLow())
         @if ($showProfile)
-            <li><a href="{{ route('profile.edit') }}">{{ __('Profile') }}</a></li>
+            <li><a href="{{ route('profile.edit') }}">{{ __('admin.my_profile') }}</a></li>
         @endif
 
         {{-- Cross-area / add-on links (e.g. the teams tier) — their own group, divided from account

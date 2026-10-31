@@ -42,6 +42,14 @@ class LandmarksAndLabelsTest extends TestCase
         $this->assertSame([], array_keys(array_filter(array_count_values($ids[1]), fn (int $count): bool => $count > 1)), 'duplicate ids');
     }
 
+    /** "My Profile", like the page it opens and the "My Teams" link beside it. */
+    public function test_the_account_menu_links_to_my_profile(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create())->get(route('users.index'))
+            ->assertOk()
+            ->assertSee('<a href="'.route('profile.edit').'">'.__('admin.my_profile').'</a>', false);
+    }
+
     public function test_the_current_page_is_marked_in_the_sidebar(): void
     {
         $html = $this->actingAs(User::factory()->superAdmin()->create())->get(route('users.index'))->getContent();

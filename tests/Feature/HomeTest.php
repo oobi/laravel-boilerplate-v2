@@ -66,4 +66,15 @@ class HomeTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee(route('dashboard'), false);
     }
+
+    /** The profile is every signed-in user's, not only admins'. */
+    public function test_any_signed_in_user_gets_a_my_profile_link(): void
+    {
+        $html = $this->actingAs(User::factory()->create())->get('/')
+            ->assertOk()
+            ->assertDontSee(route('dashboard'), false)
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('#href="'.preg_quote(route('profile.edit'), '#').'"[^>]*>\s*'.preg_quote(__('admin.my_profile'), '#').'\s*</a>#', $html);
+    }
 }
