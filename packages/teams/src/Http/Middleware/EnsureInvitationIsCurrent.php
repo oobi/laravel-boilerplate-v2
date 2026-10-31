@@ -14,14 +14,18 @@ use Symfony\Component\HttpFoundation\Response;
  * Runs ahead of `signed` on the invitation links: a genuine link (correct
  * signature) to an invitation that has expired gets a page saying so, rather
  * than the bare 403 `signed` gives. Covers both the link's own expiry and the
- * invitation's, since links sent before expiry existed carry none. Anything
- * else passes through, so a tampered link still meets `signed`.
+ * invitation's, since links sent before expiry existed carry none. A link
+ * whose team has been deleted is a 404. Anything else passes through, so a
+ * tampered link still meets `signed`.
  */
 class EnsureInvitationIsCurrent
 {
     public function handle(Request $request, Closure $next): Response
     {
         $invitation = $request->route('invitation');
+
+        // Its team was deleted: there's nothing to join (GitHub oobi#28).
+        abort_if($invitation instanceof TeamInvitation && $invitation->team === null, 404);
 
         if ($invitation instanceof TeamInvitation
             && URL::hasCorrectSignature($request)

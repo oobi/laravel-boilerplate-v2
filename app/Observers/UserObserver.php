@@ -6,12 +6,29 @@ namespace App\Observers;
 
 use App\Models\User;
 use App\Notifications\Auth\EmailAddressChanged;
+use App\Support\UserDeletionGuards;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
 
 class UserObserver
 {
+    /**
+     * Refuse a deletion an add-on blocks (UserDeletionGuards), whatever the
+     * path: the Users screen, a bulk action, Empty trash or code.
+     *
+     * @throws AuthorizationException
+     */
+    public function deleting(User $user): void
+    {
+        $reason = UserDeletionGuards::reasonFor($user, $user->isForceDeleting());
+
+        if ($reason !== null) {
+            throw new AuthorizationException($reason);
+        }
+    }
+
     /**
      * Force a logout everywhere the moment a user is deactivated: their
      * database sessions are destroyed (ends any already-open browser tab on

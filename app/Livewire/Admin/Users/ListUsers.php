@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Auth\Destination;
 use App\Support\Theme\DaisyColor;
+use App\Support\UserDeletionGuards;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -33,6 +34,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +42,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
+use Throwable;
 
 /**
  * Standalone Filament table for managing users, rendered inside the admin
@@ -180,16 +183,21 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         ->action(fn (User $record) => app(ToggleUserActive::class)($record))
                         ->hidden(fn (User $record): bool => $record->trashed()),
 
-                    DeleteAction::make()
-                        ->modalDescription(trans_choice('admin.delete_confirm', 1, ['count' => 1]))
-                        ->authorize(UserAbility::DELETE),
+                    $this->refuseBlockedDeletion(
+                        DeleteAction::make()->authorize(UserAbility::DELETE),
+                        trans_choice('admin.delete_confirm', 1, ['count' => 1]),
+                        permanently: false,
+                    ),
 
                     RestoreAction::make()
                         ->modalDescription(trans_choice('admin.restore_confirm', 1, ['count' => 1]))
                         ->authorize(UserAbility::RESTORE),
 
-                    ForceDeleteAction::make()
-                        ->authorize(UserAbility::FORCE_DELETE),
+                    $this->refuseBlockedDeletion(
+                        ForceDeleteAction::make()->authorize(UserAbility::FORCE_DELETE),
+                        __('filament-actions::modal.confirmation'),
+                        permanently: true,
+                    ),
                 ]),
             ])
             ->toolbarActions([
@@ -221,7 +229,21 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     DeleteBulkAction::make()
                         ->visible(fn (): bool => Gate::allows(SystemPermission::DELETE_USERS->value))
                         ->modalDescription(fn (Collection $records): string => trans_choice('admin.delete_confirm', $records->count(), ['count' => $records->count()]))
-                        ->authorizeIndividualRecords(UserAbility::DELETE),
+                        ->authorizeIndividualRecords(UserAbility::DELETE)
+                        // Users an add-on won't let go yet (UserDeletionGuards) are kept, each with its reason.
+                        ->action(function (DeleteBulkAction $action, Collection $records): void {
+                            $records->each(function (User $record) use ($action): void {
+                                try {
+                                    $record->delete();
+                                } catch (AuthorizationException $refused) {
+                                    $action->reportBulkProcessingFailure('blocked-'.$record->getKey(), message: fn (): string => $refused->getMessage());
+                                } catch (Throwable $failed) {
+                                    // As Filament's own bulk delete: log it, count it, carry on.
+                                    report($failed);
+                                    $action->reportBulkProcessingFailure();
+                                }
+                            });
+                        }),
 
                     RestoreBulkAction::make()
                         ->visible(fn (): bool => Gate::allows(SystemPermission::DELETE_USERS->value))
@@ -246,10 +268,40 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
         return User::onlyTrashed()->with(['roles.permissions', 'permissions'])->where('id', '!=', Auth::id());
     }
 
-    /** Only trashed users the viewer may delete for good: never someone with more access (Coverage). */
+    /**
+     * Only trashed users the viewer may delete for good: never someone with
+     * more access (Coverage), nor one an add-on won't let go yet.
+     */
     protected function mayEmpty(Model $record): bool
     {
-        return Gate::allows(UserAbility::FORCE_DELETE, $record);
+        return Gate::allows(UserAbility::FORCE_DELETE, $record) && UserDeletionGuards::reasonFor($record, permanently: true) === null;
+    }
+
+    /** Each user an add-on keeps is explained by its own reason; the rest by the default. */
+    protected function keptInTrashMessage(Collection $kept): string
+    {
+        $reasons = $kept->map(fn (User $user): ?string => UserDeletionGuards::reasonFor($user, permanently: true));
+        $uncovered = $reasons->filter(fn (?string $reason): bool => $reason === null)->count();
+
+        return collect([$uncovered === 0 ? null : trans_choice('admin.empty_trash_kept', $uncovered, ['count' => $uncovered])])
+            ->merge($reasons->filter())
+            ->filter()
+            ->implode(' ');
+    }
+
+    /**
+     * Explain up front, instead of the confirmation, when an add-on won't let
+     * this user be deleted yet (UserDeletionGuards), with no button to go on.
+     * UserObserver refuses it regardless.
+     */
+    private function refuseBlockedDeletion(Action $action, string $confirmation, bool $permanently): Action
+    {
+        return $action
+            ->modalHeading(fn (Action $action, User $record): string => UserDeletionGuards::reasonFor($record, $permanently) === null
+                ? __('filament-actions::'.($permanently ? 'force-delete' : 'delete').'.single.modal.heading', ['label' => $action->getRecordTitle()])
+                : __('admin.delete_blocked_heading', ['name' => $record->name]))
+            ->modalDescription(fn (User $record): string => UserDeletionGuards::reasonFor($record, $permanently) ?? $confirmation)
+            ->modalSubmitAction(fn (Action $action, User $record): Action|false => UserDeletionGuards::reasonFor($record, $permanently) === null ? $action : false);
     }
 
     /**

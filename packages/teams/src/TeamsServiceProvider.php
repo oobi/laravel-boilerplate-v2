@@ -17,6 +17,7 @@ use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Roles\SystemPermissionRegistry;
 use App\Support\TrustedHosts;
+use App\Support\UserDeletionGuards;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
@@ -117,6 +118,7 @@ class TeamsServiceProvider extends ServiceProvider
         $this->registerLoginRedirect();
         $this->registerAccountArea();
         $this->registerTrustedHosts();
+        $this->registerUserDeletionGuard();
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — a shield, not a permission bypass — so the owner's
@@ -257,6 +259,33 @@ class TeamsServiceProvider extends ServiceProvider
 
         // A permanently deleted team's domains go by database cascade, without Domain's own events.
         Team::forceDeleted(fn (): bool => Cache::forget(Domain::VERIFIED_HOSTS_CACHE_KEY));
+    }
+
+    /**
+     * A team's primary owner can't be deleted while they own it (GitHub
+     * oobi#28): transfer the team or delete it first. Deleted teams count only
+     * for a permanent delete, which the `teams.user_id` foreign key would
+     * otherwise refuse.
+     */
+    private function registerUserDeletionGuard(): void
+    {
+        UserDeletionGuards::register(static function (User $user, bool $permanently): ?string {
+            [$deleted, $live] = Team::query()
+                ->when($permanently, fn ($query) => $query->withTrashed())
+                ->where('user_id', $user->getKey())
+                ->orderBy('name')
+                ->get(['name', 'deleted_at'])
+                ->partition(fn (Team $team): bool => $team->trashed());
+
+            // Live teams can be transferred; deleted ones only purged.
+            $key = $live->isNotEmpty() ? 'ownership.owner_cannot_be_deleted' : 'ownership.owner_of_deleted_teams';
+            $names = $live->isNotEmpty() ? $live : $deleted;
+
+            return $names->isEmpty() ? null : team_trans_choice($key, $names->count(), [
+                'person' => $user->name,
+                'names' => $names->pluck('name')->join(', ', ' '.team_trans('ownership.and').' '),
+            ]);
+        });
     }
 
     /**

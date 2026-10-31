@@ -72,6 +72,10 @@ Not exhaustive.
   registers its own enum with `SystemPermissionRegistry::register()` and its
   permissions list, seed and imply like core's (the teams tier's
   `TeamSystemPermission`). See `docs/boilerplate/permissions.md`.
+- **User deletion**: an add-on that needs a user kept (the teams tier: a
+  team's primary owner) registers a reason with
+  `App\Support\UserDeletionGuards::register()`. Every deletion path refuses
+  it, super admins included, and the Users screen shows the reason.
 
 ## Scope: staff back-office, not a customer frontend
 

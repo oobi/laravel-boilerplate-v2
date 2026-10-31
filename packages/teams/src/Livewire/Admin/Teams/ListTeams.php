@@ -147,8 +147,14 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                             $record->delete();
                         }),
 
+                    // Refused while the owner is deleted (Team::restoring); say so up front, with no button.
                     RestoreAction::make()
-                        ->authorize(fn (): bool => Gate::allows(TeamSystemPermission::DELETE_TEAMS->value)),
+                        ->authorize(fn (): bool => Gate::allows(TeamSystemPermission::DELETE_TEAMS->value))
+                        ->modalHeading(fn (RestoreAction $action, Team $record): string => $record->restoreBlockedReason() === null
+                            ? __('filament-actions::restore.single.modal.heading', ['label' => $action->getRecordTitle()])
+                            : team_trans('admin.restore_blocked_heading', ['name' => $record->name]))
+                        ->modalDescription(fn (Team $record): ?string => $record->restoreBlockedReason())
+                        ->modalSubmitAction(fn (Action $action, Team $record): Action|false => $record->restoreBlockedReason() === null ? $action : false),
 
                     ForceDeleteAction::make()
                         ->modalDescription(fn (Team $record): string => Team::deleteWarning($record, permanent: true))
