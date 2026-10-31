@@ -16,6 +16,7 @@ use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Roles\SystemPermissionRegistry;
+use App\Support\TrustedHosts;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
@@ -24,6 +25,7 @@ use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Livewire\Team\ManageOwnership;
 use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Livewire\Team\PendingInvitations;
+use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Panels\Users\TeamMembershipsPanel;
@@ -37,6 +39,7 @@ use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamDestination;
 use Concise\Teams\Support\TeamLabels;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -113,6 +116,7 @@ class TeamsServiceProvider extends ServiceProvider
         $this->registerAccountMenu();
         $this->registerLoginRedirect();
         $this->registerAccountArea();
+        $this->registerTrustedHosts();
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — a shield, not a permission bypass — so the owner's
@@ -224,6 +228,35 @@ class TeamsServiceProvider extends ServiceProvider
         LoginRedirectRegistry::register(
             fn (User $user): ?string => $user->canAccessAdmin() ? null : TeamDestination::resolve($user),
         );
+    }
+
+    /**
+     * In host mode the app also answers on `base` and every `{slug}.base`, the
+     * admin and account hosts, and (custom-domains tier on) each verified
+     * custom domain. Read per request, so config and new domains apply at once.
+     */
+    private function registerTrustedHosts(): void
+    {
+        TrustedHosts::register(static function (): array {
+            $base = DomainPolicy::base();
+
+            // assertConfigured() requires base in host mode; an empty one would trust any host ending in a dot.
+            if (! DomainPolicy::enabled() || $base === null) {
+                return [];
+            }
+
+            $hosts = array_map(TrustedHosts::exact(...), array_filter([DomainPolicy::adminHost(), DomainPolicy::accountHost()]));
+            $hosts[] = TrustedHosts::withSubdomains($base);
+
+            if (DomainPolicy::customDomainsEnabled()) {
+                array_push($hosts, ...array_map(TrustedHosts::exact(...), Domain::verifiedHosts()));
+            }
+
+            return $hosts;
+        });
+
+        // A permanently deleted team's domains go by database cascade, without Domain's own events.
+        Team::forceDeleted(fn (): bool => Cache::forget(Domain::VERIFIED_HOSTS_CACHE_KEY));
     }
 
     /**

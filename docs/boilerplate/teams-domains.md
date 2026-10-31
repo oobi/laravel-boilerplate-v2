@@ -170,6 +170,19 @@ account host reads as logged-out on a team subdomain.
 It does **not** cover a custom domain on a *different* registrable domain — which
 is the crux of why custom domains are unfinished.
 
+## Trusted hosts
+
+Outside `local`, the app refuses (400) any host it doesn't serve (see
+`App\Support\TrustedHosts`). In host mode the teams tier adds `{base}` and any
+host under it (`{slug}.{base}`, at any depth), the admin and account hosts,
+and, with custom domains on, each verified custom domain (cached, refreshed
+whenever a domain is verified, changed or removed or its team is permanently
+deleted, and at least daily; the cache store must be shared between app
+servers, as the default `database` store is). For example, with `base` = `myapp.com` and Acme's verified
+`portal.acmecorp.com`: `acme.myapp.com` and `portal.acmecorp.com` are served,
+while Acme's pending `shop.acmecorp.com` and an unrelated `evil.com` get a 400.
+Anything else the app should answer on goes in `TRUSTED_HOSTS`.
+
 ## Completing custom domains
 
 To make a team usable on its own registrable domain, a **cross-domain session
