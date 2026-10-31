@@ -175,6 +175,11 @@ nobody can verify their address or reset their password.
 Run the scheduler too (`* * * * * php artisan schedule:run`; Cloud and Forge
 have a switch for it). With teams on, it prunes expired invitations daily.
 
+With more than one app server, the cache store must be shared between them.
+The default (`CACHE_STORE=database`) is. Rate limits, Filament's pop-up
+notifications (since Filament 5.11) and the teams tier's trusted custom domains
+all live in it; a per-server `file` store would lose or split them.
+
 ## 9. Optional: log in with Google
 
 Off until configured. To turn it on:
@@ -197,6 +202,7 @@ It signs in existing accounts only. See
 - [ ] theme-demo kept or removed
 - [ ] A queue worker runs in production (verification and reset emails depend on it)
 - [ ] The scheduler runs in production (`schedule:run` every minute)
+- [ ] Several app servers: a shared cache store (the default `database` store is)
 - [ ] Behind a proxy: `TRUSTED_PROXIES` set (not needed on Cloud, or Forge/Vapor's own domains); `SESSION_SECURE_COOKIE=true` in production
 - [ ] Log in with Google: OAuth client created and `GOOGLE_*` set, or left off on purpose
 - [ ] Client features registered from a client service provider

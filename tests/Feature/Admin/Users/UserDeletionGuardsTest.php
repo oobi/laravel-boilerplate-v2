@@ -8,6 +8,7 @@ use App\Support\UserDeletionGuards;
 use Filament\Actions\Testing\TestAction;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Notifications\Notification;
+use Filament\Notifications\NotificationMailbox;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -101,11 +102,17 @@ class UserDeletionGuardsTest extends TestCase
         $this->assertModelMissing($other);
     }
 
-    /** Every notification body sent so far, read the way Filament's assertNotified() reads them. */
+    /**
+     * Every notification body sent so far, read the way Filament's
+     * assertNotified() reads them (since 5.11 they wait in a cache-backed
+     * mailbox, not the session).
+     */
     private function sentNotificationBodies(): string
     {
+        app(NotificationMailbox::class)->flush();
         $notifications = new Notifications;
         $notifications->mount();
+        $notifications->pullNotificationsFromSession();
 
         return $notifications->notifications->map(fn (Notification $notification): string => (string) $notification->getBody())->implode(' ');
     }

@@ -9,6 +9,7 @@ use App\Models\SocialAccount;
 use App\Models\User;
 use App\Notifications\Auth\GoogleAccountLinked;
 use App\Support\Auth\GoogleLogin;
+use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
@@ -122,7 +123,7 @@ class GoogleAccountLinkTest extends TestCase
         $this->returnFromGoogleLinking($user);
 
         $this->assertTrue($user->fresh()->googleAccount->is($existing));
-        $this->assertSame(__('auth.google_already_linked'), session('filament.notifications')[0]['title'] ?? null);
+        FilamentNotification::assertNotified(__('auth.google_already_linked'));
         Notification::assertNothingSent();
     }
 
