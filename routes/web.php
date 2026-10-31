@@ -7,6 +7,7 @@ use App\Http\Controllers\ImpersonationController;
 // public:canonical: use App\Http\Controllers\LoginOnlyHomeController;
 // public:end
 use App\Http\Middleware\DenyLowAssuranceSessions;
+use App\Http\Middleware\RememberAccountArea;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Roles\CreateRole;
 use App\Livewire\Admin\Roles\ManageRoles;
@@ -81,7 +82,8 @@ Route::domain($accountHost)->middleware('throttle:google-login')->group(function
 
 // The admin area requires an active system role (e.g. dashboard, users) — route names keep their existing flat prefixes regardless of the URL path.
 Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
-    Route::middleware(['auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value])->group(function (): void {
+    // RememberAccountArea after the `can:`: the profile then opens in the admin shell (App\Support\AccountArea\AccountAreaRegistry).
+    Route::middleware(['auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value, RememberAccountArea::class.':admin'])->group(function (): void {
         // The admin root (host mode: admin_host/; path mode: /admin) sends admins to
         // the dashboard rather than 404ing. Gated like the rest, so a guest bounces
         // to login (on the account host) — the admin host never shows a form.

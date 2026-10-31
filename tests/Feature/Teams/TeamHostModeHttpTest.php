@@ -101,6 +101,21 @@ class TeamHostModeHttpTest extends TestCase
             ->assertSee('Acme Inc');
     }
 
+    /** The profile stays on the account host but keeps the team's shell, its links pointing at the team host. */
+    public function test_the_profile_on_the_account_host_keeps_the_team_shell(): void
+    {
+        $user = User::factory()->create();
+        $team = Team::factory()->create(['slug' => 'acme', 'name' => 'Acme Inc']);
+        $team->addMember($user);
+
+        $this->actingAs($user)->get('http://acme.'.self::BASE.'/dashboard')->assertOk();
+
+        $this->get('http://'.self::BASE.'/profile')
+            ->assertOk()
+            ->assertSee('title="Acme Inc"', false)
+            ->assertSee('http://acme.'.self::BASE.'/dashboard', false);
+    }
+
     public function test_the_team_host_root_redirects_to_the_dashboard(): void
     {
         $user = User::factory()->create();

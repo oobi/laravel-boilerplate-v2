@@ -1,7 +1,8 @@
 {{-- The team area shell. Reuses the shared <x-app-shell> so it behaves exactly like
      the system admin (sidebar pin/drawer, header, breadcrumbs); only the navigation
-     content and home link differ (R2). --}}
-@php($team = current_team())
+     content and home link differ (R2). An account page (profile) passes $team
+     itself, since it renders outside the team's routes (AccountAreaRegistry). --}}
+@php($team ??= current_team())
 
 <x-app-shell
     :home="$team ? team_route('team.dashboard', $team) : url('/')"

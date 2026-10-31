@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Support\AccountArea\AccountAreaRegistry;
 use App\Support\AccountMenu\AccountMenuRegistry;
 use App\Support\Auth\LoginRedirectRegistry;
 use App\Support\Breadcrumbs;
@@ -35,6 +36,7 @@ abstract class TestCase extends BaseTestCase
         RoleScopeRegistry::flush();
         SystemPermissionRegistry::flush();
         LoginRedirectRegistry::flush();
+        AccountAreaRegistry::flush();
         Breadcrumbs::flush();
 
         parent::setUp();

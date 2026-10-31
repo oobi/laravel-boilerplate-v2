@@ -6,6 +6,8 @@ namespace Concise\Teams;
 
 use App\Enums\SystemPermission;
 use App\Models\User;
+use App\Support\AccountArea\AccountAreaRegistry;
+use App\Support\AccountArea\AccountShell;
 use App\Support\AccountMenu\AccountMenuRegistry;
 use App\Support\Auth\LoginRedirectRegistry;
 use App\Support\Breadcrumbs;
@@ -110,6 +112,7 @@ class TeamsServiceProvider extends ServiceProvider
         $this->registerSystemAdminArea();
         $this->registerAccountMenu();
         $this->registerLoginRedirect();
+        $this->registerAccountArea();
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — a shield, not a permission bypass — so the owner's
@@ -221,6 +224,23 @@ class TeamsServiceProvider extends ServiceProvider
         LoginRedirectRegistry::register(
             fn (User $user): ?string => $user->canAccessAdmin() ? null : TeamDestination::resolve($user),
         );
+    }
+
+    /**
+     * The profile opened from a team (remembered by ResolveTeamContext) keeps that
+     * team's shell, re-checking the same gates as entering it: the team still
+     * exists, is active, and the user is a member. The team is handed to the
+     * layout, not set as the TeamContext, so profile requests stay unscoped.
+     */
+    private function registerAccountArea(): void
+    {
+        AccountAreaRegistry::register('team', function (User $user, ?string $teamId): ?AccountShell {
+            $team = $teamId === null ? null : Team::find($teamId);
+
+            return $team instanceof Team && $team->active && $user->belongsToTeam($team)
+                ? new AccountShell('teams::layouts.team', ['team' => $team])
+                : null;
+        });
     }
 
     private function registerSystemAdminArea(): void

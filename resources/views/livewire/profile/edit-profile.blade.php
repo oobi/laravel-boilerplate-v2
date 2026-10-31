@@ -1,5 +1,7 @@
 <div class="flex flex-col gap-6">
     @section('page-title', __('admin.profile'))
+    {{-- The breadcrumb parent in an area's shell (admin, a team); the sidebar-less shell has no breadcrumbs. --}}
+    @section('page-parent', __('admin.my_profile'))
 
     <x-page-header :title="__('admin.my_profile')" />
 

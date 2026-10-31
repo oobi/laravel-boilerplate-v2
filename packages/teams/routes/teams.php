@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\SystemPermission;
+use App\Http\Middleware\RememberAccountArea;
 use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Http\Controllers\AcceptTeamInvitation;
 use Concise\Teams\Http\Controllers\RegisterFromInvitation;
@@ -116,7 +117,7 @@ Route::middleware(['web', EnsureInvitationIsCurrent::class, 'signed'])
 // route's `can:` is re-run on every Livewire update, so access lost mid-session
 // is refused at the next click. Flat `teams.*` route names so Breadcrumbs
 // derives the parent crumb.
-Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value, 'can:'.TeamSystemPermission::VIEW_TEAMS->value])
+Route::middleware(['web', 'auth', 'verified', 'can:'.SystemPermission::ACCESS_ADMIN_PANEL->value, 'can:'.TeamSystemPermission::VIEW_TEAMS->value, RememberAccountArea::class.':admin'])
     ->domain($adminHost)
     ->prefix($adminTeamsPrefix)
     ->name('teams.')

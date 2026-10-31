@@ -160,6 +160,10 @@ version is worse than none, since every project inherits it:
    attacker now controls — so verification must be periodically re-checked.
 8. **Logout parity.** The logout POST has the same cross-domain cookie problem;
    it needs the equivalent handling.
+9. **Account-area memory.** Entering a team remembers it so the profile keeps
+   that team's shell (`AccountAreaRegistry`). On a custom domain that write lands
+   in the domain's own session, so the account host never sees it; the handoff
+   must carry it back (or the profile falls back to the last area it did see).
 
 Until this exists, custom domains stay opt-in (`TEAMS_DOMAINS_CUSTOM`, default
 off) and clearly flagged in the UI.

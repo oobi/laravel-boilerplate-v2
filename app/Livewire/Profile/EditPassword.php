@@ -18,7 +18,7 @@ use Livewire\Component;
  * "Password" — the Password tab of the self-service account area. Two-factor
  * authentication lives on its own sibling tab ({@see TwoFactorAuthentication})
  * so neither pushes the other down on small screens. See EditProfile for why
- * this renders in the neutral account layout rather than the admin shell.
+ * this renders in the account layout.
  */
 #[Layout('layouts.account')]
 class EditPassword extends Component
