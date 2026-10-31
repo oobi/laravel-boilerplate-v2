@@ -199,11 +199,13 @@ class ShowTeamTest extends TestCase
 
     public function test_members_can_be_searched_and_filtered(): void
     {
-        $admin = User::factory()->create(['first_name' => 'Ada', 'last_name' => 'Admin']);
+        // Fixed emails too: the search also matches email, and a random one containing "mia" made this flaky.
+        $this->owner->update(['email' => 'olive@example.test']);
+        $admin = User::factory()->create(['first_name' => 'Ada', 'last_name' => 'Admin', 'email' => 'ada@example.test']);
         $this->team->addMember($admin, 'Team Admin');
-        $member = User::factory()->create(['first_name' => 'Mia', 'last_name' => 'Member']);
+        $member = User::factory()->create(['first_name' => 'Mia', 'last_name' => 'Member', 'email' => 'mia@example.test']);
         $this->team->addMember($member, 'Member');
-        $suspended = User::factory()->create(['first_name' => 'Sam', 'last_name' => 'Suspended']);
+        $suspended = User::factory()->create(['first_name' => 'Sam', 'last_name' => 'Suspended', 'email' => 'sam@example.test']);
         $this->team->addMember($suspended, 'Member');
         $this->team->suspendMember($suspended);
 
