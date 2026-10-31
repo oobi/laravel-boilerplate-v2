@@ -163,6 +163,18 @@ class ListUsersTest extends TestCase
         $this->assertFalse($target->fresh()->active);
     }
 
+    /** A page size the table doesn't offer falls back to the default rather than loading that many rows (GitHub oobi#63). */
+    public function test_only_offered_page_sizes_are_used(): void
+    {
+        $table = Livewire::actingAs(User::factory()->superAdmin()->create())->test(ListUsers::class);
+
+        $table->set('tableRecordsPerPage', 100000);
+        $this->assertSame(config('pagination.default_page_size'), $table->instance()->getTableRecordsPerPage());
+
+        $table->set('tableRecordsPerPage', 50);
+        $this->assertSame(50, $table->instance()->getTableRecordsPerPage());
+    }
+
     public function test_selected_users_can_be_bulk_deleted(): void
     {
         $admin = User::factory()->superAdmin()->create();

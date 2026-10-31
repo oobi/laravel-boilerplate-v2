@@ -32,6 +32,7 @@ use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
 use Filament\Tables\View\TablesIconAlias;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -82,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentModalDefaults();
         $this->registerFilamentBulkActionDefaults();
         $this->registerFilamentRestoreDefaults();
+        $this->registerFilamentTableDefaults();
         $this->registerNotifications();
         $this->registerQueryMacros();
 
@@ -94,6 +96,16 @@ class AppServiceProvider extends ServiceProvider
         AccountAreaRegistry::register('admin', fn (User $user): ?AccountShell => $user->canAccessAdmin() ? new AccountShell('layouts.admin') : null);
 
         User::observe(UserObserver::class);
+    }
+
+    /**
+     * Every table only shows the page sizes it offers: a tampered
+     * `tableRecordsPerPage` (say 100000) falls back to the default instead of
+     * loading that many rows (GitHub oobi#63, Filament 5.11's opt-in guard).
+     */
+    private function registerFilamentTableDefaults(): void
+    {
+        Table::configureUsing(fn (Table $table): Table => $table->enforcePaginationPageOptions());
     }
 
     /**
