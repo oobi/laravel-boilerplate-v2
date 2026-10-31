@@ -77,6 +77,32 @@ class CreateRoleTest extends TestCase
         $this->assertTrue(Role::findByName('Editor')->requires_two_factor);
     }
 
+    /** Screen readers read the toggle's helper text with it (GitHub oobi#51; Filament 5.10.3+). */
+    public function test_the_two_factor_toggle_is_described_by_its_helper_text(): void
+    {
+        $html = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(CreateRole::class)
+            ->assertSeeHtml('id="form.requires_two_factor-helper-text"')
+            ->html();
+
+        $this->assertMatchesRegularExpression('/<button\b(?=[^>]*\brole="switch")(?=[^>]*\bid="form\.requires_two_factor")(?=[^>]*\baria-describedby="form\.requires_two_factor-helper-text")[^>]*>/', $html);
+    }
+
+    /** Our own badge colour picker is tied to its error and marked invalid, like Filament's fields (GitHub oobi#51). */
+    public function test_the_badge_colour_picker_is_described_by_its_error(): void
+    {
+        $html = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(CreateRole::class)
+            ->set('data.name', 'Billing')
+            ->set('data.color', null)
+            ->call('create')
+            ->assertHasErrors('data.color')
+            ->assertSeeHtml('id="form.color-error"')
+            ->html();
+
+        $this->assertMatchesRegularExpression('/<button\b(?=[^>]*\bid="form\.color")(?=[^>]*\baria-describedby="form\.color-error")(?=[^>]*\baria-invalid="true")[^>]*>/', $html);
+    }
+
     public function test_the_two_factor_help_text_pluralises_the_grace_period(): void
     {
         $admin = User::factory()->superAdmin()->create();

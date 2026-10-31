@@ -34,3 +34,6 @@ Every test outside tests/Feature/Teams/ must pass with the teams tier removed: b
 
 ## Test authorization on Livewire updates through the update route, not Livewire::test()
 Livewire::test() never goes through Livewire's update route, so it skips the persistent middleware (route `can:`, auth and the app's registered ones) that guards a page's later requests. To test that access lost with a page open is refused at the next click, render the page with `$this->get(route(...))`, change the access, then call `$this->livewireUpdate($page)` (tests/TestCase.php) and assert 403. See docs/boilerplate/permissions.md, "Access lost while a page is open".
+
+## Assert Filament notifications with assertNotified(), never the session
+Since Filament 5.11, flash notifications wait in a cache-backed NotificationMailbox, not session('filament.notifications'), so reading the session finds nothing. Assert with Livewire's ->assertNotified() or Filament\Notifications\Notification::assertNotified(title or a full Notification, which also compares the body). Only when a test needs part of a body (e.g. a bulk action's per-record failure messages), read them the way assertNotified() does: app(NotificationMailbox::class)->flush(), then a Notifications component's mount() and pullNotificationsFromSession() (see UserDeletionGuardsTest::sentNotificationBodies()).

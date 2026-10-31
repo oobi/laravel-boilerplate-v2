@@ -1,5 +1,6 @@
 @php
     use App\Support\Theme\DaisyColor;
+    use Illuminate\View\ComponentAttributeBag;
 
     $statePath = $getStatePath();
     // The sibling "name" field, so every badge previews *this role's* badge (and all read the same width).
@@ -43,6 +44,8 @@
             :aria-expanded="open"
             :aria-label="'{{ __('admin.badge_color') }}: ' + labels[state]"
             id="{{ $getId() }}"
+            {{-- Filament's own links: the field's helper text and error (aria-describedby), and aria-invalid on error (GitHub oobi#51). --}}
+            {{ new ComponentAttributeBag($field->getAccessibilityAttributes()) }}
         >
             <span x-text="preview()">{{ $initialName }}</span>
             <x-heroicon-m-chevron-down class="h-3 w-3 opacity-70" />
