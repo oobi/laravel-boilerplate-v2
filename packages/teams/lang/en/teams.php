@@ -145,6 +145,9 @@ return [
         'delete' => 'Delete :team',
         'delete_help' => 'Deleting the :team removes it for all :members. A system administrator can restore it.',
         'deleted' => ':name deleted',
+        'owner_cannot_be_deleted' => '{1} :person is the primary :owner of :names. Transfer the :team to someone else or delete it first.|[2,*] :person is the primary :owner of :names. Transfer those :teams to someone else or delete them first.',
+        'owner_of_deleted_teams' => '{1} :person is the primary :owner of the deleted :team :names. Permanently delete it first.|[2,*] :person is the primary :owner of the deleted :teams :names. Permanently delete them first.',
+        'and' => 'and',
     ],
 
     'invitations' => [
@@ -235,6 +238,8 @@ return [
     ],
 
     'admin' => [
+        'restore_blocked_heading' => 'Can’t restore :name yet',
+        'restore_owner_deleted' => ':person, the primary :owner of :name, is deleted. Restore them from the Users trash first.',
         'description' => 'Every :team on the system — who owns it and who belongs to it.',
         'search' => 'Search :teams…',
         'empty' => 'No :teams found',

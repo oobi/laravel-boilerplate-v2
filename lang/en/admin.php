@@ -94,6 +94,7 @@ return [
     'activate_confirm' => 'Are you sure you want to activate :count user?|Are you sure you want to activate :count users?',
     'deactivate_confirm' => 'Are you sure you want to deactivate :count user?|Are you sure you want to deactivate :count users?',
     'delete_confirm' => 'Are you sure you want to delete :count user? It can be restored from the trash.|Are you sure you want to delete :count users? They can be restored from the trash.',
+    'delete_blocked_heading' => 'Can\'t delete :name yet',
     'restore_user' => 'Restore user',
     'user_restored' => 'User restored.',
     'user_in_trash' => 'This user is in the trash.',

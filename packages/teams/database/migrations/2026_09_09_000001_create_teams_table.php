@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('teams', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->index();
+            // The primary owner: a user can't be deleted while they own a team (UserDeletionGuards).
+            $table->foreignId('user_id')->index()->constrained('users')->restrictOnDelete();
             $table->string('name');
             $table->string('slug')->unique();
             $table->boolean('personal_team')->default(false);

@@ -12,6 +12,7 @@ use Concise\Teams\Enums\TeamPermission;
 use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamLabels;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -98,6 +99,35 @@ class Team extends Model
                 $team->slug = static::uniqueSlug($team->name);
             }
         });
+
+        // A deleted team's pending invitations go with it, so a link already
+        // emailed can't reach a team that's gone (GitHub oobi#28). A restored
+        // team starts with none; invite again.
+        // Void, not the delete count: a value from a `deleting` listener halts the rest.
+        static::deleting(function (Team $team): void {
+            $team->invitations()->delete();
+        });
+
+        // Every team has a live owner: a team whose owner is deleted stays in
+        // the trash until the owner is restored (GitHub oobi#28).
+        static::restoring(function (Team $team): void {
+            $reason = $team->restoreBlockedReason();
+
+            if ($reason !== null) {
+                throw new AuthorizationException($reason);
+            }
+        });
+    }
+
+    /** Why this deleted team can't be restored yet (its owner is deleted), or null. */
+    public function restoreBlockedReason(): ?string
+    {
+        // Fresh: the relation may have been loaded before the owner was deleted.
+        $owner = $this->owner()->first();
+
+        return $owner?->trashed()
+            ? team_trans('admin.restore_owner_deleted', ['person' => $owner->name, 'name' => $this->name])
+            : null;
     }
 
     /**
@@ -144,10 +174,14 @@ class Team extends Model
         return static::withTrashed()->where('slug', $slug)->exists();
     }
 
-    /** The user who owns the team. Distinct from membership — the owner is also a member. */
+    /**
+     * The user who owns the team. Distinct from membership: the owner is also a
+     * member. Includes a deleted account, so a team whose owner was deleted
+     * before that was refused (GitHub oobi#28) still shows who it was.
+     */
     public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
     }
 
     /** Members of the team. Per-team roles are resolved via spatie, not this pivot. */

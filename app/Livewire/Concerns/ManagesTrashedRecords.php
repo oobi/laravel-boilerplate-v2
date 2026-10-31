@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -43,6 +44,17 @@ trait ManagesTrashedRecords
     protected function emptyTrashQuery(): Builder
     {
         return $this->trashedRecordsModel()::onlyTrashed();
+    }
+
+    /**
+     * Why the records mayEmpty() refused stay in the trash; override to give
+     * a more specific reason.
+     *
+     * @param  Collection<int, Model>  $kept
+     */
+    protected function keptInTrashMessage(Collection $kept): string
+    {
+        return trans_choice('admin.empty_trash_kept', $kept->count(), ['count' => $kept->count()]);
     }
 
     /** Whether one trashed record may be emptied; override to check each (e.g. its policy). */
@@ -84,7 +96,7 @@ trait ManagesTrashedRecords
                 Notification::make()
                     ->title(__('admin.empty_trash_success', ['count' => $count]))
                     // Any left behind (mayEmpty() said no) are explained, not silently skipped.
-                    ->body($kept->isEmpty() ? null : trans_choice('admin.empty_trash_kept', $kept->count(), ['count' => $kept->count()]))
+                    ->body($kept->isEmpty() ? null : $this->keptInTrashMessage($kept))
                     ->success()
                     ->send();
             });
