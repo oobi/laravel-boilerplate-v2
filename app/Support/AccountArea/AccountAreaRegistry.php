@@ -6,6 +6,7 @@ namespace App\Support\AccountArea;
 
 use App\Models\User;
 use Closure;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 /**
  * Which area (admin, a team, ...) the user was last in, so account pages
@@ -15,6 +16,8 @@ use Closure;
  * null once it's gone, so the page falls back to the sidebar-less shell. Core
  * registers `admin`; add-ons register their own from their provider (the teams
  * tier's `team`), so core stays area-agnostic. Last area visited wins, across tabs.
+ * An unverified user gets no area shell: every area route needs `verified`, so
+ * its sidebar would only lead to the verify-email notice.
  */
 final class AccountAreaRegistry
 {
@@ -40,6 +43,10 @@ final class AccountAreaRegistry
     /** The remembered area's shell for this user, or null for the sidebar-less one. */
     public static function shellFor(User $user): ?AccountShell
     {
+        if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+            return null;
+        }
+
         $remembered = session(self::SESSION_KEY);
 
         if (! is_array($remembered) || ! isset(self::$resolvers[$remembered['area'] ?? null])) {

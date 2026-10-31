@@ -20,6 +20,9 @@ class ProfileAreaShellTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** The sidebar-less shell's form-width column. */
+    private const string BARE_SHELL = 'ui-page flex flex-col gap-4 max-w-3xl';
+
     public function test_the_profile_is_sidebar_less_when_no_area_was_visited(): void
     {
         $admin = User::factory()->superAdmin()->create();
@@ -27,7 +30,7 @@ class ProfileAreaShellTest extends TestCase
         $this->actingAs($admin)->get(route('profile.edit'))
             ->assertOk()
             ->assertDontSee(route('users.index'))
-            ->assertSee('ui-page flex flex-col gap-4 max-w-3xl', false);
+            ->assertSee(self::BARE_SHELL, false);
     }
 
     public function test_the_profile_keeps_the_admin_shell_after_an_admin_page(): void
@@ -39,7 +42,10 @@ class ProfileAreaShellTest extends TestCase
         $this->get(route('profile.password'))
             ->assertOk()
             ->assertSee(route('users.index'))
-            ->assertDontSee('ui-page flex flex-col gap-4 max-w-3xl', false);
+            ->assertDontSee(self::BARE_SHELL, false)
+            // In an area's shell the page sits under "My Profile", in the trail and the tab title.
+            ->assertSeeInOrder([__('admin.breadcrumb_root'), __('admin.my_profile'), __('admin.password')])
+            ->assertSee('<title>'.e(__('admin.password').' · '.__('admin.my_profile')), false);
     }
 
     public function test_the_profile_drops_the_admin_shell_once_admin_access_is_gone(): void
@@ -51,7 +57,22 @@ class ProfileAreaShellTest extends TestCase
 
         $this->get(route('profile.edit'))
             ->assertOk()
-            ->assertDontSee(route('users.index'));
+            ->assertDontSee(route('users.index'))
+            ->assertSee(self::BARE_SHELL, false);
+    }
+
+    /** Area routes all need `verified`, so an unverified user's sidebar would only lead to the verify notice. */
+    public function test_an_unverified_user_gets_the_sidebar_less_shell(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+
+        $this->actingAs($admin)->get(route('dashboard'))->assertOk();
+        $admin->forceFill(['email_verified_at' => null])->save();
+
+        $this->get(route('profile.edit'))
+            ->assertOk()
+            ->assertDontSee(route('users.index'))
+            ->assertSee(self::BARE_SHELL, false);
     }
 
     /** A remembered area nothing resolves any more (e.g. a removed add-on) falls back quietly. */
@@ -63,7 +84,8 @@ class ProfileAreaShellTest extends TestCase
             ->withSession(['account_area' => ['area' => 'removed-add-on', 'id' => '1']])
             ->get(route('profile.edit'))
             ->assertOk()
-            ->assertDontSee(route('users.index'));
+            ->assertDontSee(route('users.index'))
+            ->assertSee(self::BARE_SHELL, false);
     }
 
     /** A new admin route group that forgets the middleware would drop users out of the admin shell. */

@@ -11,8 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Records the area a route belongs to (`RememberAccountArea::class.':admin'`),
- * so the profile renders in that area's shell. Listed after the route's `can:`
- * so only an authorized visit counts. See {@see AccountAreaRegistry}.
+ * so the profile renders in that area's shell. Listed after the group's entry
+ * `can:` so only a user who can enter the area is recorded. See {@see AccountAreaRegistry}.
  */
 class RememberAccountArea
 {

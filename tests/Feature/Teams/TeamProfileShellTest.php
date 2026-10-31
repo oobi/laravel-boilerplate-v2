@@ -26,7 +26,10 @@ class TeamProfileShellTest extends TestCase
     {
         $marker = 'title="'.e($team->name).'"';
 
-        $expected ? $response->assertSee($marker, false) : $response->assertDontSee($marker, false);
+        $expected
+            ? $response->assertSee($marker, false)
+            // Out of the team shell means into the sidebar-less one (its form-width column), not no shell at all.
+            : $response->assertDontSee($marker, false)->assertSee('ui-page flex flex-col gap-4 max-w-3xl', false);
     }
 
     public function test_the_profile_keeps_the_team_shell_after_a_team_page(): void
@@ -47,8 +50,10 @@ class TeamProfileShellTest extends TestCase
         $this->visitTeam($admin, $team);
         $this->get(route('dashboard'))->assertOk();
 
-        $response = $this->get(route('profile.edit'))->assertOk()->assertSee(route('users.index'));
-        $this->assertTeamShell($response, $team, false);
+        $this->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee(route('users.index'))
+            ->assertDontSee('title="'.e($team->name).'"', false);
     }
 
     public function test_the_profile_drops_the_team_shell_once_the_user_has_left(): void
