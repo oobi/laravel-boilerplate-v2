@@ -122,6 +122,8 @@ class TwoFactorGracePeriodTest extends TestCase
 
     public function test_login_succeeds_up_to_the_deadline_and_is_refused_from_it(): void
     {
+        // Steps a second either side of the deadline: a real second ticking over mid-test would land on it (#15).
+        $this->freezeSecond();
         $user = $this->subjectUser();
         $this->login($user);
         Auth::logout();
