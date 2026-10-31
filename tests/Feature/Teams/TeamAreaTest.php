@@ -55,6 +55,17 @@ class TeamAreaTest extends TestCase
         $this->assertStringNotContainsString(e(__('admin.breadcrumb_root')), $html);
     }
 
+    /** The team root crumb links to the team dashboard (see TeamProfileShellTest), but not on the dashboard itself. */
+    public function test_the_team_dashboard_does_not_link_its_root_crumb_to_itself(): void
+    {
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        $this->actingAs($owner)->get(team_route('team.dashboard', $team))
+            ->assertOk()
+            ->assertDontSee('<a href="'.team_route('team.dashboard', $team).'" class="ui-link">', false);
+    }
+
     public function test_a_non_member_is_forbidden_from_the_team_area(): void
     {
         $user = User::factory()->create();

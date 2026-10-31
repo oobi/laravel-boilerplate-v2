@@ -4,6 +4,7 @@ namespace Tests\Feature\Teams;
 
 use App\Models\User;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamLabels;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -40,6 +41,19 @@ class TeamProfileShellTest extends TestCase
         $this->visitTeam($owner, $team);
 
         $this->assertTeamShell($this->get(route('profile.edit'))->assertOk(), $team);
+    }
+
+    public function test_the_team_root_crumb_links_to_the_team_dashboard(): void
+    {
+        $owner = User::factory()->create();
+        $team = Team::factory()->ownedBy($owner)->create();
+
+        $this->visitTeam($owner, $team);
+
+        $this->get(route('profile.password'))->assertOk()->assertSee(
+            '<a href="'.team_route('team.dashboard', $team).'" class="ui-link">'.e(TeamLabels::singular()).'</a>',
+            false,
+        );
     }
 
     public function test_the_last_area_visited_wins(): void

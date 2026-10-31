@@ -48,6 +48,18 @@ class ProfileAreaShellTest extends TestCase
             ->assertSee('<title>'.e(__('admin.password').' · '.__('admin.my_profile')), false);
     }
 
+    /** "My Profile" leads back to the Profile tab, and is plain text on it. */
+    public function test_the_my_profile_crumb_links_to_the_profile_tab(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $profileLink = '<a href="'.route('profile.edit').'" class="ui-link">'.__('admin.my_profile').'</a>';
+
+        $this->actingAs($admin)->get(route('dashboard'))->assertOk();
+
+        $this->get(route('profile.password'))->assertOk()->assertSee($profileLink, false);
+        $this->get(route('profile.edit'))->assertOk()->assertDontSee($profileLink, false);
+    }
+
     public function test_the_profile_drops_the_admin_shell_once_admin_access_is_gone(): void
     {
         $admin = User::factory()->superAdmin()->create();

@@ -14,8 +14,9 @@
                 @elseif ($index > 1)
                     <span class="mx-2" aria-hidden="true">/</span>
                 @endif
-                @if ($crumb['url'] && $index > 0)
-                    <a href="{{ $crumb['url'] }}" class="hover:text-base-content">{{ $crumb['label'] }}</a>
+                {{-- Links look like the app's other links (ui-link), so they stand apart from plain crumbs and the current page. --}}
+                @if ($crumb['url'])
+                    <a href="{{ $crumb['url'] }}" class="ui-link">{{ $crumb['label'] }}</a>
                 @else
                     <span @if ($loop->last) aria-current="page" @endif>{{ $crumb['label'] }}</span>
                 @endif
