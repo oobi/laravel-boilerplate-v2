@@ -7,6 +7,7 @@ namespace Concise\Teams\Actions;
 use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Support\DomainPolicy;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -44,9 +45,10 @@ class CreateDomain
 
     /**
      * Reserved when the leftmost label is on the blacklist
-     * (`teams.domains.reserved`), or the whole domain is the app's own host,
-     * the admin host, or the account host — a team must never be able to claim
-     * those.
+     * (`teams.domains.reserved`), or the domain is, sits under, or is a parent
+     * of a host the platform owns: `base` (so another team's `{slug}.base`, GitHub
+     * oobi#26), the app's own host, the admin host or the account host. A team
+     * must never be able to claim those or the operator's own zone.
      */
     public static function isReserved(string $domain): bool
     {
@@ -54,8 +56,19 @@ class CreateDomain
             return true;
         }
 
-        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $platformHosts = array_filter([
+            DomainPolicy::base(),
+            Str::lower(trim((string) parse_url((string) config('app.url'), PHP_URL_HOST), '.')),
+            DomainPolicy::adminHost(),
+            DomainPolicy::accountHost(),
+        ]);
 
-        return in_array($domain, array_filter([$appHost, DomainPolicy::adminHost(), DomainPolicy::accountHost()]), true);
+        foreach ($platformHosts as $host) {
+            if ($domain === $host || Str::endsWith($domain, '.'.$host) || Str::endsWith($host, '.'.$domain)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

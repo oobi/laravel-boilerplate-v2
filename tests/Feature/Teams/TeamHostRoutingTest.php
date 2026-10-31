@@ -81,6 +81,19 @@ class TeamHostRoutingTest extends TestCase
         $this->assertTrue(TeamHostResolver::resolve('acme.myapp.com')->is($team));
     }
 
+    /** A custom domain row under `base` (refused since GitHub oobi#26) never takes over a platform host. */
+    public function test_a_custom_domain_under_the_base_never_shadows_a_team(): void
+    {
+        $this->enableCustomDomains();
+        $acme = Team::factory()->create(['slug' => 'acme']);
+        $other = Team::factory()->create();
+        Domain::factory()->verified()->for($other)->create(['domain' => 'acme.myapp.com']);
+        Domain::factory()->verified()->for($other)->create(['domain' => 'portal.acme.myapp.com']);
+
+        $this->assertTrue(TeamHostResolver::resolve('acme.myapp.com')->is($acme));
+        $this->assertNull(TeamHostResolver::resolve('portal.acme.myapp.com'));
+    }
+
     public function test_a_platform_subdomain_resolves_by_slug(): void
     {
         $this->enableHostMode();
@@ -141,6 +154,15 @@ class TeamHostRoutingTest extends TestCase
         $this->assertSame('admin', Team::uniqueSlug('Admin'));
     }
 
+    public function test_unique_slug_never_lands_on_the_admin_or_account_host(): void
+    {
+        $this->enableHostMode();
+        config(['teams.domains.admin_host' => 'console.myapp.com', 'teams.domains.account_host' => 'members.myapp.com']);
+
+        $this->assertSame('console-2', Team::uniqueSlug('Console'));
+        $this->assertSame('members-2', Team::uniqueSlug('Members'));
+    }
+
     // --- TeamHostResolver::hostFor + team_route() ---------------------------
 
     public function test_host_for_prefers_a_verified_primary_domain_else_the_platform_subdomain(): void
@@ -154,6 +176,15 @@ class TeamHostRoutingTest extends TestCase
         // A verified primary custom domain wins.
         Domain::factory()->verified()->primary()->for($team)->create(['domain' => 'acme.com']);
         $this->assertSame('acme.com', TeamHostResolver::hostFor($team->fresh()));
+    }
+
+    public function test_host_for_ignores_a_primary_domain_under_the_base(): void
+    {
+        $this->enableCustomDomains();
+        $team = Team::factory()->create(['slug' => 'beta']);
+        Domain::factory()->verified()->primary()->for($team)->create(['domain' => 'acme.myapp.com']);
+
+        $this->assertSame('beta.myapp.com', TeamHostResolver::hostFor($team->fresh()));
     }
 
     public function test_relabelling_a_team_moves_its_canonical_host(): void

@@ -98,6 +98,45 @@ class DomainManagementTest extends TestCase
         app(CreateDomain::class)(Team::factory()->create(), 'members.myapp.test');
     }
 
+    /**
+     * Hosts the platform owns, and their parents, can't be claimed (GitHub
+     * oobi#26): another team's `{slug}.base`, anything else under `base`, the
+     * base itself, the admin and account hosts and anything under them, and the
+     * operator's own parent domain.
+     */
+    public function test_it_rejects_hosts_the_platform_owns(): void
+    {
+        config([
+            'teams.domains.enabled' => true,
+            'teams.domains.base' => 'teams.myapp.test',
+            'teams.domains.admin_host' => 'control.ops.test',
+            'teams.domains.account_host' => 'members.myapp.test',
+        ]);
+        $team = Team::factory()->create();
+
+        foreach (['acme.teams.myapp.test', 'portal.acme.teams.myapp.test', 'teams.myapp.test', 'myapp.test', 'x.control.ops.test', 'ops.test', 'x.members.myapp.test'] as $domain) {
+            $this->assertThrows(fn () => app(CreateDomain::class)($team, $domain), InvalidArgumentException::class, team_trans('domains.reserved'));
+        }
+
+        $this->assertSame('acme.com', app(CreateDomain::class)($team, 'acme.com')->domain);
+        // A sibling of a subdomain `base` is still the operator's to grant (the one case custom domains work today).
+        $this->assertSame('acme.myapp.test', app(CreateDomain::class)($team, 'acme.myapp.test')->domain);
+    }
+
+    public function test_the_add_domain_form_rejects_another_teams_platform_host(): void
+    {
+        $this->enableCustomDomains();
+        config(['teams.domains.base' => 'myapp.test', 'teams.domains.admin_host' => 'admin.myapp.test']);
+        $team = Team::factory()->create();
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ManageDomains::class, ['team' => $team])
+            ->callAction('addDomain', data: ['domain' => 'acme.myapp.test'])
+            ->assertHasFormErrors(['domain']);
+
+        $this->assertSame(0, $team->domains()->count());
+    }
+
     public function test_it_rejects_a_duplicate_regardless_of_casing(): void
     {
         $team = Team::factory()->create();
