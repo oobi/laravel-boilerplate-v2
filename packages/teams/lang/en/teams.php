@@ -7,7 +7,7 @@
 |
 | Short keys, read through team_trans('group.key') — which also supplies the
 | project's words from config('teams.labels'): `:team`/`:teams`,
-| `:member`/`:members` and `:owner`/`:owners` are the lower-case singular /
+| `:member`/`:members` and `:owner`/`:owners` are the lower-cased (acronyms kept) singular /
 | plural ("team"/"salon", "member"/"stylist", "owner"/"manager"), and their
 | capitalised forms (`:Team`, `:Members`, `:Owner`, …) are sentence-cased by
 | Laravel automatically. A specific team's *name* is always `:name`, a specific
