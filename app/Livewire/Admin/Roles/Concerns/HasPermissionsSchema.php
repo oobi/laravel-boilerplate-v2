@@ -46,6 +46,9 @@ use Illuminate\Support\Str;
  */
 trait HasPermissionsSchema
 {
+    /** @var array<string, array<string, string>> scope key => category label => field (permissionsFieldName()) */
+    private array $permissionsFieldNames = [];
+
     /** The scope whose vocabulary the form edits. */
     abstract protected function roleScope(): RoleScope;
 
@@ -148,9 +151,40 @@ trait HasPermissionsSchema
         return collect($permissions)->every(fn (string $permission): bool => $this->mayGrant($permission));
     }
 
+    /**
+     * The category's field: `permissions_{slug}`, readable in Livewire state
+     * and tests. Categories group by exact label, so a label whose slug is
+     * empty (one written only in, say, Japanese) or already taken by an
+     * earlier label ("User Management" after "User management") gets a short
+     * hash of the label appended; otherwise the two would share one field and
+     * one category's ticks would overwrite the other's. Named from the whole
+     * vocabulary, so a field keeps its name when some permissions aren't
+     * offered here.
+     */
     protected function permissionsFieldName(string $category): string
     {
-        return 'permissions_'.Str::slug($category, '_');
+        $scope = $this->roleScope();
+
+        // Worked out once per request and scope: every field of every category asks.
+        if (! isset($this->permissionsFieldNames[$scope->key()])) {
+            $fields = [];
+
+            foreach (array_keys($scope->permissions()) as $label) {
+                $slug = Str::slug($label, '_');
+                $field = 'permissions_'.$slug;
+
+                if ($slug === '' || in_array($field, $fields, true)) {
+                    $hash = substr(md5($label), 0, 8);
+                    $field = 'permissions_'.($slug === '' ? $hash : "{$slug}_{$hash}");
+                }
+
+                $fields[$label] = $field;
+            }
+
+            $this->permissionsFieldNames[$scope->key()] = $fields;
+        }
+
+        return $this->permissionsFieldNames[$scope->key()][$category];
     }
 
     /**
