@@ -29,12 +29,32 @@ class ComponentGallery extends Component
 
     public string $dueDate = '';
 
+    // <x-date-picker inline> and display="heading" demos.
+    public string $openingDay = '';
+
+    public string $scheduleDay = '';
+
     // <x-listbox> demo.
     public string $priority = '';
 
     public function mount(): void
     {
         Gate::authorize(SystemPermission::ACCESS_ADMIN_PANEL->value);
+
+        $this->openingDay = $this->scheduleDay = now()->toDateString();
+    }
+
+    /**
+     * Demo closed days for the inline picker: two days this month.
+     *
+     * @return list<string>
+     */
+    public function closedDays(): array
+    {
+        return [
+            now()->startOfMonth()->addDays(9)->toDateString(),
+            now()->startOfMonth()->addDays(20)->toDateString(),
+        ];
     }
 
     public function render(): View

@@ -161,6 +161,55 @@ these.
 - Text in brand blue, grey or red uses `--color-primary-text`, `--color-neutral-text` or
   `--color-error-text` (utilities `text-primary-text`, `text-error-text`).
 
+## Date picker
+
+`<x-date-picker>` is one component for every date or date range: a
+select-style button that opens a month (with optional presets), bound to a
+Livewire property. Its docblock lists every prop. Today is drawn as an
+outline and the chosen day (or range) is filled, so the two never look
+alike. Three modes cover the other places a date shows up:
+
+- **`inline`** (single dates only) is the month itself, always open with no
+  button, e.g. a month in a sidebar. Give it a `label` to name it for screen
+  readers. Whenever the month on screen changes it
+  dispatches `date-picker-month` on the window with `{ id, month }` (the
+  picker's id and "Y-m"), so text beside it can follow the month. Check the
+  id: another inline picker on the page sends the same event.
+- **`marked`** ("Y-m-d" dates) and **`marked-weekdays`** (ISO weekdays,
+  1 = Monday), inline only, shade and strike through days such as closures.
+  The mark is visual only and the days can still be chosen, so say in text
+  what it means.
+- **`display="heading"`** writes the date out as a large button, for a page
+  whose title is the date (a day's schedule). Put it inside the page's
+  `<h1>` so it is still the heading. Give it a `hint` saying what it does:
+  the button's name is the date followed by the hint ("Sunday November 1,
+  jump to a date"), so it starts with the text you can see. The date follows
+  the app's locale and shortens on phones.
+
+```blade
+<div
+    x-data="{ month: @js(now()->format('Y-m')) }"
+    x-on:date-picker-month.window="$event.detail.id === 'opening-days' && (month = $event.detail.month)"
+>
+    <x-date-picker
+        inline
+        id="opening-days"
+        :label="__('Opening days')"
+        model="day"
+        mode="single"
+        :marked="$closures"
+        :marked-weekdays="[6, 7]"
+    />
+    <p class="text-sm text-muted">{{ __('Struck-through days are closed.') }}</p>
+</div>
+
+<h1>
+    <x-date-picker display="heading" model="day" mode="single" :hint="__('jump to a date')" />
+</h1>
+```
+
+The component gallery's "Date picker modes" card shows both.
+
 ## Tables
 
 `filament-table.css` themes every Filament table. Two parts of it apply only
