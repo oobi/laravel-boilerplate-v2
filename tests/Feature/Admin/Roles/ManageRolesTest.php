@@ -15,6 +15,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Tests\Fixtures\AuditPermission;
+use Tests\Fixtures\UserExportPermission;
 use Tests\TestCase;
 
 class ManageRolesTest extends TestCase
@@ -86,6 +87,48 @@ class ManageRolesTest extends TestCase
             [AuditPermission::EXPORT_AUDIT_LOG->value, AuditPermission::VIEW_AUDIT_LOG->value, SystemPermission::ACCESS_ADMIN_PANEL->value],
             $role->fresh()->permissions->pluck('name')->all(),
         );
+    }
+
+    public function test_categories_whose_labels_slug_alike_keep_their_own_fields(): void
+    {
+        SystemPermissionRegistry::register(UserExportPermission::class);
+        $admin = User::factory()->superAdmin()->create();
+        $role = Role::findOrCreate('Exporter');
+        $role->givePermissionTo(Permission::findOrCreate(UserExportPermission::EXPORT_USERS->value));
+        $role->givePermissionTo(collect([SystemPermission::VIEW_USERS, SystemPermission::MANAGE_USERS, SystemPermission::ACCESS_ADMIN_PANEL])
+            ->map(fn (SystemPermission $permission): Permission => Permission::findOrCreate($permission->value)));
+
+        // Core's "User management" keeps its plain field; the add-on's "User Management" gets its own.
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSet('data.permissions_user_management', [SystemPermission::VIEW_USERS->value, SystemPermission::MANAGE_USERS->value])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEqualsCanonicalizing(
+            [UserExportPermission::EXPORT_USERS->value, SystemPermission::VIEW_USERS->value, SystemPermission::MANAGE_USERS->value, SystemPermission::ACCESS_ADMIN_PANEL->value],
+            $role->fresh()->permissions->pluck('name')->all(),
+        );
+    }
+
+    public function test_categories_whose_labels_slug_to_nothing_keep_their_own_fields(): void
+    {
+        app('translator')->addLines([
+            'permissions.categories.user_management' => 'ユーザー管理',
+            'permissions.categories.system_administration' => 'システム管理',
+        ], 'en');
+        $admin = User::factory()->superAdmin()->create();
+        // Only panel entry: nothing in User management carries it back on save.
+        $role = Role::findOrCreate('Viewer');
+        $role->givePermissionTo(Permission::findOrCreate(SystemPermission::ACCESS_ADMIN_PANEL->value));
+
+        Livewire::actingAs($admin)
+            ->test(ManageRoles::class, ['role' => $role])
+            ->assertSee('ユーザー管理')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame([SystemPermission::ACCESS_ADMIN_PANEL->value], $role->fresh()->permissions->pluck('name')->all());
     }
 
     public function test_ticking_an_action_ticks_and_locks_its_read_floor_and_panel_entry_across_categories(): void
