@@ -309,6 +309,45 @@
         </div>
     </x-card>
 
+    {{-- <x-date-picker inline> with marked days, and display="heading" --}}
+    <x-card :title="__('Date picker modes')">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div
+                class="flex max-w-xs flex-col gap-2"
+                x-data="{ month: @js(now()->format('Y-m')) }"
+                x-on:date-picker-month.window="$event.detail.id === 'date-picker-demo-inline' && (month = $event.detail.month)"
+            >
+                <div class="text-sm font-semibold">{{ __('Inline, with closed days') }}</div>
+                <x-date-picker
+                    inline
+                    id="date-picker-demo-inline"
+                    :label="__('Opening days')"
+                    model="openingDay"
+                    mode="single"
+                    :marked="$this->closedDays()"
+                    :marked-weekdays="[6, 7]"
+                />
+                <p class="text-sm text-muted">{{ __('Struck-through days are closed: weekends, and two days this month.') }}</p>
+                <div class="ui-subtle text-xs">
+                    {{ __('Value') }}: <code>{{ $openingDay }}</code>,
+                    {{ __('month on screen') }}: <code x-text="month"></code>
+                </div>
+            </div>
+
+            <div class="flex min-w-0 flex-col gap-2">
+                <div class="text-sm font-semibold">{{ __('Heading') }}</div>
+                <x-date-picker
+                    id="date-picker-demo-heading"
+                    model="scheduleDay"
+                    mode="single"
+                    display="heading"
+                    :hint="__('jump to a date')"
+                />
+                <div class="ui-subtle text-xs">{{ __('Value') }}: <code>{{ $scheduleDay }}</code></div>
+            </div>
+        </div>
+    </x-card>
+
     <x-card :title="__('Listbox')">
         <div class="flex max-w-xs flex-col gap-2">
             <x-listbox
