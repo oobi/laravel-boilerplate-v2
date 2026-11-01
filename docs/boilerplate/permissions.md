@@ -165,6 +165,16 @@ page load. So:
 - **A write check** (one record's ability, such as `UserAbility::UPDATE` on
   Edit user) goes in each action, which re-authorizes when it runs.
 
+What the person sees: an update refused with a 403 reloads the page
+(`resources/js/components/livewire-access.js`) instead of showing Livewire's
+error overlay, so the server shows the right page: the 403 page with a way
+home, or the page itself if only that one action was refused. If the same page
+is refused again within a few seconds (say a polling or lazy request), the
+overlay shows once instead, so the page can't reload in a loop. Sign-outs need
+none of this: Livewire follows the redirect to login itself, and a deactivated
+account's sessions are deleted, so its next click is a 419 and Livewire's own
+"page expired, refresh?" prompt handles it.
+
 Livewire::test() skips all of this. To test it, render the page with
 `$this->get()` and send an update with the `livewireUpdate()` helper in
 `tests/TestCase.php`, as `LivewireUpdateAuthorizationTest` does.

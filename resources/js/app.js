@@ -3,6 +3,7 @@ import './bootstrap';
 import 'cally';
 import { initTabScrollControllers } from './components/tab-scroll.js';
 import { initTableSelectionGuard } from './components/table-selection.js';
+import { initLivewireAccessHandling } from './components/livewire-access.js';
 
 const initializeTabScrollControllers = () => {
     initTabScrollControllers();
@@ -13,3 +14,6 @@ document.addEventListener('livewire:navigated', initializeTabScrollControllers);
 
 document.addEventListener('DOMContentLoaded', initTableSelectionGuard);
 document.addEventListener('livewire:navigated', initTableSelectionGuard);
+
+// A Livewire update refused for lost access (401/403) reloads the page instead of showing the error overlay.
+initLivewireAccessHandling();
