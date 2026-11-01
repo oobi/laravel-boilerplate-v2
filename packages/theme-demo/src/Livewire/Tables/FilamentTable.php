@@ -32,6 +32,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -58,6 +59,10 @@ use Livewire\Component;
  * header cells instead; its "View" opens a modal with the extra detail as a
  * substitute for the expand. Two genuinely different Filament trade-offs,
  * not a bug in either.
+ *
+ * "grouped" groups rows by status and shows each row's email under its
+ * name, so rows are tall: the group headings and `ui-cells-top` (cells and
+ * the row menu level with the first line) from filament-table.css.
  */
 class FilamentTable extends Component implements HasActions, HasSchemas, HasTable
 {
@@ -65,7 +70,7 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
     use InteractsWithSchemas;
     use InteractsWithTable;
 
-    private const VARIANTS = ['empty', 'simple', 'maximalist', 'custom-header', 'wide'];
+    private const VARIANTS = ['empty', 'simple', 'maximalist', 'custom-header', 'wide', 'grouped'];
 
     /** Variants with the full DemoRows set + search/sort/filter/bulk/action-menu — everything but "empty", "simple" and "wide". */
     private const FULL_FEATURED_VARIANTS = ['maximalist', 'custom-header'];
@@ -143,6 +148,7 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
     {
         $isFullFeatured = in_array($this->variant, self::FULL_FEATURED_VARIANTS, true);
         $isWide = $this->variant === 'wide';
+        $isGrouped = $this->variant === 'grouped';
 
         $table = $table
             ->records(function (?string $search, ?string $sortColumn, ?string $sortDirection, ?array $filters, int|string $page, int|string $recordsPerPage) use ($isFullFeatured, $isWide): LengthAwarePaginator {
@@ -153,6 +159,8 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                 $rows = match (true) {
                     $this->variant === 'simple' => DemoRows::take(8)->keyBy('id'),
                     $isWide => DemoRows::take(10)->keyBy('id'),
+                    // Custom data isn't sorted for grouping, so keep each status together.
+                    $this->variant === 'grouped' => DemoRows::take(12)->sortBy(fn (DemoRow $row): int => array_search($row->status, DemoStatus::cases(), true))->keyBy('id'),
                     $this->variant === 'custom-header' && $this->trashedFilter === '0' => DemoRows::trashed()->keyBy('id'),
                     default => DemoRows::all()->keyBy('id'),
                 };
@@ -218,7 +226,7 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                     (int) $page,
                 );
             })
-            ->columns($isWide ? $this->wideColumns() : [
+            ->columns($isWide ? $this->wideColumns() : ($isGrouped ? $this->groupedColumns() : [
                 ...($this->variant === 'maximalist'
                     ? [Split::make($this->primaryColumns($isFullFeatured))->from('lg')]
                     : $this->primaryColumns($isFullFeatured)),
@@ -237,10 +245,27 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                             ->columnSpanFull(),
                     ])->collapsible(),
                 ] : []),
-            ])
+            ]))
             ->emptyStateHeading(__('theme-demo::messages.tables_empty_message'))
             ->emptyStateDescription(__('theme-demo::messages.tables_empty_hint'))
             ->paginated([10, 25]);
+
+        if ($isGrouped) {
+            return $table
+                ->defaultGroup(Group::make('status')
+                    ->getTitleFromRecordUsing(fn (array $record): string => $record['status']->getLabel())
+                    ->titlePrefixedWithLabel(false))
+                ->groupingSettingsHidden()
+                ->extraAttributes(['class' => 'ui-cells-top'])
+                ->recordActions([
+                    ActionGroup::make([
+                        Action::make('view')
+                            ->label(__('View'))
+                            ->icon('heroicon-o-eye')
+                            ->action(fn (array $record) => Notification::make()->title(__('Demo only: nothing to view.'))->send()),
+                    ]),
+                ]);
+        }
 
         if (! $isFullFeatured) {
             return $table;
@@ -392,6 +417,19 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
         }
 
         return $columns;
+    }
+
+    /** @return list<TextColumn> */
+    private function groupedColumns(): array
+    {
+        return [
+            TextColumn::make('name')
+                ->label(__('Name'))
+                ->weight('medium')
+                ->description(fn (array $record): string => $record['email'])
+                ->wrap(),
+            TextColumn::make('joined_at')->label(__('Joined'))->date(),
+        ];
     }
 
     /** @return array<string, mixed> */

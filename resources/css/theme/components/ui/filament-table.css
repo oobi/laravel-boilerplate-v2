@@ -185,6 +185,28 @@ th.fi-ta-selection-cell,
 }
 
 /*
+|--------------------------------------------------------------------------
+| Grouped rows and tall rows
+|--------------------------------------------------------------------------
+| A grouped table's group heading (->defaultGroup()) reads like the column
+| headers: small uppercase, muted. A table whose rows are tall (a name with a
+| description under it) adds `ui-cells-top` through ->extraAttributes(), so
+| its other cells and the row menu sit level with the first line, not
+| mid-row.
+*/
+.fi-ta-group-header .fi-ta-group-heading {
+    @apply text-muted;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.ui-cells-top .fi-ta-cell {
+    vertical-align: top;
+}
+
+/*
 | Filament paints an empty cell's placeholder ("Never", "None") gray-400,
 | 3.35:1 on white; muted text clears AA. Infolists match (filament-infolist.css).
 */

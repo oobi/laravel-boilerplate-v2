@@ -114,6 +114,8 @@ list with the reason. See `.ai/rules/views.md`.
 | `<x-table-trash-toggle>` | active/trashed record-count toggle inside a `counts` slot | `model`, `value`, `activeCount`, `trashedCount` |
 | `<x-table-empty-trash-action>` | destructive header action button inside an `actions` slot | `action` (Filament action method name) |
 
+A Filament table with tall rows adds `->extraAttributes(['class' => 'ui-cells-top'])`, so its cells and the ⋮ menu sit level with the first line (`docs/boilerplate/design-system.md`, Tables). Group headings are styled with no class; `<x-tabs-nav flush>` adds `ui-flush-content` for a table that fills its panel.
+
 ### Tabs
 
 | Component | Use instead of | Key props |
