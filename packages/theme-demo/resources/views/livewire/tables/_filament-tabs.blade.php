@@ -39,3 +39,11 @@
 >
     {{ __('theme-demo::messages.tables_tab_wide') }}
 </x-tabs-item>
+
+<x-tabs-item
+    :active="$variant === 'grouped'"
+    href="{{ route('style-demo.tables-filament-grouped') }}"
+    icon="heroicon-o-queue-list"
+>
+    {{ __('theme-demo::messages.tables_tab_grouped') }}
+</x-tabs-item>

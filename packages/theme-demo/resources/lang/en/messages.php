@@ -33,6 +33,7 @@ return [
     'tables_tab_maximalist' => 'Maximalist',
     'tables_tab_custom_header' => 'Custom header',
     'tables_tab_wide' => 'Wide',
+    'tables_tab_grouped' => 'Grouped',
     'tables_wide_description' => '~20 columns, to see how it scrolls (or doesn\'t) and how responsive it is (or isn\'t).',
 
     'filament_table_title' => 'Filament table',

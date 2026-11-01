@@ -32,6 +32,7 @@ Route::middleware(['web', 'auth', 'verified'])
         Route::get('/tables/filament/maximalist', FilamentTable::class)->name('tables-filament-maximalist')->defaults('variant', 'maximalist');
         Route::get('/tables/filament/custom-header', FilamentTable::class)->name('tables-filament-custom-header')->defaults('variant', 'custom-header');
         Route::get('/tables/filament/wide', FilamentTable::class)->name('tables-filament-wide')->defaults('variant', 'wide');
+        Route::get('/tables/filament/grouped', FilamentTable::class)->name('tables-filament-grouped')->defaults('variant', 'grouped');
         Route::get('/forms/daisy', DaisyForm::class)->name('forms-daisy')->defaults('variant', 'floating');
         Route::get('/forms/daisy/standard', DaisyForm::class)->name('forms-daisy-standard')->defaults('variant', 'standard');
         Route::get('/forms/filament', FilamentForm::class)->name('forms-filament');

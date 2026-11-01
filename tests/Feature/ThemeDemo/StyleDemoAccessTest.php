@@ -178,6 +178,7 @@ class StyleDemoAccessTest extends TestCase
             'filament table maximalist' => ['/admin/style-demo/tables/filament/maximalist'],
             'filament table custom header' => ['/admin/style-demo/tables/filament/custom-header'],
             'filament table wide' => ['/admin/style-demo/tables/filament/wide'],
+            'filament table grouped' => ['/admin/style-demo/tables/filament/grouped'],
             'daisy form' => ['/admin/style-demo/forms/daisy'],
             'daisy form standard' => ['/admin/style-demo/forms/daisy/standard'],
             'filament form' => ['/admin/style-demo/forms/filament'],

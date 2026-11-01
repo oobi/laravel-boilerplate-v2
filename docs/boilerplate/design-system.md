@@ -161,6 +161,30 @@ these.
 - Text in brand blue, grey or red uses `--color-primary-text`, `--color-neutral-text` or
   `--color-error-text` (utilities `text-primary-text`, `text-error-text`).
 
+## Tables
+
+`filament-table.css` themes every Filament table. Two parts of it apply only
+when a table asks for them:
+
+- **Group headings.** A grouped table's headings (`->defaultGroup()`) read
+  like the column headers: small uppercase in muted text. Nothing to add.
+- **`ui-cells-top`** lines up every cell, and the ⋮ menu, with the top of its
+  row instead of the middle. Add it to a table whose rows are tall (a name
+  with a note under it), so the date beside the name sits on its line.
+
+```php
+return $table
+    // Group by month: sort on the real column, key and title from its value.
+    ->defaultGroup(Group::make('created_at')
+        ->getKeyFromRecordUsing(fn (Note $note): string => $note->created_at->format('Y-m'))
+        ->getTitleFromRecordUsing(fn (Note $note): string => $note->created_at->format('F Y'))
+        ->titlePrefixedWithLabel(false))
+    ->groupingSettingsHidden()
+    ->extraAttributes(['class' => 'ui-cells-top']);
+```
+
+The gallery's Filament table has a Grouped tab showing both.
+
 ## Modals
 
 Every modal is built on **`<x-modal>`**, which renders a native `<dialog>`. That

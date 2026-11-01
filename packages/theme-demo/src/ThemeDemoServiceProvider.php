@@ -46,7 +46,7 @@ class ThemeDemoServiceProvider extends ServiceProvider
                     ->label(__('theme-demo::messages.nav_filament_table'))
                     ->route('style-demo.tables-filament-empty')
                     ->icon('heroicon-o-table-cells')
-                    ->active('style-demo.tables-filament-empty', 'style-demo.tables-filament-simple', 'style-demo.tables-filament-maximalist', 'style-demo.tables-filament-custom-header', 'style-demo.tables-filament-wide'),
+                    ->active('style-demo.tables-filament-empty', 'style-demo.tables-filament-simple', 'style-demo.tables-filament-maximalist', 'style-demo.tables-filament-custom-header', 'style-demo.tables-filament-wide', 'style-demo.tables-filament-grouped'),
                 NavItem::make('style-demo-forms-daisy')
                     ->label(__('theme-demo::messages.nav_forms_daisy'))
                     ->route('style-demo.forms-daisy')
