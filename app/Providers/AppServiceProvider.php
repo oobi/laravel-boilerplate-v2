@@ -102,10 +102,16 @@ class AppServiceProvider extends ServiceProvider
      * Every table only shows the page sizes it offers: a tampered
      * `tableRecordsPerPage` (say 100000) falls back to the default instead of
      * loading that many rows (GitHub oobi#63, Filament 5.11's opt-in guard).
+     *
+     * Every table stacks each row into a card on a phone instead of scrolling
+     * sideways; a genuinely wide data grid opts out with `->stackedOnMobile(false)`.
+     * The cards are tightened in filament-table.css (see .ai/rules/tables.md).
      */
     private function registerFilamentTableDefaults(): void
     {
-        Table::configureUsing(fn (Table $table): Table => $table->enforcePaginationPageOptions());
+        Table::configureUsing(fn (Table $table): Table => $table
+            ->enforcePaginationPageOptions()
+            ->stackedOnMobile());
     }
 
     /**

@@ -175,6 +175,18 @@ class ListUsersTest extends TestCase
         $this->assertSame(50, $table->instance()->getTableRecordsPerPage());
     }
 
+    /** On a phone every table stacks its rows (the global default), and the users list uses the compact rows. */
+    public function test_the_table_stacks_its_rows_on_a_phone(): void
+    {
+        $table = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListUsers::class)
+            ->instance()
+            ->getTable();
+
+        $this->assertTrue($table->isStackedOnMobile());
+        $this->assertStringContainsString('ui-stacked-compact', $table->getExtraAttributeBag()->get('class'));
+    }
+
     public function test_selected_users_can_be_bulk_deleted(): void
     {
         $admin = User::factory()->superAdmin()->create();

@@ -8,6 +8,7 @@ use Concise\ThemeDemo\Livewire\Forms\DaisyForm;
 use Concise\ThemeDemo\Livewire\ModalGallery;
 use Concise\ThemeDemo\Livewire\Tables\FilamentTable;
 use Concise\ThemeDemo\Livewire\Tables\MaximalistTable;
+use Filament\Tables\Columns\Layout\Grid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -99,6 +100,25 @@ class StyleDemoAccessTest extends TestCase
         Livewire::test(FilamentTable::class, ['variant' => 'maximalist'])
             ->call('sortTable', 'joined_at')
             ->assertSet('tableSort', 'joined_at:asc');
+    }
+
+    /** The wide demo is the data grid that opts out of the stacked phone layout every other table gets. */
+    public function test_only_the_wide_demo_opts_out_of_stacked_rows(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $this->assertFalse(Livewire::test(FilamentTable::class, ['variant' => 'wide'])->instance()->getTable()->isStackedOnMobile());
+        $this->assertTrue(Livewire::test(FilamentTable::class, ['variant' => 'simple'])->instance()->getTable()->isStackedOnMobile());
+    }
+
+    /** A Grid, not a Split: a Split sizes each row's columns to their content, so nothing lines up. */
+    public function test_the_maximalist_demo_lines_its_rows_up_with_a_grid(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $layout = Livewire::test(FilamentTable::class, ['variant' => 'maximalist'])->instance()->getTable()->getColumnsLayout();
+
+        $this->assertInstanceOf(Grid::class, $layout[0]);
     }
 
     public function test_the_custom_header_demo_filters_by_joined_dates(): void

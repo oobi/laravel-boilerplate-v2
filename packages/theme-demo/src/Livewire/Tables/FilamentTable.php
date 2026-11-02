@@ -20,11 +20,17 @@ use Filament\Forms\Components\Hidden;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\IconPosition;
+use Filament\Support\Enums\TextSize;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Panel;
 use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -38,6 +44,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\HtmlString;
 use Livewire\Component;
 
 /**
@@ -49,16 +56,17 @@ use Livewire\Component;
  * view, swapping Filament's own header for OUR <x-table-header>, the same
  * way every *real* admin table in this app does it (see ListUsers).
  *
- * "maximalist" keeps Filament's native row-expansion (Split + a collapsible
- * Panel column) — but ANY Layout\Component among the columns makes Filament
- * render every row through its generic layout renderer instead of plain
- * <table>/<tr>/<td>, unconditionally (confirmed at 1600px wide, not a mobile
- * fallback): Split still lines up each row correctly, but the header row is
+ * "maximalist" keeps Filament's native row-expansion (a Grid + a collapsible
+ * Panel, see maximalistColumns()). But ANY Layout\Component among the columns
+ * makes Filament render every row through its generic layout renderer instead
+ * of plain <table>/<tr>/<td>, unconditionally (confirmed at 1600px wide, not a
+ * mobile fallback): a Grid lines up each row, but the header row is
  * always a "Sort by" dropdown, never real sortable <th> cells. So
  * "custom-header" drops Split/Panel entirely for the classic table with real
  * header cells instead; its "View" opens a modal with the extra detail as a
  * substitute for the expand. Two genuinely different Filament trade-offs,
- * not a bug in either.
+ * not a bug in either. Neither is the way to make a table fit a phone: that's
+ * ->stackedOnMobile(), on for every table (see .ai/rules/tables.md).
  *
  * "grouped" groups rows by status and shows each row's email under its
  * name, so rows are tall: the group headings and `ui-cells-top` (cells and
@@ -226,26 +234,15 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                     (int) $page,
                 );
             })
-            ->columns($isWide ? $this->wideColumns() : ($isGrouped ? $this->groupedColumns() : [
-                ...($this->variant === 'maximalist'
-                    ? [Split::make($this->primaryColumns($isFullFeatured))->from('lg')]
-                    : $this->primaryColumns($isFullFeatured)),
-
-                // A Layout\Component (Split here, Panel below) among the columns makes
-                // Filament render every row through its own generic layout renderer
-                // instead of plain <table>/<tr>/<td> — confirmed at 1600px wide, so it's
-                // not a responsive/mobile fallback. "custom-header" never uses Split or
-                // Panel, precisely so its classic table with real header cells survives
-                // (see FULL_FEATURED_VARIANTS docblock); "maximalist" accepts the
-                // trade-off for row-alignment + the collapsible detail panel below.
-                ...($this->variant === 'maximalist' ? [
-                    Panel::make([
-                        TextColumn::make('detail')
-                            ->label(__('Detail'))
-                            ->columnSpanFull(),
-                    ])->collapsible(),
-                ] : []),
-            ]))
+            ->columns(match (true) {
+                $isWide => $this->wideColumns(),
+                $isGrouped => $this->groupedColumns(),
+                $this->variant === 'maximalist' => $this->maximalistColumns(),
+                default => $this->primaryColumns($isFullFeatured),
+            })
+            // Every table stacks its rows on a phone (AppServiceProvider); "wide" is the
+            // genuinely wide data grid that opts out and keeps the sideways scroll.
+            ->stackedOnMobile(! $isWide)
             ->emptyStateHeading(__('theme-demo::messages.tables_empty_message'))
             ->emptyStateDescription(__('theme-demo::messages.tables_empty_hint'))
             ->paginated([10, 25]);
@@ -360,6 +357,98 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                 ->sortable($isFullFeatured),
 
             ...($isFullFeatured ? $this->extraColumns() : []),
+        ];
+    }
+
+    /**
+     * The maximalist row: a Grid layout, not a Split. A Split sizes each column
+     * to its own content, so nothing lines up from one row to the next; a Grid
+     * gives every row the same tracks. Twelve on a wide table (the person, then
+     * status, joined date and priority in fixed columns), two on a narrow one
+     * (the person across the top, status and date side by side, then the
+     * priority select across the row). The switch goes by the table's own width
+     * (`@4xl`, a container query), not the screen's, so it holds beside the
+     * pinned sidebar. Every value names itself, since a layout table has no
+     * column headings: the priority options say "priority", the date has
+     * "Joined" above it and the verified badge has a screen-reader label. The detail
+     * and the featured toggle (with its word beside it) open in a collapsible
+     * panel.
+     *
+     * @return list<Grid|Panel>
+     */
+    private function maximalistColumns(): array
+    {
+        $demoOnly = fn (mixed $state) => Notification::make()->title(__('Demo only: nothing saved.'))->send();
+
+        return [
+            Grid::make(['default' => 2, '@4xl' => 12])->extraAttributes(['class' => 'items-center'])->schema([
+                Split::make([
+                    ImageColumn::make('avatar_url')
+                        ->label(__('Avatar'))
+                        ->circular()
+                        ->imageSize(40)
+                        ->grow(false),
+
+                    Stack::make([
+                        TextColumn::make('name')
+                            ->label(__('Name'))
+                            ->weight(FontWeight::Medium)
+                            // One inline span: a bare sr-only sibling would push the badge icon onto its own line.
+                            ->formatStateUsing(fn (string $state, array $record): string|HtmlString => $record['verified']
+                                ? new HtmlString('<span class="pe-1">'.e($state).'<span class="sr-only"> ('.e(__('verified')).')</span></span>')
+                                : $state)
+                            ->icon(fn (array $record): ?Heroicon => $record['verified'] ? Heroicon::CheckBadge : null)
+                            ->iconPosition(IconPosition::After)
+                            ->iconColor('info')
+                            ->searchable()
+                            ->sortable(),
+
+                        TextColumn::make('email')
+                            ->label(__('Email'))
+                            ->color('gray')
+                            ->size(TextSize::Small),
+                    ]),
+                ])->columnSpan(['default' => 2, '@4xl' => 5]),
+
+                TextColumn::make('status')
+                    ->label(__('Status'))
+                    ->badge()
+                    ->sortable()
+                    ->columnSpan(['default' => 1, '@4xl' => 2]),
+
+                TextColumn::make('joined_at')
+                    ->label(__('Joined'))
+                    ->date()
+                    ->description(__('Joined'), position: 'above')
+                    ->color('gray')
+                    ->sortable()
+                    ->columnSpan(['default' => 1, '@4xl' => 2]),
+
+                SelectColumn::make('priority')
+                    ->label(__('Priority'))
+                    ->options(['low' => __('Low priority'), 'medium' => __('Medium priority'), 'high' => __('High priority')])
+                    ->selectablePlaceholder(false)
+                    ->updateStateUsing($demoOnly)
+                    ->columnSpan(['default' => 2, '@4xl' => 3]),
+            ]),
+
+            Panel::make([
+                Split::make([
+                    TextColumn::make('detail')
+                        ->label(__('Detail')),
+
+                    Split::make([
+                        ToggleColumn::make('featured')
+                            ->label(__('Featured'))
+                            ->updateStateUsing($demoOnly)
+                            ->grow(false),
+
+                        TextColumn::make('featured_label')
+                            ->state(__('Featured'))
+                            ->size(TextSize::Small),
+                    ])->grow(false),
+                ])->from('md'),
+            ])->collapsible(),
         ];
     }
 

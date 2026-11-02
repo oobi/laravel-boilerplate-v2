@@ -86,6 +86,30 @@ class TeamDemoSeederTest extends TestCase
         $this->assertTrue(Team::query()->with('owner')->get()->every(fn (Team $team) => $team->owner->active));
     }
 
+    public function test_it_seeds_pending_and_expired_invitations_for_each_team(): void
+    {
+        Team::createRole('Team Admin', [TeamPermission::MANAGE_MEMBERS]);
+        Team::createRole('Member');
+
+        (new TeamSeeder)->run();
+
+        foreach (Team::query()->with('invitations')->get() as $team) {
+            $this->assertCount(3, $team->invitations->reject->isExpired(), "team {$team->slug} should have pending invitations");
+            $this->assertCount(1, $team->invitations->filter->isExpired(), "team {$team->slug} should have an expired invitation for the badge");
+        }
+    }
+
+    public function test_the_seeded_invitations_stay_pending_under_a_short_lifetime(): void
+    {
+        config(['teams.invitations.expires_after_days' => 1]);
+
+        (new TeamSeeder)->run();
+
+        foreach (Team::query()->with('invitations')->get() as $team) {
+            $this->assertCount(3, $team->invitations->reject->isExpired());
+        }
+    }
+
     public function test_it_seeds_short_slugs_from_the_first_word_of_the_name(): void
     {
         (new TeamSeeder)->run();

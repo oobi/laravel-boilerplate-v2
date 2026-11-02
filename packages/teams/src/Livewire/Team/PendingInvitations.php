@@ -92,7 +92,8 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(team_trans('invitations.sent'))
                     ->since()
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('md'),
 
                 // The date the link stops working; once past, an "Expired" badge (Resend starts it again).
                 // Formatted as ->date() would (display timezone and format), which can't take the override.

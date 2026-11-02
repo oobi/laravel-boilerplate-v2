@@ -46,6 +46,25 @@
         flex: 0 1 auto;
     }
 
+    /* On a phone the filters share the row in equal columns (two at 390px)
+       rather than each taking its own width; one too wide for its column
+       truncates instead of pushing the row out. */
+    @media (width < 40rem) {
+        .ui-toolbar__filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+            flex: 1 1 100%;
+
+            & > * {
+                min-width: 0;
+            }
+
+            & .select {
+                width: 100%;
+            }
+        }
+    }
+
     .ui-toolbar__counts {
         display: flex;
         align-items: center;
