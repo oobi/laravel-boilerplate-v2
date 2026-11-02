@@ -133,3 +133,20 @@ Independent of the recipes above, tune per project:
 The three label pairs also drive the **seeded default role names** — a relabelled
 install seeds "Salon Admin" / "Stylist" rather than "Team Admin" / "Member".
 Roles are editable data afterwards, so this is just a coherent starting point.
+
+## Environment banner
+
+Set `ENVIRONMENT_BANNER_TEXT` in local and staging `.env` files to show a strip
+across the top of every page (public, login, error, account and admin), so no
+one mistakes a test site for the live one. Leave it unset in production: no
+text, no banner.
+
+```
+ENVIRONMENT_BANNER_TEXT='STAGING - not live data'
+ENVIRONMENT_BANNER_COLOR='#facc15'
+```
+
+The colour is a `#rgb` or `#rrggbb` hex value (default `#facc15`); anything
+else falls back to the default. The text is black or white, whichever contrasts
+more with it. Long text is cut short to fit a narrow screen. The strip stacks
+above the impersonation banner when both show.

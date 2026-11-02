@@ -12,6 +12,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Http/Controllers/LoginOnlyHomeController.php | .ai/rules/http-controllers.md |
 | app/Livewire/**, packages/*/src/Livewire/** | .ai/rules/infolists.md |
 | lang/** | .ai/rules/lang.md |
+| resources/views/layouts/**, resources/views/components/app-shell.blade.php | .ai/rules/layouts.md |
 | app/Livewire/** | .ai/rules/livewire.md |
 | app/Models/** | .ai/rules/models.md |
 | app/Policies/** | .ai/rules/policies.md |

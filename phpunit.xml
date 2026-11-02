@@ -36,6 +36,8 @@
         <env name="AUTH_2FA_GRACE_DAYS" value="14"/>
         <env name="AUTH_2FA_ENFORCEMENT" value="true"/>
         <env name="AUTH_2FA_SUPER_ADMINS" value="false"/>
+        <!-- No environment banner unless a test turns it on, whatever a developer's .env sets. -->
+        <env name="ENVIRONMENT_BANNER_TEXT" value=""/>
         <!-- teams:start (bp:remove-teams strips these with the tier) -->
         <!-- Pin the teams tier to its defaults so the suite is deterministic regardless of a
              developer's .env (relabelling, creation mode, invitations). Tests that exercise a

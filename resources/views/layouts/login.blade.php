@@ -12,7 +12,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-dvh bg-base-200 flex flex-col items-center justify-center gap-6 px-4 pb-4 {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : 'pt-4' }}">
+{{-- Fixed top banners reserve their own space (layout.css), so the pt-4 drops when one shows. --}}
+@php($impersonating = auth()->check() && auth()->user()->isImpersonated())
+<body class="min-h-dvh bg-base-200 flex flex-col items-center justify-center gap-6 px-4 pb-4 {{ $impersonating ? 'is-impersonating' : '' }} {{ \App\Support\EnvironmentBanner::isShown() ? 'has-environment-banner' : '' }} {{ $impersonating || \App\Support\EnvironmentBanner::isShown() ? '' : 'pt-4' }}">
+    <x-environment-banner />
     {{-- A signed-in page here (confirm password) must still let an impersonator leave. --}}
     <x-impersonation-banner />
 
