@@ -17,7 +17,7 @@
             @endif
             {{ $label }}
         </span>
-        <x-heroicon-o-chevron-down class="h-4 w-4 transition-transform" ::class="{ 'rotate-180': !open }" aria-hidden="true" />
+        <x-heroicon-o-chevron-down class="h-4 w-4 transition-transform" ::class="{ 'rotate-180': open }" aria-hidden="true" />
     </button>
     <div :id="$id('nav-group')" x-show="open" x-collapse>
         {{ $slot }}

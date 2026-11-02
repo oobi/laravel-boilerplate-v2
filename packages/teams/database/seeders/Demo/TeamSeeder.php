@@ -6,12 +6,14 @@ namespace Concise\Teams\Database\Seeders\Demo;
 
 use App\Models\User;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Support\DomainPolicy;
 use Concise\Teams\Support\TeamLabels;
 use Concise\Teams\TeamsServiceProvider;
 use Database\Seeders\Demo\RefusesProduction;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
 
 /**
@@ -78,6 +80,7 @@ class TeamSeeder extends Seeder
             ));
 
             $this->seedNonActiveStatuses($team, $members);
+            $this->seedInvitations($team, $roles);
 
             return $team;
         });
@@ -112,6 +115,37 @@ class TeamSeeder extends Seeder
         if ($deactivated !== null && $deactivated->active) {
             $deactivated->update(['active' => false]);
         }
+    }
+
+    /**
+     * Give each team a few pending invitations so the Invitations tab shows a
+     * real table: sent at different times, across the team roles (and one with
+     * none), plus one expired invitation for the column's "Expired" badge.
+     *
+     * @param  SupportCollection<int, string>  $roles
+     */
+    private function seedInvitations(Team $team, SupportCollection $roles): void
+    {
+        $lifetime = TeamInvitation::lifetimeInDays();
+
+        // Ages stay inside the lifetime, so all three are still pending however short it is.
+        foreach ([1, 3, 6] as $position => $daysAgo) {
+            $sentAt = now()->subDays(min($daysAgo, $lifetime - 1))->subHours($position);
+
+            TeamInvitation::factory()->for($team)->create([
+                'role' => $position === 2 ? null : $roles->get($position % max($roles->count(), 1)),
+                'created_at' => $sentAt,
+                'expires_at' => $sentAt->copy()->addDays($lifetime),
+            ]);
+        }
+
+        $expiredSentAt = now()->subDays($lifetime + 2);
+
+        TeamInvitation::factory()->for($team)->create([
+            'role' => $roles->first(),
+            'created_at' => $expiredSentAt,
+            'expires_at' => $expiredSentAt->copy()->addDays($lifetime),
+        ]);
     }
 
     /**

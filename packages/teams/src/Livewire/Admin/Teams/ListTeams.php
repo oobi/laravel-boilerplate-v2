@@ -86,7 +86,8 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(team_trans('admin.created'))
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('md'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('active')

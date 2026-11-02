@@ -257,6 +257,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
             ])
             ->searchPlaceholder(team_trans('members.search'))
             ->emptyStateHeading(team_trans('members.empty'))
+            // On a phone, the role and status badges sit under the name (filament-table.css).
+            ->extraAttributes(['class' => 'ui-stacked-compact'])
             ->paginated(config('pagination.page_sizes'))
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
     }

@@ -234,6 +234,36 @@ return $table
 
 The gallery's Filament table has a Grouped tab showing both.
 
+### On a phone
+
+Every table stacks its rows into cards below `sm` (640px) instead of
+scrolling sideways: `->stackedOnMobile()` is set for all tables in
+`AppServiceProvider`. `filament-table.css` keeps the cards short: the first
+cell (the user, team or email) has no label, the other cells put label and
+value on one line, and the ⋮ menu and the checkbox sit at the top right.
+
+- **Hide what a phone doesn't need** with `->visibleFrom('md')`: dates such as
+  last login, created or sent. The column stays sortable.
+- **`ui-stacked-compact`** puts the other cells' badges on one line under the
+  name, like a native list item, with their labels kept for screen readers.
+  Use it for a list of people whose other cells are role and status badges
+  (Users, team Members), not for a table with dates or counts.
+- **A genuinely wide data grid** opts out with `->stackedOnMobile(false)` and
+  keeps the sideways scroll (the gallery's Wide tab).
+
+```php
+return $table
+    ->columns([
+        // ...
+        TextColumn::make('last_login_at')->dateTime()->visibleFrom('md'),
+    ])
+    ->extraAttributes(['class' => 'ui-stacked-compact']);
+```
+
+Don't reach for `Split`, `Stack` or `Panel` to fit a phone: any layout
+component renders the table through Filament's layout renderer at every
+width, so the desktop table loses its header cells too.
+
 ## Modals
 
 Every modal is built on **`<x-modal>`**, which renders a native `<dialog>`. That

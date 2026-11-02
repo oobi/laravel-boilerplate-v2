@@ -70,7 +70,8 @@
 .fi-ta-actions-header-cell,
 .fi-ta-empty-header-cell,
 th.fi-ta-selection-cell,
-.fi-ta-content-header {
+.fi-ta-content-header,
+.fi-ta-table-stacked-header-cell {
     background-color: color-mix(
         in oklab,
         var(--color-primary) 6%,
@@ -212,4 +213,226 @@ th.fi-ta-selection-cell,
 */
 .fi-ta-placeholder {
     @apply text-muted;
+}
+
+/*
+| A collapsible row's chevron (a layout table with a collapsible Panel) points
+| down while the row is closed and up once it's open, the usual disclosure
+| convention; Filament ships it the other way round. Assumes the default
+| chevron-down icon (the COLUMNS_COLLAPSE_BUTTON alias).
+*/
+.fi-ta-content .fi-ta-record .fi-ta-record-collapse-btn {
+    rotate: 180deg;
+
+    @media (prefers-reduced-motion: no-preference) {
+        transition: rotate 150ms;
+    }
+}
+
+.fi-ta-content .fi-ta-record.fi-ta-record-collapsed .fi-ta-record-collapse-btn {
+    rotate: none;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Stacked rows on a phone (->stackedOnMobile(), on for every table)
+|--------------------------------------------------------------------------
+| Below `sm` Filament turns each row into a card of label-over-value cells,
+| about 230px a row. Tighten it into a list item: the first cell (the
+| entity: user, team, email) drops its label, since the name says what it
+| is; the other cells put label and value on one line; and the row menu
+| (and the selection checkbox, when there is one) sits at the top right,
+| beside the name, instead of on a line of its own. Same targeted-exception
+| rationale as the header above; desktop (`sm` and up) is untouched.
+*/
+@media (width < 40rem) {
+    /* The "Sort by" strip that replaces the header row: muted label, select-all lined up with the row checkboxes. */
+    .fi-ta-table-stacked-header-cell .fi-input-wrp-label {
+        @apply text-muted;
+    }
+
+    .fi-ta-table-stacked-on-mobile:has(> tbody > tr > .fi-ta-cell > .fi-ta-actions) .fi-ta-page-checkbox {
+        margin-inline-end: 1.5rem;
+    }
+
+    /*
+    | Data rows only (they hold labelled cells), not group header or summary
+    | rows. The entity cell is the first data cell, after the checkbox: a table
+    | that leads with another column needs its own tweak.
+    */
+    .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row:has(> td > .fi-ta-cell-label) {
+        padding-block: 0.5rem 0.75rem;
+
+        & > .fi-ta-cell:not(.fi-ta-selection-cell):not(:has(> .fi-ta-actions)) {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 2rem;
+
+            /* A column shown only from a breakpoint (->visibleFrom()) stays hidden here. */
+            &[class*=":fi-visible"] {
+                display: none;
+            }
+
+            & > .fi-ta-cell-label {
+                @apply text-muted;
+                flex: 0 0 5rem;
+                padding-top: 0;
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+
+            & > .fi-ta-cell-content {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            & .fi-ta-text-has-badges {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* The entity cell: no label, room on the right for the menu and checkbox, and a long email wraps. */
+        & > .fi-ta-selection-cell + .fi-ta-cell,
+        & > .fi-ta-cell:first-child:not(.fi-ta-selection-cell) {
+            min-width: 0;
+            padding-inline-end: 3.5rem;
+            overflow-wrap: anywhere;
+
+            & > .fi-ta-cell-label {
+                display: none;
+            }
+        }
+
+        &:has(> .fi-ta-selection-cell > .fi-ta-record-checkbox) > .fi-ta-selection-cell + .fi-ta-cell {
+            padding-inline-end: 6rem;
+        }
+
+        & > .fi-ta-cell:has(> .fi-ta-actions) {
+            position: absolute;
+            top: 1.5rem;
+            inset-inline-end: 0.5rem;
+            width: auto;
+            padding: 0;
+        }
+
+        & > .fi-ta-selection-cell {
+            top: 1.3125rem;
+            padding: 0;
+        }
+
+        &:has(> .fi-ta-cell > .fi-ta-actions) > .fi-ta-selection-cell {
+            inset-inline-end: 3.25rem;
+        }
+    }
+
+    /*
+    | Compact rows, opt-in (->extraAttributes(['class' => 'ui-stacked-compact'])):
+    | for a list of people whose other cells are self-describing badges (role,
+    | status), the badges flow on one line under the name instead of one
+    | labelled line each, like a native list item. The labels stay for screen
+    | readers. Not for a table with dates or counts: unlabelled, they'd read as
+    | noise.
+    */
+    .ui-stacked-compact .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row:has(> td > .fi-ta-cell-label) {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.375rem;
+        /* Indents the badges to line up with the name, past the 40px avatar and its gap. */
+        padding-inline: 4.25rem 1rem;
+
+        & > .fi-ta-cell:not(.fi-ta-selection-cell):not(:has(> .fi-ta-actions)) {
+            width: auto;
+            min-height: 0;
+
+            & > .fi-ta-cell-label {
+                @apply sr-only;
+            }
+        }
+
+        /* :where() keeps this below the entity cell's padding further down. */
+        & > .fi-ta-cell:where(:not(.fi-ta-selection-cell):not(:has(> .fi-ta-actions))) {
+            padding: 0;
+        }
+
+        & > .fi-ta-selection-cell + .fi-ta-cell,
+        & > .fi-ta-cell:first-child:not(.fi-ta-selection-cell) {
+            flex-basis: 100%;
+            margin-block: -0.25rem -0.375rem;
+            margin-inline-start: -4.25rem;
+            padding-inline: 1rem 3.5rem;
+        }
+
+        &:has(> .fi-ta-selection-cell > .fi-ta-record-checkbox) > .fi-ta-selection-cell + .fi-ta-cell {
+            padding-inline-end: 6rem;
+        }
+    }
+}
+
+.fi-ta-content-ctn:has(.fi-ta-record) {
+    container-type: inline-size;
+}
+
+/* An editable select in a layout row keeps to its grid cell instead of Filament's 12rem minimum. */
+.fi-ta-record .fi-ta-select {
+    min-width: 0;
+}
+
+@container (width < 56rem) {
+    /*
+    | Rows from the layout renderer (a table built from Split/Stack/Grid/Panel,
+    | like the maximalist demo) while the table is narrow: the same placement as
+    | the stacked rows above, with the checkbox and the ⋮ at the top right and
+    | the collapse chevron at the bottom right, instead of the checkbox down the
+    | left edge. Narrow means the table's own width (under 56rem), not the
+    | screen's, so it matches a Layout\Grid switching its columns at `@4xl`, and
+    | a table beside the pinned sidebar on a laptop counts as narrow too.
+    */
+    .fi-ta-content-ctn .fi-ta-record {
+        align-items: stretch;
+
+        & > .fi-ta-record-checkbox {
+            position: absolute;
+            top: 1.25rem;
+            inset-inline-end: 1rem;
+            margin: 0;
+        }
+
+        &:has(> .fi-ta-record-content-ctn > .fi-ta-actions) > .fi-ta-record-checkbox {
+            inset-inline-end: 3.25rem;
+        }
+
+        & > .fi-ta-record-content-ctn > .fi-ta-actions {
+            position: absolute;
+            top: 1.125rem;
+            inset-inline-end: 0.5rem;
+            padding: 0;
+        }
+
+        /* Room for the checkbox and ⋮: the whole summary, or just its first cell when it's a Grid. */
+        &:has(> .fi-ta-record-checkbox, > .fi-ta-record-content-ctn > .fi-ta-actions) > .fi-ta-record-content-ctn > :first-child > .fi-ta-record-content:first-child {
+            &:not(:has(.fi-ta-grid)) {
+                padding-inline-end: 2.5rem;
+            }
+
+            & .fi-ta-grid > :first-child {
+                padding-inline-end: 2rem;
+            }
+        }
+
+        & > .fi-ta-record-collapse-btn {
+            align-self: flex-end;
+            margin-block-end: 0.5rem;
+        }
+    }
+
+    .fi-ta-content-header .fi-ta-page-checkbox {
+        order: 1;
+        margin-inline-start: auto;
+    }
+
+    .fi-ta-content-ctn:has(.fi-ta-record-content-ctn > .fi-ta-actions) .fi-ta-content-header .fi-ta-page-checkbox {
+        margin-inline-end: 2.25rem;
+    }
 }

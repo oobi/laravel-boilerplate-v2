@@ -61,6 +61,30 @@
                     .style-demo-native-table-header .fi-ta-header-ctn {
                         display: block;
                     }
+
+                    .style-demo-native-table-header .fi-ta-header-toolbar > * {
+                        display: flex;
+                    }
+
+                    /* On a phone the search fills the row beside the filter button; the bulk actions keep their gap only while they show. */
+                    @media (width < 40rem) {
+                        .style-demo-native-table-header .fi-ta-header-toolbar {
+                            column-gap: 0;
+
+                            & > .fi-ta-actions:has(> :not([style*="display: none"])) {
+                                margin-inline-end: 1rem;
+                            }
+
+                            & > :nth-child(2) {
+                                flex: 1 1 auto;
+                                margin-inline-start: 0;
+                            }
+
+                            & .fi-ta-search-field {
+                                flex: 1 1 auto;
+                            }
+                        }
+                    }
                 </style>
 
                 <div class="style-demo-native-table-header">
