@@ -63,6 +63,15 @@
                 width: 100%;
             }
         }
+
+        /* The toolbar's action ("Add member") takes its own full-width row, not a lone button at the edge. */
+        .ui-toolbar__actions {
+            flex: 1 1 100%;
+
+            & > * {
+                flex: 1 1 auto;
+            }
+        }
     }
 
     .ui-toolbar__counts {

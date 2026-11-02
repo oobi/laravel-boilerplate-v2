@@ -65,7 +65,7 @@ class StyleDemoAccessTest extends TestCase
             ->assertSee('tabs-connected__header', false)
             ->assertSee('tabs tabs-border gap-2 sm:gap-6', false)
             ->assertSee('tabs-connected__divider', false)
-            ->assertSee('tab-content tabs-connected__content bg-base-100 p-4 sm:p-6', false);
+            ->assertSee('tab-content tabs-connected__content bg-base-100', false);
     }
 
     #[DataProvider('tabContentProvider')]

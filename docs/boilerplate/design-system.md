@@ -242,8 +242,12 @@ scrolling sideways: `->stackedOnMobile()` is set for all tables in
 cell (the user, team or email) has no label, the other cells put label and
 value on one line, and the ⋮ menu and the checkbox sit at the top right.
 
-- **Hide what a phone doesn't need** with `->visibleFrom('md')`: dates such as
-  last login, created or sent. The column stays sortable.
+- **Hide what a phone or tablet doesn't need** with `->visibleFrom('lg')`:
+  dates such as last login, created or sent, and counts. The column stays
+  sortable. It's hidden in the stacked card too, so not for a column a phone
+  needs.
+- **A column of several badges** adds `->wrap()`, so they stack instead of
+  widening the table on a tablet.
 - **`ui-stacked-compact`** puts the other cells' badges on one line under the
   name, like a native list item, with their labels kept for screen readers.
   Use it for a list of people whose other cells are role and status badges
@@ -255,7 +259,7 @@ value on one line, and the ⋮ menu and the checkbox sit at the top right.
 return $table
     ->columns([
         // ...
-        TextColumn::make('last_login_at')->dateTime()->visibleFrom('md'),
+        TextColumn::make('last_login_at')->dateTime()->visibleFrom('lg'),
     ])
     ->extraAttributes(['class' => 'ui-stacked-compact']);
 ```
@@ -263,6 +267,20 @@ return $table
 Don't reach for `Split`, `Stack` or `Panel` to fit a phone: any layout
 component renders the table through Filament's layout renderer at every
 width, so the desktop table loses its header cells too.
+
+On a phone a page's top-level panels (cards, tab islands, sections, a
+toolbar and its table) also run edge to edge: they step out of the page
+gutter and lose their side borders and corners, keeping their shadow
+(`layout.css`). Panels inside
+another panel, in a grid of two or more columns, or in a modal stay inset;
+add `ui-no-bleed` to keep any other one inset.
+
+### In a tab
+
+A tab panel holding just a table, or a toolbar then a table, goes flush by
+itself: no panel padding, no border on the table, and the toolbar becomes a
+strip under the tabs. Pages don't pass `flush` for it. Anything else in the
+panel (a form, cards) keeps the padding.
 
 ## Modals
 

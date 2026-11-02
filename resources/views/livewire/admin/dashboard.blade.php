@@ -4,7 +4,7 @@
     <x-page-header title="{{ __('System overview') }}" description="{{ __('Manage users and monitor platform activity') }}" />
 
     {{-- Stats grid — first card uses real data, the rest are disposable placeholders demonstrating the style. --}}
-    <div class="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mb-6 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         <x-stats-card label="{{ __('Total users') }}" :value="number_format($totalUsers)" color="info" footer-color="success">
             <x-slot:icon>
                 <x-heroicon-o-user-group class="h-8 w-8" />

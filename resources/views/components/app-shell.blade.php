@@ -47,13 +47,15 @@
             x-data="{
                 sidebarPinned: JSON.parse(localStorage.getItem('ui.sidebar.pinned') ?? 'true'),
                 sidebarDrawerOpen: false,
+                drawerWidth: window.innerWidth,
                 togglePin() {
                     this.sidebarPinned = !this.sidebarPinned;
                     localStorage.setItem('ui.sidebar.pinned', this.sidebarPinned ? 'true' : 'false');
                     if (!this.sidebarPinned) this.sidebarDrawerOpen = false;
                 },
             }"
-            @resize.window="if (window.innerWidth < 768) sidebarDrawerOpen = false"
+            {{-- Width changes only: a tablet's address bar collapsing (height) mustn't shut an open drawer. --}}
+            @resize.window="if (window.innerWidth !== drawerWidth) { drawerWidth = window.innerWidth; if (drawerWidth < 1280) sidebarDrawerOpen = false }"
             class="ui-app-inner flex"
         >
             @if ($hasNav)
@@ -105,7 +107,7 @@
                             {{-- Pin button (desktop only): pins the sidebar as a persistent column --}}
                             <x-button.icon
                                 @click="togglePin(); sidebarDrawerOpen = false; $nextTick(() => $refs.unpin.focus())"
-                                class="hidden md:inline-flex"
+                                class="hidden xl:inline-flex"
                                 title="{{ __('Pin sidebar') }}"
                             >
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor"><path d="M81.3 47.1L64.3 30.1L30.4 64L47.4 81L559.4 593L576.4 610L610.3 576.1L593.3 559.1L450.2 416L512.2 416C512.2 399.8 510.2 383.7 506.4 368C495.7 323.6 470.7 282.7 436.8 253.4L427.4 112L480.2 112L480.2 64L166 64L213 111L208.8 174.6L81.3 47.1zM253.9 219.7L261.1 112L379.3 112L388.9 256.6L390.2 276.6L405.4 289.7C429 310.2 447 337.9 456.5 368L402.1 368L253.8 219.7zM314.3 416L266.3 368L183.7 368C189.9 348.5 199.6 330 212.1 313.8L178 279.7C157.1 305.2 141.7 335.7 133.9 368C130.1 383.7 128.1 399.8 128.1 416L314.3 416zM296.1 584L296.1 608L344.1 608L344.1 464L296.1 464L296.1 584z"/></svg>
@@ -126,11 +128,13 @@
                 </div>
             </aside>
 
-            {{-- Pinned sidebar: persistent column for desktop while pinned.
+            {{-- Pinned sidebar: persistent column for desktop while pinned. Desktop
+                 means `xl` (1280px) and up: below that a tablet or small laptop
+                 needs the 256px for its tables, so the sidebar is the drawer there.
                  Base classes assume the default (pinned) state so it renders visible
                  immediately on page load; x-show only hides it once Alpine confirms
                  the user has actually unpinned it, avoiding a flash for pinned users. --}}
-            <aside class="hidden md:flex shrink-0 w-64" x-show="sidebarPinned">
+            <aside class="hidden xl:flex shrink-0 w-64" x-show="sidebarPinned">
                 <div class="flex h-full w-64 flex-col border-r border-base-300 bg-base-100">
                     <div class="flex h-16 shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
@@ -156,7 +160,7 @@
 
             {{-- Main column --}}
             <div class="flex min-w-0 flex-1 flex-col">
-                <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-8 backdrop-blur">
+                <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-4 backdrop-blur sm:px-6 lg:px-8">
                     @if ($hasNav)
                         {{-- Logo: visible on desktop only while the sidebar is unpinned --}}
                         <x-application-logo
@@ -164,22 +168,22 @@
                             :href="$home"
                             x-show="!sidebarPinned"
                             x-cloak
-                            class="hidden shrink-0 items-center md:flex"
+                            class="hidden shrink-0 items-center xl:flex"
                         />
 
                         {{-- Mobile logo: always visible; drawer/pinned asides cover this on desktop --}}
                         <x-application-logo
                             variant="icon"
                             :href="$home"
-                            class="flex shrink-0 items-center md:hidden"
+                            class="flex shrink-0 items-center xl:hidden"
                         />
 
                         {{-- Mobile menu button --}}
-                        <x-button.icon class="md:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
+                        <x-button.icon class="xl:hidden" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
                             <x-heroicon-o-bars-3 class="h-5 w-5" />
                         </x-button.icon>
                         {{-- Desktop menu button: visible when the sidebar is unpinned --}}
-                        <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden md:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
+                        <x-button.icon x-show="!sidebarPinned" x-cloak class="hidden xl:inline-flex" @click="sidebarDrawerOpen = !sidebarDrawerOpen" title="{{ __('Open menu') }}" aria-controls="app-drawer" x-bind:aria-expanded="sidebarDrawerOpen">
                             <x-heroicon-o-bars-3 class="h-5 w-5" />
                         </x-button.icon>
                     @else

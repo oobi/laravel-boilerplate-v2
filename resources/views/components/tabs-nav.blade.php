@@ -14,6 +14,11 @@
     Drops the panel's padding, runs the line under the tabs the
     full width, and lets a table inside drop its own border and corners
     (`.ui-flush-content`, filament-table.css) so the panel's border frames it.
+    A panel holding just a table, or a toolbar then a table, goes flush on
+    its own (tabs.css), so table pages don't pass it.
+
+    The panel's padding lives in tabs.css, not utility classes, so that rule
+    can take it off.
 
     scrollable (default true): one horizontal row at every screen size.
     Arrow buttons sit beside the viewport, shown only when the tabs overflow.
@@ -61,7 +66,7 @@
         {{-- Forces display regardless of which tab is "active" — daisyUI's own
              show/hide-on-checked wiring is for co-located panels; ours are
              separate pages, so there's always exactly one panel to show. --}}
-        <div @class(['tab-content tabs-connected__content bg-base-100', 'p-4 sm:p-6' => ! $flush, 'ui-flush-content' => $flush]) style="display: block">
+        <div @class(['tab-content tabs-connected__content bg-base-100', 'ui-flush-content' => $flush]) style="display: block">
             {{ $content }}
         </div>
     @endisset

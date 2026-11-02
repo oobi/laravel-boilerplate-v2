@@ -77,8 +77,20 @@
     }
 
     /* Containers */
+    /* The gutter is a variable so a full-bleed panel (below) steps out by exactly as much. */
     .ui-page {
-        @apply mx-auto px-4 sm:px-6 lg:px-8;
+        --ui-page-gutter: 1rem;
+
+        @apply mx-auto;
+        padding-inline: var(--ui-page-gutter);
+
+        @variant sm {
+            --ui-page-gutter: 1.5rem;
+        }
+
+        @variant lg {
+            --ui-page-gutter: 2rem;
+        }
     }
 
     /* Page header */
@@ -102,5 +114,59 @@
 
     .ui-page-actions {
         @apply flex max-w-full shrink-0 flex-wrap items-center gap-2;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Full-bleed panels on a phone (app shell: admin, team and profile pages)
+|--------------------------------------------------------------------------
+| Below `sm` a page's top-level panels (cards, tab islands, sections,
+| toolbars, a table on the page) run edge to edge: they step out of the page
+| gutter and lose their side borders and corners, and every one gets a top
+| and bottom border (a Filament section's outline is a shadow ring, too faint
+| on its own against the page) as well as its shadow. Everything else (page header, alerts,
+| empty states, form actions) keeps the gutter. A panel inside another panel,
+| in a grid of two or more columns (dashboard stat cards) or in a modal stays
+| as it is (so does one in Filament's schema tabs, fieldset or wizard; a
+| Filament schema Grid isn't detected, as top-level sections sit in one); add
+| `ui-no-bleed` to keep one inset. Unlayered, so it beats the
+| utility classes that draw the panels' borders.
+*/
+@media (width < 40rem) {
+    .ui-app main .ui-page :is(.card, .tabs-connected, .fi-section:not(.fi-aside), .ui-toolbar, .fi-ta-ctn):not(
+        :is(.card, .tabs-connected, .fi-section, .fi-ta-ctn, .ui-toolbar, .fi-sc-tabs, .fi-fieldset, .fi-wizard, .fi-modal, .modal, dialog, .dropdown-content, [class~="grid-cols-2"], [class~="grid-cols-3"], [class~="grid-cols-4"], .ui-no-bleed) *,
+        .ui-no-bleed
+    ) {
+        margin-inline: calc(-1 * var(--ui-page-gutter));
+        border-inline-width: 0;
+        border-block-end: 1px solid var(--color-base-300);
+
+        /* An accent card's coloured top (`border-t-4 border-t-*`) stays. */
+        &:not([class*="border-t-"]) {
+            border-block-start: 1px solid var(--color-base-300);
+        }
+        border-radius: 0;
+        /* A table flush in a section follows its now-square corners (filament-section.css). */
+        --ui-section-radius: 0;
+
+        /* A sticky card footer's rounded bottom, and a link card's focus ring, stay inside the screen. */
+        & .rounded-b-box {
+            border-end-start-radius: 0;
+            border-end-end-radius: 0;
+        }
+
+        &.ui-card-link:focus-visible {
+            outline-offset: -2px;
+        }
+    }
+
+    /* A page-level toolbar over its table reads as one block, as in a tab panel. */
+    .ui-app main .ui-page .ui-toolbar:has(+ .fi-ta) {
+        margin-bottom: 0;
+
+        & + .fi-ta .fi-ta-ctn {
+            border-top-width: 0;
+        }
     }
 }
