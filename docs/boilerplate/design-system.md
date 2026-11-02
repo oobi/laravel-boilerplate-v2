@@ -270,10 +270,26 @@ width, so the desktop table loses its header cells too.
 
 On a phone a page's top-level panels (cards, tab islands, sections, a
 toolbar and its table) also run edge to edge: they step out of the page
-gutter and lose their side borders and corners, keeping their shadow
-(`layout.css`). Panels inside
-another panel, in a grid of two or more columns, or in a modal stay inset;
-add `ui-no-bleed` to keep any other one inset.
+gutter and lose their side borders and corners. They keep their shadow and
+gain a 1px top and bottom border, so they still stand out from the page; an
+accent card keeps its coloured top (`layout.css`). Panels inside another
+panel, in a `grid-cols-2`, `-3` or `-4` grid, or in a modal, dropdown or
+Filament tabs, fieldset or wizard stay inset. Add `ui-no-bleed` to keep any
+other one inset, including panels set side by side some other way (flex,
+`grid-cols-[...]`): on their wrapper, or on each panel.
+
+Where the edge and padding rules live (each file styles its own component):
+
+| File | What it does |
+|---|---|
+| `ui/layout.css` | The page gutter (`--ui-page-gutter`), full-bleed panels on a phone, a page-level toolbar joined to its table |
+| `daisyui-overrides/tabs.css` | Tab panel padding, the auto-flush panel, the toolbar strip in a tab |
+| `ui/filament-table.css` | `.ui-flush-content` (the `flush` prop), stacked rows on a phone |
+| `ui/filament-section.css` | A section holding just a table goes flush (`--ui-section-radius`) |
+| `daisyui-overrides/card.css` | Card padding (`--card-p`), 1rem on a phone |
+| `ui/toolbar.css` | The toolbar's own layout on a phone |
+
+All under `resources/css/theme/components/`.
 
 ### In a tab
 
