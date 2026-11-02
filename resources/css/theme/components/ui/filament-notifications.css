@@ -42,3 +42,8 @@
     background-color: color-mix(in oklab, var(--fi-notification-color, var(--color-neutral)) 15%, var(--color-base-100));
     color: var(--fi-notification-color, var(--color-neutral));
 }
+
+/* Toasts sit below the fixed top banners (environment, impersonation), not over them. */
+.fi-no {
+    top: calc(1rem + var(--ui-top-banners-height, 0px));
+}

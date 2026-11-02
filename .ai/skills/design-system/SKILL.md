@@ -129,5 +129,6 @@ A Filament table with tall rows adds `->extraAttributes(['class' => 'ui-cells-to
   `App\Support\Navigation\AdminNav` (see the `add-nav-item` skill) instead of
   placing these directly in a page view.
 - `<x-breadcrumbs>`, `<x-application-logo>`, `<x-header-menu>`,
-  `<x-impersonation-banner>`, `<x-theme-init-script>` — already wired into
-  the admin/guest layouts; reuse the layout rather than duplicating these.
+  `<x-environment-banner>`, `<x-impersonation-banner>`,
+  `<x-theme-init-script>`: already wired into the admin/guest layouts; reuse
+  the layout rather than duplicating these.

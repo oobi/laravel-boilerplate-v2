@@ -8,6 +8,7 @@
 @layer components {
     :root {
         --ui-impersonation-banner-height: 32px; /* Condensed banner height */
+        --ui-environment-banner-height: 24px;
     }
 
     /* Body & Application Wrapper. dvh, not vh: on iOS Safari 100vh is the height
@@ -28,27 +29,50 @@
         @apply relative flex h-dvh overflow-hidden;
     }
 
-    /* Single source of truth: reserve space for the fixed banner on the body,
-       works unmodified for non-sidebar layouts (e.g. the public layout). */
+    /* Single source of truth: the fixed top banners showing on this page
+       (body classes), summed. Reserved on the body, so it works unmodified
+       for non-sidebar layouts (e.g. the public layout). */
+    body {
+        --ui-environment-banner-offset: 0px;
+        --ui-impersonation-banner-offset: 0px;
+        --ui-top-banners-height: calc(var(--ui-environment-banner-offset) + var(--ui-impersonation-banner-offset));
+    }
+
+    body.has-environment-banner {
+        --ui-environment-banner-offset: var(--ui-environment-banner-height);
+    }
+
     body.is-impersonating {
-        padding-top: var(--ui-impersonation-banner-height);
+        --ui-impersonation-banner-offset: var(--ui-impersonation-banner-height);
+    }
+
+    body.has-environment-banner,
+    body.is-impersonating {
+        padding-top: var(--ui-top-banners-height);
     }
 
     /* Admin's app shell is viewport-locked (h-dvh flex), so shrink it by
        the offset body padding already reserved instead of overflowing it. */
-    body.is-impersonating .ui-app {
+    :is(body.has-environment-banner, body.is-impersonating) .ui-app {
         min-height: 0;
-        height: calc(100dvh - var(--ui-impersonation-banner-height));
+        height: calc(100dvh - var(--ui-top-banners-height));
     }
 
-    body.is-impersonating .ui-app > .ui-app-inner {
+    :is(body.has-environment-banner, body.is-impersonating) .ui-app > .ui-app-inner {
         height: 100%;
     }
 
-    /* Impersonation banner */
+    /* Environment banner: topmost, colours set inline from .env */
+    .ui-environment-banner {
+        @apply fixed inset-x-0 top-0 z-50 flex items-center justify-center px-3 text-xs font-semibold;
+        height: var(--ui-environment-banner-height);
+    }
+
+    /* Impersonation banner: under the environment banner when both show */
     .ui-impersonation-banner {
-        @apply fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-2 px-3 shadow-md;
+        @apply fixed inset-x-0 z-50 flex items-center justify-between gap-2 px-3 shadow-md;
         @apply bg-warning text-warning-content text-xs;
+        top: var(--ui-environment-banner-offset);
         height: var(--ui-impersonation-banner-height);
     }
 

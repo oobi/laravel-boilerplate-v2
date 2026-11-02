@@ -13,8 +13,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="min-h-dvh bg-base-100 font-sans antialiased {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }}">
+<body class="min-h-dvh bg-base-100 font-sans antialiased {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }} {{ \App\Support\EnvironmentBanner::isShown() ? 'has-environment-banner' : '' }}">
     <x-skip-link />
+    <x-environment-banner />
     <x-impersonation-banner />
 
     @include('layouts.partials.public-nav')

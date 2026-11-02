@@ -12,7 +12,8 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-dvh flex-col bg-base-100 {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }}">
+<body class="flex min-h-dvh flex-col bg-base-100 {{ auth()->check() && auth()->user()->isImpersonated() ? 'is-impersonating' : '' }} {{ \App\Support\EnvironmentBanner::isShown() ? 'has-environment-banner' : '' }}">
+    <x-environment-banner />
     {{-- An impersonator who hits a 403/404 must still be able to leave. --}}
     <x-impersonation-banner />
 

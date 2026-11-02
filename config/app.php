@@ -30,6 +30,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Environment Banner
+    |--------------------------------------------------------------------------
+    |
+    | When text is set, a strip across the top of every page (public, login,
+    | error and the admin) tells people which environment they are on, e.g.
+    | "STAGING - not live data". Leave it unset in production. The colour is
+    | a hex value; text on it is black or white, whichever reads better.
+    |
+    */
+
+    'environment_banner' => [
+        'text' => env('ENVIRONMENT_BANNER_TEXT'),
+        'color' => env('ENVIRONMENT_BANNER_COLOR', '#facc15'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |
