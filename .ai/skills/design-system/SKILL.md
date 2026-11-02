@@ -60,6 +60,12 @@ mix strength in dark mode rather than hardcoding a second color).
   `floating-label.css`, `tabs.css`, `toolbar.css`,
   `typography.css`, `shadows.css`) before writing custom CSS — most layout
   primitives already exist there.
+- On a phone (below `sm`) a page's top-level panels (cards, tab islands,
+  sections, toolbars, a table on the page) run edge to edge (`layout.css`).
+  Panels in a `grid-cols-2`, `-3` or `-4` grid are skipped automatically; any
+  other side-by-side layout at phone width (flex, `grid-cols-[...]`, 5+
+  columns) must add `ui-no-bleed` (to the wrapper or each panel), or they
+  touch.
 
 ## Components — always prefer these over hand-rolled markup
 
@@ -114,7 +120,7 @@ list with the reason. See `.ai/rules/views.md`.
 | `<x-table-trash-toggle>` | active/trashed record-count toggle inside a `counts` slot | `model`, `value`, `activeCount`, `trashedCount` |
 | `<x-table-empty-trash-action>` | destructive header action button inside an `actions` slot | `action` (Filament action method name) |
 
-A Filament table with tall rows adds `->extraAttributes(['class' => 'ui-cells-top'])`, so its cells and the ⋮ menu sit level with the first line (`docs/boilerplate/design-system.md`, Tables). Group headings are styled with no class; `<x-tabs-nav flush>` adds `ui-flush-content` for a table that fills its panel. Every table stacks its rows on a phone (global `->stackedOnMobile()`); hide dates and counts a phone or tablet doesn't need with `->visibleFrom('lg')`, and a list of people with role/status badges adds `ui-stacked-compact` (Tables, "On a phone"). A tab panel holding just a table (or toolbar + table) goes flush by itself, and on a phone top-level panels run edge to edge (`ui-no-bleed` keeps one inset).
+A Filament table with tall rows adds `->extraAttributes(['class' => 'ui-cells-top'])`, so its cells and the ⋮ menu sit level with the first line (`docs/boilerplate/design-system.md`, Tables). Group headings are styled with no class; `<x-tabs-nav flush>` adds `ui-flush-content` for a table that fills its panel. Every table stacks its rows on a phone (global `->stackedOnMobile()`); hide dates and counts a phone or tablet doesn't need with `->visibleFrom('lg')`, and a list of people with role/status badges adds `ui-stacked-compact` (Tables, "On a phone"). A tab panel holding just a table (or toolbar + table) goes flush by itself, and on a phone top-level panels run edge to edge (see Spacing).
 
 ### Tabs
 
