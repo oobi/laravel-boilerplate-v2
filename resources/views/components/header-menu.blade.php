@@ -3,7 +3,8 @@
     matching Buzz's header-menu look. daisyUI's dropdown styling, opened as a
     disclosure: a named button that says whether it's open, opens on click (not
     on focus), and closes on Escape (focus back to the button), a click outside or
-    Tabbing out.
+    Tabbing out. The `links` slot adds the host layout's own links after My
+    profile (the public nav's Admin dashboard, which the admin shell doesn't need).
 --}}
 <div class="dropdown dropdown-end" x-data="{ open: false }" x-bind:class="{ 'dropdown-open': open }"
     x-on:keydown.escape="if (open) { $event.stopPropagation(); open = false; $refs.trigger.focus() }" x-on:click.outside="open = false"
@@ -18,6 +19,8 @@
         @if ($showProfile)
             <li><a href="{{ route('profile.edit') }}">{{ __('admin.my_profile') }}</a></li>
         @endif
+
+        {{ $links ?? '' }}
 
         {{-- Cross-area / add-on links (e.g. the teams tier) — their own group, divided from account
              management above and functionally distinct from any same-named sidebar item. See

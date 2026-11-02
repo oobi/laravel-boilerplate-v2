@@ -24,8 +24,6 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconPosition;
 use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\ColorColumn;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Panel;
@@ -340,11 +338,27 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
     private function primaryColumns(bool $isFullFeatured): array
     {
         return [
-            TextColumn::make('name')
+            // Full-featured: the avatar beside the name, not a column of its own further along.
+            ...($isFullFeatured ? [
+                ImageColumn::make('avatar_url')
+                    // Named for a screen reader only: a visible "Avatar" heading over pictures is noise.
+                    ->label(new HtmlString('<span class="sr-only">'.e(__('Avatar')).'</span>'))
+                    ->circular()
+                    ->imageSize(40)
+                    // As narrow as the picture, so the name sits right beside it.
+                    ->width('1%')
+                    // Not on a phone: the stacked card leads with the name (filament-table.css).
+                    ->visibleFrom('sm'),
+            ] : []),
+
+            $this->withVerifiedBadge(TextColumn::make('name')
                 ->label(__('Name'))
                 ->description(fn (array $record): string => $record['email'])
+                // A long email breaks rather than widen the table on a tablet.
+                ->wrap()
+                ->extraAttributes(['class' => 'wrap-anywhere'])
                 ->searchable()
-                ->sortable($isFullFeatured),
+                ->sortable($isFullFeatured), $isFullFeatured),
 
             TextColumn::make('status')
                 ->label(__('Status'))
@@ -354,10 +368,32 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
             TextColumn::make('joined_at')
                 ->label(__('Joined'))
                 ->date()
-                ->sortable($isFullFeatured),
+                ->sortable($isFullFeatured)
+                ->visibleFrom($isFullFeatured ? 'lg' : null),
 
             ...($isFullFeatured ? $this->extraColumns() : []),
         ];
+    }
+
+    /**
+     * A verified person's name gets a badge icon after it, with "(verified)" for
+     * a screen reader, instead of a Verified column of its own. One inline span
+     * around the name: a bare sr-only sibling would push the icon onto its own
+     * line inside Filament's line-clamped text.
+     */
+    private function withVerifiedBadge(TextColumn $column, bool $condition = true): TextColumn
+    {
+        if (! $condition) {
+            return $column;
+        }
+
+        return $column
+            ->formatStateUsing(fn (string $state, array $record): string|HtmlString => $record['verified']
+                ? new HtmlString('<span class="pe-1">'.e($state).'<span class="sr-only"> ('.e(__('verified')).')</span></span>')
+                : $state)
+            ->icon(fn (array $record): ?Heroicon => $record['verified'] ? Heroicon::CheckBadge : null)
+            ->iconPosition(IconPosition::After)
+            ->iconColor('info');
     }
 
     /**
@@ -390,18 +426,11 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                         ->grow(false),
 
                     Stack::make([
-                        TextColumn::make('name')
+                        $this->withVerifiedBadge(TextColumn::make('name')
                             ->label(__('Name'))
                             ->weight(FontWeight::Medium)
-                            // One inline span: a bare sr-only sibling would push the badge icon onto its own line.
-                            ->formatStateUsing(fn (string $state, array $record): string|HtmlString => $record['verified']
-                                ? new HtmlString('<span class="pe-1">'.e($state).'<span class="sr-only"> ('.e(__('verified')).')</span></span>')
-                                : $state)
-                            ->icon(fn (array $record): ?Heroicon => $record['verified'] ? Heroicon::CheckBadge : null)
-                            ->iconPosition(IconPosition::After)
-                            ->iconColor('info')
                             ->searchable()
-                            ->sortable(),
+                            ->sortable()),
 
                         TextColumn::make('email')
                             ->label(__('Email'))
@@ -452,31 +481,22 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
         ];
     }
 
-    /** More column TYPES from the Filament docs, beyond TextColumn — demo-only values, see extraColumnValues(). */
+    /** Editable column types from the Filament docs, beyond TextColumn. Demo-only values, see extraColumnValues(). */
     private function extraColumns(): array
     {
-        $demoOnly = fn ($state) => Notification::make()->title(__('Demo only — nothing saved.'))->send();
+        $demoOnly = fn (mixed $state) => Notification::make()->title(__('Demo only: nothing saved.'))->send();
 
         return [
-            ImageColumn::make('avatar_url')
-                ->label(__('Avatar'))
-                ->circular(),
-
-            IconColumn::make('verified')
-                ->label(__('Verified'))
-                ->boolean(),
-
-            ColorColumn::make('color')
-                ->label(__('Color')),
-
             SelectColumn::make('priority')
                 ->label(__('Priority'))
                 ->options(['low' => __('Low'), 'medium' => __('Medium'), 'high' => __('High')])
+                ->selectablePlaceholder(false)
                 ->updateStateUsing($demoOnly),
 
             ToggleColumn::make('featured')
                 ->label(__('Featured'))
-                ->updateStateUsing($demoOnly),
+                ->updateStateUsing($demoOnly)
+                ->visibleFrom('lg'),
         ];
     }
 
@@ -486,7 +506,6 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
         return [
             'avatar_url' => 'https://ui-avatars.com/api/?name='.urlencode($row->name).'&background=random',
             'verified' => $row->status === DemoStatus::ACTIVE,
-            'color' => sprintf('#%06x', crc32($row->name) & 0xFFFFFF),
             'priority' => ['low', 'medium', 'high'][$row->id % 3],
             'featured' => $row->id % 4 === 0,
         ];

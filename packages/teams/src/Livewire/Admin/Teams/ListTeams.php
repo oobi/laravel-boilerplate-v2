@@ -73,9 +73,11 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                     ->label(team_trans('admin.owner'))
                     ->view('filament.tables.columns.user-column'),
 
+                // Counts and dates show from `lg`: below it the name and owner need the width.
                 Tables\Columns\TextColumn::make('users_count')
                     ->label(team_trans('admin.members'))
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('lg'),
 
                 Tables\Columns\TextColumn::make('active')
                     ->label(__('admin.status'))
@@ -85,9 +87,9 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(team_trans('admin.created'))
-                    ->dateTime()
+                    ->date()
                     ->sortable()
-                    ->visibleFrom('md'),
+                    ->visibleFrom('lg'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('active')

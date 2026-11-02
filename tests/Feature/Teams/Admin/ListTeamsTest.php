@@ -84,6 +84,8 @@ class ListTeamsTest extends TestCase
             ->test(ListTeams::class)
             ->assertCanSeeTableRecords([$team])
             ->assertSee($owner->name)
+            // The owner is secondary to the team: name only, no email.
+            ->assertDontSee($owner->email)
             ->assertTableColumnStateSet('users_count', 2, $team);
     }
 

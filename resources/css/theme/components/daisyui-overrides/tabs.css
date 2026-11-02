@@ -56,6 +56,54 @@
     border: 0;
     border-radius: 0;
     box-shadow: none;
+    padding: 1rem;
+
+    @media (width >= 40rem) {
+        padding: 1.5rem;
+    }
+}
+
+/*
+| A flush panel: <x-tabs-nav flush>, or one that holds just a table, or a
+| toolbar then a table (directly, or inside one wrapper element: a Livewire
+| component's root, as on the team Members and Invitations tabs, or the
+| theme demo's header wrapper). A <style> or <script> beside them doesn't
+| count. The table fills the panel edge to edge with no border of its own
+| (the panel's frames it), and the toolbar becomes a strip under the tabs
+| instead of a card in a card. Anything else in the panel (a form, cards, an
+| infolist) keeps the padding.
+*/
+.tabs-connected__content:is(
+    .ui-flush-content,
+    :has(> .fi-ta):not(:has(> :not(style, script, .ui-toolbar, .fi-ta))),
+    :has(> div > .fi-ta):not(:has(> :not(style, script, div), > div ~ div, > div > :not(style, script, .ui-toolbar, .fi-ta)))
+) {
+    padding: 0;
+
+    /* Runs the line under the tabs the full width (the header's divider stops at its padding). */
+    &:not(.ui-flush-content) {
+        box-shadow: 0 -1px 0 color-mix(in oklab, var(--color-base-300) 86%, var(--color-base-content));
+    }
+
+    & .fi-ta-ctn {
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    /* Inset like the table's first column under it, so the search lines up with the checkboxes. */
+    & .ui-toolbar {
+        margin-bottom: 0;
+        border: 0;
+        border-bottom: 1px solid var(--color-base-300);
+        border-radius: 0;
+        box-shadow: none;
+        padding-inline: 1rem;
+
+        @media (width >= 40rem) {
+            padding-inline: 1.5rem;
+        }
+    }
 }
 
 .tabs-connected__divider {

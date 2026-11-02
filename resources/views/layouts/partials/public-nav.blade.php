@@ -9,7 +9,22 @@
              here. Left out while empty: an empty nav landmark is noise to a screen reader. --}}
         <div class="flex-1" aria-hidden="true"></div>
 
-        <div class="flex items-center gap-3">
+        @auth
+            {{-- On a phone the account links don't fit beside the logo: the admin shell's avatar menu, plus
+                 Admin dashboard unless an add-on already lists it (the teams tier does). --}}
+            @php($menuHasDashboard = \App\Support\AccountMenu\AccountMenuRegistry::visible(auth()->user())->contains(fn ($item): bool => $item->getUrl() === route('dashboard')))
+            <div class="sm:hidden">
+                <x-header-menu>
+                    @if (auth()->user()->canAccessAdmin() && ! $menuHasDashboard)
+                        <x-slot:links>
+                            <li><a href="{{ route('dashboard') }}">{{ __('Admin dashboard') }}</a></li>
+                        </x-slot:links>
+                    @endif
+                </x-header-menu>
+            </div>
+        @endauth
+
+        <div @class(['items-center gap-3', 'hidden sm:flex' => auth()->check(), 'flex' => ! auth()->check()])>
             @auth
                 <span class="hidden text-sm text-base-content/70 sm:inline">
                     {{ __('Welcome, :name', ['name' => auth()->user()->first_name]) }}

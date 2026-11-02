@@ -93,6 +93,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                         : $record->roles->pluck('name')->all())
                     ->placeholder(__('admin.no_roles'))
                     ->badge()
+                    // Several badges stack rather than widen the table past a tablet.
+                    ->wrap()
                     ->color(fn (string $state, User $record): string => $state === __('admin.super_admin')
                         ? DaisyColor::ERROR->toFilamentColor()
                         : $record->roles->firstWhere('name', $state)?->badgeColor()->toFilamentColor() ?? DaisyColor::NEUTRAL->toFilamentColor()),
@@ -106,7 +108,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     ->dateTime()
                     ->placeholder(__('admin.never'))
                     ->sortable()
-                    ->visibleFrom('md'),
+                    ->visibleFrom('lg'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')

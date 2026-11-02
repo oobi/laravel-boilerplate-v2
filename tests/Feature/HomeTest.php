@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\AccountMenu\AccountMenuRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Route;
@@ -76,5 +77,37 @@ class HomeTest extends TestCase
             ->getContent();
 
         $this->assertMatchesRegularExpression('#href="'.preg_quote(route('profile.edit'), '#').'"[^>]*>\s*'.preg_quote(__('admin.my_profile'), '#').'\s*</a>#', $html);
+    }
+
+    /** On a phone the nav's links move into the avatar menu, Admin dashboard included for an admin. */
+    public function test_the_account_menu_carries_the_admin_dashboard_link_for_admins_only(): void
+    {
+        AccountMenuRegistry::flush();
+
+        $adminMenu = $this->accountMenu($this->actingAs(User::factory()->superAdmin()->create())->get('/')->assertOk()->getContent());
+        $this->assertSame(1, substr_count($adminMenu, 'href="'.route('dashboard').'"'));
+        $this->assertStringContainsString('href="'.route('profile.edit').'"', $adminMenu);
+
+        $userMenu = $this->accountMenu($this->actingAs(User::factory()->create())->get('/')->assertOk()->getContent());
+        $this->assertStringNotContainsString('href="'.route('dashboard').'"', $userMenu);
+    }
+
+    /** An add-on's own Admin dashboard link (the teams tier has one) isn't doubled. */
+    public function test_the_account_menu_does_not_repeat_an_add_on_admin_dashboard_link(): void
+    {
+        AccountMenuRegistry::flush();
+        AccountMenuRegistry::item('add-on-dashboard')->label('Admin dashboard')->url(fn (): string => route('dashboard'));
+
+        $menu = $this->accountMenu($this->actingAs(User::factory()->superAdmin()->create())->get('/')->assertOk()->getContent());
+
+        $this->assertSame(1, substr_count($menu, 'href="'.route('dashboard').'"'));
+    }
+
+    private function accountMenu(string $html): string
+    {
+        $this->assertMatchesRegularExpression('#<ul id="account-menu".*?</ul>#s', $html);
+        preg_match('#<ul id="account-menu".*?</ul>#s', $html, $match);
+
+        return $match[0];
     }
 }

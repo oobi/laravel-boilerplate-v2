@@ -106,6 +106,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     ->label(Team::allowsMultipleRoles() ? team_trans('members.roles') : team_trans('members.role'))
                     ->getStateUsing(fn (User $record): array => $this->badgesFor($record))
                     ->badge()
+                    // Several badges stack rather than widen the table past a tablet.
+                    ->wrap()
                     ->color(fn (string $state): string => $this->badgeColor($state)),
 
                 // A member's effective standing as one badge — see statusLabel()

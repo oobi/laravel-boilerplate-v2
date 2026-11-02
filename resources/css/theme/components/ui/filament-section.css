@@ -95,7 +95,8 @@
     & .fi-ta-ctn {
         border: 0;
         box-shadow: none;
-        border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        /* A full-bleed section on a phone (layout.css) sets the variable to 0. */
+        border-radius: 0 0 var(--ui-section-radius, var(--radius-xl)) var(--ui-section-radius, var(--radius-xl));
     }
 }
 
