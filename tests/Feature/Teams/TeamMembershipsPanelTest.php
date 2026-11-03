@@ -73,7 +73,9 @@ class TeamMembershipsPanelTest extends TestCase
             ->assertTableColumnStateSet('standing', [team_trans('members.primary_owner')], $owned)
             ->assertTableColumnStateSet('standing', [team_trans('members.owner')], $coOwned)
             ->assertTableColumnStateSet('standing', ['Team Admin'], $admin)
-            ->assertTableColumnStateSet('standing', ['Team Admin', team_trans('members.suspended')], $suspended);
+            ->assertTableColumnStateSet('standing', ['Team Admin'], $suspended)
+            ->assertTableColumnStateSet('membership_status', [team_trans('members.suspended')], $suspended)
+            ->assertTableColumnStateSet('membership_status', [team_trans('admin.active')], $admin);
     }
 
     public function test_an_inactive_team_is_flagged(): void
