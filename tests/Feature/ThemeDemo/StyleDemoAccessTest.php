@@ -54,6 +54,33 @@ class StyleDemoAccessTest extends TestCase
             ->assertNotified(__('theme-demo::messages.modals_filament_confirmed'));
     }
 
+    /** Projects copy from the demo, so it models accessible markup (oobi #67). */
+    public function test_demo_controls_have_accessible_names(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $this->get('/admin/style-demo/components/filament')
+            ->assertOk()
+            ->assertSee('aria-label="'.e(__('Edit (:color)', ['color' => 'primary'])).'"', false);
+
+        $forms = $this->get('/admin/style-demo/forms/daisy/standard')->assertOk();
+
+        foreach (['range', 'file', 'color'] as $field) {
+            $forms->assertSee('for="'.$field.'"', false)->assertSee('id="'.$field.'" type="'.$field.'"', false);
+        }
+
+        $forms->assertDontSee('radio-sm', false);
+
+        $this->get('/admin/style-demo/tables/maximalist')
+            ->assertOk()
+            ->assertSee('aria-label="'.e(__('admin.select_all')).'"', false)
+            ->assertSee('aria-label="'.e(__('filament::components/pagination.actions.next.label')).'"', false);
+
+        $this->get('/admin/style-demo/tables/wide')
+            ->assertOk()
+            ->assertSee('tabindex="0" role="region"', false);
+    }
+
     public function test_table_tabs_are_connected_to_their_content_panel(): void
     {
         $admin = User::factory()->superAdmin()->create();

@@ -29,7 +29,7 @@
                     <legend class="fieldset-legend ui-form-label">{{ __('theme-demo::messages.field_checkbox_group') }}</legend>
                     @foreach (['a' => 'Option A', 'b' => 'Option B', 'c' => 'Option C'] as $value => $label)
                         <label class="label gap-2 ui-form-label">
-                            <input type="checkbox" class="checkbox checkbox-sm" wire:model="checkboxGroup" value="{{ $value }}">
+                            <input type="checkbox" class="checkbox" wire:model="checkboxGroup" value="{{ $value }}">
                             {{ $label }}
                         </label>
                     @endforeach
@@ -39,7 +39,7 @@
                     <legend class="fieldset-legend ui-form-label">{{ __('theme-demo::messages.field_radio_group') }}</legend>
                     @foreach (['x' => 'Option X', 'y' => 'Option Y', 'z' => 'Option Z'] as $value => $label)
                         <label class="label gap-2 ui-form-label">
-                            <input type="radio" class="radio radio-sm" wire:model="radioGroup" value="{{ $value }}">
+                            <input type="radio" class="radio" wire:model="radioGroup" value="{{ $value }}">
                             {{ $label }}
                         </label>
                     @endforeach
@@ -51,21 +51,21 @@
                 </label>
 
                 <div>
-                    <label class="ui-form-label mb-1">{{ __('theme-demo::messages.field_range') }}</label>
-                    <input type="range" min="0" max="100" wire:model.live="range" class="range">
+                    <label for="range" class="ui-form-label mb-1">{{ __('theme-demo::messages.field_range') }}</label>
+                    <input id="range" type="range" min="0" max="100" wire:model.live="range" class="range">
                     <div class="mt-1 text-xs text-muted">{{ $range }}</div>
                 </div>
 
                 <x-form-input name="date" type="date" label="{{ __('theme-demo::messages.field_date') }}" wire:model="date" :floating="$variant === 'floating'" />
 
                 <div>
-                    <label class="ui-form-label mb-1">{{ __('theme-demo::messages.field_file') }}</label>
-                    <input type="file" wire:model="file" class="file-input w-full">
+                    <label for="file" class="ui-form-label mb-1">{{ __('theme-demo::messages.field_file') }}</label>
+                    <input id="file" type="file" wire:model="file" class="file-input w-full">
                 </div>
 
                 <div>
-                    <label class="ui-form-label me-2 mb-1">{{ __('theme-demo::messages.field_color') }}</label>
-                    <input type="color" wire:model="color" class="input h-10 w-20 p-1">
+                    <label for="color" class="ui-form-label me-2 mb-1">{{ __('theme-demo::messages.field_color') }}</label>
+                    <input id="color" type="color" wire:model="color" class="input h-10 w-20 p-1">
                 </div>
 
                 <x-form-input name="errorExample" type="text" label="{{ __('theme-demo::messages.field_error_example') }}" wire:model="errorExample" :floating="$variant === 'floating'" />
