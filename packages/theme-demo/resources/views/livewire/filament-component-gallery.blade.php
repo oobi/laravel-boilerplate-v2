@@ -53,11 +53,11 @@
         {{ $this->statusSchema }}
     </x-card>
 
-    {{-- Icon buttons --}}
+    {{-- Icon buttons: an icon alone needs a label, read out and shown in the tooltip. --}}
     <x-card :title="__('Icon buttons')">
         <div class="flex flex-wrap items-center gap-2">
             @foreach ($filamentColors as $label => $color)
-                <x-filament::icon-button :color="$color" icon="heroicon-o-pencil-square" :tooltip="ucfirst($label)" />
+                <x-filament::icon-button :color="$color" icon="heroicon-o-pencil-square" :label="__('Edit (:color)', ['color' => $label])" :tooltip="__('Edit (:color)', ['color' => $label])" />
             @endforeach
         </div>
     </x-card>

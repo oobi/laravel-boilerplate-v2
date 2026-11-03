@@ -44,7 +44,7 @@
                     <thead>
                         <tr>
                             <th class="w-10">
-                                <input type="checkbox" class="checkbox checkbox-sm" wire:click="toggleSelectAll" @checked(count($selected) && count($selected) === $this->rows->total())>
+                                <input type="checkbox" class="checkbox checkbox-sm" wire:click="toggleSelectAll" aria-label="{{ __('admin.select_all') }}" @checked(count($selected) && count($selected) === $this->rows->total())>
                             </th>
                             @foreach (['name' => __('Name'), 'status' => __('Status'), 'joinedAt' => __('Joined')] as $column => $label)
                                 <th class="cursor-pointer select-none" wire:click="sortBy('{{ $column }}')">
@@ -61,7 +61,7 @@
                         @forelse ($this->rows as $row)
                             <tr wire:key="maximalist-row-{{ $row->id }}">
                                 <td>
-                                    <input type="checkbox" class="checkbox checkbox-sm" wire:model.live="selected" value="{{ $row->id }}">
+                                    <input type="checkbox" class="checkbox checkbox-sm" wire:model.live="selected" value="{{ $row->id }}" aria-label="{{ __('Select :name', ['name' => $row->name]) }}">
                                 </td>
                                 <td class="flex items-center gap-3">
                                     <x-avatar :name="$row->name" size="sm" />
@@ -105,7 +105,7 @@
                     </label>
 
                     <nav class="daisy-table__pagination-actions" aria-label="{{ __('filament::components/pagination.label') }}">
-                        <x-button color="neutral" variant="outline" size="sm" wire:click="previousPage" :disabled="$this->rows->onFirstPage()">
+                        <x-button color="neutral" variant="outline" size="sm" wire:click="previousPage" :disabled="$this->rows->onFirstPage()" :aria-label="__('filament::components/pagination.actions.previous.label')">
                             <x-heroicon-o-chevron-left class="h-4 w-4" />
                             <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.previous.label') }}</span>
                         </x-button>
@@ -116,7 +116,7 @@
                             @endfor
                         </x-button-group>
 
-                        <x-button color="neutral" variant="outline" size="sm" wire:click="nextPage" :disabled="! $this->rows->hasMorePages()">
+                        <x-button color="neutral" variant="outline" size="sm" wire:click="nextPage" :disabled="! $this->rows->hasMorePages()" :aria-label="__('filament::components/pagination.actions.next.label')">
                             <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.next.label') }}</span>
                             <x-heroicon-o-chevron-right class="h-4 w-4" />
                         </x-button>
