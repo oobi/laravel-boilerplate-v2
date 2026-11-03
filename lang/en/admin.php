@@ -28,6 +28,8 @@ return [
     'records_trashed' => 'Trashed',
     'filters' => 'Filters',
     'filters_on' => 'Filters, :count on',
+    'bulk_actions' => 'Bulk actions',
+    'records_selected' => '{1} :count :label selected|[2,*] :count :label selected',
     'save_changes' => 'Save changes',
     'delete' => 'Delete',
 

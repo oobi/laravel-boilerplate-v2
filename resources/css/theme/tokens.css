@@ -68,6 +68,12 @@
   --color-primary-text: color-mix(in oklab, var(--color-primary) var(--soft-fg-strength), var(--soft-fg-mix));
   --color-neutral-text: color-mix(in oklab, var(--color-neutral) var(--soft-fg-strength), var(--soft-fg-mix));
   --color-error-text: color-mix(in oklab, var(--color-error) var(--soft-fg-strength), var(--soft-fg-mix));
+
+  /* A selected row, card or list item: a pale primary, not grey, which reads as disabled.
+     Hover deepens it a step. Pairs with a primary edge where the item has one. Muted text
+     on both clears AA (ThemeContrastTest), which caps the tint. */
+  --ui-selected-bg: color-mix(in oklab, var(--color-primary) 7%, var(--color-base-100));
+  --ui-selected-bg-hover: color-mix(in oklab, var(--color-primary) 9%, var(--color-base-100));
 }
 
 @plugin "daisyui/theme" {
@@ -126,6 +132,12 @@
   --color-primary-text: color-mix(in oklab, var(--color-primary) var(--soft-fg-strength), var(--soft-fg-mix));
   --color-neutral-text: color-mix(in oklab, var(--color-neutral) var(--soft-fg-strength), var(--soft-fg-mix));
   --color-error-text: color-mix(in oklab, var(--color-error) var(--soft-fg-strength), var(--soft-fg-mix));
+
+  /* A selected row, card or list item: a pale primary, not grey, which reads as disabled.
+     Hover deepens it a step. Pairs with a primary edge where the item has one. Muted text
+     on both clears AA (ThemeContrastTest), which caps the tint. */
+  --ui-selected-bg: color-mix(in oklab, var(--color-primary) 7%, var(--color-base-100));
+  --ui-selected-bg-hover: color-mix(in oklab, var(--color-primary) 9%, var(--color-base-100));
 }
 
 /* ── Design tokens ──────────────────────────────────────────────

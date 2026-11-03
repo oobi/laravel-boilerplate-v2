@@ -338,6 +338,7 @@ Where the edge and padding rules live (each file styles its own component):
 | `daisyui-overrides/card.css` | Card padding (`--card-p`), 1rem on a phone |
 | `ui/toolbar.css` | The toolbar's own layout on a phone: the "Filters" button and its panel |
 | `ui/filament-buttons.css` | A toolbar action shown as just its icon on a phone (`->labeledFrom('sm')`) |
+| `ui/filament-table.css` (selection bar) | The selection count, the bar and bulk-actions sheet below `lg`, the selected-row tint |
 
 All under `resources/css/theme/components/`.
 
@@ -347,6 +348,55 @@ A tab panel holding just a table, or a toolbar then a table, goes flush by
 itself: no panel padding, no border on the table, and the toolbar becomes a
 strip under the tabs. Pages don't pass `flush` for it. Anything else in the
 panel (a form, cards) keeps the padding.
+
+### Selection and bulk actions
+
+Selecting rows works the same on every Filament table, with nothing to add
+per table:
+
+- **The count names the rows**: "2 users selected", from the table's model
+  label, not Filament's "2 records selected". A table with no model says
+  "records". Set `->modelLabel()` / `->pluralModelLabel()` when the model's
+  name isn't the word people use.
+- **A selected row is tinted pale primary** with a primary edge, not grey
+  (grey reads as disabled), and its avatar gets a ring. The tint is
+  `--ui-selected-bg` (and `--ui-selected-bg-hover`) in `tokens.css`: use it
+  for anything else that can be selected, such as a hand-built list or a
+  card grid. Muted text on both clears AA (`ThemeContrastTest`).
+- **One selection per page**: starting a selection in one table clears any
+  other table's (`table-selection.js`), so there's only ever one set of
+  bulk actions.
+
+Below `lg` (phones and upright tablets) the selection becomes a bar fixed to
+the bottom of the screen, so the actions stay in reach however far down the
+list you've scrolled: the count, "Select all" and "Deselect all" under it,
+and a "Bulk actions" button. That opens a bottom sheet headed with the count,
+with a close button and each bulk action as a full-width solid button in its
+colour. From `lg` up the actions stay in Filament's dropdown above the table.
+The bar and sheet come from `filament/tables/selection-bar`, a render hook in
+`AppServiceProvider`, and draw Filament's own actions, so confirmations,
+authorisation and `->visible()` / `->hidden()` work as usual (the trash view
+offers only Restore).
+
+When you add bulk actions:
+
+- **Put them in one `BulkActionGroup`.** The group's label names the bar's
+  button, and on desktop it's the one dropdown. A loose `BulkAction` still
+  works but shows twice on a phone when the table keeps Filament's own
+  header.
+- **Colour each by intent**, as for buttons: `danger` for destructive
+  (delete), `warning` for consequential but reversible (deactivate),
+  `success` for restorative (activate, restore), and leave everything else
+  at the default primary. In the sheet every action is a solid button, so a
+  colour per action becomes a rainbow where none of them means anything;
+  by intent, the ordinary actions read as one calm block and the coloured
+  ones stand out for a reason. Put destructive actions last: the sheet
+  sets the first one apart.
+- **Never colour one `gray`**: a solid grey button reads as disabled.
+
+Keyboard users reach the bar before the table (it's earlier in the page), so
+from the last row it's Shift+Tab back up; fine on touch, and the count is
+announced as it changes.
 
 ## Modals
 

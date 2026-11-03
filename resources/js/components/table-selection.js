@@ -57,8 +57,43 @@ const resyncCheckboxesToSelectionState = () => {
     });
 };
 
+/**
+ * One selection per page: starting a selection in one table clears any other
+ * table's (its "Select all" link only shows once that table has one), so only
+ * one bulk-actions bar (fixed to the bottom of the screen on a phone, see
+ * filament-table.css) can ever show, and it's always about the rows just
+ * touched.
+ */
+const clearOtherTablesSelections = (event) => {
+    const checkbox = event.target;
+
+    // Row and group checkboxes, and the "select this page" one (outside the selection cells on a phone).
+    if (! checkbox.matches?.(`${SELECTION_CHECKBOX_SELECTOR}, .fi-ta-page-checkbox`) || ! checkbox.checked || ! window.Alpine) {
+        return;
+    }
+
+    const table = checkbox.closest('[x-data^="filamentTable("]');
+
+    document.querySelectorAll('[x-data^="filamentTable("]').forEach((other) => {
+        if (other === table) {
+            return;
+        }
+
+        const state = window.Alpine.$data(other);
+
+        if (state?.getSelectedRecordsCount?.() > 0) {
+            state.deselectAllRecords();
+        }
+    });
+};
+
 export const initTableSelectionGuard = () => {
     disableStateRestoration();
+
+    if (! window.__tableSelectionSingleListener) {
+        document.addEventListener('change', clearOtherTablesSelections);
+        window.__tableSelectionSingleListener = true;
+    }
 
     // Cover checkboxes Livewire renders after the initial load. One document-level
     // observer handles every table on the page; guarded so repeated init calls

@@ -110,6 +110,27 @@ class ListUsersTest extends TestCase
             ->assertCanNotSeeTableRecords([$plain, $percent]);
     }
 
+    public function test_the_selection_count_names_users_not_records(): void
+    {
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListUsers::class)
+            ->assertSeeHtml('class="ui-selection-count"')
+            ->assertSeeHtml('__COUNT__ user selected')
+            ->assertSeeHtml('__COUNT__ users selected');
+    }
+
+    public function test_the_bulk_sheet_lists_only_the_bulk_actions_on_offer(): void
+    {
+        // The sheet follows Filament's own header menu in the page, so "in order" finds the copy in the sheet.
+        $component = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListUsers::class)
+            ->assertSeeHtmlInOrder(['class="ui-bulk-sheet"', "mountAction('activate'"]);
+
+        $component->set('tableFilters.trashed.value', '0')
+            ->assertSeeHtmlInOrder(['class="ui-bulk-sheet"', "mountAction('restore'"])
+            ->assertDontSeeHtml("mountAction('activate'");
+    }
+
     public function test_selected_users_can_be_bulk_activated(): void
     {
         $admin = User::factory()->superAdmin()->create();

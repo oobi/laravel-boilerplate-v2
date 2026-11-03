@@ -31,16 +31,192 @@
 | never the duplicated search/filter chrome. (Same `:has()` technique as
 | floating-label.css; degrades to "hidden", never to broken.)
 */
-.fi-ta-main:has(
-        > .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])
-    )
-    > .fi-ta-header-ctn {
-    display: block;
+/* From lg up: below it, the selection bar's own "Bulk actions" button and sheet take over (below). */
+@media (width >= 64rem) {
+    .fi-ta-main:has(
+            > .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])
+        )
+        > .fi-ta-header-ctn {
+        display: block;
+    }
 }
 
 .fi-ta-header-ctn > .fi-ta-header,
 .fi-ta-header-toolbar > :not(.fi-ta-actions) {
     display: none;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Selection bar: our count, and below lg a bar and bottom sheet
+|--------------------------------------------------------------------------
+| filament/tables/selection-bar (a render hook in AppServiceProvider) puts a
+| count named for the rows ("2 users selected") in Filament's selection
+| indicator, hiding Filament's "2 records selected", and below lg a "Bulk
+| actions" button with a <dialog> sheet of the table's bulk actions.
+|
+| These lean on Filament's indicator markup (a count span in its first div,
+| the links in its last). If that changes, the bar degrades to two counts or
+| none and a plain layout, never to a broken action.
+*/
+.fi-ta-selection-indicator > div:first-child > span {
+    display: none;
+}
+
+.ui-selection-bar-button {
+    display: none;
+}
+
+@media (width >= 64rem) {
+    .fi-ta-selection-indicator > div:last-child {
+        flex: 1 1 auto;
+    }
+
+    .ui-selection-count {
+        margin-inline-end: auto;
+    }
+}
+
+/*
+| Below lg (phones and upright tablets), while rows are selected, the
+| indicator is a bar fixed to the bottom of the screen, so the actions stay
+| in reach however far down the list you've scrolled: the count, "Select all"
+| and "Deselect all" under it, and the "Bulk actions" button at its end.
+| Filament's own bulk dropdown is hidden there (its trigger carries
+| fi-btn-menu, from BulkActionGroup::configureUsing()).
+*/
+@media (width < 64rem) {
+    .fi-ta-main:has(> .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])) {
+        /* Room for the bar, so the last row scrolls clear of it. */
+        padding-bottom: 6rem;
+    }
+
+    .fi-ta-header-ctn .fi-dropdown:has(.fi-btn-menu) {
+        display: none;
+    }
+
+    .fi-ta-selection-indicator {
+        position: fixed;
+        inset: auto 0 0 0;
+        z-index: 40;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        column-gap: 0.375rem;
+        row-gap: 0.125rem;
+        margin: 0;
+        padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+        background: var(--color-base-100);
+        border-top: 1px solid var(--color-base-300);
+        box-shadow: 0 -6px 16px color-mix(in oklab, var(--color-base-content) 8%, transparent);
+
+        & > div:first-child {
+            grid-area: 1 / 1;
+            display: flex;
+            align-items: center;
+        }
+
+        & > div:last-child {
+            display: contents;
+        }
+
+        & .ui-selection-count {
+            grid-area: 1 / 2;
+            font-size: 1.0625rem;
+            font-weight: 600;
+        }
+
+        & .fi-ta-selection-indicator-actions-ctn {
+            grid-area: 2 / 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem 1rem;
+
+            /* "Deselect all" is a quiet way out, not a red warning. */
+            & > .fi-link:last-child {
+                @apply text-muted;
+            }
+        }
+
+        & .ui-selection-bar-button {
+            grid-area: 1 / 3 / 3;
+            display: inline-flex;
+        }
+    }
+
+    /* Below sm the stacked table's "Sort by" row goes while selecting: you're acting on rows, not reordering them. */
+    @media (width < 40rem) {
+        .fi-ta-main:has(> .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])) tr:has(> .fi-ta-table-stacked-header-cell) {
+            display: none;
+        }
+    }
+}
+
+/* The bottom sheet: full width along the bottom edge, square, over a dimmed and locked page. The padding is on its body, so only a tap on the dim closes it. */
+.ui-bulk-sheet {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: 85dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-top: 1px solid var(--color-base-300);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+
+    &::backdrop {
+        background: color-mix(in oklab, black 45%, transparent);
+    }
+
+    & .ui-bulk-sheet__body {
+        padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    & .ui-bulk-sheet__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-block: 0.5rem 0.75rem;
+    }
+
+    & .ui-bulk-sheet__heading {
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+
+    /* Each action a full-width solid button in its own colour, the destructive ones set apart below the rest. */
+    & .ui-bulk-sheet__actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+
+        & > .fi-btn {
+            width: 100%;
+        }
+
+        & > .fi-btn.fi-color-danger:not(.fi-color-danger ~ .fi-color-danger):not(:first-child) {
+            margin-top: 0.75rem;
+        }
+    }
+}
+
+html:has(.ui-bulk-sheet[open]) {
+    overflow: hidden;
+}
+
+/* A selected row reads as chosen, not disabled: the shared pale primary (tokens.css), not Filament's grey. A ring keeps its avatar from melting into the tint. */
+.fi-ta-row.fi-selected {
+    background-color: var(--ui-selected-bg);
+
+    &:hover {
+        background-color: var(--ui-selected-bg-hover);
+    }
+
+    & .avatar > div {
+        box-shadow: 0 0 0 2px var(--color-base-100);
+    }
 }
 
 /*
