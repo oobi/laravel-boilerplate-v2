@@ -160,7 +160,7 @@ return [
         'role' => 'Role',
         'sent' => 'Sent',
         'expires' => 'Expires',
-        'expired_badge' => 'Expired',
+        'expired_status' => 'Expired',
         'invite' => 'Invite',
         'invite_heading' => 'Invite someone to :name',
         'already_member' => 'That person already belongs to this :team.',

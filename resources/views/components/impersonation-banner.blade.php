@@ -11,7 +11,7 @@
             <span class="font-semibold">{{ auth()->user()->name }}</span>
 
             @if (! auth()->user()->active)
-                <x-status color="neutral">{{ __('admin.inactive') }}</x-status>
+                <x-status color="neutral" size="sm">{{ __('admin.inactive') }}</x-status>
             @endif
         </div>
 

@@ -187,7 +187,9 @@ class TeamInvitationExpiryTest extends TestCase
         Livewire::actingAs($owner)
             ->test(PendingInvitations::class, ['team' => $team])
             ->assertTableColumnFormattedStateSet('expires_at', $current->expires_at->toFormattedDateString(), $current)
-            ->assertTableColumnFormattedStateSet('expires_at', team_trans('invitations.expired_badge'), $expired);
+            // Once expired, a status: the red dot, then the word (a still-valid date has no dot).
+            ->assertSeeHtml('<span class="status status-error" aria-hidden="true"></span>'.team_trans('invitations.expired_status'))
+            ->assertDontSeeHtml('status-error" aria-hidden="true"></span>'.$current->expires_at->toFormattedDateString());
     }
 
     public function test_invitations_are_pruned_a_while_after_they_expire(): void

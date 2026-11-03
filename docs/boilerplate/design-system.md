@@ -131,7 +131,10 @@ the label carries the meaning, so colour is never the only signal.
 In a Filament table or infolist, call **`->status()`** on the TextColumn or
 TextEntry instead of `->badge()`. The dot takes the column's `->color()` (or
 the enum's), the label keeps its formatting and the body text colour, and it
-takes the same `size` and `animation` options:
+takes the same `size` and `animation` options, plus a `condition` like
+`->badge()`'s for a column that's a state only sometimes (an invitation's
+expiry date, then "Expired"). Call it after `->prefix()` and
+`->extraAttributes()` (or merge those), which would replace what it adds:
 
 ```php
 TextColumn::make('status')->status(),
@@ -142,12 +145,13 @@ TextEntry::make('active')
 ```
 
 Colours: **success** on or good, **neutral** off (inactive, disabled, not
-linked), **warning** paused or needing attention (suspended, a domain awaiting
+linked; a pale grey, so off reads apart from the coloured dots), **warning** paused or needing attention (suspended, a domain awaiting
 verification), **info** waiting on someone else (pending), **error** a problem
 (locked out, expired). `size` is daisyUI's xs to xl; `animation` (`ping`,
 `bounce`) is for something live and stops when the viewer prefers reduced
-motion. `ComponentUsageTest` fails on a state's lang string inside
-`<x-badge>`, or `->badge()` on a status or active column.
+motion. `ComponentUsageTest` fails on a state in a badge: an `<x-badge>`
+holding a state's lang string or a record's status, or `->badge()` on a
+status, state, active, expiry or verification column. Counts stay badges.
 
 ## Form actions
 

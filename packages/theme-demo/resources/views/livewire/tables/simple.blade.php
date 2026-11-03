@@ -31,7 +31,7 @@
                                     <span class="font-medium">{{ $row->name }}</span>
                                 </td>
                                 <td>{{ $row->email }}</td>
-                                <td><x-badge :value="$row->status" /></td>
+                                <td><x-status :value="$row->status" /></td>
                                 <td>{{ $row->joinedAt }}</td>
                             </tr>
                         @empty

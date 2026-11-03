@@ -8,7 +8,7 @@ use App\Support\Theme\DaisyColor;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-/** Mirrors App\Enums\UserStatus's HasColor/HasLabel shape so <x-badge> "just works" here too. */
+/** Mirrors App\Enums\UserStatus's HasColor/HasLabel shape so <x-status> and ->status() "just work" here too. */
 enum DemoStatus: string implements HasColor, HasLabel
 {
     case ACTIVE = 'active';
@@ -29,7 +29,7 @@ enum DemoStatus: string implements HasColor, HasLabel
         return match ($this) {
             self::ACTIVE => DaisyColor::SUCCESS->toFilamentColor(),
             self::PENDING => DaisyColor::INFO->toFilamentColor(),
-            self::ARCHIVED => DaisyColor::WARNING->toFilamentColor(),
+            self::ARCHIVED => DaisyColor::NEUTRAL->toFilamentColor(),
         };
     }
 

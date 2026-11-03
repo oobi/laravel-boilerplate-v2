@@ -80,3 +80,17 @@
         border: 1px solid var(--avatar-color, var(--color-neutral));
     }
 }
+
+/*
+ * daisyUI status dots for states. The coloured ones clear 3:1 against the
+ * page in both themes (WCAG 1.4.11, ThemeContrastTest); raw warning (light
+ * yellow) doesn't, so it takes the theme's warning text tone. Neutral is
+ * "off" (inactive, disabled, not linked): a pale grey, deliberately faint so
+ * it reads apart from the coloured "on" dots; its word carries the meaning.
+ * Unlayered, so it beats daisyUI's status-* colours in its utilities layer.
+ */
+.status-warning { background-color: var(--color-warning-soft); color: var(--color-warning-soft); }
+.status-neutral {
+    background-color: color-mix(in oklab, var(--color-base-content) 25%, transparent);
+    color: transparent;
+}

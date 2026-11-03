@@ -26,7 +26,7 @@
                                         <span class="font-medium">{{ $row->name }}</span>
                                     </td>
                                     <td>{{ $row->email }}</td>
-                                    <td><x-badge :value="$row->status" /></td>
+                                    <td><x-status :value="$row->status" /></td>
                                     <td>{{ $row->joinedAt }}</td>
                                 </tr>
                             @endforeach
@@ -94,7 +94,7 @@
                     <div class="border-t border-base-300 pt-6">
                         <div class="flex items-center justify-between gap-4">
                             <h2 class="ui-h3">{{ __('theme-demo::messages.tab_content_panels_activity_title') }}</h2>
-                            <x-badge value="{{ __('theme-demo::messages.tab_content_panels_activity_badge') }}" color="success" />
+                            <x-status color="success">{{ __('theme-demo::messages.tab_content_panels_activity_badge') }}</x-status>
                         </div>
 
                         <div class="mt-4 flex flex-col divide-y divide-base-300">
@@ -105,7 +105,7 @@
                                         <p class="truncate font-medium">{{ $row->name }}</p>
                                         <p class="text-sm text-muted">{{ __('theme-demo::messages.tab_content_panels_activity_detail') }}</p>
                                     </div>
-                                    <x-badge value="{{ __('theme-demo::messages.tab_content_panels_activity_status') }}" color="success" />
+                                    <x-status color="success">{{ __('theme-demo::messages.tab_content_panels_activity_status') }}</x-status>
                                 </div>
                             @endforeach
                         </div>

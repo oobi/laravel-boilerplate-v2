@@ -94,7 +94,6 @@ class ComponentUsageTest extends TestCase
             '<x-button class="btn-surface">',
             '<label class="has-checked:bg-primary/8 hover:bg-warning/10">',
             '<x-card class="card-title">',
-            '<span class="ui-status-text">',
             '<x-card href="/x">',
             '<x-button-group.item active>',
             '<p class="text-base-content/70">',
@@ -129,26 +128,56 @@ class ComponentUsageTest extends TestCase
 
     public function test_the_state_check_catches_a_badged_state_and_spares_roles(): void
     {
-        $this->assertTrue(self::badgesAState("<x-badge color=\"success\">{{ __('admin.enabled') }}</x-badge>"));
-        $this->assertTrue(self::badgesAState("<x-badge color=\"neutral\">{{ __('admin.inactive') }}</x-badge>"));
-        $this->assertTrue(self::badgesAStateColumn("TextColumn::make('status')\n    ->label(__('admin.status'))\n    ->badge(),"));
-        $this->assertTrue(self::badgesAStateColumn("TextEntry::make('active')->badge()"));
+        foreach ([
+            "<x-badge color=\"success\">{{ __('admin.enabled') }}</x-badge>",
+            "<x-badge color=\"neutral\">{{ __('admin.inactive') }}</x-badge>",
+            "<x-badge value=\"{{ __('admin.active') }}\" color=\"success\" />",
+            '<x-badge :value="__(\'admin.suspended\')" />',
+            '<x-badge :value="$row->status" />',
+            '<x-badge :value="$row[\'status\']" />',
+            "<x-badge color=\"warning\">{{ __('invitations.expired_status') }}</x-badge>",
+            "<x-badge color=\"error\">{{ __('admin.two_factor_grace_locked_out') }}</x-badge>",
+        ] as $markup) {
+            $this->assertTrue(self::badgesAState($markup), $markup);
+        }
+
+        foreach ([
+            "TextColumn::make('status')\n    ->label(__('admin.status'))\n    ->badge(),",
+            "TextEntry::make('active')->badge()",
+            "TextColumn::make('membership_status')->badge(true)",
+            'TextColumn::make(\'expires_at\')->badge(fn (Invite $record): bool => $record->isExpired())',
+            'TextColumn::make("state")->badge()',
+        ] as $code) {
+            $this->assertTrue(self::badgesAStateColumn($code), $code);
+        }
 
         $this->assertFalse(self::badgesAState("<x-badge color=\"error\">{{ __('admin.super_admin') }}</x-badge>"));
         $this->assertFalse(self::badgesAState("<x-status color=\"success\">{{ __('admin.enabled') }}</x-status>"));
+        $this->assertFalse(self::badgesAState('<x-badge color="info" size="xs">{{ $activeCount }}</x-badge>'));
+        $this->assertFalse(self::badgesAState("<x-badge color=\"info\">{{ trans_choice('teams.pending_invitations_count', \$count) }}</x-badge>"));
+        $this->assertFalse(self::badgesAState("{{-- not an <x-badge> --}}\n<x-status :value=\"\$row->status\" />"));
         $this->assertFalse(self::badgesAStateColumn("TextColumn::make('role')\n    ->badge(),\n\nTextColumn::make('status')->status(),"));
+        $this->assertFalse(self::badgesAStateColumn("Tab::make('active')->badge(3)"));
+        $this->assertFalse(self::badgesAStateColumn("SelectFilter::make('status'),\nTextColumn::make('role')->badge()"));
     }
 
-    /** An <x-badge> wrapping a state's lang string. */
+    /** An <x-badge> holding a state: a state's lang string (attribute or content) or a record's status. */
     private static function badgesAState(string $contents): bool
     {
-        return preg_match("/<x-badge\b[^>]*>\s*\{\{\s*(?:__|team_trans)\('[\w.]*\.(?:active|inactive|enabled|disabled|linked|not_linked|suspended|pending|verified|expired)'/", $contents) === 1;
+        // Blade comments may name a component; each match stays within one element.
+        $markup = preg_replace('/\{\{--.*?--\}\}/s', '', $contents);
+        preg_match_all('/<x-badge\b(?:(?!<x-).)*?(?:\/>|<\/x-badge>)/s', $markup, $badges);
+
+        return collect($badges[0])->contains(fn (string $badge): bool => preg_match(
+            "/(?:__|trans_choice|team_trans|team_trans_choice)\\(\\s*'[\\w:.-]*\\.(?:\\w+_)?(?:active|inactive|enabled|disabled|linked|not_linked|suspended|pending|verified|expired|archived|locked_out)(?:_(?:status|badge))?'|->status\\b|\\['status'\\]/",
+            $badge,
+        ) === 1);
     }
 
-    /** A Filament column or entry named for a state (status, active) chained to ->badge() before the next make(). */
+    /** A Filament column or entry holding a state (status, state, active, an expiry or verification date) chained to ->badge(…) before the next make(). */
     private static function badgesAStateColumn(string $contents): bool
     {
-        return preg_match("/::make\('(?:\w+_)?(?:status|active)'\)(?:(?!::make\().)*?->badge\(\)/s", $contents) === 1;
+        return preg_match("/(?:Column|Entry)::make\\(['\"](?:\\w+_)?(?:status|state|active|expires_at|expired_at|verified_at)['\"]\\)(?:(?!::make\\().)*?->badge\\(/s", $contents) === 1;
     }
 
     /**

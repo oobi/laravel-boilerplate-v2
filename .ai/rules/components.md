@@ -19,7 +19,7 @@ Prefer the five intent components over `<x-button color="…">` in app markup �
 - `<x-button.warning>` — consequential but *reversible/non-destructive*: impersonate, grant super-admin, reset password.
 - `<x-button.icon>` — square (or `circle`) icon-only chrome: menu toggles, modal close, pin/unpin. Plain ghost, no colour tint. **Always give it an `aria-label` or `title`.**
 
-Rubric for danger vs warning: destroys/removes/cuts off access → `danger`; powerful but reversible → `warning`; otherwise → `action`. `<x-button>` stays the low-level primitive these wrap; use it directly only for a standalone navigation CTA where a deliberate primary/primary-outline emphasis (not one of the intents above) is the point — e.g. a landing-page "Go to dashboard" / "Register" pair. There are no `info`/`success` buttons by design — those colours are for status surfaces (alerts, badges), not actions.
+Rubric for danger vs warning: destroys/removes/cuts off access → `danger`; powerful but reversible → `warning`; otherwise → `action`. `<x-button>` stays the low-level primitive these wrap; use it directly only for a standalone navigation CTA where a deliberate primary/primary-outline emphasis (not one of the intents above) is the point, e.g. a landing-page "Go to dashboard" / "Register" pair. There are no `info`/`success` buttons by design: those colours are for status surfaces (alerts, badges, status dots), not actions.
 
 That rubric is for Blade `<x-button.*>`. Filament row and bulk actions may also use `success` for a restorative action (activate, restore), as RestoreAction and RestoreBulkAction do by default; see tables.md, "Bulk actions".
 

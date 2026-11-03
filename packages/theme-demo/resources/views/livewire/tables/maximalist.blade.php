@@ -70,7 +70,7 @@
                                         <div class="text-xs text-muted">{{ $row->email }}</div>
                                     </div>
                                 </td>
-                                <td><x-badge :value="$row->status" /></td>
+                                <td><x-status :value="$row->status" /></td>
                                 <td>{{ $row->joinedAt }}</td>
                                 <td>
                                     <x-button.icon :aria-label="__('Show details')" :aria-expanded="in_array($row->id, $expanded, true) ? 'true' : 'false'" wire:click="toggleExpand({{ $row->id }})">

@@ -133,7 +133,7 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
             ])
             ->searchPlaceholder(team_trans('domains.search'))
             ->filters([
-                // Verified vs pending — the same two states the status column shows.
+                // Verified vs pending: the same two states the status column shows.
                 Tables\Filters\SelectFilter::make('status')
                     ->label(team_trans('domains.status'))
                     ->options(self::statusOptions())
