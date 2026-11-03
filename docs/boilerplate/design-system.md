@@ -113,6 +113,42 @@ the explanation as its content and an `actions` slot.
 
 Demos of all of these are in the style demo's component gallery.
 
+## Badges and status
+
+A **badge** is for a kind of thing: a role, Primary owner, a count. A
+**state** (Active, Inactive, Suspended, Pending, Enabled, Linked, Verified) is
+**`<x-status>`**: daisyUI's `status` dot, then the label in plain text. In a
+row that holds both, the role stands out and the state reads as a word, and
+the label carries the meaning, so colour is never the only signal.
+
+```blade
+<x-badge color="error">Super admin</x-badge>
+<x-status :value="$user->status" />          {{-- an enum with HasColor/HasLabel --}}
+<x-status color="warning">Suspended</x-status>
+<x-status color="error" size="lg" animation="ping">Live</x-status>
+```
+
+In a Filament table or infolist, call **`->status()`** on the TextColumn or
+TextEntry instead of `->badge()`. The dot takes the column's `->color()` (or
+the enum's), the label keeps its formatting and the body text colour, and it
+takes the same `size` and `animation` options:
+
+```php
+TextColumn::make('status')->status(),
+TextEntry::make('active')
+    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+    ->status(),
+```
+
+Colours: **success** on or good, **neutral** off (inactive, disabled, not
+linked), **warning** paused or needing attention (suspended, a domain awaiting
+verification), **info** waiting on someone else (pending), **error** a problem
+(locked out, expired). `size` is daisyUI's xs to xl; `animation` (`ping`,
+`bounce`) is for something live and stops when the viewer prefers reduced
+motion. `ComponentUsageTest` fails on a state's lang string inside
+`<x-badge>`, or `->badge()` on a status or active column.
+
 ## Form actions
 
 A page form's action row is **`<x-form-actions>`**, never a hand-rolled
@@ -250,7 +286,7 @@ value on one line, and the ⋮ menu and the checkbox sit at the top right.
   widening the table on a tablet.
 - **`ui-stacked-compact`** puts the other cells' badges on one line under the
   name, like a native list item, with their labels kept for screen readers.
-  Use it for a list of people whose other cells are role and status badges
+  Use it for a list of people whose other cells are role badges and a status
   (Users, team Members), not for a table with unlabelled dates or bare
   numbers; a count that names itself ("2 teams") is fine. An empty cell (a
   Filament `->placeholder()`, or a custom cell view marked `data-cell-empty`)

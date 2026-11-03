@@ -127,13 +127,13 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
 
                 Tables\Columns\TextColumn::make('status')
                     ->label(team_trans('domains.status'))
-                    ->badge()
+                    ->status()
                     ->getStateUsing(fn (Domain $record): string => $record->isVerified() ? team_trans('domains.verified') : team_trans('domains.pending'))
                     ->color(fn (Domain $record): string => ($record->isVerified() ? DaisyColor::SUCCESS : DaisyColor::WARNING)->toFilamentColor()),
             ])
             ->searchPlaceholder(team_trans('domains.search'))
             ->filters([
-                // Verified vs pending — the same two states the status badge shows.
+                // Verified vs pending — the same two states the status column shows.
                 Tables\Filters\SelectFilter::make('status')
                     ->label(team_trans('domains.status'))
                     ->options(self::statusOptions())

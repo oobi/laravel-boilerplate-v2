@@ -238,6 +238,45 @@
         </div>
     </x-card>
 
+    {{-- Status: a state as daisyUI's dot and a word; a badge is for a kind of thing. --}}
+    <x-card :title="__('Status')">
+        <p class="ui-subtle text-sm">{{ __('A state (active, suspended, pending) is a dot and its label; a kind of thing (a role) is a badge. The label carries the meaning, so colour is never the only signal.') }}</p>
+
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Colours') }}</div>
+            <div class="flex flex-wrap gap-x-5 gap-y-2">
+                @foreach ($colors as $color)
+                    <x-status :color="$color">{{ ucfirst($color) }}</x-status>
+                @endforeach
+            </div>
+        </div>
+
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Sizes') }}</div>
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+                @foreach ($sizes as $size)
+                    <x-status color="success" :size="$size">{{ strtoupper($size) }}</x-status>
+                @endforeach
+            </div>
+        </div>
+
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Animations (still when reduced motion is on)') }}</div>
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <x-status color="error" animation="ping">{{ __('Ping') }}</x-status>
+                <x-status color="info" animation="bounce">{{ __('Bounce') }}</x-status>
+            </div>
+        </div>
+
+        <div>
+            <div class="ui-subtle mb-1">{{ __('Beside a badge') }}</div>
+            <div class="flex flex-wrap items-center gap-2">
+                <x-badge color="error">{{ __('Super admin') }}</x-badge>
+                <x-status color="success">{{ __('Active') }}</x-status>
+            </div>
+        </div>
+    </x-card>
+
     {{-- Avatars --}}
     <x-card :title="__('Avatars')">
         @foreach (['solid', 'soft', 'ghost', 'outline'] as $variant)

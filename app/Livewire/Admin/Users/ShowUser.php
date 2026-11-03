@@ -93,7 +93,7 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
                                 TextEntry::make('status')
                                     ->label(__('admin.status'))
-                                    ->badge(),
+                                    ->status(),
 
                                 TextEntry::make('created_at')
                                     ->label(__('admin.joined'))

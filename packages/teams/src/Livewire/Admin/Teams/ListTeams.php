@@ -81,7 +81,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
 
                 Tables\Columns\TextColumn::make('active')
                     ->label(__('admin.status'))
-                    ->badge()
+                    ->status()
                     ->formatStateUsing(fn (bool $state): string => $state ? team_trans('admin.active') : team_trans('admin.inactive'))
                     ->color(fn (bool $state): string => ($state ? DaisyColor::SUCCESS : DaisyColor::NEUTRAL)->toFilamentColor()),
 

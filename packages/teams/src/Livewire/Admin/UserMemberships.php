@@ -116,9 +116,9 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
 
                 Tables\Columns\TextColumn::make('membership_status')
                     ->label(__('admin.status'))
-                    ->state(fn (Team $record): array => array_column($this->statusBadges($record), 'label'))
-                    ->badge()
-                    ->color(fn (string $state, Team $record): string => collect($this->statusBadges($record))->firstWhere('label', $state)['color']),
+                    ->state(fn (Team $record): array => array_column($this->statusStates($record), 'label'))
+                    ->status()
+                    ->color(fn (string $state, Team $record): string => collect($this->statusStates($record))->firstWhere('label', $state)['color']),
 
                 Tables\Columns\TextColumn::make('joined_at')
                     ->label(team_trans('memberships.member_since'))
@@ -302,7 +302,7 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
      *
      * @return list<array{label: string, color: string}>
      */
-    private function statusBadges(Team $team): array
+    private function statusStates(Team $team): array
     {
         return [$this->isSuspendedIn($team)
             ? ['label' => team_trans('members.suspended'), 'color' => DaisyColor::WARNING->toFilamentColor()]

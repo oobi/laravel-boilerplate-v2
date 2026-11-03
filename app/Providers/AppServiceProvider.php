@@ -23,17 +23,20 @@ use App\Support\Auth\MailedLinks;
 use App\Support\Auth\PasswordChecks;
 use App\Support\Roles\AdminRoleScopes;
 use App\Support\Theme\DaisyColor;
+use App\Support\Theme\StatusDot;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Facades\FilamentView;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -45,12 +48,14 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route as RouteDefinition;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -92,6 +97,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFilamentTableDefaults();
         $this->registerNotifications();
         $this->registerQueryMacros();
+        $this->registerStatusMacros();
 
         // One password rule for every path that sets a password (#41); see config/auth.php.
         Password::defaults(fn (): Password => Password::min(config()->integer('auth.password_min_length')));
@@ -271,6 +277,27 @@ class AppServiceProvider extends ServiceProvider
                 $query->orWhereRaw($isPostgres ? "{$wrapped}::text ilike ? escape '!'" : "{$wrapped} like ? escape '!'", [$pattern]);
             }));
         });
+    }
+
+    /**
+     * `->status()` on a TextColumn or TextEntry: a state shown as daisyUI's
+     * status dot then its label (App\Support\Theme\StatusDot), in place of
+     * `->badge()`. The dot takes the column's `->color()` for each state (an
+     * enum's HasColor too); the label keeps its formatting and the body text
+     * colour (text-base-content outranks the colour Filament would give it).
+     * The cell is a flex row so the dot centres beside the label, as in
+     * <x-status>. Optional `size` (xs…xl) and `animation` (ping, bounce).
+     */
+    private function registerStatusMacros(): void
+    {
+        foreach ([TextColumn::class, TextEntry::class] as $component) {
+            $component::macro('status', function (?string $size = null, ?string $animation = null): static {
+                /** @var TextColumn|TextEntry $this */
+                return $this
+                    ->prefix(fn (mixed $state, ?Model $relatedRecord = null): HtmlString => StatusDot::html(is_string($color = $this->getColor($state, $relatedRecord)) ? $color : 'gray', $size, $animation))
+                    ->extraAttributes(['class' => 'flex items-center gap-2 text-base-content'], merge: true);
+            });
+        }
     }
 
     /** Sortable-but-unsorted columns get a double chevron; once sorted, a single chevron shows the direction (daisyUI style). */

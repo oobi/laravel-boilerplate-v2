@@ -27,6 +27,7 @@ class ComponentUsageTest extends TestCase
         '/class="[^"]*(?<![\w-])alert(?![\w-])/' => '<x-alert>',
         '/class="[^"]*(?<![\w-])card(?![\w-])/' => '<x-card> (inset when nested)',
         '/class="[^"]*(?<![\w-])badge(?![\w-])/' => '<x-badge>',
+        '/class="[^"]*(?<![\w-])status(?![\w-])/' => '<x-status>',
         '/class="[^"]*(?<![\w-])ui-banner(?![\w-])/' => '<x-banner>',
         '/border-l-4 border-(info|success|warning|error)\b/' => '<x-banner> or <x-alert>',
         '/(?<![\w:-])bg-(info|success|warning|error)\/\d+/' => '<x-banner> or <x-alert>',
@@ -76,6 +77,7 @@ class ComponentUsageTest extends TestCase
             '<div role="alert" class="alert alert-warning">' => '<x-alert>',
             '<div class="card bg-base-100">' => '<x-card>',
             '<span class="badge badge-soft">' => '<x-badge>',
+            '<span class="status status-success">' => '<x-status>',
             '<div class="join"><button class="join-item">' => '<x-button-group>',
             '<button @class([\'ui-button-group-btn\'])>' => '<x-button-group>',
             '<div class="rounded-box border border-dashed p-8">' => '<x-empty-state>',
@@ -92,12 +94,61 @@ class ComponentUsageTest extends TestCase
             '<x-button class="btn-surface">',
             '<label class="has-checked:bg-primary/8 hover:bg-warning/10">',
             '<x-card class="card-title">',
+            '<span class="ui-status-text">',
             '<x-card href="/x">',
             '<x-button-group.item active>',
             '<p class="text-base-content/70">',
         ] as $markup) {
             $this->assertSame([], self::hits($markup), $markup);
         }
+    }
+
+    /**
+     * A state (active, suspended, enabled, linked…) is a status dot and its
+     * label, never a badge: a badge is for a kind of thing, like a role. In
+     * Blade that's <x-status>, not an <x-badge> around a state's lang string;
+     * in a Filament table or infolist, ->status() on a status or active
+     * column, not ->badge(). See .ai/rules/views.md.
+     */
+    public function test_states_are_shown_as_a_status_not_a_badge(): void
+    {
+        $views = collect([resource_path('views'), ...glob(base_path('packages/*/resources/views'))])
+            ->flatMap(fn (string $directory): array => File::allFiles($directory))
+            ->filter(fn (SplFileInfo $file): bool => str_ends_with($file->getFilename(), '.blade.php') && self::badgesAState($file->getContents()));
+
+        $components = collect([app_path(), ...glob(base_path('packages/*/src'))])
+            ->flatMap(fn (string $directory): array => File::allFiles($directory))
+            ->filter(fn (SplFileInfo $file): bool => str_ends_with($file->getFilename(), '.php') && self::badgesAStateColumn($file->getContents()));
+
+        $found = $views->merge($components)
+            ->map(fn (SplFileInfo $file): string => str_replace(base_path().'/', '', $file->getPathname()))
+            ->values();
+
+        $this->assertSame([], $found->all(), "A state shown as a badge; use <x-status> or ->status() (see .ai/rules/views.md):\n".$found->implode("\n"));
+    }
+
+    public function test_the_state_check_catches_a_badged_state_and_spares_roles(): void
+    {
+        $this->assertTrue(self::badgesAState("<x-badge color=\"success\">{{ __('admin.enabled') }}</x-badge>"));
+        $this->assertTrue(self::badgesAState("<x-badge color=\"neutral\">{{ __('admin.inactive') }}</x-badge>"));
+        $this->assertTrue(self::badgesAStateColumn("TextColumn::make('status')\n    ->label(__('admin.status'))\n    ->badge(),"));
+        $this->assertTrue(self::badgesAStateColumn("TextEntry::make('active')->badge()"));
+
+        $this->assertFalse(self::badgesAState("<x-badge color=\"error\">{{ __('admin.super_admin') }}</x-badge>"));
+        $this->assertFalse(self::badgesAState("<x-status color=\"success\">{{ __('admin.enabled') }}</x-status>"));
+        $this->assertFalse(self::badgesAStateColumn("TextColumn::make('role')\n    ->badge(),\n\nTextColumn::make('status')->status(),"));
+    }
+
+    /** An <x-badge> wrapping a state's lang string. */
+    private static function badgesAState(string $contents): bool
+    {
+        return preg_match("/<x-badge\b[^>]*>\s*\{\{\s*(?:__|team_trans)\('[\w.]*\.(?:active|inactive|enabled|disabled|linked|not_linked|suspended|pending|verified|expired)'/", $contents) === 1;
+    }
+
+    /** A Filament column or entry named for a state (status, active) chained to ->badge() before the next make(). */
+    private static function badgesAStateColumn(string $contents): bool
+    {
+        return preg_match("/::make\('(?:\w+_)?(?:status|active)'\)(?:(?!::make\().)*?->badge\(\)/s", $contents) === 1;
     }
 
     /**
