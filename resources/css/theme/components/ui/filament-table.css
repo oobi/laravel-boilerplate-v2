@@ -573,8 +573,11 @@ th.fi-ta-selection-cell,
     | for a list of people whose other cells are self-describing badges (role,
     | status), the badges flow on one line under the name instead of one
     | labelled line each, like a native list item. The labels stay for screen
-    | readers. Not for a table with dates or counts: unlabelled, they'd read as
-    | noise.
+    | readers. Not for a table with unlabelled dates or bare numbers: they'd read
+    | as noise (a count that names itself, "2 teams", is fine). An empty cell, a
+    | Filament ->placeholder() or a custom cell marked data-cell-empty, is
+    | visually hidden (still read out), so a placeholder must only ever mean
+    | "none".
     */
     .ui-stacked-compact .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row:has(> td > .fi-ta-cell-label) {
         display: flex;
@@ -593,6 +596,11 @@ th.fi-ta-selection-cell,
             }
         }
 
+        /* An empty cell is left out of sight (nothing there says none), but still read out. */
+        & > .fi-ta-cell:has(.fi-ta-placeholder, [data-cell-empty]) {
+            @apply sr-only;
+        }
+
         /* :where() keeps this below the entity cell's padding further down. */
         & > .fi-ta-cell:where(:not(.fi-ta-selection-cell):not(:has(> .fi-ta-actions))) {
             padding: 0;
@@ -602,7 +610,8 @@ th.fi-ta-selection-cell,
         & > .fi-ta-cell:first-child:not(.fi-ta-selection-cell),
         & > .fi-ta-selection-cell + .fi-ta-cell[class*=":fi-visible"] + .fi-ta-cell,
         & > .fi-ta-cell:first-child[class*=":fi-visible"] + .fi-ta-cell {
-            flex-basis: 100%;
+            /* The whole line, the indent it pulls back over included, so a short badge never fits beside it. */
+            flex-basis: calc(100% + 4.25rem);
             margin-block: -0.25rem -0.375rem;
             margin-inline-start: -4.25rem;
             padding-inline: 1rem 3.5rem;

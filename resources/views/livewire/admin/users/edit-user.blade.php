@@ -5,12 +5,10 @@
 
     <x-page-header>
         <x-slot:title>
-            <span class="flex items-center gap-2">
-                {{ __('admin.edit_user') }}
-                @if ($user->id === auth()->id())
-                    <x-badge color="success">{{ __('admin.you') }}</x-badge>
-                @endif
-            </span>
+            {{ __('admin.edit_user') }}
+            @if ($user->id === auth()->id())
+                <span class="font-normal text-muted">{{ __('admin.you') }}</span>
+            @endif
         </x-slot:title>
     </x-page-header>
 

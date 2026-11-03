@@ -57,8 +57,11 @@ class UsersTeamsColumnTest extends TestCase
             ->assertSeeHtml('href="'.route('users.show', $this->joiner).'#team-memberships"')
             ->assertSee(team_trans_choice('memberships.count', 3, ['count' => 3]))
             ->assertDontSee('Gone Co')
-            ->assertDontSeeHtml('href="'.route('users.show', $this->solo).'#team-memberships"')
-            ->assertDontSeeHtml('href="'.route('users.show', $this->loner).'#team-memberships"');
+            // On a phone one team is counted too ("1 team"), so a bare name doesn't stand alone under the person's.
+            ->assertSeeHtml('href="'.route('users.show', $this->solo).'#team-memberships"')
+            ->assertDontSeeHtml('href="'.route('users.show', $this->loner).'#team-memberships"')
+            // No teams: marked so a phone's compact row leaves the dash out.
+            ->assertSeeHtml('data-cell-empty');
     }
 
     public function test_the_count_links_to_the_memberships_section_on_the_user_page(): void
@@ -70,7 +73,8 @@ class UsersTeamsColumnTest extends TestCase
 
     public function test_the_column_costs_no_query_per_user(): void
     {
-        $administrator = User::factory()->administrator()->create();
+        // Kept on page 1: with no role on the page, the roles' permissions aren't eager loaded, one query fewer.
+        $administrator = User::factory()->administrator()->create(['last_name' => 'Aaronson']);
         $few = $this->queries(fn () => Livewire::actingAs($administrator->fresh())->test(ListUsers::class));
 
         User::factory()->count(6)->create()->each(fn (User $user) => $this->north->addMember($user));
@@ -79,7 +83,11 @@ class UsersTeamsColumnTest extends TestCase
             Team::factory()->create()->addMember($user);
         });
 
-        $this->assertSame($few, $this->queries(fn () => Livewire::actingAs($administrator->fresh())->test(ListUsers::class)));
+        $many = $this->queries(fn () => Livewire::actingAs($administrator->fresh())->test(ListUsers::class));
+
+        // Compared by shape (ids and id lists blanked), so a failure names the extra query.
+        $shapes = fn (array $queries): array => array_count_values(preg_replace(['/\((\d+, )*\d+\)/', '/\b\d+\b/'], ['(N)', 'N'], $queries));
+        $this->assertSame($shapes($few), $shapes($many));
     }
 
     public function test_a_team_name_is_not_linked_for_someone_who_cannot_view_teams(): void
@@ -100,8 +108,12 @@ class UsersTeamsColumnTest extends TestCase
             ->assertCanSeeTableRecords([$this->joiner, $this->solo, $this->loner], inOrder: true);
     }
 
-    /** Queries for one render, after a warm-up render pays the one-off lookups (as AdminQueryCountTest). */
-    private function queries(callable $render): int
+    /**
+     * The SQL of one render, after a warm-up render pays the one-off lookups (as AdminQueryCountTest).
+     *
+     * @return list<string>
+     */
+    private function queries(callable $render): array
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         $render();
@@ -110,6 +122,6 @@ class UsersTeamsColumnTest extends TestCase
         DB::enableQueryLog();
         $render();
 
-        return count(DB::getQueryLog());
+        return array_column(DB::getQueryLog(), 'query');
     }
 }

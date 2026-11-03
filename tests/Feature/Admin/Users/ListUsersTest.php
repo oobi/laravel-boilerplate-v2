@@ -67,6 +67,16 @@ class ListUsersTest extends TestCase
             ->assertActionHidden(TestAction::make('delete')->table($target));
     }
 
+    public function test_only_the_signed_in_users_row_is_marked_as_them(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        User::factory()->create();
+
+        $html = Livewire::actingAs($admin)->test(ListUsers::class)->html();
+
+        $this->assertSame(1, substr_count($html, '<span class="font-normal text-muted">'.e(__('admin.you')).'</span>'));
+    }
+
     public function test_admins_can_view_the_users_list(): void
     {
         $admin = User::factory()->superAdmin()->create();

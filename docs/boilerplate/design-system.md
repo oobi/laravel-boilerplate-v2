@@ -251,7 +251,11 @@ value on one line, and the ⋮ menu and the checkbox sit at the top right.
 - **`ui-stacked-compact`** puts the other cells' badges on one line under the
   name, like a native list item, with their labels kept for screen readers.
   Use it for a list of people whose other cells are role and status badges
-  (Users, team Members), not for a table with dates or counts.
+  (Users, team Members), not for a table with unlabelled dates or bare
+  numbers; a count that names itself ("2 teams") is fine. An empty cell (a
+  Filament `->placeholder()`, or a custom cell view marked `data-cell-empty`)
+  is left out of sight there but still read out, so a placeholder must only
+  ever mean "none".
 - **A genuinely wide data grid** opts out with `->stackedOnMobile(false)` and
   keeps the sideways scroll (the gallery's Wide tab).
 
