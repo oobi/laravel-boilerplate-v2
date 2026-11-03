@@ -92,7 +92,8 @@
     > .fi-section-content:has(> .fi-grid-col:only-child > .fi-sc-component > .fi-ta) {
     padding: 0;
 
-    & .fi-ta-ctn {
+    /* Not a table inside a modal the section's component renders (filament-table.css styles those). */
+    & .fi-ta-ctn:not(.fi-modal *) {
         border: 0;
         box-shadow: none;
         /* A full-bleed section on a phone (layout.css) sets the variable to 0. */
