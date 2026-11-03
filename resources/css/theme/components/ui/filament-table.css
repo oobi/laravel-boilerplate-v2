@@ -711,9 +711,12 @@ th.fi-ta-selection-cell,
 | ->status() (AppServiceProvider) marks the cell `ui-status`. The label is
 | the cell itself, or, with a ->description(), an item nested in Filament's
 | column wrapper, so the row layout and colour go on the item either way;
-| the description stays under it, left-aligned.
+| the description stays under it, left-aligned. A ->tooltip() (or
+| ->copyable()) wraps the dot and label in one more span inside the item,
+| so that span is a row too.
 */
-:is(.ui-status.fi-ta-text-item, .ui-status .fi-ta-text-item) {
+:is(.ui-status.fi-ta-text-item, .ui-status .fi-ta-text-item),
+:is(.ui-status.fi-ta-text-item, .ui-status .fi-ta-text-item) > span:is([x-tooltip], .fi-copyable):not(.fi-badge) {
     display: flex;
     align-items: center;
     gap: calc(var(--spacing) * 2);
