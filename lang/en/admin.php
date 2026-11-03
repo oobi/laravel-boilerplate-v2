@@ -116,6 +116,7 @@ return [
     'roles_description' => 'Define what each role can do, and assign roles to users.',
     'system_roles' => 'System',
     'no_roles' => 'No system role',
+    'any_system_role' => 'Any system role',
     'add_role' => 'Add role',
     'edit_role' => 'Edit role',
     'role_name' => 'Role name',

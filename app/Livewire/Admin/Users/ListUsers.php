@@ -61,6 +61,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
 
     private const NO_ROLE_FILTER_VALUE = '__no_role__';
 
+    private const ANY_SYSTEM_ROLE_FILTER_VALUE = '__any_system_role__';
+
     /** @var array<string, string>|null roleFilterOptions(), read by the filter and the view on each render */
     private ?array $roleFilterOptions = null;
 
@@ -131,8 +133,12 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     ->query(function (Builder $query, array $data): Builder {
                         return match ($data['value'] ?? null) {
                             null => $query,
+                            self::ANY_SYSTEM_ROLE_FILTER_VALUE => $query->where(fn (Builder $query): Builder => $query
+                                ->where('is_super_admin', true)
+                                ->orWhereHas('roles', fn (Builder $roles): Builder => $roles->systemRoles())),
                             self::SUPER_ADMIN_FILTER_VALUE => $query->where('is_super_admin', true),
-                            self::NO_ROLE_FILTER_VALUE => $query->where('is_super_admin', false)->doesntHave('roles'),
+                            // The complement of "any system role" (a user's roles are system roles; team roles hang off the membership).
+                            self::NO_ROLE_FILTER_VALUE => $query->where('is_super_admin', false)->whereDoesntHave('roles', fn (Builder $roles): Builder => $roles->systemRoles()),
                             default => $query->whereRelation('roles', 'name', $data['value']),
                         };
                     }),
@@ -345,9 +351,10 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     public function roleFilterOptions(): array
     {
         return $this->roleFilterOptions ??= [
+            self::ANY_SYSTEM_ROLE_FILTER_VALUE => __('admin.any_system_role'),
             self::SUPER_ADMIN_FILTER_VALUE => __('admin.super_admin'),
-            self::NO_ROLE_FILTER_VALUE => __('admin.no_roles'),
             ...Role::systemRoles()->orderBy('name')->pluck('name', 'name')->all(),
+            self::NO_ROLE_FILTER_VALUE => __('admin.no_roles'),
         ];
     }
 
