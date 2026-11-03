@@ -18,6 +18,7 @@ use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Roles\SystemPermissionRegistry;
 use App\Support\TrustedHosts;
 use App\Support\UserDeletionGuards;
+use App\Support\UserListColumns;
 use Concise\Teams\Enums\TeamAbility;
 use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Http\Middleware\ResolveTeamContext;
@@ -39,7 +40,10 @@ use Concise\Teams\Support\Roles\TeamRoleScope;
 use Concise\Teams\Support\TeamContext;
 use Concise\Teams\Support\TeamDestination;
 use Concise\Teams\Support\TeamLabels;
+use Filament\Tables\Columns\Column;
+use Filament\Tables\Columns\ViewColumn;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -318,5 +322,35 @@ class TeamsServiceProvider extends ServiceProvider
         );
 
         PanelRegistry::for('users.show')->add(TeamMembershipsPanel::class);
+
+        $this->registerUsersListColumn();
+    }
+
+    /**
+     * A Teams column on the admin Users list: the count (suspended memberships
+     * included) and, for a single team, its slug and name, all as subqueries so
+     * the list stays one query. Deleted teams don't count.
+     */
+    private function registerUsersListColumn(): void
+    {
+        $teamsOfUser = fn (string $column): Builder => Team::query()
+            ->select("teams.{$column}")
+            ->join('team_user', 'team_user.team_id', '=', 'teams.id')
+            ->whereColumn('team_user.user_id', 'users.id')
+            // Read only when there's one live team; the order just keeps the pick deterministic.
+            ->orderBy('team_user.id')
+            ->limit(1);
+
+        UserListColumns::register(
+            'teams',
+            fn (): Column => ViewColumn::make('teams')
+                ->label(team_trans('memberships.column'))
+                ->view('teams::filament.tables.columns.user-teams-column')
+                ->viewData(['linked' => Gate::allows(TeamSystemPermission::VIEW_TEAMS->value)])
+                ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('teams_count', $direction)),
+            fn (Builder $query): Builder => $query
+                ->withCount('teams')
+                ->addSelect(['only_team_slug' => $teamsOfUser('slug'), 'only_team_name' => $teamsOfUser('name')]),
+        );
     }
 }

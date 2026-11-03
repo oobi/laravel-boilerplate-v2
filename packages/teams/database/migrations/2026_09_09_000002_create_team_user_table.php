@@ -25,6 +25,8 @@ return new class extends Migration
             // No `role` string column (the drift vector in the predecessor app): a
             // member's team roles are foreign keys to `roles` rows, in team_user_role.
             $table->unique(['team_id', 'user_id']);
+            // A user's teams (the Users list's Teams column counts and sorts by them); MySQL indexes the foreign key itself, Postgres and SQLite don't.
+            $table->index('user_id');
         });
 
         // A member's team roles: the membership's own pivot to spatie `roles` rows

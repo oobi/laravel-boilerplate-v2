@@ -76,6 +76,12 @@ Not exhaustive.
   team's primary owner) registers a reason with
   `App\Support\UserDeletionGuards::register()`. Every deletion path refuses
   it, super admins included, and the Users screen shows the reason.
+- **Users list columns**: an add-on that keeps something per user (the teams
+  tier: the teams a user is in) adds a column to the admin Users list with
+  `App\Support\UserListColumns::register($name, $column, $query)`. The column
+  is built per render; the optional query hook loads what it shows as
+  subqueries on the list's own query, so the list never runs a query per
+  user. Columns sit after Status.
 
 ## Scope: staff back-office, not a customer frontend
 

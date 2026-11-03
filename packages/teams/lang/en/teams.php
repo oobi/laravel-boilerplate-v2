@@ -283,6 +283,9 @@ return [
 
     'memberships' => [
         'title' => ':Team memberships',
+        // The Users list column: a dash, the one team's name, or a count linking to these memberships.
+        'column' => ':Teams',
+        'count' => '{0} No :teams|{1} :count :team|[2,*] :count :teams',
         'none' => 'Does not belong to any :team.',
         'member_since' => ':Member since',
         'add' => 'Add to :teams',
