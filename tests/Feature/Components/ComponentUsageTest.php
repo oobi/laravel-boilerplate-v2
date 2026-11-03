@@ -18,16 +18,17 @@ class ComponentUsageTest extends TestCase
 {
     /**
      * What's hand-rolled, and the component to use instead. Whole class names
-     * only, so card-inset, btn-surface and the like don't count.
+     * only, so card-inset, btn-surface and the like don't count, nor one
+     * after a dot: `listed.status` in an Alpine :class is a property.
      *
      * @var array<string, string>
      */
     private const PATTERNS = [
         '/class="[^"]*(?<![\w-])btn(?![\w-])/' => '<x-button.*> (action, secondary, cancel, back, danger, warning, icon)',
-        '/class="[^"]*(?<![\w-])alert(?![\w-])/' => '<x-alert>',
-        '/class="[^"]*(?<![\w-])card(?![\w-])/' => '<x-card> (inset when nested)',
-        '/class="[^"]*(?<![\w-])badge(?![\w-])/' => '<x-badge>',
-        '/class="[^"]*(?<![\w-])status(?![\w-])/' => '<x-status>',
+        '/class="[^"]*(?<![\w.-])alert(?![\w-])/' => '<x-alert>',
+        '/class="[^"]*(?<![\w.-])card(?![\w-])/' => '<x-card> (inset when nested)',
+        '/class="[^"]*(?<![\w.-])badge(?![\w-])/' => '<x-badge>',
+        '/class="[^"]*(?<![\w.-])status(?![\w-])/' => '<x-status>',
         '/class="[^"]*(?<![\w-])ui-banner(?![\w-])/' => '<x-banner>',
         '/border-l-4 border-(info|success|warning|error)\b/' => '<x-banner> or <x-alert>',
         '/(?<![\w:-])bg-(info|success|warning|error)\/\d+/' => '<x-banner> or <x-alert>',
@@ -97,6 +98,8 @@ class ComponentUsageTest extends TestCase
             '<x-card href="/x">',
             '<x-button-group.item active>',
             '<p class="text-base-content/70">',
+            '<span :class="{ \'line-through\': listed.status === \'no_show\' }">',
+            '<div :class="{ \'opacity-50\': row.card && row.badge && row.alert }">',
         ] as $markup) {
             $this->assertSame([], self::hits($markup), $markup);
         }
