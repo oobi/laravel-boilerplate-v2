@@ -85,7 +85,7 @@ return [
     'stop_impersonating' => 'Stop impersonating',
     'impersonation_ended_no_access' => ':name can\'t reach anything in this app, so impersonation ended. Give them a role to let them in.',
 
-    'search_placeholder' => 'Search users by name or email...',
+    'search_placeholder' => 'Search users by name or email…',
     'no_users_found' => 'No users found',
 
     'reset_password' => 'Reset password',

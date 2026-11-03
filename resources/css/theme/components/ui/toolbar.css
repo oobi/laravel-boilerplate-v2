@@ -91,6 +91,7 @@
             .ui-toolbar & .ui-floating-label .ui-floating-label-text {
                 position: static;
                 order: -1;
+                max-width: 100%;
                 transform: none;
                 padding: 0;
                 background: none;
