@@ -13,7 +13,8 @@ return [
     'add_user' => 'Add user',
     'edit_user' => 'Edit user',
     'back_to_users' => 'Back to users',
-    'you' => 'You',
+    // Marks the signed-in user beside their own name, in muted text.
+    'you' => '(you)',
     'back' => 'Back',
     'cancel' => 'Cancel',
     'confirm' => 'Confirm',

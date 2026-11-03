@@ -12,6 +12,7 @@ use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Roles\SystemPermissionRegistry;
 use App\Support\TrustedHosts;
 use App\Support\UserDeletionGuards;
+use App\Support\UserListColumns;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Http\Request;
@@ -43,6 +44,7 @@ abstract class TestCase extends BaseTestCase
         Breadcrumbs::flush();
         TrustedHosts::flush();
         UserDeletionGuards::flush();
+        UserListColumns::flush();
         // Symfony keeps trusted hosts statically too; a test run as production sets them.
         Request::setTrustedHosts([]);
 

@@ -83,6 +83,8 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
     {
         return $schema->components([
             Section::make(team_trans('memberships.title'))
+                // The Users list's "N teams" links here.
+                ->id('team-memberships')
                 ->headerActions([$this->addToTeamsAction()])
                 ->schema([EmbeddedTable::make()]),
         ]);

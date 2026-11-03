@@ -41,15 +41,14 @@ class EditUserTest extends TestCase
 
     public function test_the_page_header_slot_renders_intentional_markup(): void
     {
-        // The page-header title is passed as a slot here (a "You" badge next to
+        // The page-header title is passed as a slot here (a muted "(you)" after
         // the heading). Slots carry HtmlString, so escaping the string-prop case
         // must not double-escape this intentional markup.
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->get("/admin/users/{$admin->id}/edit")
             ->assertOk()
-            ->assertSee(__('admin.you'))
-            ->assertSee('<span class="flex items-center gap-2">', false)
+            ->assertSee('<span class="font-normal text-muted">'.e(__('admin.you')).'</span>', false)
             ->assertDontSee('&lt;span', false);
     }
 

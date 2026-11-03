@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Support\Auth\Destination;
 use App\Support\Theme\DaisyColor;
 use App\Support\UserDeletionGuards;
+use App\Support\UserListColumns;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -75,7 +76,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     {
         return $table
             // Roles with their permissions and direct permissions: every row action asks Coverage what the user holds.
-            ->query(User::query()->with(['roles.permissions', 'permissions']))
+            // Add-on columns (UserListColumns) load what they show here, as subqueries.
+            ->query(UserListColumns::modifyQuery(User::query()->with(['roles.permissions', 'permissions'])))
             ->defaultSort('last_name')
             ->columns([
                 Tables\Columns\ViewColumn::make('user_composite')
@@ -104,6 +106,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
                     ->badge(),
+
+                ...UserListColumns::columns(),
 
                 Tables\Columns\TextColumn::make('last_login_at')
                     ->label(__('admin.last_login'))
