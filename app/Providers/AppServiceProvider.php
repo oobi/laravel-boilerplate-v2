@@ -24,6 +24,7 @@ use App\Support\Auth\PasswordChecks;
 use App\Support\Roles\AdminRoleScopes;
 use App\Support\Theme\DaisyColor;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
@@ -31,15 +32,19 @@ use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Facades\FilamentIcon;
+use Filament\Support\Facades\FilamentView;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Filament\Tables\View\TablesIconAlias;
+use Filament\Tables\View\TablesRenderHook;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route as RouteDefinition;
@@ -168,6 +173,12 @@ class AppServiceProvider extends ServiceProvider
      * button — see `.fi-btn-menu` in filament-buttons.css. Applied app-wide
      * so individual tables don't repeat the styling; a table can still
      * override any of it with its own fluent calls after make().
+     *
+     * The selection indicator gets our selection bar
+     * (filament/tables/selection-bar): a count named for the rows ("2 users
+     * selected", from the table's model label, instead of Filament's "2
+     * records selected"), and below lg a "Bulk actions" button opening the
+     * table's bulk actions in a bottom sheet (see filament-table.css).
      */
     private function registerFilamentBulkActionDefaults(): void
     {
@@ -177,6 +188,31 @@ class AppServiceProvider extends ServiceProvider
                 ->outlined()
                 ->extraAttributes(['class' => 'fi-btn-menu']);
         });
+
+        FilamentView::registerRenderHook(
+            TablesRenderHook::SELECTION_INDICATOR_ACTIONS_BEFORE,
+            function (): ?View {
+                $component = Livewire::current();
+
+                if (! $component instanceof HasTable) {
+                    return null;
+                }
+
+                $table = $component->getTable();
+                $toolbarActions = collect($table->getToolbarActions());
+
+                return view('filament.tables.selection-bar', [
+                    'table' => $table,
+                    'componentId' => $component->getId(),
+                    'bulkLabel' => $toolbarActions->first(fn ($action): bool => $action instanceof ActionGroup)?->getLabel() ?? __('admin.bulk_actions'),
+                    'bulkActions' => $toolbarActions
+                        ->flatMap(fn ($action): array => $action instanceof ActionGroup ? $action->getFlatActions() : [$action])
+                        ->filter(fn ($action): bool => $action instanceof Action && $action->isBulk() && $action->isVisible())
+                        ->values()
+                        ->all(),
+                ]);
+            },
+        );
     }
 
     /**

@@ -23,6 +23,26 @@ class ThemeContrastTest extends TestCase
         }
     }
 
+    /**
+     * A selected row (--ui-selected-bg, and its hover) keeps muted text readable in both themes.
+     * Held to 4.55, not 4.5: on a tinted background this model reads a little higher than
+     * the browser, which measured 4.49 where this said 4.5.
+     */
+    public function test_muted_text_clears_aa_on_a_selected_row(): void
+    {
+        preg_match('/@utility text-muted \{\s*color: color-mix\(in oklab, var\(--color-base-content\) (\d+)%, transparent\);/', $this->css(), $muted);
+
+        foreach (['boilerplate', 'boilerplate-dark'] as $theme) {
+            foreach (['ui-selected-bg', 'ui-selected-bg-hover'] as $token) {
+                $this->assertSame(1, preg_match('/--'.$token.':\s*color-mix\(in oklab, var\(--color-primary\) (\d+)%, var\(--color-base-100\)\);/', $this->themeBlock($theme), $tint), "{$theme}: --{$token} is missing or reshaped");
+
+                $background = $this->mixInOklab($this->token('primary', $theme), $this->token('base-100', $theme), $tint[1] / 100);
+
+                $this->assertContrast($this->over($this->token('base-content', $theme), $background, $muted[1] / 100), $background, "text-muted on --{$token} ({$theme})", 4.55);
+            }
+        }
+    }
+
     public function test_white_text_on_the_status_colours_clears_aa(): void
     {
         foreach (['success', 'info', 'error', 'primary'] as $name) {
@@ -66,13 +86,13 @@ class ThemeContrastTest extends TestCase
      * @param  array{float, float, float}  $foreground
      * @param  array{float, float, float}  $background
      */
-    private function assertContrast(array $foreground, array $background, string $what): void
+    private function assertContrast(array $foreground, array $background, string $what, float $minimum = 4.5): void
     {
         $lighter = max($this->luminance($foreground), $this->luminance($background));
         $darker = min($this->luminance($foreground), $this->luminance($background));
         $ratio = ($lighter + 0.05) / ($darker + 0.05);
 
-        $this->assertGreaterThanOrEqual(4.5, round($ratio, 2), sprintf('%s is %.2f:1', $what, $ratio));
+        $this->assertGreaterThanOrEqual($minimum, round($ratio, 2), sprintf('%s is %.2f:1', $what, $ratio));
     }
 
     /**
