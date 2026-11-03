@@ -110,13 +110,13 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     ->wrap()
                     ->color(fn (string $state): string => $this->badgeColor($state)),
 
-                // A member's effective standing as one badge — see statusLabel()
-                // for the precedence. Its own column, not a badge tacked onto the
-                // role, so "Suspended"/"Inactive" read as status, not as a role.
+                // A member's effective standing as one state (a status dot, not a
+                // badge) — see statusLabel() for the precedence. Its own column, so
+                // "Suspended"/"Inactive" read as status, not as a role.
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
                     ->getStateUsing(fn (User $record): string => $this->statusLabel($record))
-                    ->badge()
+                    ->status()
                     ->color(fn (User $record): string => $this->statusColor($record)),
             ])
             ->filters([

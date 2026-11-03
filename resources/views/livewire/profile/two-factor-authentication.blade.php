@@ -20,9 +20,9 @@
                             <p class="ui-subtle">{{ __('admin.two_factor_info') }}</p>
 
                             @if (Auth::user()->two_factor_confirmed_at)
-                                <x-badge color="success">{{ __('admin.enabled') }}</x-badge>
+                                <x-status color="success">{{ __('admin.enabled') }}</x-status>
                             @else
-                                <x-badge color="neutral">{{ __('admin.disabled') }}</x-badge>
+                                <x-status color="neutral">{{ __('admin.disabled') }}</x-status>
                             @endif
                         </div>
 
@@ -121,9 +121,9 @@
                                 </p>
 
                                 @if ($googleAccount)
-                                    <x-badge color="success" class="shrink-0">{{ __('admin.linked') }}</x-badge>
+                                    <x-status color="success" class="shrink-0">{{ __('admin.linked') }}</x-status>
                                 @else
-                                    <x-badge color="neutral" class="shrink-0">{{ __('admin.not_linked') }}</x-badge>
+                                    <x-status color="neutral" class="shrink-0">{{ __('admin.not_linked') }}</x-status>
                                 @endif
                             </div>
 

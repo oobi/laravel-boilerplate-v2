@@ -362,7 +362,7 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
 
             TextColumn::make('status')
                 ->label(__('Status'))
-                ->badge()
+                ->status()
                 ->sortable($isFullFeatured),
 
             TextColumn::make('joined_at')
@@ -441,7 +441,7 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
 
                 TextColumn::make('status')
                     ->label(__('Status'))
-                    ->badge()
+                    ->status()
                     ->sortable()
                     ->columnSpan(['default' => 1, '@4xl' => 2]),
 
@@ -516,7 +516,7 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
     {
         $columns = [
             TextColumn::make('name')->label(__('Name'))->searchable(),
-            TextColumn::make('status')->label(__('Status'))->badge(),
+            TextColumn::make('status')->label(__('Status'))->status(),
             TextColumn::make('joined_at')->label(__('Joined'))->date(),
         ];
 

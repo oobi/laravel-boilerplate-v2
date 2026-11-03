@@ -20,9 +20,9 @@
         <span>{{ __('admin.two_factor_authentication') }}</span>
 
         @if ($user->two_factor_confirmed_at)
-            <x-badge color="success">{{ __('admin.enabled') }}</x-badge>
+            <x-status color="success">{{ __('admin.enabled') }}</x-status>
         @else
-            <x-badge color="neutral">{{ __('admin.disabled') }}</x-badge>
+            <x-status color="neutral">{{ __('admin.disabled') }}</x-status>
         @endif
     </div>
 
@@ -31,15 +31,15 @@
             <span>{{ __('admin.two_factor_grace') }}</span>
 
             @if ($user->isSuperAdmin())
-                <x-badge color="neutral">{{ __('admin.two_factor_grace_super_admin') }}</x-badge>
+                <x-status color="neutral">{{ __('admin.two_factor_grace_super_admin') }}</x-status>
             @elseif (GracePeriod::expired($user))
-                <x-badge color="error">{{ __('admin.two_factor_grace_locked_out') }}</x-badge>
+                <x-status color="error">{{ __('admin.two_factor_grace_locked_out') }}</x-status>
             @elseif ($user->two_factor_grace_started_at === null)
-                <x-badge color="neutral">{{ __('admin.two_factor_grace_not_started') }}</x-badge>
+                <x-status color="neutral">{{ __('admin.two_factor_grace_not_started') }}</x-status>
             @else
-                <x-badge :color="$graceDays <= 2 ? 'error' : 'warning'">
+                <x-status :color="$graceDays <= 2 ? 'error' : 'warning'">
                     {{ trans_choice('admin.two_factor_grace_remaining', $graceDays) }}
-                </x-badge>
+                </x-status>
             @endif
         </div>
     @endif
@@ -79,9 +79,9 @@
             <span>{{ __('admin.google_account') }}</span>
 
             @if ($googleAccount)
-                <x-badge color="success" class="shrink-0">{{ __('admin.linked') }}</x-badge>
+                <x-status color="success" class="shrink-0">{{ __('admin.linked') }}</x-status>
             @else
-                <x-badge color="neutral" class="shrink-0">{{ __('admin.not_linked') }}</x-badge>
+                <x-status color="neutral" class="shrink-0">{{ __('admin.not_linked') }}</x-status>
             @endif
         </div>
 

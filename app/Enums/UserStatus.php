@@ -15,7 +15,7 @@ use Filament\Support\Contracts\HasLabel;
  * shared by ListUsers' table and ShowUser's infolist so both agree.
  *
  * Implements Filament's HasLabel/HasColor so this enum works out of the box
- * with Filament's ->badge() columns/entries (and our own <x-badge>) without
+ * with Filament's ->status() columns/entries (and our own <x-status>) without
  * per-call-site formatting closures.
  */
 enum UserStatus: string implements HasColor, HasLabel
@@ -41,7 +41,7 @@ enum UserStatus: string implements HasColor, HasLabel
         return match ($this) {
             self::ACTIVE => DaisyColor::SUCCESS->toFilamentColor(),
             self::PENDING => DaisyColor::INFO->toFilamentColor(),
-            self::INACTIVE => DaisyColor::WARNING->toFilamentColor(),
+            self::INACTIVE => DaisyColor::NEUTRAL->toFilamentColor(),
         };
     }
 }

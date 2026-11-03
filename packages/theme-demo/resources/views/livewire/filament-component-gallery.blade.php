@@ -47,6 +47,12 @@
         </div>
     </x-card>
 
+    {{-- Status: ->status() on a column or entry, in place of ->badge() for a state. --}}
+    <x-card :title="__('Status')">
+        <p class="ui-subtle text-sm">{{ __('->status() on a TextColumn or TextEntry shows a state as a dot and its label, in place of ->badge(), which is for kinds of thing (roles).') }}</p>
+        {{ $this->statusSchema }}
+    </x-card>
+
     {{-- Icon buttons --}}
     <x-card :title="__('Icon buttons')">
         <div class="flex flex-wrap items-center gap-2">

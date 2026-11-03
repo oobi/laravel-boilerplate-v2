@@ -14,6 +14,6 @@
     @endif
 
     @unless ($record->active)
-        <x-badge color="neutral">{{ team_trans('admin.inactive') }}</x-badge>
+        <x-status color="neutral" class="font-normal">{{ team_trans('admin.inactive') }}</x-status>
     @endunless
 </div>
