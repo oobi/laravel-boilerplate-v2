@@ -79,7 +79,7 @@ class LandmarksAndLabelsTest extends TestCase
     public function test_the_trash_toggle_names_its_buttons_in_words(): void
     {
         $this->blade('<x-table-trash-toggle :active-count="106" :trashed-count="1" />')
-            ->assertSee('aria-label="106 active records"', false)
-            ->assertSee('aria-label="1 in the trash"', false);
+            ->assertSee('aria-label="Active, 106 records"', false)
+            ->assertSee('aria-label="Trashed, 1 record"', false);
     }
 }

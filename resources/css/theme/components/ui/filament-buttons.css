@@ -228,3 +228,43 @@
     background-color: var(--color-base-200);
     --tw-ring-color: var(--color-base-300);
 }
+
+/*
+| A toolbar action given ->labeledFrom('sm') (team Members' "Add member"):
+| on a phone Filament renders it as an icon button, named by its label, so it
+| sits beside the search and "Filters" as a solid square the fields' height,
+| instead of taking a full-width row; the filter panel then opens under that
+| row. From sm up Filament swaps in the labelled button.
+*/
+@media (width < 40rem) {
+    .ui-toolbar__actions:has(> .fi-icon-btn) {
+        flex: none;
+
+        /* margin: Filament's icon buttons pull out by -0.5rem, which would break the row's gaps. */
+        & > .fi-icon-btn {
+            flex: none;
+            margin: 0;
+            width: calc(var(--size-field, 0.25rem) * 10);
+            height: calc(var(--size-field, 0.25rem) * 10);
+            border-radius: var(--radius-field);
+        }
+
+        & > .fi-icon-btn.fi-color-primary {
+            background-color: var(--color-primary);
+            color: var(--color-primary-content);
+
+            &:hover {
+                background-color: color-mix(in oklab, var(--color-primary) 85%, black);
+            }
+
+            /* Filament's focus ring is the fill's own blue: a base-coloured gap keeps it visible. */
+            &:focus-visible {
+                box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--color-primary);
+            }
+        }
+    }
+
+    .ui-toolbar:has(> .ui-toolbar__actions > .fi-icon-btn) > .ui-toolbar__panel {
+        order: 1;
+    }
+}

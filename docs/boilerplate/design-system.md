@@ -268,6 +268,55 @@ Don't reach for `Split`, `Stack` or `Panel` to fit a phone: any layout
 component renders the table through Filament's layout renderer at every
 width, so the desktop table loses its header cells too.
 
+### The toolbar on a phone
+
+Below `sm`, `<x-table-header>` puts the search and a "Filters" button on one
+row and folds its `filters` and `counts` slots into a panel the button opens,
+with each field's label above it. From `sm` up the slots sit in the row as
+before. It's automatic: a page passes no prop, and a toolbar with neither slot
+(Pending invitations) gets no button.
+
+- **The button shows what's on.** It carries a badge with the number of
+  filters set, is tinted while open or while one is set, and is named
+  "Filters, 1 on" for screen readers. It starts open when a filter is already
+  set on load.
+- **Filters count themselves.** `<x-table-filter-select>`, `<x-listbox>`,
+  `<x-date-picker>` and `<x-table-trash-toggle>` mark their root
+  `data-table-filter="{wire:model path}"`, and the toolbar counts those whose
+  value isn't empty. A control you write yourself for the `filters` slot adds
+  the same attribute, or the badge won't count it, and its "all" choice must
+  be an empty value (null, `''` or `[]`), or it always counts as on. Plain text in `counts`
+  ("25 total") folds into the panel uncounted.
+- **Only filters go in those slots.** Anything there is hidden until the panel
+  opens. Actions belong in `actions`, which stays visible.
+- **The trash toggle hides itself while the trash is empty** (unless the trash
+  view is already chosen). In the panel it runs full width, its segments say
+  "Active" and "Trashed", under a "Showing" label.
+- **Filament's "Active filters" bar stays** at every width: on a phone it's the
+  one place a closed panel's filters show, each with its own ✕. The trash
+  view's chip reads "Trashed" (`TrashedFilter::configureUsing()` in
+  `AppServiceProvider`).
+
+The `actions` slot takes a full-width row on a phone. A Filament action whose
+icon says what it does on its own can show just the icon there, beside
+"Filters", with `->labeledFrom('sm')`: Filament renders an icon button named by
+the label (its accessible name and tooltip), and the toolbar draws it as a
+square the fields' height, solid when the action is primary. Only a Filament
+action can do this; a Blade `<x-button.*>` in `actions` (such as
+`<x-table-empty-trash-action>`) always shows its label.
+
+```php
+Action::make('addMember')
+    ->label(team_trans('members.add'))
+    ->icon('heroicon-o-user-plus')
+    // Just the icon on a phone, beside the search; its label stays the accessible name.
+    ->labeledFrom('sm');
+```
+
+Use it only when the icon names the action without its label (a person with a
+plus for "Add member"). Keep the label when the icon is generic (a plain plus,
+an envelope for "Invite"), and always on a destructive action.
+
 On a phone a page's top-level panels (cards, tab islands, sections, a
 toolbar and its table) also run edge to edge: they step out of the page
 gutter and lose their side borders and corners. They keep their shadow and
@@ -283,11 +332,12 @@ Where the edge and padding rules live (each file styles its own component):
 | File | What it does |
 |---|---|
 | `ui/layout.css` | The page gutter (`--ui-page-gutter`), full-bleed panels on a phone, a page-level toolbar joined to its table |
-| `daisyui-overrides/tabs.css` | Tab panel padding, the auto-flush panel, the toolbar strip in a tab |
+| `daisyui-overrides/tabs.css` | Tab panel padding, the auto-flush panel, the toolbar strip in a tab (with room above for the fields' floating labels) |
 | `ui/filament-table.css` | `.ui-flush-content` (the `flush` prop), stacked rows on a phone |
 | `ui/filament-section.css` | A section holding just a table goes flush (`--ui-section-radius`) |
 | `daisyui-overrides/card.css` | Card padding (`--card-p`), 1rem on a phone |
-| `ui/toolbar.css` | The toolbar's own layout on a phone |
+| `ui/toolbar.css` | The toolbar's own layout on a phone: the "Filters" button and its panel |
+| `ui/filament-buttons.css` | A toolbar action shown as just its icon on a phone (`->labeledFrom('sm')`) |
 
 All under `resources/css/theme/components/`.
 

@@ -14,7 +14,7 @@
 
 @php $id ??= \Illuminate\Support\Str::slug(str_replace(['.', '_'], '-', $model)); @endphp
 
-<div class="ui-floating-label">
+<div class="ui-floating-label" data-table-filter="{{ $model }}">
     <select id="{{ $id }}" wire:model.live="{{ $model }}" {{ $attributes->class(['select']) }}>
         @if ($placeholder)
             <option value="">{{ $placeholder }}</option>
