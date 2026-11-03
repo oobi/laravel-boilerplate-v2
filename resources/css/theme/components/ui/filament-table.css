@@ -497,6 +497,13 @@ th.fi-ta-selection-cell,
             align-items: center;
             gap: 0.75rem;
             min-height: 2rem;
+            /* A column's ->alignCenter() or ->alignEnd() is for the desktop grid: in the card every label and value starts at the same edge. */
+            text-align: start;
+
+            & .fi-ta-cell-content :is([class*="fi-align-"], [class*="fi-align-"] ul) {
+                justify-content: flex-start;
+                text-align: start;
+            }
 
             /* A column shown only from a breakpoint (->visibleFrom()) stays hidden here. */
             &[class*=":fi-visible"] {
