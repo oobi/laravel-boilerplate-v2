@@ -100,8 +100,10 @@
         box-shadow: none;
         padding-inline: 1rem;
 
+        /* Room above for the fields' floating labels, which otherwise crowd the tabs' line. */
         @media (width >= 40rem) {
             padding-inline: 1.5rem;
+            padding-top: 1.25rem;
         }
     }
 }

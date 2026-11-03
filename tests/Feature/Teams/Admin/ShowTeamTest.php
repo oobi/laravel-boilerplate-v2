@@ -12,6 +12,7 @@ use Concise\Teams\Livewire\Team\MembersTable;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Concise\Teams\Support\TeamContext;
+use Filament\Actions\Action;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -172,6 +173,13 @@ class ShowTeamTest extends TestCase
 
         $this->assertTrue($this->team->fresh()->hasUser($user));
         $this->assertSame('Member', $this->team->roleFor($user));
+    }
+
+    public function test_add_member_is_just_its_icon_on_a_phone_and_keeps_its_name(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(MembersTable::class, ['team' => $this->team])
+            ->assertActionExists('addMember', fn (Action $action): bool => $action->getLabeledFromBreakpoint() === 'sm');
     }
 
     public function test_add_member_is_a_system_admin_tool_not_a_team_one(): void

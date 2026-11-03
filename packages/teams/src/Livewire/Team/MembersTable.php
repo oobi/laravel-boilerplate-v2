@@ -275,6 +275,8 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
         return Action::make('addMember')
             ->label(team_trans('members.add'))
             ->icon('heroicon-o-user-plus')
+            // Just the icon on a phone, beside the search; its label stays the accessible name.
+            ->labeledFrom('sm')
             ->modalHeading(team_trans('members.add_heading', ['name' => $this->team->name]))
             ->modalWidth(Width::Medium)
             ->visible(fn (): bool => Gate::allows(TeamSystemPermission::MANAGE_TEAMS->value))

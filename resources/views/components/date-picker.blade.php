@@ -181,6 +181,7 @@
     x-on:focusin.window="open && ! isInside($event.target) && close()"
     x-on:keydown.escape.window="open && (close(true), $event.preventDefault())"
     @class(['ui-floating-label', 'min-w-0' => $isHeading])
+    data-table-filter="{{ $model }}"
 >
     <button
         x-ref="button"

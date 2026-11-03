@@ -32,6 +32,7 @@ use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Filament\Tables\View\TablesIconAlias;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -106,12 +107,18 @@ class AppServiceProvider extends ServiceProvider
      * Every table stacks each row into a card on a phone instead of scrolling
      * sideways; a genuinely wide data grid opts out with `->stackedOnMobile(false)`.
      * The cards are tightened in filament-table.css (see .ai/rules/tables.md).
+     *
+     * The trash view's "Active filters" chip says "Trashed", the word the
+     * toolbar's trash toggle uses, not Filament's "Only deleted records".
      */
     private function registerFilamentTableDefaults(): void
     {
         Table::configureUsing(fn (Table $table): Table => $table
             ->enforcePaginationPageOptions()
             ->stackedOnMobile());
+
+        TrashedFilter::configureUsing(fn (TrashedFilter $filter): TrashedFilter => $filter
+            ->falseLabel(fn (): string => __('admin.records_trashed')));
     }
 
     /**

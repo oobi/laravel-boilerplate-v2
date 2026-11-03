@@ -46,10 +46,80 @@
         flex: 0 1 auto;
     }
 
-    /* On a phone the filters share the row in equal columns (two at 390px)
+    /* From sm up the panel's slots sit in the row as flex items of the
+       toolbar, as if the panel weren't there. */
+    .ui-toolbar__panel {
+        display: contents;
+    }
+
+    .ui-toolbar__filter-chevron {
+        transition: rotate 150ms;
+    }
+
+    .ui-toolbar__filter-toggle[aria-expanded='true'] .ui-toolbar__filter-chevron {
+        rotate: 180deg;
+    }
+
+    /* On a phone the search shares its row with the "Filters" button, and the
+       filters and counts fold into the panel it opens, a full row under it.
+       The filters share the panel's row in equal columns (two at 390px)
        rather than each taking its own width; one too wide for its column
        truncates instead of pushing the row out. */
     @media (width < 40rem) {
+        .ui-toolbar__search {
+            min-width: 0;
+        }
+
+        .ui-toolbar__panel {
+            display: none;
+            flex: 1 1 100%;
+            flex-direction: column;
+            gap: 0.75rem;
+
+            &.is-open {
+                display: flex;
+            }
+
+            /* The panel has room, so each field's label sits above it rather than floating on its border. */
+            & .ui-floating-label {
+                display: flex;
+                flex-direction: column;
+                gap: 0.375rem;
+            }
+
+            /* Prefixed past floating-label.css's floated rules, which load later at equal weight. */
+            .ui-toolbar & .ui-floating-label .ui-floating-label-text {
+                position: static;
+                order: -1;
+                transform: none;
+                padding: 0;
+                background: none;
+                font-size: 0.875rem;
+                font-weight: 500;
+                opacity: 1;
+                color: var(--color-base-content);
+            }
+
+            /* The trash toggle goes full width under a "Showing" label, its segments in words. */
+            & .ui-trash-toggle,
+            & .ui-trash-toggle .ui-button-group {
+                display: flex;
+                width: 100%;
+            }
+
+            & .ui-trash-toggle .ui-button-group-btn {
+                flex: 1 1 0%;
+            }
+
+            & .ui-trash-toggle__word {
+                display: inline;
+            }
+
+            & .ui-trash-toggle__label {
+                display: block;
+            }
+        }
+
         .ui-toolbar__filters {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
@@ -72,6 +142,12 @@
                 flex: 1 1 auto;
             }
         }
+    }
+
+    /* The trash toggle's words and label only show in a phone's filter panel (below). */
+    .ui-trash-toggle__word,
+    .ui-trash-toggle__label {
+        display: none;
     }
 
     .ui-toolbar__counts {
@@ -143,4 +219,24 @@
     block-size: 1.875rem;
     inline-size: 100%;
     font-size: 0.75rem;
+}
+
+/* The phone's "Filters" button. Outside the layer: daisyUI's .btn sits in
+   the utilities layer and would otherwise win. Bordered like the fields
+   beside it, not the heavier neutral outline. */
+.ui-toolbar .ui-toolbar__filter-toggle {
+    display: none;
+    border-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);
+
+    @media (width < 40rem) {
+        display: inline-flex;
+        flex: none;
+    }
+
+    /* Tinted while open or while a filter is on, like a chosen segment. */
+    &.is-active {
+        background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-base-100));
+        color: var(--color-primary-text);
+        border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-base-300));
+    }
 }
