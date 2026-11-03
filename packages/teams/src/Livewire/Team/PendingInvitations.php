@@ -95,15 +95,15 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                     ->sortable()
                     ->visibleFrom('lg'),
 
-                // The date the link stops working; once past, an "Expired" badge (Resend starts it again).
+                // The date the link stops working; once past, an "Expired" status (Resend starts it again).
                 // Formatted as ->date() would (display timezone and format), which can't take the override.
                 Tables\Columns\TextColumn::make('expires_at')
                     ->label(team_trans('invitations.expires'))
                     ->formatStateUsing(fn (Tables\Columns\TextColumn $column, TeamInvitation $record): string => $record->isExpired()
-                        ? team_trans('invitations.expired_badge')
+                        ? team_trans('invitations.expired_status')
                         : $record->expires_at->copy()->setTimezone($column->getTimezone())->translatedFormat($column->getTable()->getDefaultDateDisplayFormat()))
-                    ->badge(fn (TeamInvitation $record): bool => $record->isExpired())
-                    ->color(fn (TeamInvitation $record): ?string => $record->isExpired() ? DaisyColor::WARNING->toFilamentColor() : null)
+                    ->color(fn (TeamInvitation $record): ?string => $record->isExpired() ? DaisyColor::ERROR->toFilamentColor() : null)
+                    ->status(fn (TeamInvitation $record): bool => $record->isExpired())
                     ->sortable(),
             ])
             ->recordActions([

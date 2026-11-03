@@ -111,7 +111,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
                     ->color(fn (string $state): string => $this->badgeColor($state)),
 
                 // A member's effective standing as one state (a status dot, not a
-                // badge) — see statusLabel() for the precedence. Its own column, so
+                // badge); statusLabel() has the precedence. Its own column, so
                 // "Suspended"/"Inactive" read as status, not as a role.
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('admin.status'))
@@ -507,7 +507,7 @@ class MembersTable extends Component implements HasActions, HasSchemas, HasTable
      * A member's effective standing as a single label, by precedence: a
      * deactivated account (Inactive) can't reach the team at all, so it outranks
      * a team-level Suspension; below those sit the account's own Pending/Active.
-     * One badge, never two competing "Active"s (account status vs membership).
+     * One status, never two competing "Active"s (account status vs membership).
      */
     private function statusLabel(User $member): string
     {

@@ -83,6 +83,37 @@ class ThemeContrastTest extends TestCase
     }
 
     /**
+     * A state's coloured status dot (<x-status>, ->status()) is a graphic that
+     * tells states apart, so it clears 3:1 on the page (WCAG 1.4.11). Warning
+     * is drawn in its text tone (colors.css). Neutral ("off") is a pale grey by
+     * design, set apart from the coloured dots; its label carries the meaning.
+     */
+    public function test_status_dots_for_states_clear_three_to_one_in_both_themes(): void
+    {
+        $this->assertStringContainsString('.status-warning { background-color: var(--color-warning-soft);', $this->colorsCss());
+
+        foreach (['boilerplate', 'boilerplate-dark'] as $theme) {
+            $dots = [
+                'success' => $this->token('success', $theme),
+                'info' => $this->token('info', $theme),
+                'error' => $this->token('error', $theme),
+                'warning' => $this->token('warning-soft', $theme),
+            ];
+
+            foreach ($dots as $name => $dot) {
+                foreach (['base-100', 'base-200'] as $surface) {
+                    $this->assertContrast($dot, $this->token($surface, $theme), "status-{$name} dot on {$surface} ({$theme})", 3.0);
+                }
+            }
+        }
+    }
+
+    private function colorsCss(): string
+    {
+        return file_get_contents(dirname(__DIR__, 3).'/resources/css/theme/components/ui/colors.css');
+    }
+
+    /**
      * @param  array{float, float, float}  $foreground
      * @param  array{float, float, float}  $background
      */

@@ -570,8 +570,8 @@ th.fi-ta-selection-cell,
 
     /*
     | Compact rows, opt-in (->extraAttributes(['class' => 'ui-stacked-compact'])):
-    | for a list of people whose other cells are self-describing badges (role,
-    | status), the badges flow on one line under the name instead of one
+    | for a list of people whose other cells are self-describing (role badges,
+    | a status), they flow on one line under the name instead of one
     | labelled line each, like a native list item. The labels stay for screen
     | readers. Not for a table with unlabelled dates or bare numbers: they'd read
     | as noise (a count that names itself, "2 teams", is fine). An empty cell, a

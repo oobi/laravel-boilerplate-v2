@@ -24,6 +24,7 @@ use App\Support\Auth\PasswordChecks;
 use App\Support\Roles\AdminRoleScopes;
 use App\Support\Theme\DaisyColor;
 use App\Support\Theme\StatusDot;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -286,15 +287,20 @@ class AppServiceProvider extends ServiceProvider
      * enum's HasColor too); the label keeps its formatting and the body text
      * colour (text-base-content outranks the colour Filament would give it).
      * The cell is a flex row so the dot centres beside the label, as in
-     * <x-status>. Optional `size` (xs…xl) and `animation` (ping, bounce).
+     * <x-status>. Optional `size` (xs…xl) and `animation` (ping, bounce); a
+     * `condition`, like ->badge()'s, shows the dot only for some states (an
+     * invitation's expiry date, then "Expired"). Call it after ->prefix() and
+     * ->extraAttributes() (or merge those), which would replace what it adds.
      */
     private function registerStatusMacros(): void
     {
         foreach ([TextColumn::class, TextEntry::class] as $component) {
-            $component::macro('status', function (?string $size = null, ?string $animation = null): static {
+            $component::macro('status', function (bool|Closure $condition = true, ?string $size = null, ?string $animation = null): static {
                 /** @var TextColumn|TextEntry $this */
                 return $this
-                    ->prefix(fn (mixed $state, ?Model $relatedRecord = null): HtmlString => StatusDot::html(is_string($color = $this->getColor($state, $relatedRecord)) ? $color : 'gray', $size, $animation))
+                    ->prefix(fn (mixed $state, ?Model $relatedRecord = null): ?HtmlString => $this->evaluate($condition, ['state' => $state])
+                        ? StatusDot::html(is_string($color = $this->getColor($state, $relatedRecord)) ? $color : 'gray', $size, $animation)
+                        : null)
                     ->extraAttributes(['class' => 'flex items-center gap-2 text-base-content'], merge: true);
             });
         }

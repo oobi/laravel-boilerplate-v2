@@ -17,8 +17,6 @@ class StatusDot
 {
     public const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'];
 
-    public const ANIMATIONS = ['ping', 'bounce'];
-
     /**
      * @param  string  $color  A daisyUI or Filament colour name (danger, gray… map across).
      * @param  'xs'|'sm'|'md'|'lg'|'xl'|null  $size  daisyUI's status-{size}; null is its default (md).
