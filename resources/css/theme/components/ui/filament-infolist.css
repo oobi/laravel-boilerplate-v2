@@ -45,3 +45,11 @@
 .fi-in-placeholder {
     @apply text-muted;
 }
+
+/* ->status() on an entry: the dot beside its label, in body text (as in filament-table.css). */
+:is(.ui-status.fi-in-text-item, .ui-status .fi-in-text-item) {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    color: var(--color-base-content);
+}

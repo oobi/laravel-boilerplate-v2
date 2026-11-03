@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace Tests\Feature\Components;
 
 use App\Enums\UserStatus;
+use App\Livewire\Admin\Users\ListUsers;
 use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /** A state as daisyUI's status dot and its label (GitHub #73): <x-status> and Filament's ->status(). */
 class StatusComponentTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_a_decorative_dot_then_the_label(): void
     {
         $this->blade('<x-status color="warning">Suspended</x-status>')
@@ -64,5 +69,20 @@ class StatusComponentTest extends TestCase
         $html = (string) $entry->formatState(true);
         $this->assertStringContainsString('status-success status-sm', $html);
         $this->assertStringContainsString('On &lt;b&gt;', $html, 'the label is still escaped');
+    }
+
+    public function test_a_column_with_a_description_keeps_the_dot_on_its_label(): void
+    {
+        $user = User::factory()->superAdmin()->create(['active' => false]);
+        $table = Livewire::actingAs($user)->test(ListUsers::class)->instance()->getTable();
+
+        // With a description Filament nests the label in its own item; the marker
+        // goes on the cell and the theme CSS lays out the item, so it can't land
+        // on the column wrapper as flex utilities did (oobi #76).
+        $html = TextColumn::make('status')->status()->description('1 hour ago')->table($table)->record($user)->toEmbeddedHtml();
+
+        $this->assertMatchesRegularExpression('/class="[^"]*\bfi-ta-text-has-descriptions\b[^"]*\bui-status\b|class="[^"]*\bui-status\b[^"]*\bfi-ta-text-has-descriptions\b/', $html);
+        $this->assertMatchesRegularExpression('/class="[^"]*\bfi-ta-text-item\b[^"]*"[^>]*>\s*<span class="status status-neutral"/', $html);
+        $this->assertStringNotContainsString('items-center', $html);
     }
 }
