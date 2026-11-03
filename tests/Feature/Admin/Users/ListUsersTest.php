@@ -447,6 +447,41 @@ class ListUsersTest extends TestCase
             ->assertCanNotSeeTableRecords([$admin, $support]);
     }
 
+    public function test_any_system_role_and_no_system_role_split_everyone_between_them(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $support = User::factory()->support()->create();
+        $noRole = User::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(ListUsers::class)
+            ->filterTable('role', '__any_system_role__')
+            ->assertCanSeeTableRecords([$admin, $support])
+            ->assertCanNotSeeTableRecords([$noRole])
+            ->filterTable('role', '__no_role__')
+            ->assertCanSeeTableRecords([$noRole])
+            ->assertCanNotSeeTableRecords([$admin, $support]);
+    }
+
+    public function test_the_role_filter_options_run_from_any_system_role_to_no_system_role(): void
+    {
+        Role::findOrCreate('Editor');
+
+        $options = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListUsers::class)
+            ->instance()
+            ->roleFilterOptions();
+
+        $this->assertSame('__any_system_role__', array_key_first($options));
+        $this->assertSame('__super_admin__', array_keys($options)[1]);
+        $this->assertSame('__no_role__', array_key_last($options));
+
+        $roleNames = array_slice(array_keys($options), 2, -1);
+        $sortedRoleNames = $roleNames;
+        sort($sortedRoleNames);
+        $this->assertSame($sortedRoleNames, $roleNames);
+    }
+
     public function test_the_role_filter_lists_system_roles_only(): void
     {
         Role::findOrCreate('Editor');
