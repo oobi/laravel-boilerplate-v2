@@ -46,8 +46,9 @@
     @apply text-muted;
 }
 
-/* ->status() on an entry: the dot beside its label, in body text (as in filament-table.css). */
-:is(.ui-status.fi-in-text-item, .ui-status .fi-in-text-item) {
+/* ->status() on an entry: the dot beside its label, in body text, with or without a tooltip (as in filament-table.css). */
+:is(.ui-status.fi-in-text-item, .ui-status .fi-in-text-item),
+:is(.ui-status.fi-in-text-item, .ui-status .fi-in-text-item) > span:is([x-tooltip], .fi-copyable):not(.fi-badge) {
     display: flex;
     align-items: center;
     gap: calc(var(--spacing) * 2);

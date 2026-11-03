@@ -6,6 +6,7 @@ namespace Tests\Feature\Components;
 
 use App\Enums\UserStatus;
 use App\Livewire\Admin\Users\ListUsers;
+use App\Livewire\Admin\Users\ShowUser;
 use App\Models\User;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -84,5 +85,23 @@ class StatusComponentTest extends TestCase
         $this->assertMatchesRegularExpression('/class="[^"]*\bfi-ta-text-has-descriptions\b[^"]*\bui-status\b|class="[^"]*\bui-status\b[^"]*\bfi-ta-text-has-descriptions\b/', $html);
         $this->assertMatchesRegularExpression('/class="[^"]*\bfi-ta-text-item\b[^"]*"[^>]*>\s*<span class="status status-neutral"/', $html);
         $this->assertStringNotContainsString('items-center', $html);
+    }
+
+    public function test_a_column_with_a_tooltip_keeps_the_dot_in_the_span_the_theme_lays_out(): void
+    {
+        $user = User::factory()->superAdmin()->create(['active' => false]);
+        $table = Livewire::actingAs($user)->test(ListUsers::class)->instance()->getTable();
+
+        // A tooltip wraps the dot and label in one more span inside the marked
+        // item; filament-table.css makes that span a row too (oobi #77).
+        $html = TextColumn::make('status')->status()->tooltip('Since Monday')->table($table)->record($user)->toEmbeddedHtml();
+
+        $wrapped = '/class="[^"]*\bui-status\b[^"]*"[^>]*>\s*<span[^>]*\bx-tooltip=[^>]*>\s*<span class="status status-neutral"/';
+        $this->assertMatchesRegularExpression($wrapped, $html);
+
+        // An entry has its own copy of the wrapper code, which filament-infolist.css relies on.
+        $showUser = Livewire::actingAs($user)->test(ShowUser::class, ['user' => $user])->instance();
+        $entryHtml = TextEntry::make('status')->status()->tooltip('Since Monday')->container(Schema::make($showUser)->record($user))->toEmbeddedHtml();
+        $this->assertMatchesRegularExpression($wrapped, $entryHtml);
     }
 }
