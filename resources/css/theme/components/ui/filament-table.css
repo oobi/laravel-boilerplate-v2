@@ -703,3 +703,19 @@ th.fi-ta-selection-cell,
         margin-inline-end: 2.25rem;
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| Status cells: the dot beside its label, in body text
+|--------------------------------------------------------------------------
+| ->status() (AppServiceProvider) marks the cell `ui-status`. The label is
+| the cell itself, or, with a ->description(), an item nested in Filament's
+| column wrapper, so the row layout and colour go on the item either way;
+| the description stays under it, left-aligned.
+*/
+:is(.ui-status.fi-ta-text-item, .ui-status .fi-ta-text-item) {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    color: var(--color-base-content);
+}

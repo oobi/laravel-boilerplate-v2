@@ -285,12 +285,13 @@ class AppServiceProvider extends ServiceProvider
      * status dot then its label (App\Support\Theme\StatusDot), in place of
      * `->badge()`. The dot takes the column's `->color()` for each state (an
      * enum's HasColor too); the label keeps its formatting and the body text
-     * colour (text-base-content outranks the colour Filament would give it).
-     * The cell is a flex row so the dot centres beside the label, as in
-     * <x-status>. Optional `size` (xs…xl) and `animation` (ping, bounce); a
-     * `condition`, like ->badge()'s, shows the dot only for some states (an
-     * invitation's expiry date, then "Expired"). Call it after ->prefix() and
-     * ->extraAttributes() (or merge those), which would replace what it adds.
+     * colour. Its `ui-status` marker lets the theme CSS lay the dot beside the
+     * label, as in <x-status>, with or without a ->description()
+     * (filament-table.css, filament-infolist.css). Optional `size` (xs…xl)
+     * and `animation` (ping, bounce); a `condition`, like ->badge()'s, shows
+     * the dot only for some states (an invitation's expiry date, then
+     * "Expired"). Call it after ->prefix() and ->extraAttributes() (or merge
+     * those), which would replace what it adds.
      */
     private function registerStatusMacros(): void
     {
@@ -301,7 +302,7 @@ class AppServiceProvider extends ServiceProvider
                     ->prefix(fn (mixed $state, ?Model $relatedRecord = null): ?HtmlString => $this->evaluate($condition, ['state' => $state])
                         ? StatusDot::html(is_string($color = $this->getColor($state, $relatedRecord)) ? $color : 'gray', $size, $animation)
                         : null)
-                    ->extraAttributes(['class' => 'flex items-center gap-2 text-base-content'], merge: true);
+                    ->extraAttributes(['class' => 'ui-status'], merge: true);
             });
         }
     }
