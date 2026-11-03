@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Add-on-contributed columns on the admin Users list, keyed by name like
- * AccountMenuRegistry so re-registering replaces. Each is a Filament column, built per render so its
- * label follows the locale, plus an optional hook on the list's query to load
- * what the column shows as subqueries, never a query per row. ListUsers puts
- * them after Status. The teams tier registers one: the teams a user is in.
+ * AccountMenuRegistry so re-registering replaces. Each is a Filament column,
+ * built per render so its label follows the locale, plus an optional hook on
+ * the list's query to load what the column shows as subqueries, never a
+ * query per row. ListUsers puts them after Status. The teams tier registers
+ * one: the teams a user is in.
  */
 class UserListColumns
 {
