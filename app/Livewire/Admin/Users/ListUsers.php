@@ -76,8 +76,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
     {
         return $table
             // Roles with their permissions and direct permissions: every row action asks Coverage what the user holds.
-            // Add-on columns (UserListColumns) load what they show here, as subqueries.
-            ->query(UserListColumns::modifyQuery(User::query()->with(['roles.permissions', 'permissions'])))
+            // Add-on columns (UserListColumns) load what they show here, as subqueries; users.* first, so an addSelect adds to it.
+            ->query(UserListColumns::modifyQuery(User::query()->select('users.*')->with(['roles.permissions', 'permissions'])))
             ->defaultSort('last_name')
             ->columns([
                 Tables\Columns\ViewColumn::make('user_composite')

@@ -24,6 +24,8 @@ class UserListColumnsTest extends TestCase
 
     public function test_a_registered_column_shows_what_its_query_hook_loads(): void
     {
+        // Alone, as in an app without the teams tier, whose withCount would mask a missing select.
+        UserListColumns::flush();
         UserListColumns::register(
             'shouted_email',
             fn (): Column => TextColumn::make('shouted_email')->label('Shouted'),
