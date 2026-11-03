@@ -285,6 +285,13 @@ return [
         'title' => ':Team memberships',
         'none' => 'Does not belong to any :team.',
         'member_since' => ':Member since',
+        'add' => 'Add to :teams',
+        'add_heading' => 'Add :person to :teams',
+        'teams_field' => ':Teams',
+        'add_submit' => 'Add',
+        'teams_gone' => 'One of the chosen :teams no longer exists. Choose again.',
+        'added' => '{1} :person added to :count :team|[2,*] :person added to :count :teams',
+        'none_added' => ':person already belongs to every :team you chose.',
     ],
 
     'roles' => [

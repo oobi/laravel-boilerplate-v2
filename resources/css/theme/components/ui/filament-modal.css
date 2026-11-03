@@ -26,6 +26,43 @@
 }
 
 /*
+| A slide-over (or full-screen modal) starts below the fixed top banners
+| (environment, impersonation; --ui-top-banners-height in layout.css), not
+| under them: Filament sizes it to the whole viewport from the top. 0 when
+| no banner shows.
+*/
+.fi-modal:is(.fi-modal-slide-over, .fi-width-screen) > .fi-modal-window-ctn {
+    padding-top: var(--ui-top-banners-height, 0px);
+
+    & > .fi-modal-window {
+        height: calc(100dvh - var(--ui-top-banners-height, 0px));
+    }
+}
+
+/* On a phone a slide-over is the whole screen, so it takes the page gutter (1rem), not Filament's 1.5rem: its heading, fields, an edge-to-edge table's rows and its buttons line up as on a page. */
+@media (width < 40rem) {
+    .fi-modal.fi-modal-slide-over > .fi-modal-window-ctn > .fi-modal-window {
+        --ui-modal-gutter: 1rem;
+
+        & :is(.fi-modal-header, .fi-modal-content, .fi-modal-footer) {
+            padding-inline: var(--ui-modal-gutter);
+        }
+
+        & .fi-modal-close-btn {
+            inset-inline-end: var(--ui-modal-gutter);
+        }
+    }
+}
+
+/* Its content scrolls behind a sticky footer, so the footer keeps a dividing line (the rule above drops it for dialogs that fit). */
+.fi-modal-has-sticky-footer:is(.fi-modal-slide-over, .fi-width-screen)
+    > .fi-modal-window-ctn
+    > .fi-modal-window
+    > .fi-modal-footer {
+    border-top: 1px solid var(--color-base-300);
+}
+
+/*
 |--------------------------------------------------------------------------
 | .ui-modal-footer-split: a "More actions" menu apart, on the left
 |--------------------------------------------------------------------------

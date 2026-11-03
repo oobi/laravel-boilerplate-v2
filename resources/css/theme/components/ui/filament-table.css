@@ -15,6 +15,57 @@
     display: none;
 }
 
+/* A table inside a modal or slide-over (a TableSelect field) has no <x-table-header> of ours, so it keeps Filament's own search and filters. */
+.fi-modal .fi-ta-header-ctn {
+    display: block;
+}
+
+.fi-modal .fi-ta-header-toolbar > :not(.fi-ta-actions) {
+    display: flex;
+}
+
+/* There, the search fills the row beside the filter button (as the theme demo's native header does), and the filter button sits inside the row's padding: Filament's icon buttons pull out by -0.5rem, which pushed it and its badge to the edge. */
+.fi-modal .fi-ta-header-toolbar {
+    column-gap: 0;
+
+    & > :last-child {
+        flex: 1 1 auto;
+        margin-inline-start: 0;
+    }
+
+    & .fi-ta-search-field {
+        flex: 1 1 auto;
+    }
+
+    & .fi-icon-btn {
+        margin: 0;
+    }
+}
+
+/* From sm up a table in a modal or slide-over is a bordered card, like the app's other tables (Filament drops its frame there). */
+@media (width >= 40rem) {
+    .fi-modal .fi-modal-content .fi-ta-ctn {
+        border: 1px solid var(--color-base-300);
+        border-radius: var(--radius-box, 0.5rem);
+    }
+}
+
+/* On a phone a table in a modal or slide-over runs edge to edge, out through the window's side padding (--ui-modal-gutter, filament-modal.css; Filament's 1.5rem otherwise), like a page's top-level panels: a line above and below, and the island shadow. */
+@media (width < 40rem) {
+    .fi-modal .fi-modal-content .fi-ta-ctn {
+        margin-inline: calc(-1 * var(--ui-modal-gutter, 1.5rem));
+        border-inline: 0;
+        border-block: 1px solid var(--color-base-300);
+        border-radius: 0;
+        box-shadow: var(--ui-island-shadow);
+
+        /* Filament's "Active filters" row is 0.75rem in; line it up with the rows and search, at the gutter. */
+        & .fi-ta-filter-indicators {
+            padding-inline: var(--ui-modal-gutter, 1.5rem);
+        }
+    }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Bulk-action toolbar — the one part of Filament's header we DO want
@@ -86,7 +137,8 @@
 | fi-btn-menu, from BulkActionGroup::configureUsing()).
 */
 @media (width < 64rem) {
-    .fi-ta-main:has(> .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])) {
+    /* Not inside a modal (a picker): there the selection stays in place, above the table. */
+    .fi-ta-main:not(.fi-modal *):has(> .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])) {
         /* Room for the bar, so the last row scrolls clear of it. */
         padding-bottom: 6rem;
     }
@@ -95,7 +147,7 @@
         display: none;
     }
 
-    .fi-ta-selection-indicator {
+    .fi-ta-selection-indicator:not(.fi-modal *) {
         position: fixed;
         inset: auto 0 0 0;
         z-index: 40;
@@ -503,6 +555,12 @@ th.fi-ta-selection-cell,
         & > .fi-ta-selection-cell {
             top: 1.3125rem;
             padding: 0;
+        }
+
+        /* With no ⋮ menu (a picker), the checkbox lines up with the header's, 1rem in. Filament's cell is 4px wide, so it's sized to the checkbox, which would otherwise spill past it to the edge; beside a menu it sits left of it (below). */
+        &:not(:has(> .fi-ta-cell > .fi-ta-actions)) > .fi-ta-selection-cell {
+            inset-inline-end: 1rem;
+            width: auto;
         }
 
         &:has(> .fi-ta-cell > .fi-ta-actions) > .fi-ta-selection-cell {

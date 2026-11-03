@@ -8,16 +8,23 @@ use App\Enums\SystemPermission;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Theme\DaisyColor;
+use Closure;
+use Concise\Teams\Actions\AddUserToTeams;
 use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Models\Membership;
 use Concise\Teams\Models\Team;
+use Concise\Teams\Support\TeamRoleField;
+use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Components\TableSelect;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -25,6 +32,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
@@ -70,6 +78,7 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
     {
         return $schema->components([
             Section::make(team_trans('memberships.title'))
+                ->headerActions([$this->addToTeamsAction()])
                 ->schema([EmbeddedTable::make()]),
         ]);
     }
@@ -107,6 +116,60 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
             ->emptyStateHeading(team_trans('memberships.none'))
             ->paginated(config('pagination.page_sizes'))
             ->defaultPaginationPageOption(config('pagination.default_page_size'));
+    }
+
+    /**
+     * Add the user to several teams at once, in one slide-over: choose the role,
+     * tick the teams in a table (teams they aren't in, active ones by default).
+     * Admin-only, like a team's own "Add member", so it checks `manage teams`
+     * directly.
+     */
+    public function addToTeamsAction(): Action
+    {
+        return Action::make('addToTeams')
+            ->label(team_trans('memberships.add'))
+            ->icon('heroicon-o-user-plus')
+            ->modalHeading(team_trans('memberships.add_heading', ['person' => $this->user->name]))
+            ->slideOver()
+            ->modalWidth(Width::TwoExtraLarge)
+            ->modalSubmitActionLabel(team_trans('memberships.add_submit'))
+            ->visible(fn (): bool => Gate::allows(TeamSystemPermission::MANAGE_TEAMS->value))
+            ->schema([
+                TeamRoleField::make(),
+
+                TableSelect::make('teams')
+                    ->label(team_trans('memberships.teams_field'))
+                    ->multiple()
+                    ->required()
+                    ->tableConfiguration(TeamPickerTable::class)
+                    ->tableArguments(['user' => $this->user->getKey()])
+                    // Every id must be a live team (the picker's list is only presentational); AddUserToTeams then skips teams the user is already in.
+                    ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                        // A forged id that isn't a whole number fails here, before it reaches the query (Postgres rejects id IN ('abc')).
+                        if (collect(Arr::wrap($value))->contains(fn (mixed $id): bool => ! is_scalar($id) || ! ctype_digit((string) $id))) {
+                            $fail(team_trans('memberships.teams_gone'));
+
+                            return;
+                        }
+
+                        $ids = array_unique(Arr::wrap($value));
+
+                        if (Team::query()->whereKey($ids)->count() !== count($ids)) {
+                            $fail(team_trans('memberships.teams_gone'));
+                        }
+                    }),
+            ])
+            ->action(function (array $data): void {
+                Gate::authorize(TeamSystemPermission::MANAGE_TEAMS->value);
+
+                $added = app(AddUserToTeams::class)($this->user, $data['teams'], TeamRoleField::selected($data));
+                $this->badges = [];
+                $this->memberships = null;
+
+                $added->isEmpty()
+                    ? Notification::make()->title(team_trans('memberships.none_added', ['person' => $this->user->name]))->warning()->send()
+                    : Notification::make()->title(team_trans_choice('memberships.added', $added->count(), ['person' => $this->user->name, 'count' => $added->count()]))->success()->send();
+            });
     }
 
     public function render(): View
