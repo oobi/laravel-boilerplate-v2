@@ -27,6 +27,15 @@ class ListUsersTest extends TestCase
         $this->get('/admin/users')->assertRedirect('/login');
     }
 
+    public function test_a_user_with_no_role_shows_a_dash_that_is_still_read_out(): void
+    {
+        User::factory()->create();
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListUsers::class)
+            ->assertSeeHtml('<span aria-hidden="true">–</span><span class="sr-only">'.e(__('admin.no_roles')).'</span>');
+    }
+
     public function test_users_without_admin_access_are_forbidden(): void
     {
         $user = User::factory()->create();
