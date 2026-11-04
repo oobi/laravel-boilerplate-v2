@@ -42,6 +42,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\HtmlString;
 use Livewire\Component;
 use Throwable;
 
@@ -95,7 +96,8 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
                     ->getStateUsing(fn (User $record): array => $record->is_super_admin
                         ? [__('admin.super_admin')]
                         : $record->roles->pluck('name')->all())
-                    ->placeholder(__('admin.no_roles'))
+                    // A dash, as in the Teams column, still read out as what it means.
+                    ->placeholder(new HtmlString('<span aria-hidden="true">–</span><span class="sr-only">'.e(__('admin.no_roles')).'</span>'))
                     ->badge()
                     // Several badges stack rather than widen the table past a tablet.
                     ->wrap()

@@ -49,6 +49,15 @@ class UsersTeamsColumnTest extends TestCase
         Team::factory()->create()->addMember($this->joiner);
     }
 
+    /** Filament's rows don't wrap from sm, so a long team name would widen the table and squeeze the person's name and email. */
+    public function test_a_long_team_name_wraps_to_two_lines_rather_than_widening_the_table(): void
+    {
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListUsers::class)
+            ->assertSeeHtml('sm:whitespace-normal sm:wrap-anywhere sm:max-lg:max-w-28')
+            ->assertSeeHtml('sm:line-clamp-2" title="Northwind"');
+    }
+
     public function test_one_team_is_named_and_several_are_counted_with_a_link_to_the_memberships(): void
     {
         Livewire::actingAs(User::factory()->superAdmin()->create())
