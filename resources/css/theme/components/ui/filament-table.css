@@ -369,7 +369,7 @@ html:has(.ui-bulk-sheet[open]) {
     /* The pagination's tint, so the two read as one footer. */
     background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
 
-    &:not(.fi-modal *) {
+    &:not(.fi-modal *, dialog *) {
         position: sticky;
         bottom: -1px;
         z-index: 10;
@@ -402,7 +402,8 @@ html:has(.ui-bulk-sheet[open]) {
 }
 
 .ui-table-scroll.is-stuck .ui-table-rail,
-.ui-table-scroll.is-stuck ~ .fi-pagination {
+.ui-table-scroll.is-stuck ~ .fi-pagination,
+.ui-table-scroll.is-stuck ~ .daisy-table__pagination {
     box-shadow: 0 -6px 12px -10px rgb(0 0 0 / 0.25);
 }
 
@@ -548,7 +549,7 @@ html:has(.ui-bulk-sheet[open]) {
 }
 
 /* Keep a focused row clear of the stuck header and footer when tabbing scrolls it into view. */
-:where(main):has(.fi-ta-ctn .fi-pagination) {
+:where(main):has(.fi-ta-ctn .fi-pagination, .ui-table-main) {
     scroll-padding-block: 3rem 6rem;
 }
 

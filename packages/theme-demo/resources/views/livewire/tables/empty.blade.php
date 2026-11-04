@@ -7,7 +7,7 @@
         @include('theme-demo::livewire.tables._tabs')
 
         <x-slot:content>
-            <div class="overflow-x-auto">
+            <x-table-scroll>
                 <table class="table">
                     <thead>
                         <tr>
@@ -29,7 +29,7 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </x-table-scroll>
         </x-slot:content>
     </x-tabs-nav>
 </div>

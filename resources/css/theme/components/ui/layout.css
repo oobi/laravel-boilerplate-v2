@@ -134,8 +134,8 @@
 | utility classes that draw the panels' borders.
 */
 @media (width < 40rem) {
-    .ui-app main .ui-page :is(.card, .tabs-connected, .fi-section:not(.fi-aside), .ui-toolbar, .fi-ta-ctn):not(
-        :is(.card, .tabs-connected, .fi-section, .fi-ta-ctn, .ui-toolbar, .fi-sc-tabs, .fi-fieldset, .fi-wizard, .fi-modal, .modal, dialog, .dropdown-content, [class~="grid-cols-2"], [class~="grid-cols-3"], [class~="grid-cols-4"], .ui-no-bleed) *,
+    .ui-app main .ui-page :is(.card, .tabs-connected, .fi-section:not(.fi-aside), .ui-toolbar, .fi-ta-ctn, .daisy-table):not(
+        :is(.card, .tabs-connected, .fi-section, .fi-ta-ctn, .daisy-table, .ui-toolbar, .fi-sc-tabs, .fi-fieldset, .fi-wizard, .fi-modal, .modal, dialog, .dropdown-content, [class~="grid-cols-2"], [class~="grid-cols-3"], [class~="grid-cols-4"], .ui-no-bleed) *,
         .ui-no-bleed
     ) {
         margin-inline: calc(-1 * var(--ui-page-gutter));
@@ -162,10 +162,12 @@
     }
 
     /* A page-level toolbar over its table reads as one block, as in a tab panel. */
-    .ui-app main .ui-page .ui-toolbar:has(+ .fi-ta) {
+    .ui-app main .ui-page .ui-toolbar:has(+ :is(.fi-ta, .daisy-table)) {
         margin-bottom: 0;
 
-        & + .fi-ta .fi-ta-ctn {
+        & + .fi-ta .fi-ta-ctn,
+        & + .daisy-table {
+            margin-top: 0;
             border-top-width: 0;
         }
     }

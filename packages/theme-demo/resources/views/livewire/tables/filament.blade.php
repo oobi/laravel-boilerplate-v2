@@ -83,6 +83,11 @@
                             & .fi-ta-search-field {
                                 flex: 1 1 auto;
                             }
+
+                            /* Filament's icon buttons pull out by -0.5rem, which pushed the filter button and its badge to the edge. */
+                            & .fi-icon-btn {
+                                margin: 0;
+                            }
                         }
                     }
                 </style>

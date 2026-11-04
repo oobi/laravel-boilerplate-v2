@@ -8,7 +8,7 @@
 
         <x-slot:content>
             @if ($variant === 'table')
-                <div class="overflow-x-auto">
+                <x-table-scroll>
                     <table class="table">
                         <thead>
                             <tr>
@@ -21,9 +21,11 @@
                         <tbody>
                             @foreach ($this->rows as $row)
                                 <tr wire:key="tab-content-row-{{ $row->id }}">
-                                    <td class="flex items-center gap-3">
-                                        <x-avatar :name="$row->name" size="sm" />
-                                        <span class="font-medium">{{ $row->name }}</span>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <x-avatar :name="$row->name" size="sm" />
+                                            <span class="font-medium">{{ $row->name }}</span>
+                                        </div>
                                     </td>
                                     <td>{{ $row->email }}</td>
                                     <td><x-status :value="$row->status" /></td>
@@ -32,7 +34,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                </div>
+                </x-table-scroll>
             @elseif ($variant === 'form')
                 <form class="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div class="ui-floating-label">

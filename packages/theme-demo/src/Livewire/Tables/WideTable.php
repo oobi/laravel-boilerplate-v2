@@ -34,7 +34,7 @@ class WideTable extends Component
     /** @return Collection<int, array<string, mixed>> */
     public function rows(): Collection
     {
-        return DemoRows::take(10)->map(fn ($row): array => [
+        return DemoRows::take(30)->map(fn ($row): array => [
             'name' => $row->name,
             'email' => $row->email,
             'status' => $row->status,

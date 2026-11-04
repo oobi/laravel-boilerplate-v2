@@ -13,7 +13,7 @@
                 </x-slot:search>
             </x-table-header>
 
-            <div class="mt-4 overflow-x-auto">
+            <x-table-scroll class="mt-4">
                 <table class="table">
                     <thead>
                         <tr>
@@ -26,9 +26,11 @@
                     <tbody>
                         @forelse ($this->rows as $row)
                             <tr wire:key="simple-row-{{ $row->id }}">
-                                <td class="flex items-center gap-3">
-                                    <x-avatar :name="$row->name" size="sm" />
-                                    <span class="font-medium">{{ $row->name }}</span>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <x-avatar :name="$row->name" size="sm" />
+                                        <span class="font-medium">{{ $row->name }}</span>
+                                    </div>
                                 </td>
                                 <td>{{ $row->email }}</td>
                                 <td><x-status :value="$row->status" /></td>
@@ -41,7 +43,7 @@
                         @endforelse
                     </tbody>
                 </table>
-            </div>
+            </x-table-scroll>
         </x-slot:content>
     </x-tabs-nav>
 </div>

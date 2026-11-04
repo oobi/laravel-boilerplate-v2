@@ -38,9 +38,8 @@
                 </div>
             @endif
 
-            <div class="daisy-table mt-4">
-                <div class="daisy-table__scroll">
-                    <table class="table">
+            <x-table-scroll class="daisy-table mt-4">
+                <table class="table">
                     <thead>
                         <tr>
                             <th class="w-10">
@@ -54,7 +53,7 @@
                                     @endif
                                 </th>
                             @endforeach
-                            <th class="w-10"></th>
+                            <th class="w-10 ui-table-actions"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -63,11 +62,13 @@
                                 <td>
                                     <input type="checkbox" class="checkbox checkbox-sm" wire:model.live="selected" value="{{ $row->id }}" aria-label="{{ __('Select :name', ['name' => $row->name]) }}">
                                 </td>
-                                <td class="flex items-center gap-3">
-                                    <x-avatar :name="$row->name" size="sm" />
-                                    <div>
-                                        <div class="font-medium">{{ $row->name }}</div>
-                                        <div class="text-xs text-muted">{{ $row->email }}</div>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <x-avatar :name="$row->name" size="sm" />
+                                        <div>
+                                            <div class="font-medium">{{ $row->name }}</div>
+                                            <div class="text-xs text-muted">{{ $row->email }}</div>
+                                        </div>
                                     </div>
                                 </td>
                                 <td><x-status :value="$row->status" /></td>
@@ -89,40 +90,41 @@
                             </tr>
                         @endforelse
                     </tbody>
-                    </table>
-                </div>
+                </table>
 
-                <footer class="daisy-table__pagination" aria-label="{{ __('filament::components/pagination.label') }}">
-                    <span class="daisy-table__pagination-overview">{{ $this->paginationOverview() }}</span>
+                <x-slot:footer>
+                    <footer class="daisy-table__pagination" aria-label="{{ __('filament::components/pagination.label') }}">
+                        <span class="daisy-table__pagination-overview">{{ $this->paginationOverview() }}</span>
 
-                    <label class="daisy-table__pagination-per-page">
-                        <span>{{ __('filament::components/pagination.fields.records_per_page.label') }}</span>
-                        <select class="select select-sm" wire:model.live="perPage">
-                            @foreach ([10, 25] as $pageSize)
-                                <option value="{{ $pageSize }}">{{ $pageSize }}</option>
-                            @endforeach
-                        </select>
-                    </label>
+                        <label class="daisy-table__pagination-per-page">
+                            <span>{{ __('filament::components/pagination.fields.records_per_page.label') }}</span>
+                            <select class="select select-sm" wire:model.live="perPage">
+                                @foreach ([10, 25] as $pageSize)
+                                    <option value="{{ $pageSize }}">{{ $pageSize }}</option>
+                                @endforeach
+                            </select>
+                        </label>
 
-                    <nav class="daisy-table__pagination-actions" aria-label="{{ __('filament::components/pagination.label') }}">
-                        <x-button color="neutral" variant="outline" size="sm" wire:click="previousPage" :disabled="$this->rows->onFirstPage()" :aria-label="__('filament::components/pagination.actions.previous.label')">
-                            <x-heroicon-o-chevron-left class="h-4 w-4" />
-                            <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.previous.label') }}</span>
-                        </x-button>
+                        <nav class="daisy-table__pagination-actions" aria-label="{{ __('filament::components/pagination.label') }}">
+                            <x-button color="neutral" variant="outline" size="sm" wire:click="previousPage" :disabled="$this->rows->onFirstPage()" :aria-label="__('filament::components/pagination.actions.previous.label')">
+                                <x-heroicon-o-chevron-left class="h-4 w-4" />
+                                <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.previous.label') }}</span>
+                            </x-button>
 
-                        <x-button-group :label="__('Pages')" size="sm" class="daisy-table__pagination-pages">
-                            @for ($p = 1; $p <= $this->rows->lastPage(); $p++)
-                                <x-button-group.item :active="$p === $this->rows->currentPage()" wire:click="gotoPage({{ $p }})">{{ $p }}</x-button-group.item>
-                            @endfor
-                        </x-button-group>
+                            <x-button-group :label="__('Pages')" size="sm" class="daisy-table__pagination-pages">
+                                @for ($p = 1; $p <= $this->rows->lastPage(); $p++)
+                                    <x-button-group.item :active="$p === $this->rows->currentPage()" wire:click="gotoPage({{ $p }})">{{ $p }}</x-button-group.item>
+                                @endfor
+                            </x-button-group>
 
-                        <x-button color="neutral" variant="outline" size="sm" wire:click="nextPage" :disabled="! $this->rows->hasMorePages()" :aria-label="__('filament::components/pagination.actions.next.label')">
-                            <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.next.label') }}</span>
-                            <x-heroicon-o-chevron-right class="h-4 w-4" />
-                        </x-button>
-                    </nav>
-                </footer>
-            </div>
+                            <x-button color="neutral" variant="outline" size="sm" wire:click="nextPage" :disabled="! $this->rows->hasMorePages()" :aria-label="__('filament::components/pagination.actions.next.label')">
+                                <span class="daisy-table__pagination-action-label">{{ __('filament::components/pagination.actions.next.label') }}</span>
+                                <x-heroicon-o-chevron-right class="h-4 w-4" />
+                            </x-button>
+                        </nav>
+                    </footer>
+                </x-slot:footer>
+            </x-table-scroll>
         </x-slot:content>
     </x-tabs-nav>
 </div>

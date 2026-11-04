@@ -78,7 +78,9 @@ class StyleDemoAccessTest extends TestCase
 
         $this->get('/admin/style-demo/tables/wide')
             ->assertOk()
-            ->assertSee('tabindex="0" role="region"', false);
+            // The scroll rail makes the table a focusable region while it overflows.
+            ->assertSee('tableScrollRail(', false)
+            ->assertSee(__('admin.scrollable_table'), false);
     }
 
     public function test_table_tabs_are_connected_to_their_content_panel(): void

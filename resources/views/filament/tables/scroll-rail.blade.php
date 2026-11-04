@@ -1,11 +1,14 @@
 {{--
     Rendered after a Filament table's content by the render hook in
-    AppServiceProvider, so a Livewire re-render keeps it. While the table is
-    wider than its space: fades on the sides with more to see, and a rail above
-    the pagination that shows where you are, always visible, unlike a native
-    scrollbar (hidden on touch screens and off screen on a long table). The
-    arrows scroll by keyboard or a click; dragging is the extra. The track is
-    hidden from screen readers, which reach the columns through the table.
+    AppServiceProvider, so a Livewire re-render keeps it, and by <x-table-scroll>
+    for a hand-built one.
+
+    While the table is wider than its space: fades on the sides with more to
+    see, and a rail above the pagination that shows where you are, always
+    visible, unlike a native scrollbar (hidden on touch screens and off screen on
+    a long table). The arrows scroll by keyboard or a click; dragging is the
+    extra. The track is hidden from screen readers, which reach the columns
+    through the table.
 
     State: resources/js/components/table-scroll-rail.js. Styles: filament-table.css.
 --}}

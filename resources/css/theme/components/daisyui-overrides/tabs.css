@@ -75,8 +75,8 @@
 */
 .tabs-connected__content:is(
     .ui-flush-content,
-    :has(> .fi-ta):not(:has(> :not(style, script, .ui-toolbar, .fi-ta))),
-    :has(> div > .fi-ta):not(:has(> :not(style, script, div), > div ~ div, > div > :not(style, script, .ui-toolbar, .fi-ta)))
+    :has(> :is(.fi-ta, .ui-table-main)):not(:has(> :not(style, script, .ui-toolbar, .fi-ta, .ui-table-main))),
+    :has(> div > :is(.fi-ta, .ui-table-main)):not(:has(> :not(style, script, div), > div ~ div, > div > :not(style, script, .ui-toolbar, .fi-ta, .ui-table-main)))
 ) {
     padding: 0;
 
@@ -85,15 +85,20 @@
         box-shadow: 0 -1px 0 color-mix(in oklab, var(--color-base-300) 86%, var(--color-base-content));
     }
 
-    & .fi-ta-ctn {
+    & .fi-ta-ctn,
+    & .daisy-table {
         border: 0;
         box-shadow: none;
         border-radius: 0;
     }
 
+    & .ui-table-main {
+        margin-top: 0;
+    }
+
     /* Inset like the table's first column under it, so the search lines up with the checkboxes. */
     & .ui-toolbar {
-        margin-bottom: 0;
+        margin-block: 0;
         border: 0;
         border-bottom: 1px solid var(--color-base-300);
         border-radius: 0;

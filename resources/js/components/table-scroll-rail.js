@@ -1,11 +1,12 @@
 /**
- * Filament table scroll rail: the state behind filament/tables/scroll-rail.
+ * Table scroll rail: the state behind filament/tables/scroll-rail, for a Filament
+ * table or a hand-built one in <x-table-scroll>.
  *
- * Follows the table's own scroller (`.fi-ta-content-ctn`), which stays the only
- * thing that scrolls. Livewire can replace the scroller or its contents on any
- * re-render, so a mutation observer re-checks them. While the table overflows
- * the scroller is a named, focusable region, so a keyboard can scroll a table
- * with nothing focusable in it.
+ * Follows the table's own scroller (`.fi-ta-content-ctn`, `.ui-table-scroller`),
+ * which stays the only thing that scrolls. Livewire can replace the scroller or
+ * its contents on any re-render, so a mutation observer re-checks them. While
+ * the table overflows the scroller is a named, focusable region, so a keyboard
+ * can scroll a table with nothing focusable in it.
  *
  * Also measures the sticky column header's range on the page for the CSS
  * animation that moves it (filament-table.css), and tells stuck from resting
@@ -60,13 +61,13 @@ export const tableScrollRail = (regionLabel) => {
         footerHeight: 0,
 
         init() {
-            main = this.$el.closest('.fi-ta-main');
+            main = this.$el.closest('.fi-ta-main, .ui-table-main');
 
             if (! main) {
                 return;
             }
 
-            page = this.$el.closest('.fi-modal') ? null : this.$el.closest('main');
+            page = this.$el.closest('.fi-modal, dialog') ? null : this.$el.closest('main');
 
             scheduleSync = () => {
                 cancelAnimationFrame(frame);
@@ -103,9 +104,9 @@ export const tableScrollRail = (regionLabel) => {
 
         /** Point the observers at the current scroller and footer, which a re-render may have replaced. */
         bind() {
-            const currentScroller = main.querySelector(':scope > .fi-ta-content-ctn');
-            const currentFooter = main.querySelector(':scope > .fi-pagination');
-            const currentContent = currentScroller?.querySelector('.fi-ta-table, .fi-ta-content') ?? null;
+            const currentScroller = main.querySelector(':scope > .fi-ta-content-ctn, :scope > .ui-table-scroller');
+            const currentFooter = main.querySelector(':scope > .fi-pagination, :scope > .daisy-table__pagination');
+            const currentContent = currentScroller?.querySelector('.fi-ta-table, .fi-ta-content, .table') ?? null;
 
             if (currentScroller !== scroller || currentFooter !== footer || currentContent !== content) {
                 scroller?.removeEventListener('scroll', scheduleSync);
@@ -192,7 +193,7 @@ export const tableScrollRail = (regionLabel) => {
 
         /** Where the header row starts on the page, and how far it can travel before it reaches the table's end. */
         syncHeaderRange() {
-            const header = scroller.querySelector('.fi-ta-table > thead');
+            const header = scroller.querySelector('.fi-ta-table > thead, .table > thead');
 
             // No box means a hidden table: it measures 0, which would follow the page's scroll.
             if (! page || ! header?.offsetHeight) {
@@ -266,7 +267,7 @@ export const tableScrollRail = (regionLabel) => {
  */
 export const keepTableScrollStateThroughRenders = () => {
     window.Livewire.hook('morph.updating', ({ el, toEl }) => {
-        if (el.classList?.contains('fi-ta-main')) {
+        if (el.matches?.('.fi-ta-main, .ui-table-main')) {
             ['--ui-table-header-start', '--ui-table-header-travel'].forEach((name) => {
                 const value = el.style.getPropertyValue(name);
 
@@ -276,7 +277,7 @@ export const keepTableScrollStateThroughRenders = () => {
             });
         }
 
-        if (el.classList?.contains('fi-ta-content-ctn') && toEl.classList?.contains('fi-ta-content-ctn')) {
+        if (el.matches?.('.fi-ta-content-ctn, .ui-table-scroller') && toEl.matches?.('.fi-ta-content-ctn, .ui-table-scroller')) {
             ['tabindex', 'role', 'aria-label'].forEach((name) => {
                 if (el.hasAttribute(name)) {
                     toEl.setAttribute(name, el.getAttribute(name));

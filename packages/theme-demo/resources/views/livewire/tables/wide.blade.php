@@ -7,8 +7,8 @@
         @include('theme-demo::livewire.tables._tabs')
 
         <x-slot:content>
-            {{-- No wrapper trick here: daisyUI's own .table + overflow-x-auto handles a wide table natively, unlike Filament's stackedOnMobile()/Split responsive machinery. A named, focusable region, so a keyboard can scroll it. --}}
-            <div class="overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary" tabindex="0" role="region" aria-label="{{ __('Wide table, scrolls sideways') }}">
+            {{-- ~20 columns and 30 rows, to judge the rail, header and fades on a hand-built table. --}}
+            <x-table-scroll>
                 <table class="table">
                     <thead>
                         <tr>
@@ -24,9 +24,11 @@
                     <tbody>
                         @foreach ($this->rows() as $index => $row)
                             <tr wire:key="wide-row-{{ $index }}">
-                                <td class="flex items-center gap-3">
-                                    <x-avatar :name="$row['name']" size="sm" />
-                                    <span class="font-medium">{{ $row['name'] }}</span>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <x-avatar :name="$row['name']" size="sm" />
+                                        <span class="font-medium">{{ $row['name'] }}</span>
+                                    </div>
                                 </td>
                                 <td>{{ $row['email'] }}</td>
                                 <td><x-status :value="$row['status']" /></td>
@@ -38,7 +40,7 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
+            </x-table-scroll>
         </x-slot:content>
     </x-tabs-nav>
 </div>
