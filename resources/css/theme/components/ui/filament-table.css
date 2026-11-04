@@ -293,11 +293,12 @@ html:has(.ui-bulk-sheet[open]) {
 |--------------------------------------------------------------------------
 | A long table keeps its column headers in view, a table wider than its space
 | shows a rail and fades at its sides (filament/tables/scroll-rail, a render
-| hook in AppServiceProvider), and from sm up the pagination sticks too: on a
-| phone it costs more screen than it's worth, and you reach it at the end of the
-| list. Like <x-form-actions>, they stick only while nothing between them and
-| <main> sets overflow hidden/auto. bottom: -1px is how the rail's observer tells
-| stuck from resting. Not in a modal, where everything sits in place.
+| hook in AppServiceProvider), and from sm up the pagination sticks too, unless
+| the screen is short: on a phone it costs more screen than it's worth, and you
+| reach it at the end of the list. Like <x-form-actions>, they stick only while
+| nothing between them and <main> sets overflow hidden/auto. bottom: -1px is how
+| the rail's observer tells stuck from resting. Not in a modal, where everything
+| sits in place.
 |
 | A table changes this through ->extraAttributes(), per width (phone is below
 | sm): ui-sticky-footer-phone, ui-no-sticky-footer-desktop,
@@ -338,7 +339,7 @@ html:has(.ui-bulk-sheet[open]) {
         z-index: 6;
         /* The line under the header row, which stays behind when the cells move. */
         box-shadow: 0 1px 0 var(--color-base-300);
-        animation: ui-table-sticky-header linear both;
+        animation: var(--ui-table-header-animation, ui-table-sticky-header) linear both;
         animation-timeline: --ui-page;
         animation-range: var(--ui-table-header-start, 0px) calc(var(--ui-table-header-start, 0px) + var(--ui-table-header-travel, 0px));
     }
@@ -387,7 +388,8 @@ html:has(.ui-bulk-sheet[open]) {
     }
 }
 
-@media (width >= 40rem) {
+/* Not on a short screen (a phone in landscape): the rows need that height more. */
+@media (width >= 40rem) and (height >= 31.25rem) {
     .fi-ta:not(.ui-no-sticky-footer-desktop) .fi-pagination:not(.fi-modal *) {
         position: sticky;
         bottom: -1px;
@@ -461,6 +463,88 @@ html:has(.ui-bulk-sheet[open]) {
 .ui-table-fade-end {
     inset-inline-end: 0;
     background: linear-gradient(to left, color-mix(in oklab, var(--color-base-content) 14%, transparent), transparent);
+}
+
+/*
+| The row menu stays in reach while the columns scroll under it. Unlike the
+| header this is plain position: sticky, as it sticks within the sideways
+| scroller. Its cells need a solid background, the row's own, and a shadow takes
+| over from the fade while there's more to scroll. A row with no actions still
+| gets the cell, so nothing shows through that column.
+*/
+.fi-ta-row {
+    /* Filament's own surface for a table, which in dark isn't base-100. */
+    --ui-row-bg: var(--color-base-100);
+
+    @variant dark {
+        --ui-row-bg: var(--gray-900);
+    }
+
+    /* Separate rules: a shared list would give striped the hover's specificity, over selected. In srgb, as Filament's white/5 composites. */
+    &.fi-clickable:hover {
+        --ui-row-bg: var(--gray-50);
+
+        @variant dark {
+            --ui-row-bg: color-mix(in srgb, white 5%, var(--gray-900));
+        }
+    }
+
+    &.fi-striped {
+        --ui-row-bg: var(--gray-50);
+
+        @variant dark {
+            --ui-row-bg: color-mix(in srgb, white 5%, var(--gray-900));
+        }
+    }
+
+    &.fi-selected {
+        --ui-row-bg: var(--ui-selected-bg);
+
+        &:hover {
+            --ui-row-bg: var(--ui-selected-bg-hover);
+        }
+    }
+}
+
+:where(.fi-ta-table:has(> thead .fi-ta-actions-header-cell:last-child)) > tbody > tr > td.fi-ta-cell:last-child {
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 4;
+    background-color: var(--ui-row-bg);
+
+    /* Above the rows below it, the stuck header and the footer while its menu is open. */
+    &:has(.fi-dropdown-panel:not([x-cloak]):not([style*="display: none"])) {
+        z-index: 11;
+    }
+}
+
+.fi-ta-table > thead th.fi-ta-actions-header-cell:last-child {
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 8;
+}
+
+.fi-ta-content-ctn:has(~ .ui-table-scroll.is-overflowing:not(.is-at-end)) {
+    & .fi-ta-table:has(> thead .fi-ta-actions-header-cell:last-child) > tbody > tr > td.fi-ta-cell:last-child {
+        box-shadow: -8px 0 8px -8px rgb(0 0 0 / 0.25);
+    }
+
+    & .fi-ta-table > thead th.fi-ta-actions-header-cell:last-child {
+        box-shadow: 0 1px 0 var(--color-base-300), -8px 0 8px -8px rgb(0 0 0 / 0.25);
+    }
+}
+
+.fi-ta-main:has(> .fi-ta-content-ctn .fi-ta-actions-header-cell:last-child) .ui-table-fade-end {
+    display: none;
+}
+
+/* A stacked row's menu keeps its place at the top right of the card. */
+@media (width < 40rem) {
+    .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row > td.fi-ta-cell:last-child {
+        position: static;
+        z-index: auto;
+        background-color: transparent;
+    }
 }
 
 /* Keep a focused row clear of the stuck header and footer when tabbing scrolls it into view. */

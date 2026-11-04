@@ -149,6 +149,15 @@ class StyleDemoAccessTest extends TestCase
         $this->assertCount(25, $records->items());
     }
 
+    /** So the frozen actions column can be judged while its columns scroll under it. */
+    public function test_the_wide_demo_has_a_row_menu(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        Livewire::test(FilamentTable::class, ['variant' => 'wide'])
+            ->assertSeeHtml('fi-ta-actions-header-cell');
+    }
+
     /** A Grid, not a Split: a Split sizes each row's columns to their content, so nothing lines up. */
     public function test_the_maximalist_demo_lines_its_rows_up_with_a_grid(): void
     {

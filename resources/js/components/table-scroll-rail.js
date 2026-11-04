@@ -21,10 +21,32 @@ export const tableScrollRail = (regionLabel) => {
     let footer;
     let frame;
     let scheduleSync;
+    let settleTimer;
+    let syncAfterResize;
     let resizeObserver;
     let mutationObserver;
     let stuckObserver;
     let stuckTarget;
+
+    // Not scroll-padding: it counts the frozen cell as hidden too, so tabbing through the row menus scrolls to the table's end.
+    const keepFocusClearOfFrozenColumn = ({ target }) => {
+        // Keyboard focus only: focus from a mouse arrives on press, and scrolling then would make the click miss.
+        if (! target.matches(':focus-visible')) {
+            return;
+        }
+
+        const frozenCell = target.closest('tr')?.lastElementChild;
+
+        if (! frozenCell || frozenCell.contains(target) || getComputedStyle(frozenCell).position !== 'sticky') {
+            return;
+        }
+
+        const overlap = target.getBoundingClientRect().right - frozenCell.getBoundingClientRect().left;
+
+        if (overlap > 0) {
+            scroller.scrollLeft += overlap + 8;
+        }
+    };
 
     return {
         overflows: false,
@@ -54,11 +76,25 @@ export const tableScrollRail = (regionLabel) => {
             mutationObserver = new MutationObserver(scheduleSync);
             mutationObserver.observe(main, { childList: true, subtree: true });
 
+            // Rotating an iPhone can leave the header's range stale: the page reflows in
+            // stages, so measure again once it has settled, and on any later page scroll.
+            syncAfterResize = () => {
+                scheduleSync();
+                clearTimeout(settleTimer);
+                settleTimer = setTimeout(scheduleSync, 400);
+            };
+            window.addEventListener('resize', syncAfterResize);
+            page?.addEventListener('scroll', scheduleSync, { passive: true });
+
             this.sync();
         },
 
         destroy() {
+            window.removeEventListener('resize', syncAfterResize);
+            page?.removeEventListener('scroll', scheduleSync);
+            clearTimeout(settleTimer);
             scroller?.removeEventListener('scroll', scheduleSync);
+            scroller?.removeEventListener('focusin', keepFocusClearOfFrozenColumn);
             resizeObserver?.disconnect();
             mutationObserver?.disconnect();
             stuckObserver?.disconnect();
@@ -73,7 +109,9 @@ export const tableScrollRail = (regionLabel) => {
 
             if (currentScroller !== scroller || currentFooter !== footer || currentContent !== content) {
                 scroller?.removeEventListener('scroll', scheduleSync);
+                scroller?.removeEventListener('focusin', keepFocusClearOfFrozenColumn);
                 currentScroller?.addEventListener('scroll', scheduleSync, { passive: true });
+                currentScroller?.addEventListener('focusin', keepFocusClearOfFrozenColumn);
 
                 resizeObserver.disconnect();
                 // The page's contents too: anything above the table moves the header's range.
@@ -156,15 +194,27 @@ export const tableScrollRail = (regionLabel) => {
         syncHeaderRange() {
             const header = scroller.querySelector('.fi-ta-table > thead');
 
-            if (! page || ! header) {
+            // No box means a hidden table: it measures 0, which would follow the page's scroll.
+            if (! page || ! header?.offsetHeight) {
                 return;
             }
 
             const start = header.getBoundingClientRect().top - page.getBoundingClientRect().top + page.scrollTop;
-            const travel = Math.max(0, header.parentElement.offsetHeight - header.offsetHeight);
+            const travel = `${Math.max(0, header.parentElement.offsetHeight - header.offsetHeight)}px`;
+            const currentStart = parseFloat(main.style.getPropertyValue('--ui-table-header-start'));
+
+            // With a tolerance: at a fractional zoom the measured start wanders as the page scrolls, and each restart recalculates the whole table.
+            if (Math.abs(currentStart - start) < 2 && main.style.getPropertyValue('--ui-table-header-travel') === travel) {
+                return;
+            }
 
             main.style.setProperty('--ui-table-header-start', `${start}px`);
-            main.style.setProperty('--ui-table-header-travel', `${travel}px`);
+            main.style.setProperty('--ui-table-header-travel', travel);
+
+            // Restart it, without a paint in between, so a running animation can't keep the old range.
+            main.style.setProperty('--ui-table-header-animation', 'none');
+            getComputedStyle(header.querySelector('th') ?? header).animationName;
+            main.style.removeProperty('--ui-table-header-animation');
         },
 
         scrollByPage(direction) {

@@ -12,7 +12,7 @@
 <div
     class="ui-table-scroll"
     x-data="tableScrollRail(@js(__('admin.scrollable_table')))"
-    x-bind:class="{ 'is-stuck': stuck, 'is-overflowing': overflows }"
+    x-bind:class="{ 'is-stuck': stuck, 'is-overflowing': overflows, 'is-at-end': atEnd }"
     x-bind:style="{ '--ui-table-content-top': `${contentTop}px`, '--ui-table-content-height': `${contentHeight}px`, '--ui-table-footer-height': `${footerHeight}px` }"
 >
     <div class="ui-table-fade ui-table-fade-start" x-bind:class="{ 'is-visible': overflows && ! atStart }"></div>

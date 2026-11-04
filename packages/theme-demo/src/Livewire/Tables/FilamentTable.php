@@ -264,6 +264,18 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                 ]);
         }
 
+        if ($isWide) {
+            // The row menu stays in reach while the columns scroll under it (filament-table.css).
+            return $table->recordActions([
+                ActionGroup::make([
+                    Action::make('view')
+                        ->label(__('View'))
+                        ->icon('heroicon-o-eye')
+                        ->action(fn (array $record) => Notification::make()->title(__('Demo only: nothing to view.'))->send()),
+                ]),
+            ]);
+        }
+
         if (! $isFullFeatured) {
             return $table;
         }
