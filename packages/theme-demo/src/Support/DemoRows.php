@@ -25,7 +25,19 @@ class DemoRows
     /** @return Collection<int, DemoRow> */
     public static function all(): Collection
     {
-        return collect(self::NAMES)->values()->map(function (string $name, int $index): DemoRow {
+        return self::take(count(self::NAMES));
+    }
+
+    /**
+     * The first $count rows. Past the last name the names repeat, each with its own id.
+     *
+     * @return Collection<int, DemoRow>
+     */
+    public static function take(int $count): Collection
+    {
+        return Collection::times($count, function (int $number): DemoRow {
+            $index = $number - 1;
+            $name = self::NAMES[$index % count(self::NAMES)];
             $slug = str_replace(' ', '.', mb_strtolower(str_replace("'", '', $name)));
 
             return new DemoRow(
@@ -37,12 +49,6 @@ class DemoRows
                 detail: "Row #{$index} — extra detail revealed when this row is expanded.",
             );
         });
-    }
-
-    /** @return Collection<int, DemoRow> */
-    public static function take(int $count): Collection
-    {
-        return self::all()->take($count)->values();
     }
 
     /** Fixed fake "trashed" rows for the trash-toggle demo — just for the look, not a real soft-delete. */

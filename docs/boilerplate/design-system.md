@@ -297,7 +297,8 @@ value on one line, and the ⋮ menu and the checkbox sit at the top right.
   is left out of sight there but still read out, so a placeholder must only
   ever mean "none".
 - **A genuinely wide data grid** opts out with `->stackedOnMobile(false)` and
-  keeps the sideways scroll (the gallery's Wide tab).
+  keeps the sideways scroll (the gallery's Wide tab). See "Long and wide
+  tables" below for what it gets.
 
 ```php
 return $table
@@ -311,6 +312,68 @@ return $table
 Don't reach for `Split`, `Stack` or `Panel` to fit a phone: any layout
 component renders the table through Filament's layout renderer at every
 width, so the desktop table loses its header cells too.
+
+### Long and wide tables
+
+Every Filament table gets this with nothing to add. It keeps the table's
+controls in reach while the page scrolls, and shows when a table is wider than
+its space, since a native scrollbar is hidden on touch screens and off screen
+on a long table.
+
+| Part | From `sm` up | Below `sm`, stacked (most tables) | Below `sm`, not stacked |
+|---|---|---|---|
+| Column header row | Stays in view | No header row | Stays in view |
+| Scroll rail and edge fades | While the table overflows | Don't overflow | While the table overflows |
+| Pagination | Sticks, unless the screen is under 500px tall | End of the list | End of the list |
+| ⋮ column | Frozen at the right | Top right of the card | Frozen at the right |
+
+The rail replaces the native scrollbar only while it's showing. The search and
+filter toolbar doesn't stick, and nothing sticks in a modal. A table built from
+layout components has no header row or frozen column, and the column only
+freezes when the row actions are the last cell.
+
+A table changes these with classes, through `->extraAttributes()` or on
+`<x-table-scroll>`. Pass `merge: true` to `extraAttributes()` to add them to any
+set by `Table::configureUsing()`.
+
+| Class | Does |
+|---|---|
+| `ui-sticky-footer-phone` | Sticks the pagination below `sm` too |
+| `ui-no-sticky-footer-desktop` | Leaves the pagination at the end of the list from `sm` up |
+| `ui-no-sticky-header-phone`, `ui-no-sticky-header-desktop` | Lets the header scroll away at that width |
+| `ui-no-rail-arrows-phone`, `ui-no-rail-arrows-desktop` | Hides the rail's arrows at that width |
+
+**A hand-built table** goes in `<x-table-scroll>` for the same behaviour. Give
+the last header cell `ui-table-actions` to freeze that column, and add
+`daisy-table` for the bordered look with a pagination footer:
+
+```blade
+<x-table-scroll class="daisy-table">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{{ __('Name') }}</th>
+                <th class="ui-table-actions"></th>
+            </tr>
+        </thead>
+        {{-- rows --}}
+    </table>
+
+    <x-slot:footer>
+        <footer class="daisy-table__pagination">{{-- pagination --}}</footer>
+    </x-slot:footer>
+</x-table-scroll>
+```
+
+A tinted row sets `--ui-row-bg` on its `<tr>`, so the frozen cell matches it.
+For now an `<x-dropdown>` in `<x-table-scroll>` is cut off on the last rows, even
+when the table fits and whether or not its column is frozen.
+
+The header follows the page through a CSS scroll-driven animation on its real
+cells, because `position: sticky` can't work inside a sideways scroller. In a
+browser without them, the header scrolls away with the page. Sticking needs
+nothing between the table and `<main>` to set `overflow` hidden or auto: use
+`overflow-clip`, as with `<x-form-actions>`.
 
 ### The toolbar on a phone
 
@@ -390,8 +453,9 @@ All under `resources/css/theme/components/`.
 
 A tab panel holding just a table, or a toolbar then a table, goes flush by
 itself: no panel padding, no border on the table, and the toolbar becomes a
-strip under the tabs. Pages don't pass `flush` for it. Anything else in the
-panel (a form, cards) keeps the padding.
+strip under the tabs. Pages don't pass `flush` for it. A hand-built table in
+`<x-table-scroll>` counts too. Anything else in the panel (a form, cards) keeps
+the padding.
 
 ### Selection and bulk actions
 

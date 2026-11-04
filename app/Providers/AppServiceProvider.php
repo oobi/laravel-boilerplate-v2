@@ -122,12 +122,20 @@ class AppServiceProvider extends ServiceProvider
      *
      * The trash view's "Active filters" chip says "Trashed", the word the
      * toolbar's trash toggle uses, not Filament's "Only deleted records".
+     *
+     * A table wider than its space shows a scroll rail and fades, since a native
+     * scrollbar is hidden on touch screens and off screen on a long table.
      */
     private function registerFilamentTableDefaults(): void
     {
         Table::configureUsing(fn (Table $table): Table => $table
             ->enforcePaginationPageOptions()
             ->stackedOnMobile());
+
+        FilamentView::registerRenderHook(
+            TablesRenderHook::CONTENT_AFTER,
+            fn (): View => view('filament.tables.scroll-rail'),
+        );
 
         TrashedFilter::configureUsing(fn (TrashedFilter $filter): TrashedFilter => $filter
             ->falseLabel(fn (): string => __('admin.records_trashed')));

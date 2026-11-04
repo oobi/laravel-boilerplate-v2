@@ -4,6 +4,13 @@ import 'cally';
 import { initTabScrollControllers } from './components/tab-scroll.js';
 import { initTableSelectionGuard } from './components/table-selection.js';
 import { initLivewireAccessHandling } from './components/livewire-access.js';
+import { keepTableScrollStateThroughRenders, tableScrollRail } from './components/table-scroll-rail.js';
+
+document.addEventListener('alpine:init', () => {
+    window.Alpine.data('tableScrollRail', tableScrollRail);
+});
+
+document.addEventListener('livewire:init', keepTableScrollStateThroughRenders);
 
 const initializeTabScrollControllers = () => {
     initTabScrollControllers();

@@ -115,6 +115,7 @@ list with the reason. See `.ai/rules/views.md`.
 | Component | Use instead of | Key props |
 |---|---|---|
 | `<x-table-header>` | Filament's native table header/search/filter row (hidden via `filament-table.css`) | slots: `search`, `filters`, `counts`, `actions`. On a phone `filters` and `counts` fold into a panel behind a "Filters" button that counts what's on, so put only filters there; never hand-roll the button |
+| `<x-table-scroll>` | a hand-built `<table class="table">` in an `overflow-x-auto` wrapper. Keeps the header in view, shows a scroll rail and fades while it overflows, and goes flush in a tab panel, as Filament tables do on their own | slot: `footer` (the pagination); `<th class="ui-table-actions">` as the last header cell freezes that column; `class="daisy-table"` for the bordered look |
 | `<x-table-search>` | search input inside a `<x-table-header>` `search` slot | `model` (default `tableSearch`), `label`, `debounce` |
 | `<x-table-filter-select>` | filter `<select>` inside a `<x-table-header>` `filters` slot | `model`, `label`, `options`, `placeholder` |
 | `<x-listbox>` | a `<x-table-filter-select>` whose options need a coloured dot (a native `<select>` can't show one); works in any Livewire toolbar | `model`, `label`, `options`, `dots` (value => dot classes, e.g. `bg-primary`), `placeholder` |

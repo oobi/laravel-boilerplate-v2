@@ -78,7 +78,9 @@ class StyleDemoAccessTest extends TestCase
 
         $this->get('/admin/style-demo/tables/wide')
             ->assertOk()
-            ->assertSee('tabindex="0" role="region"', false);
+            // The scroll rail makes the table a focusable region while it overflows.
+            ->assertSee('tableScrollRail(', false)
+            ->assertSee(__('admin.scrollable_table'), false);
     }
 
     public function test_table_tabs_are_connected_to_their_content_panel(): void
@@ -136,6 +138,26 @@ class StyleDemoAccessTest extends TestCase
 
         $this->assertFalse(Livewire::test(FilamentTable::class, ['variant' => 'wide'])->instance()->getTable()->isStackedOnMobile());
         $this->assertTrue(Livewire::test(FilamentTable::class, ['variant' => 'simple'])->instance()->getTable()->isStackedOnMobile());
+    }
+
+    /** Wide and tall, so its sideways scroll and pagination can be judged with the footer below the fold. */
+    public function test_the_wide_demo_has_thirty_records_over_two_pages(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $records = Livewire::test(FilamentTable::class, ['variant' => 'wide'])->instance()->getTableRecords();
+
+        $this->assertSame(30, $records->total());
+        $this->assertCount(25, $records->items());
+    }
+
+    /** So the frozen actions column can be judged while its columns scroll under it. */
+    public function test_the_wide_demo_has_a_row_menu(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        Livewire::test(FilamentTable::class, ['variant' => 'wide'])
+            ->assertSeeHtml('fi-ta-actions-header-cell');
     }
 
     /** A Grid, not a Split: a Split sizes each row's columns to their content, so nothing lines up. */

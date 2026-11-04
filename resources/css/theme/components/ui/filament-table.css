@@ -279,10 +279,309 @@ html:has(.ui-bulk-sheet[open]) {
 | Replace both with our own border/shadow tokens so it reads as the same
 | "island" as `.ui-toolbar` and every other card in the app.
 */
-.fi-ta-ctn {
+.fi-ta-ctn,
+.fi-ta-ctn:not(.fi-ta-ctn-with-header) {
     border: 1px solid var(--color-base-300);
     box-shadow: var(--ui-island-shadow);
-    overflow: hidden;
+    /* Clip, not hidden: hidden would make it a scroller and trap the sticky footer below. */
+    overflow: clip;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Sticky header, footer and scroll rail
+|--------------------------------------------------------------------------
+| A long table keeps its column headers in view, a table wider than its space
+| shows a rail and fades at its sides (filament/tables/scroll-rail, a render
+| hook in AppServiceProvider), and from sm up the pagination sticks too, unless
+| the screen is short: on a phone it costs more screen than it's worth, and you
+| reach it at the end of the list. Like <x-form-actions>, they stick only while
+| nothing between them and <main> sets overflow hidden/auto. bottom: -1px is how
+| the rail's observer tells stuck from resting. Not in a modal, where everything
+| sits in place.
+|
+| A table changes this through ->extraAttributes(), per width (phone is below
+| sm): ui-sticky-footer-phone, ui-no-sticky-footer-desktop,
+| ui-no-sticky-header-phone, ui-no-sticky-header-desktop,
+| ui-no-rail-arrows-phone, ui-no-rail-arrows-desktop.
+*/
+.fi-ta-main {
+    position: relative;
+}
+
+@media (width < 40rem) {
+    .fi-ta-ctn .fi-pagination {
+        padding-block: 0.25rem;
+    }
+}
+
+/*
+| position: sticky can't do the header: the sideways scroller is its scroll
+| container, and that never scrolls down. So the real cells slide down the table
+| as <main> scrolls, on the compositor, sort buttons and select-all included.
+| The rail's script measures the range. Without scroll-driven animations the
+| header scrolls away with the page.
+*/
+@supports (animation-timeline: scroll()) {
+    .ui-app main {
+        scroll-timeline: --ui-page block;
+    }
+
+    @keyframes ui-table-sticky-header {
+        to {
+            transform: translateY(var(--ui-table-header-travel, 0px));
+        }
+    }
+
+    /* :where() keeps this below the per-width choices further down. */
+    .fi-ta-table > thead th:where(:not(.fi-ta-table-stacked-header-cell, .fi-modal *)) {
+        position: relative;
+        z-index: 6;
+        /* The line under the header row, which stays behind when the cells move. */
+        box-shadow: 0 1px 0 var(--color-base-300);
+        animation: var(--ui-table-header-animation, ui-table-sticky-header) linear both;
+        animation-timeline: --ui-page;
+        animation-range: var(--ui-table-header-start, 0px) calc(var(--ui-table-header-start, 0px) + var(--ui-table-header-travel, 0px));
+    }
+}
+
+.ui-table-scroll {
+    display: contents;
+}
+
+/* The rail replaces the native scrollbar, which shows as well on a desktop set to always show them. Only once the rail is up, so without its script the native one stays. */
+.fi-ta-content-ctn:has(~ .ui-table-scroll.is-overflowing) {
+    scrollbar-width: none;
+}
+
+/* Inside the edge: the island's clip would cut off a ring outside it. */
+.fi-ta-content-ctn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+.ui-table-rail {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-top: 1px solid var(--color-base-300);
+    /* The pagination's tint, so the two read as one footer. */
+    background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
+
+    &:not(.fi-modal *, dialog *) {
+        position: sticky;
+        bottom: -1px;
+        z-index: 10;
+    }
+}
+
+@media (width < 40rem) {
+    .ui-sticky-footer-phone .fi-pagination:not(.fi-modal *) {
+        position: sticky;
+        bottom: -1px;
+        z-index: 10;
+    }
+
+    .ui-sticky-footer-phone .ui-table-rail:not(.fi-modal *) {
+        bottom: calc(var(--ui-table-footer-height, 0px) - 1px);
+    }
+}
+
+/* Not on a short screen (a phone in landscape): the rows need that height more. */
+@media (width >= 40rem) and (height >= 31.25rem) {
+    .fi-ta:not(.ui-no-sticky-footer-desktop) .fi-pagination:not(.fi-modal *) {
+        position: sticky;
+        bottom: -1px;
+        z-index: 10;
+    }
+
+    .fi-ta:not(.ui-no-sticky-footer-desktop) .ui-table-rail:not(.fi-modal *) {
+        bottom: calc(var(--ui-table-footer-height, 0px) - 1px);
+    }
+}
+
+.ui-table-scroll.is-stuck .ui-table-rail,
+.ui-table-scroll.is-stuck ~ .fi-pagination,
+.ui-table-scroll.is-stuck ~ .daisy-table__pagination {
+    box-shadow: 0 -6px 12px -10px rgb(0 0 0 / 0.25);
+}
+
+/* aria-disabled, not disabled, so keyboard focus stays when an arrow reaches its end. */
+.ui-table-rail-arrow[aria-disabled="true"] {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+/* A tall hit area around a thin bar; touch-action so dragging the thumb doesn't scroll the page. */
+.ui-table-rail-track {
+    position: relative;
+    flex: 1 1 auto;
+    height: 1.5rem;
+    cursor: pointer;
+    touch-action: none;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: calc(50% - 0.1875rem) 0;
+        border-radius: 999px;
+        background-color: color-mix(in oklab, var(--color-base-content) 12%, transparent);
+    }
+}
+
+.ui-table-rail-thumb {
+    position: absolute;
+    top: calc(50% - 0.1875rem);
+    height: 0.375rem;
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+}
+
+.ui-table-fade {
+    position: absolute;
+    top: var(--ui-table-content-top, 0);
+    z-index: 7;
+    width: 2rem;
+    height: var(--ui-table-content-height, 0);
+    pointer-events: none;
+    opacity: 0;
+
+    &.is-visible {
+        opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        transition: opacity 150ms;
+    }
+}
+
+.ui-table-fade-start {
+    inset-inline-start: 0;
+    background: linear-gradient(to right, color-mix(in oklab, var(--color-base-content) 14%, transparent), transparent);
+}
+
+.ui-table-fade-end {
+    inset-inline-end: 0;
+    background: linear-gradient(to left, color-mix(in oklab, var(--color-base-content) 14%, transparent), transparent);
+}
+
+/*
+| The row menu stays in reach while the columns scroll under it. Unlike the
+| header this is plain position: sticky, as it sticks within the sideways
+| scroller. Its cells need a solid background, the row's own, and a shadow takes
+| over from the fade while there's more to scroll. A row with no actions still
+| gets the cell, so nothing shows through that column.
+*/
+.fi-ta-row {
+    /* Filament's own surface for a table, which in dark isn't base-100. */
+    --ui-row-bg: var(--color-base-100);
+
+    @variant dark {
+        --ui-row-bg: var(--gray-900);
+    }
+
+    /* Separate rules: a shared list would give striped the hover's specificity, over selected. In srgb, as Filament's white/5 composites. */
+    &.fi-clickable:hover {
+        --ui-row-bg: var(--gray-50);
+
+        @variant dark {
+            --ui-row-bg: color-mix(in srgb, white 5%, var(--gray-900));
+        }
+    }
+
+    &.fi-striped {
+        --ui-row-bg: var(--gray-50);
+
+        @variant dark {
+            --ui-row-bg: color-mix(in srgb, white 5%, var(--gray-900));
+        }
+    }
+
+    &.fi-selected {
+        --ui-row-bg: var(--ui-selected-bg);
+
+        &:hover {
+            --ui-row-bg: var(--ui-selected-bg-hover);
+        }
+    }
+}
+
+:where(.fi-ta-table:has(> thead .fi-ta-actions-header-cell:last-child)) > tbody > tr > td.fi-ta-cell:last-child {
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 4;
+    background-color: var(--ui-row-bg);
+
+    /* Above the rows below it, the stuck header and the footer while its menu is open. */
+    &:has(.fi-dropdown-panel:not([x-cloak]):not([style*="display: none"])) {
+        z-index: 11;
+    }
+}
+
+.fi-ta-table > thead th.fi-ta-actions-header-cell:last-child {
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 8;
+}
+
+.fi-ta-content-ctn:has(~ .ui-table-scroll.is-overflowing:not(.is-at-end)) {
+    & .fi-ta-table:has(> thead .fi-ta-actions-header-cell:last-child) > tbody > tr > td.fi-ta-cell:last-child {
+        box-shadow: -8px 0 8px -8px rgb(0 0 0 / 0.25);
+    }
+
+    & .fi-ta-table > thead th.fi-ta-actions-header-cell:last-child {
+        box-shadow: 0 1px 0 var(--color-base-300), -8px 0 8px -8px rgb(0 0 0 / 0.25);
+    }
+}
+
+.fi-ta-main:has(> .fi-ta-content-ctn .fi-ta-actions-header-cell:last-child) .ui-table-fade-end {
+    display: none;
+}
+
+/* A stacked row's menu keeps its place at the top right of the card. */
+@media (width < 40rem) {
+    .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row > td.fi-ta-cell:last-child {
+        position: static;
+        z-index: auto;
+        background-color: transparent;
+    }
+}
+
+/* Keep a focused row clear of the stuck header and footer when tabbing scrolls it into view. */
+:where(main):has(.fi-ta-ctn .fi-pagination, .ui-table-main) {
+    scroll-padding-block: 3rem 6rem;
+}
+
+/* Below lg the selection bar is fixed to the bottom of the screen, so the footer stays in place under the rows while selecting. */
+@media (width < 64rem) {
+    .fi-ta-main:has(> .fi-ta-selection-indicator:not([x-cloak]):not([style*="display: none"])) {
+        & .fi-pagination,
+        & .ui-table-rail {
+            position: static;
+        }
+    }
+}
+
+/* The other per-width choices. */
+@media (width < 40rem) {
+    .ui-no-sticky-header-phone .fi-ta-table > thead th {
+        animation: none;
+    }
+
+    .ui-no-rail-arrows-phone .ui-table-rail-arrow {
+        display: none;
+    }
+}
+
+@media (width >= 40rem) {
+    .ui-no-sticky-header-desktop .fi-ta-table > thead th {
+        animation: none;
+    }
+
+    .ui-no-rail-arrows-desktop .ui-table-rail-arrow {
+        display: none;
+    }
 }
 
 /*
@@ -295,6 +594,7 @@ html:has(.ui-bulk-sheet[open]) {
 | instead of gray so it matches the rest of the theme.
 */
 .fi-ta-header-cell,
+.fi-ta-header-group-cell,
 .fi-ta-actions-header-cell,
 .fi-ta-empty-header-cell,
 th.fi-ta-selection-cell,

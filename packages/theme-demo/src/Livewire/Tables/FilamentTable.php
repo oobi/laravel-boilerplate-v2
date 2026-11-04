@@ -164,7 +164,7 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
 
                 $rows = match (true) {
                     $this->variant === 'simple' => DemoRows::take(8)->keyBy('id'),
-                    $isWide => DemoRows::take(10)->keyBy('id'),
+                    $isWide => DemoRows::take(30)->keyBy('id'),
                     // Custom data isn't sorted for grouping, so keep each status together.
                     $this->variant === 'grouped' => DemoRows::take(12)->sortBy(fn (DemoRow $row): int => array_search($row->status, DemoStatus::cases(), true))->keyBy('id'),
                     $this->variant === 'custom-header' && $this->trashedFilter === '0' => DemoRows::trashed()->keyBy('id'),
@@ -243,7 +243,9 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
             ->stackedOnMobile(! $isWide)
             ->emptyStateHeading(__('theme-demo::messages.tables_empty_message'))
             ->emptyStateDescription(__('theme-demo::messages.tables_empty_hint'))
-            ->paginated([10, 25]);
+            ->paginated([10, 25])
+            // "wide" is tall too: its footer starts below the fold, with more than one page.
+            ->defaultPaginationPageOption($isWide ? 25 : 10);
 
         if ($isGrouped) {
             return $table
@@ -260,6 +262,18 @@ class FilamentTable extends Component implements HasActions, HasSchemas, HasTabl
                             ->action(fn (array $record) => Notification::make()->title(__('Demo only: nothing to view.'))->send()),
                     ]),
                 ]);
+        }
+
+        if ($isWide) {
+            // The row menu stays in reach while the columns scroll under it (filament-table.css).
+            return $table->recordActions([
+                ActionGroup::make([
+                    Action::make('view')
+                        ->label(__('View'))
+                        ->icon('heroicon-o-eye')
+                        ->action(fn (array $record) => Notification::make()->title(__('Demo only: nothing to view.'))->send()),
+                ]),
+            ]);
         }
 
         if (! $isFullFeatured) {
