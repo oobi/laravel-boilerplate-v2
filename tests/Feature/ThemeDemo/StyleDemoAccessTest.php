@@ -138,6 +138,17 @@ class StyleDemoAccessTest extends TestCase
         $this->assertTrue(Livewire::test(FilamentTable::class, ['variant' => 'simple'])->instance()->getTable()->isStackedOnMobile());
     }
 
+    /** Wide and tall, so its sideways scroll and pagination can be judged with the footer below the fold. */
+    public function test_the_wide_demo_has_thirty_records_over_two_pages(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $records = Livewire::test(FilamentTable::class, ['variant' => 'wide'])->instance()->getTableRecords();
+
+        $this->assertSame(30, $records->total());
+        $this->assertCount(25, $records->items());
+    }
+
     /** A Grid, not a Split: a Split sizes each row's columns to their content, so nothing lines up. */
     public function test_the_maximalist_demo_lines_its_rows_up_with_a_grid(): void
     {
