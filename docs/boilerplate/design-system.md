@@ -322,7 +322,7 @@ on a long table.
 
 | Part | From `sm` up | Below `sm`, stacked (most tables) | Below `sm`, not stacked |
 |---|---|---|---|
-| Column header row | Stays in view | No header row | Stays in view |
+| Column header row | Stays in view from `lg` up, scrolls away below it | No header row | Scrolls away |
 | Scroll rail and edge fades | While the table overflows | Don't overflow | While the table overflows |
 | Pagination | Sticks, unless the screen is under 500px tall | End of the list | End of the list |
 | ⋮ column | Frozen at the right | Top right of the card | Frozen at the right |
@@ -340,7 +340,7 @@ set by `Table::configureUsing()`.
 |---|---|
 | `ui-sticky-footer-phone` | Sticks the pagination below `sm` too |
 | `ui-no-sticky-footer-desktop` | Leaves the pagination at the end of the list from `sm` up |
-| `ui-no-sticky-header-phone`, `ui-no-sticky-header-desktop` | Lets the header scroll away at that width |
+| `ui-no-sticky-header-desktop` | Lets the header scroll away from `lg` up too |
 | `ui-no-rail-arrows-phone`, `ui-no-rail-arrows-desktop` | Hides the rail's arrows at that width |
 
 **A hand-built table** goes in `<x-table-scroll>` for the same behaviour. Give
@@ -369,11 +369,26 @@ A tinted row sets `--ui-row-bg` on its `<tr>`, so the frozen cell matches it.
 For now an `<x-dropdown>` in `<x-table-scroll>` is cut off on the last rows, even
 when the table fits and whether or not its column is frozen.
 
-The header follows the page through a CSS scroll-driven animation on its real
-cells, because `position: sticky` can't work inside a sideways scroller. In a
-browser without them, the header scrolls away with the page. Sticking needs
-nothing between the table and `<main>` to set `overflow` hidden or auto: use
-`overflow-clip`, as with `<x-form-actions>`.
+From `lg` up the header follows the page through a CSS scroll-driven animation
+on its real cells, because `position: sticky` can't work inside a sideways
+scroller. In a browser without them, the header scrolls away with the page.
+Below `lg` it always scrolls away: the document scrolls there so Safari's toolbars
+can collapse, and Safari draws that animation badly while they move (see "Page
+scrolling"). Sticking needs nothing between the table and its scroller to set
+`overflow` hidden or auto: use `overflow-clip`, as with `<x-form-actions>`.
+
+### Page scrolling
+
+Below `lg` (1024px) the document scrolls, so Safari on an iPhone can collapse its
+toolbars. From `lg` up the shell stays locked to the screen and `<main>` scrolls,
+beside the sidebar. Sticky elements follow whichever is scrolling, so
+`<x-form-actions>`, card footers and the table rail need nothing. To find the
+scroller in a script, check `<main>`'s `overflow-y`: it's `visible` below `lg`.
+Nothing scrolls behind an open drawer, dialog or Filament modal (`layout.css`).
+Anchors and focused controls in `<main>` stop clear of the top bar, through
+`scroll-margin-top`; WebKit ignores that for keyboard focus, so
+`keep-focus-clear-of-top-bar.js` covers it. Don't use `scroll-padding-top` on
+`<html>`: it also catches the sticky bar, and focus landing there jumps the page.
 
 ### The toolbar on a phone
 
