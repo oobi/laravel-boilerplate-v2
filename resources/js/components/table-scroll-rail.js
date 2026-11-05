@@ -9,7 +9,7 @@
  * can scroll a table with nothing focusable in it.
  *
  * Also measures the sticky column header's range on the page for the CSS
- * animation that moves it (filament-table.css), and tells stuck from resting
+ * animation that moves it from lg up (filament-table.css), and tells stuck from resting
  * for whichever of the footer and the rail is sticking at the bottom.
  */
 export const tableScrollRail = (regionLabel) => {
@@ -77,7 +77,7 @@ export const tableScrollRail = (regionLabel) => {
             mutationObserver = new MutationObserver(scheduleSync);
             mutationObserver.observe(main, { childList: true, subtree: true });
 
-            // Rotating an iPhone can leave the header's range stale: the page reflows in
+            // Rotating a device can leave the header's range stale: the page reflows in
             // stages, so measure again once it has settled, and on any later page scroll.
             syncAfterResize = () => {
                 scheduleSync();
@@ -196,7 +196,8 @@ export const tableScrollRail = (regionLabel) => {
             const header = scroller.querySelector('.fi-ta-table > thead, .table > thead');
 
             // No box means a hidden table: it measures 0, which would follow the page's scroll.
-            if (! page || ! header?.offsetHeight) {
+            // Below lg <main> doesn't scroll, and there's no animation to measure for.
+            if (! page || ! header?.offsetHeight || getComputedStyle(page).overflowY === 'visible') {
                 return;
             }
 

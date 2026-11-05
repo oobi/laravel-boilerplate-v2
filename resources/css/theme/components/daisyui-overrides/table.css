@@ -39,17 +39,19 @@
     }
 }
 
-@supports (animation-timeline: scroll()) {
-    /* :where() keeps this below the per-width choices further down. */
-    .ui-table-scroller > .table > thead th:where(:not(dialog *)) {
-        position: relative;
-        z-index: 6;
-        /* The row's tint is on its <tr>, which stays behind when the cells move. */
-        background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
-        box-shadow: 0 1px 0 var(--color-base-300);
-        animation: var(--ui-table-header-animation, ui-table-sticky-header) linear both;
-        animation-timeline: --ui-page;
-        animation-range: var(--ui-table-header-start, 0px) calc(var(--ui-table-header-start, 0px) + var(--ui-table-header-travel, 0px));
+@media (width >= 64rem) {
+    @supports (animation-timeline: scroll()) {
+        /* :where() keeps this below the per-width choices further down. */
+        .ui-table-scroller > .table > thead th:where(:not(dialog *)) {
+            position: relative;
+            z-index: 6;
+            /* The row's tint is on its <tr>, which stays behind when the cells move. */
+            background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
+            box-shadow: 0 1px 0 var(--color-base-300);
+            animation: var(--ui-table-header-animation, ui-table-sticky-header) linear both;
+            animation-timeline: --ui-page;
+            animation-range: var(--ui-table-header-start, 0px) calc(var(--ui-table-header-start, 0px) + var(--ui-table-header-travel, 0px));
+        }
     }
 }
 
@@ -65,10 +67,6 @@
 
     .ui-sticky-footer-phone.ui-table-main:has(> .daisy-table__pagination) .ui-table-rail {
         bottom: calc(var(--ui-table-footer-height, 0px) - 1px);
-    }
-
-    .ui-no-sticky-header-phone .ui-table-scroller > .table > thead th {
-        animation: none;
     }
 }
 

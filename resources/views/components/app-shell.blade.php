@@ -69,7 +69,7 @@
                 x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
                 @click="sidebarDrawerOpen = false"
-                class="fixed inset-0 z-40 bg-black/50"
+                class="ui-drawer-backdrop fixed inset-0 z-40 bg-black/50"
                 style="display: none;"
             ></div>
 

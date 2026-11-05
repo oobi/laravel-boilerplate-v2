@@ -12,8 +12,8 @@
     }
 
     /* Body & Application Wrapper. dvh, not vh: on iOS Safari 100vh is the height
-       with the toolbars hidden, which they never are here (only <main> scrolls),
-       so a vh shell hides its bottom behind the toolbar (#47). */
+       with the toolbars hidden, so a vh shell hides its bottom behind the toolbar
+       (#47). Below lg the shell isn't locked to the screen: see below. */
     .ui-app {
         @apply min-h-dvh;
         /* A variable, so solid surfaces that must match the page (a stuck form action row) can use it. */
@@ -114,6 +114,51 @@
 
     .ui-page-actions {
         @apply flex max-w-full shrink-0 flex-wrap items-center gap-2;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| The page scrolls on phones and tablets (app shell)
+|--------------------------------------------------------------------------
+| Below `lg` the document scrolls, not <main>, because Safari on an iPhone only
+| collapses its toolbars for the document. From `lg` up the shell stays locked
+| to the screen with <main> as the scroller, beside the pinned sidebar. Sticky
+| elements follow whichever is scrolling. Unlayered, to beat the shell's rules
+| above and the utility classes on <main>.
+*/
+@media (width < 64rem) {
+    .ui-app,
+    .ui-app > .ui-app-inner {
+        height: auto;
+        min-height: calc(100dvh - var(--ui-top-banners-height, 0px));
+    }
+
+    .ui-app > .ui-app-inner {
+        display: block;
+        overflow: visible;
+    }
+
+    .ui-app main {
+        overflow: visible;
+    }
+
+    /* Under the fixed banners, which the document now scrolls past. Solid, since the page now passes under it. */
+    .ui-app-inner header.sticky {
+        top: var(--ui-top-banners-height, 0px);
+        background-color: var(--color-base-100);
+        backdrop-filter: none;
+    }
+
+    /* An anchor or a focused field stops clear of the top bar and banners. On what's in <main>, not as <html>'s scroll-padding: that also catches the sticky bar, so focus landing on a control in it jumps the page. */
+    .ui-app main,
+    .ui-app main * {
+        scroll-margin-top: calc(5rem + var(--ui-top-banners-height, 0px));
+    }
+
+    /* Nothing scrolls behind an open drawer or dialog. Filament locks the page for its own modals. */
+    html:has(.ui-drawer-backdrop:not([style*="display: none"]), dialog[open]) {
+        overflow: hidden;
     }
 }
 
