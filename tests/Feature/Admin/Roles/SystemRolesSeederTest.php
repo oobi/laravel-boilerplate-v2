@@ -11,7 +11,7 @@ use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
 use Spatie\Permission\Models\Permission;
-use Tests\Fixtures\AuditPermission;
+use Tests\Fixtures\ReportPermission;
 use Tests\TestCase;
 
 /**
@@ -106,18 +106,18 @@ class SystemRolesSeederTest extends TestCase
 
     public function test_seeding_creates_registered_add_on_permissions_and_grants_them_to_administrator(): void
     {
-        SystemPermissionRegistry::register(AuditPermission::class);
+        SystemPermissionRegistry::register(ReportPermission::class);
 
         (new PermissionSeeder)->run();
 
-        foreach (AuditPermission::cases() as $permission) {
+        foreach (ReportPermission::cases() as $permission) {
             $this->assertTrue(Permission::query()->where('name', $permission->value)->exists(), $permission->value);
         }
 
         $this->runSeeder();
 
         $admin = Role::systemRoles()->where('name', SystemRolesSeeder::ADMINISTRATOR)->firstOrFail();
-        $this->assertTrue($admin->hasPermissionTo(AuditPermission::EXPORT_AUDIT_LOG->value));
-        $this->assertTrue($admin->hasPermissionTo(AuditPermission::VIEW_AUDIT_LOG->value));
+        $this->assertTrue($admin->hasPermissionTo(ReportPermission::EXPORT_REPORTS->value));
+        $this->assertTrue($admin->hasPermissionTo(ReportPermission::VIEW_REPORTS->value));
     }
 }

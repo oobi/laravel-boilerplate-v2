@@ -107,7 +107,7 @@ class ThemeDemoServiceProvider extends ServiceProvider
             );
 
         // ...or extend an existing one:
-        // NavRegistry::group('people-access')->add(NavItem::make('audit')->label('Audit')->route('audit.index'));
+        // NavRegistry::group('people-access')->add(NavItem::make('reports')->label('Reports')->route('reports.index'));
     }
 }
 ```

@@ -14,7 +14,7 @@ use App\Support\Theme\DaisyColor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
-use Tests\Fixtures\AuditPermission;
+use Tests\Fixtures\ReportPermission;
 use Tests\Fixtures\UserExportPermission;
 use Tests\TestCase;
 
@@ -71,20 +71,20 @@ class ManageRolesTest extends TestCase
 
     public function test_a_registered_add_on_permission_is_offered_in_its_own_category_and_saved_with_its_implications(): void
     {
-        SystemPermissionRegistry::register(AuditPermission::class);
+        SystemPermissionRegistry::register(ReportPermission::class);
         $admin = User::factory()->superAdmin()->create();
-        $role = Role::findOrCreate('Auditor');
+        $role = Role::findOrCreate('Analyst');
 
         Livewire::actingAs($admin)
             ->test(ManageRoles::class, ['role' => $role])
-            ->assertSee('Audit log')
-            ->assertSee(AuditPermission::EXPORT_AUDIT_LOG->label())
-            ->set('data.permissions_audit_log', [AuditPermission::EXPORT_AUDIT_LOG->value])
+            ->assertSee('Reports')
+            ->assertSee(ReportPermission::EXPORT_REPORTS->label())
+            ->set('data.permissions_reports', [ReportPermission::EXPORT_REPORTS->value])
             ->call('save')
             ->assertHasNoErrors();
 
         $this->assertEqualsCanonicalizing(
-            [AuditPermission::EXPORT_AUDIT_LOG->value, AuditPermission::VIEW_AUDIT_LOG->value, SystemPermission::ACCESS_ADMIN_PANEL->value],
+            [ReportPermission::EXPORT_REPORTS->value, ReportPermission::VIEW_REPORTS->value, SystemPermission::ACCESS_ADMIN_PANEL->value],
             $role->fresh()->permissions->pluck('name')->all(),
         );
     }

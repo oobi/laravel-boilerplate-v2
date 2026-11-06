@@ -312,15 +312,15 @@ enum implementing `App\Support\Roles\SystemPermissionDefinition` (`label()`,
 `boot()`:
 
 ```php
-SystemPermissionRegistry::register(AuditLogPermission::class);
+SystemPermissionRegistry::register(ReportPermission::class);
 ```
 
 Its cases then behave exactly like core's: they list on the Roles screen
 under their own category (after core's), `PermissionSeeder` creates their
 rows, the Administrator role in `SystemRolesSeeder` holds them, every write
 path closes grants over their `implies()`, and they're checked like any other
-permission: `Gate::authorize(AuditLogPermission::VIEW_AUDIT_LOG)`,
-`$user->hasSystemPermission(AuditLogPermission::VIEW_AUDIT_LOG)`. An
+permission: `Gate::authorize(ReportPermission::VIEW_REPORTS)`,
+`$user->hasSystemPermission(ReportPermission::VIEW_REPORTS)`. An
 implication may name a core case: a new area's read floor carries
 `SystemPermission::ACCESS_ADMIN_PANEL`. Core code never names an add-on's
 permission; the add-on names core's. The teams tier's `TeamSystemPermission`
