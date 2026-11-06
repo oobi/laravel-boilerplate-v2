@@ -29,7 +29,7 @@ class AppShellComponentTest extends TestCase
 
     /**
      * dialog[open] would also match a dialog opened with show(), which is part
-     * of the page: below lg that page could no longer scroll (GitHub #34).
+     * of the page: below lg that page could no longer scroll (GitHub #86).
      */
     public function test_only_a_modal_dialog_locks_the_page_behind_it(): void
     {
@@ -37,5 +37,25 @@ class AppShellComponentTest extends TestCase
 
         $this->assertMatchesRegularExpression('/html:has\\([^{]*dialog:modal[^{]*\\)\s*\{\s*overflow: hidden;/', $css);
         $this->assertStringNotContainsString('dialog[open]', $css);
+    }
+
+    /**
+     * Text fields match :focus-visible on a tap too, so without the pointer check
+     * tapping one could scroll it out from under the finger (GitHub #85).
+     */
+    public function test_the_focus_helper_leaves_presses_and_modals_alone_and_clears_marked_headings(): void
+    {
+        $script = file_get_contents(resource_path('js/components/keep-focus-clear-of-top-bar.js'));
+
+        $this->assertStringContainsString("addEventListener('pointerdown', () => { focusIsFromPointer = true; }", $script);
+        $this->assertStringContainsString("['click', 'pointercancel', 'keydown']", $script);
+        $this->assertStringContainsString('() => { focusIsFromPointer = false; }', $script);
+        $this->assertStringContainsString('const isReturning = target === lastFocused;', $script);
+        $this->assertStringContainsString("if (! isReturning && ! focusIsFromPointer && target.matches?.(KEYBOARD_FOCUS) && ! target.closest('dialog:modal, .fi-modal'))", $script);
+        $this->assertStringContainsString("querySelectorAll('[data-keep-focus-clear]')", $script);
+
+        foreach (['time', 'date', 'datetime-local', 'month', 'week'] as $type) {
+            $this->assertStringContainsString("[type={$type}]", $script);
+        }
     }
 }
