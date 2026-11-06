@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Concise\Teams\Actions;
 
 use App\Models\User;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use Concise\Teams\Models\Team;
 use Concise\Teams\Models\TeamInvitation;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Accept an invitation as the signed-in user: they join the team with the
@@ -42,12 +45,18 @@ class AcceptInvitation
             ? $invitation->role
             : null;
 
-        $team->addMember($user, $role);
-        $invitation->delete();
+        DB::transaction(function () use ($team, $user, $role, $invitation): void {
+            $team->addMember($user, $role);
 
-        if (! $user->hasVerifiedEmail()) {
-            $user->markEmailAsVerified();
-        }
+            // The named entry below says it better than a team_invitation.deleted beside it.
+            Audit::withoutLogging(fn () => $invitation->delete());
+
+            Audit::record('team.invitation_accepted', $team, ['member_id' => $user->getKey(), 'member' => $user->email], category: AuditCategory::ACCESS);
+
+            if (! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
+        });
 
         return $team;
     }

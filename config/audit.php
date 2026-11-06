@@ -44,8 +44,9 @@ return [
     'max_value_length' => 2000,
 
     /*
-     * Scheduled tasks that finish successfully. Failures and skips are always
-     * logged. Turn this off if a frequent task makes it noisy.
+     * Scheduled tasks that finish or are skipped. Failures are always logged.
+     * Turn this off if a frequent task makes it noisy: an every-minute task whose
+     * condition is false writes 1,440 skips a day.
      */
-    'log_schedule_success' => env('AUDIT_LOG_SCHEDULE_SUCCESS', true),
+    'log_schedule_routine' => env('AUDIT_LOG_SCHEDULE_ROUTINE', true),
 ];

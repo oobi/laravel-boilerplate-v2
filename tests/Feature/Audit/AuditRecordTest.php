@@ -33,7 +33,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('invoice_batch.sent', $subject, ['count' => 3], category: AuditCategory::SYSTEM);
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame('invoice_batch.sent', $entry->event);
         $this->assertSame('Invoice batch sent', $entry->description);
@@ -46,7 +46,7 @@ class AuditRecordTest extends TestCase
     {
         Audit::record('item.raised', category: 'ledger');
 
-        $this->assertSame('ledger', AuditEntry::sole()->log_name);
+        $this->assertSame('ledger', $this->recorded()->log_name);
     }
 
     public function test_an_entry_can_be_backdated_and_attributed_for_an_import(): void
@@ -56,7 +56,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('item.imported', by: $author, at: $at);
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertTrue($entry->created_at->equalTo($at));
         $this->assertTrue($entry->causer->is($author));
@@ -68,8 +68,8 @@ class AuditRecordTest extends TestCase
         Audit::record('invoice.sent', properties: ['to' => 'a@example.test', 'mail' => ['smtp_password' => 'secret-value']]);
 
         $this->assertStringNotContainsString('secret-value', DB::table('activity_log')->value('properties'));
-        $this->assertSame(LogAuditEntry::REDACTED, AuditEntry::sole()->getProperty('mail.smtp_password'));
-        $this->assertSame('a@example.test', AuditEntry::sole()->getProperty('to'));
+        $this->assertSame(LogAuditEntry::REDACTED, $this->recorded()->getProperty('mail.smtp_password'));
+        $this->assertSame('a@example.test', $this->recorded()->getProperty('to'));
     }
 
     #[DataProvider('sensitiveNames')]
@@ -96,7 +96,7 @@ class AuditRecordTest extends TestCase
     {
         Audit::record('invoice.sent', properties: ['cookie_consent' => 'yes', 'authorization_status' => 'approved', 'name' => 'Sprocket']);
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame('yes', $entry->getProperty('cookie_consent'));
         $this->assertSame('approved', $entry->getProperty('authorization_status'));
@@ -109,7 +109,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('invoice.sent', properties: ['nationalId' => 'secret-value']);
 
-        $this->assertSame(LogAuditEntry::REDACTED, AuditEntry::sole()->getProperty('nationalId'));
+        $this->assertSame(LogAuditEntry::REDACTED, $this->recorded()->getProperty('nationalId'));
     }
 
     public function test_a_sensitive_name_inside_a_collection_property_is_redacted(): void
@@ -130,7 +130,7 @@ class AuditRecordTest extends TestCase
     {
         Audit::record('login.failed', properties: ['email' => "bad\xFFinput", 'nested' => ['value' => "bad\xFFinput"], "key\xFF" => 'kept'], description: "Failed for bad\xFFinput");
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertStringStartsWith('bad', $entry->getProperty('email'));
         $this->assertStringStartsWith('bad', $entry->getProperty('nested.value'));
@@ -145,7 +145,7 @@ class AuditRecordTest extends TestCase
             'count' => 3,
         ]);
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertStringStartsWith('bad', $entry->getProperty('collection.value'));
         $this->assertStringStartsWith('bad', $entry->getProperty('object.value'));
@@ -163,7 +163,7 @@ class AuditRecordTest extends TestCase
             ->post('/audit-test')
             ->assertOk();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(255, mb_strlen($entry->actor_name));
         $this->assertSame(255, mb_strlen($entry->impersonator_name));
@@ -173,7 +173,7 @@ class AuditRecordTest extends TestCase
     {
         Audit::as('crm', fn () => Audit::record('contact.synced'), str_repeat('a', 300));
 
-        $this->assertSame(255, mb_strlen(AuditEntry::sole()->actor_name));
+        $this->assertSame(255, mb_strlen($this->recorded()->actor_name));
     }
 
     public function test_a_long_description_is_cut(): void
@@ -182,7 +182,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('invoice.sent', description: str_repeat('a', 50));
 
-        $this->assertSame(str_repeat('a', 10).'...', AuditEntry::sole()->description);
+        $this->assertSame(str_repeat('a', 10).'...', $this->recorded()->description);
     }
 
     public function test_a_description_is_stored_as_written_so_placeholders_cannot_reveal_attributes(): void
@@ -192,7 +192,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('user.renamed', $user, description: 'Renamed to :causer.password :subject.password :properties.x');
 
-        $this->assertSame('Renamed to :causer.password :subject.password :properties.x', AuditEntry::sole()->description);
+        $this->assertSame('Renamed to :causer.password :subject.password :properties.x', $this->recorded()->description);
     }
 
     public function test_a_direct_activity_call_gets_the_same_protection(): void
@@ -202,7 +202,7 @@ class AuditRecordTest extends TestCase
 
         activity()->withProperties(['password' => 'secret-value'])->log('Did :causer.password');
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame('Did :causer.password', $entry->description);
         $this->assertSame(LogAuditEntry::REDACTED, $entry->getProperty('password'));
@@ -219,7 +219,7 @@ class AuditRecordTest extends TestCase
         Auth::logout();
         $user->forceDelete();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(AuditActor::USER, $entry->actor_type);
         $this->assertSame($name, $entry->actor_name);
@@ -229,7 +229,7 @@ class AuditRecordTest extends TestCase
     {
         Audit::record('invoice.sent');
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(AuditActor::SYSTEM, $entry->actor_type);
         $this->assertNull($entry->causer_id);
@@ -256,7 +256,7 @@ class AuditRecordTest extends TestCase
 
         Audit::as('claude', fn () => Audit::record('note.drafted'));
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame('claude', $entry->actor_type);
         $this->assertTrue($entry->causer->is($user));
@@ -269,7 +269,7 @@ class AuditRecordTest extends TestCase
 
         $this->withHeader('User-Agent', 'TestBrowser/1.0')->post('/audit-test')->assertOk();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(AuditActor::GUEST, $entry->actor_type);
         $this->assertSame('127.0.0.1', $entry->ip_address);
@@ -282,7 +282,7 @@ class AuditRecordTest extends TestCase
 
         $this->withHeader('User-Agent', str_repeat('a', 600))->post('/audit-test')->assertOk();
 
-        $this->assertSame(str_repeat('a', 512), AuditEntry::sole()->user_agent);
+        $this->assertSame(str_repeat('a', 512), $this->recorded()->user_agent);
     }
 
     public function test_an_empty_user_agent_is_stored_as_nothing(): void
@@ -291,7 +291,7 @@ class AuditRecordTest extends TestCase
 
         $this->withHeader('User-Agent', '')->post('/audit-test')->assertOk();
 
-        $this->assertNull(AuditEntry::sole()->user_agent);
+        $this->assertNull($this->recorded()->user_agent);
     }
 
     public function test_a_malformed_user_agent_cannot_stop_the_entry(): void
@@ -300,8 +300,8 @@ class AuditRecordTest extends TestCase
 
         $this->withHeader('User-Agent', "Bad\xFFBrowser")->post('/audit-test')->assertOk();
 
-        $this->assertStringStartsWith('Bad', AuditEntry::sole()->user_agent);
-        $this->assertTrue(mb_check_encoding(AuditEntry::sole()->user_agent, 'UTF-8'));
+        $this->assertStringStartsWith('Bad', $this->recorded()->user_agent);
+        $this->assertTrue(mb_check_encoding($this->recorded()->user_agent, 'UTF-8'));
     }
 
     public function test_an_impersonator_who_was_soft_deleted_is_still_named(): void
@@ -316,7 +316,7 @@ class AuditRecordTest extends TestCase
             ->post('/audit-test')
             ->assertOk();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame($admin->getKey(), $entry->impersonator_id);
         $this->assertTrue($entry->impersonator->is($admin));
@@ -336,7 +336,7 @@ class AuditRecordTest extends TestCase
 
         $admin->forceDelete();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertNull($entry->impersonator_id);
         $this->assertSame($name, $entry->impersonator_name);
@@ -357,7 +357,7 @@ class AuditRecordTest extends TestCase
 
         $this->artisan('queue:work', ['--once' => true, '--stop-when-empty' => true])->assertSuccessful();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(AuditActor::QUEUE, $entry->actor_type);
         $this->assertTrue($entry->causer->is($user));
@@ -371,7 +371,7 @@ class AuditRecordTest extends TestCase
 
         $this->post('/audit-test')->assertOk();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(AuditActor::GUEST, $entry->actor_type);
         $this->assertNull($entry->causer_id);
@@ -388,7 +388,7 @@ class AuditRecordTest extends TestCase
             ->post('/audit-test')
             ->assertOk();
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertTrue($entry->causer->is($target));
         $this->assertSame($target->name, $entry->actor_name);
@@ -410,7 +410,7 @@ class AuditRecordTest extends TestCase
             ->post('/audit-test')
             ->assertOk();
 
-        $this->assertNull(AuditEntry::sole()->impersonator_id);
+        $this->assertNull($this->recorded()->impersonator_id);
     }
 
     public function test_a_queued_job_is_attributed_to_the_person_who_dispatched_it(): void
@@ -426,7 +426,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('report.generated');
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(AuditActor::QUEUE, $entry->actor_type);
         $this->assertTrue($entry->causer->is($user));
@@ -439,7 +439,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('report.generated');
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame(AuditActor::QUEUE, $entry->actor_type);
         $this->assertNull($entry->causer_id);
@@ -461,7 +461,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('report.generated');
 
-        $this->assertTrue(AuditEntry::sole()->causer->is($original));
+        $this->assertTrue($this->recorded()->causer->is($original));
     }
 
     public function test_a_soft_deleted_dispatcher_is_still_named(): void
@@ -472,7 +472,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('report.generated');
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertSame($user->getKey(), $entry->causer_id);
         $this->assertSame($user->name, $entry->actor_name);
@@ -487,7 +487,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('report.generated');
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertTrue($entry->causer->is($user));
         $this->assertSame(AuditActor::USER, $entry->actor_type);
@@ -509,7 +509,7 @@ class AuditRecordTest extends TestCase
 
         Audit::record('report.generated');
 
-        $entry = AuditEntry::sole();
+        $entry = $this->recorded();
 
         $this->assertTrue($entry->causer->is($target));
         $this->assertSame($admin->getKey(), $entry->impersonator_id);
@@ -589,6 +589,14 @@ class AuditRecordTest extends TestCase
         $this->assertTrue($exporter->canAccessAdmin());
         $this->assertTrue($viewer->canAccessAdmin());
         $this->assertFalse($viewer->hasSystemPermission(SystemPermission::EXPORT_AUDIT_LOG));
+    }
+
+    /** The one entry the test made, leaving out those for the users it set up and signed out. */
+    private function recorded(): AuditEntry
+    {
+        return AuditEntry::query()
+            ->where(fn ($query) => $query->whereNull('event')->orWhereNotIn('event', ['user.created', 'user.deleted', 'user.force_deleted', 'auth.logout']))
+            ->sole();
     }
 
     private function auditRoute(): void

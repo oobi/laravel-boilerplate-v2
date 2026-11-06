@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Support\Audit;
 
+use App\Models\AuditEntry;
 use BackedEnum;
 use Closure;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Writes to the audit log. A model's own changes need only the Auditable trait;
@@ -44,6 +46,30 @@ final class Audit
             ->when($by !== null, fn ($logger) => $logger->causedBy($by))
             ->when($at !== null, fn ($logger) => $logger->createdAt($at))
             ->log($description ?? self::describe($event));
+    }
+
+    /**
+     * Record something that must carry on even if the audit log can't: a login, a
+     * logout, a scheduled task. A failure is reported instead of thrown. The
+     * transaction is a savepoint inside any surrounding one, which Postgres would
+     * otherwise abort when the failed write is caught.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    public static function attempt(
+        string $event,
+        ?Model $subject = null,
+        array $properties = [],
+        BackedEnum|string $category = AuditCategory::DATA,
+        ?Model $by = null,
+    ): void {
+        try {
+            (new AuditEntry)->getConnection()->transaction(
+                fn () => self::record($event, $subject, $properties, category: $category, by: $by),
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**

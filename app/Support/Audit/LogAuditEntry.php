@@ -66,8 +66,12 @@ class LogAuditEntry extends LogActivityAction
             return $description;
         }
 
-        $event = Str::snake(class_basename($subject)).'.'.$activity->getAttribute('event');
         $isDefaultDescription = $description === $activity->getAttribute('event');
+        $isForceDelete = $activity->getAttribute('event') === ActivityEvent::Deleted->value
+            && method_exists($subject, 'isForceDeleting')
+            && $subject->isForceDeleting();
+
+        $event = Str::snake(class_basename($subject)).'.'.($isForceDelete ? 'force_deleted' : $activity->getAttribute('event'));
 
         $activity->setAttribute('event', $event);
 
@@ -90,6 +94,7 @@ class LogAuditEntry extends LogActivityAction
             $isSignedIn => AuditActor::USER,
             $dispatchedBy !== null => AuditActor::QUEUE,
             $this->isWebRequest() => AuditActor::GUEST,
+            Context::hasHidden(AuditActor::CONTEXT_IN_JOB) => AuditActor::QUEUE,
             default => AuditActor::SYSTEM,
         });
 

@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
+use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Theme\DaisyColor;
 use App\Support\TwoFactor\GracePeriod;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role as SpatieRole;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Extends Spatie's Role model with an admin-configurable badge color (see
@@ -24,8 +29,15 @@ use Spatie\Permission\Models\Role as SpatieRole;
  */
 class Role extends SpatieRole
 {
+    use Auditable {
+        Auditable::delete as auditedDelete;
+    }
+
     /** The scope core manages itself: the app-wide roles in the Roles screen. */
     public const SYSTEM_SCOPE = 'system';
+
+    /** @var array{holder_count?: int, permissions?: list<string>} */
+    private array $accessLostOnDelete = [];
 
     /**
      * Default to the system scope (and no 2FA mandate) in memory as well as
@@ -56,13 +68,36 @@ class Role extends SpatieRole
     protected static function booted(): void
     {
         static::saved(function (Role $role): void {
-            GracePeriod::forgetRequiredRoleNames();
+            self::forgetCaches();
 
             if ($role->wasChanged('requires_two_factor') && ! $role->requires_two_factor) {
                 $role->clearMembersGracePeriods($role->users()->pluck('id')->all());
             }
         });
-        static::deleted(fn () => GracePeriod::forgetRequiredRoleNames());
+        static::deleted(fn () => self::forgetCaches());
+    }
+
+    /**
+     * Now, for the rest of this write, and again once it commits: a role write sits
+     * in a transaction, and another request could otherwise re-cache the old
+     * answer before the commit and keep a revoked permission alive for a day.
+     */
+    private static function forgetCaches(): void
+    {
+        GracePeriod::forgetRequiredRoleNames();
+
+        DB::afterCommit(function (): void {
+            GracePeriod::forgetRequiredRoleNames();
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        });
+    }
+
+    /** What spatie calls on a grant or revoke, which may be in a transaction with no role save to clear after it. */
+    public function forgetCachedPermissions(): void
+    {
+        parent::forgetCachedPermissions();
+
+        DB::afterCommit(fn () => app(PermissionRegistrar::class)->forgetCachedPermissions());
     }
 
     /** Members are noted first: spatie's own deleting hook detaches them before any of ours runs. */
@@ -70,11 +105,25 @@ class Role extends SpatieRole
     {
         $members = $this->users()->pluck('id')->all();
 
-        return tap(parent::delete(), function (?bool $deleted) use ($members): void {
+        // A count, as a role can have thousands of holders.
+        $this->accessLostOnDelete = [
+            'holder_count' => RoleScopeRegistry::find($this->scope)?->holderCount($this) ?? count($members),
+            'permissions' => $this->permissions()->pluck('name')->sort()->values()->all(),
+        ];
+
+        return tap($this->auditedDelete(), function (?bool $deleted) use ($members): void {
             if ($deleted) {
                 $this->clearMembersGracePeriods($members);
             }
         });
+    }
+
+    /** spatie's hook for adding to an entry: `role.deleted` also says what access went with the role. */
+    public function beforeActivityLogged(Model $activity, string $event): void
+    {
+        if ($event === 'role.deleted') {
+            $activity->setAttribute('properties', collect($activity->getAttribute('properties'))->merge($this->accessLostOnDelete));
+        }
     }
 
     /**

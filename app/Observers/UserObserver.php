@@ -6,6 +6,8 @@ namespace App\Observers;
 
 use App\Models\User;
 use App\Notifications\Auth\EmailAddressChanged;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\UserDeletionGuards;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,14 @@ use Throwable;
 
 class UserObserver
 {
+    /** A user can start out as a super admin (bp:make-admin). */
+    public function created(User $user): void
+    {
+        if ($user->is_super_admin) {
+            Audit::record('user.super_admin_granted', $user, ['before' => false, 'after' => true], category: AuditCategory::ACCESS);
+        }
+    }
+
     /**
      * Refuse a deletion an add-on blocks (UserDeletionGuards), whatever the
      * path: the Users screen, a bulk action, Empty trash or code.
@@ -41,6 +51,8 @@ class UserObserver
             $this->tellPreviousAddress($user);
         }
 
+        $this->recordAccessChanges($user);
+
         if (! $user->wasChanged('active') || $user->active) {
             return;
         }
@@ -48,6 +60,28 @@ class UserObserver
         $this->purgeDatabaseSessions($user);
 
         $user->forceFill(['remember_token' => null])->saveQuietly();
+    }
+
+    /** Named entries, here so no path that changes these can skip them. They commit with the change. */
+    private function recordAccessChanges(User $user): void
+    {
+        if ($user->wasChanged('is_super_admin')) {
+            Audit::record(
+                $user->is_super_admin ? 'user.super_admin_granted' : 'user.super_admin_revoked',
+                $user,
+                ['before' => ! $user->is_super_admin, 'after' => $user->is_super_admin],
+                category: AuditCategory::ACCESS,
+            );
+        }
+
+        if ($user->wasChanged('active')) {
+            Audit::record(
+                $user->active ? 'user.reactivated' : 'user.deactivated',
+                $user,
+                ['before' => ! $user->active, 'after' => $user->active],
+                category: AuditCategory::ACCESS,
+            );
+        }
     }
 
     /**

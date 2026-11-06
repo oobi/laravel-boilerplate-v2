@@ -7,6 +7,8 @@ namespace App\Livewire\Admin\Roles;
 use App\Enums\SystemPermission;
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use App\Models\Role;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Roles\RoleScope;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Theme\DaisyColor;
@@ -20,6 +22,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -103,16 +106,26 @@ class CreateRole extends Component implements HasSchemas
         // Only in a scope they may manage, and only permissions they hold (the form disables the rest).
         abort_unless($this->roleScope()->mayManage(Auth::user()) && $this->mayGrantAll($permissions), 403);
 
-        $role = Role::create([
-            'name' => $data['name'],
-            'color' => $data['color'],
-            'requires_two_factor' => $this->scopeKey === Role::SYSTEM_SCOPE && ($data['requires_two_factor'] ?? false),
-            ...$this->roleScope()->attributes(),
-        ]);
+        $role = DB::transaction(function () use ($data, $permissions): Role {
+            $role = Role::create([
+                'name' => $data['name'],
+                'color' => $data['color'],
+                'requires_two_factor' => $this->scopeKey === Role::SYSTEM_SCOPE && ($data['requires_two_factor'] ?? false),
+                ...$this->roleScope()->attributes(),
+            ]);
 
-        $role->givePermissionTo(collect($permissions)
-            ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
-            ->all());
+            $role->givePermissionTo(collect($permissions)
+                ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
+                ->all());
+
+            // Permission grants are pivot writes, which no model event reports.
+            Audit::record('role.permissions_changed', $role, [
+                'before' => [],
+                'after' => $role->permissions()->pluck('name')->sort()->values()->all(),
+            ], category: AuditCategory::ACCESS);
+
+            return $role;
+        });
 
         Notification::make()
             ->title(__('admin.role_created'))

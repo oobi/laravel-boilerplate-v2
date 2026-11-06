@@ -6,8 +6,11 @@ namespace App\Console\Commands;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
@@ -92,18 +95,26 @@ class MakeAdminCommand extends Command
         );
 
         $user = new User;
-        $user->forceFill([
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $email,
-            'password' => Hash::make($plainPassword),
-            'is_super_admin' => ! $asAdministrator,
-            'active' => true,
-            'email_verified_at' => now(),
-        ])->save();
+
+        DB::transaction(function () use ($user, $role, $firstName, $lastName, $email, $plainPassword, $asAdministrator): void {
+            $user->forceFill([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'password' => Hash::make($plainPassword),
+                'is_super_admin' => ! $asAdministrator,
+                'active' => true,
+                'email_verified_at' => now(),
+            ])->save();
+
+            if ($role !== null) {
+                $user->assignRole($role);
+
+                Audit::record('user.roles_changed', $user, ['before' => [], 'after' => [$role->name]], category: AuditCategory::ACCESS);
+            }
+        });
 
         if ($role !== null) {
-            $user->assignRole($role);
             $this->info("Administrator created: {$user->email}");
         } else {
             $this->info("Super admin created: {$user->email}");

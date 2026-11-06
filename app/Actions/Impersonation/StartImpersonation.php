@@ -6,10 +6,14 @@ namespace App\Actions\Impersonation;
 
 use App\Enums\UserAbility;
 use App\Models\User;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Auth\Destination;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Lab404\Impersonate\Services\ImpersonateManager;
+use RuntimeException;
 
 /**
  * Starts impersonation of $target by the acting user, from the CSRF-protected
@@ -42,6 +46,16 @@ class StartImpersonation
 
         session()->put(self::LEAVE_REDIRECT_KEY, $leaveRedirect ?? route('users.show', $target));
 
-        $this->manager->take(Auth::user(), $target, config('laravel-impersonate.default_impersonator_guard'));
+        // Recorded first, so the entry names the admin before the guard swaps to the target.
+        DB::transaction(function () use ($target): void {
+            Audit::record('impersonation.started', $target, category: AuditCategory::ACCESS);
+
+            // take() answers false when it fails, which must not leave an entry saying it started.
+            throw_unless(
+                $this->manager->take(Auth::user(), $target, config('laravel-impersonate.default_impersonator_guard')),
+                RuntimeException::class,
+                'Impersonation could not start.',
+            );
+        });
     }
 }

@@ -16,13 +16,13 @@ final class AuditActor
     /** A web request with nobody signed in, such as a failed login. */
     public const string GUEST = 'guest';
 
-    /** A queued job, with the person who dispatched it as causer. */
+    /** A queued job, with the person who dispatched it as causer if there was one. */
     public const string QUEUE = 'queue';
 
     /** The scheduler's own record of a task. */
     public const string SCHEDULER = 'scheduler';
 
-    /** Anything else outside a web request: console commands, jobs nobody dispatched. */
+    /** Anything else outside a web request, such as a console command. */
     public const string SYSTEM = 'system';
 
     /** Hidden Context keys, so an actor set for a block also reaches jobs it dispatches. */
@@ -33,4 +33,6 @@ final class AuditActor
     public const string CONTEXT_DISPATCHED_BY = 'audit.dispatched_by';
 
     public const string CONTEXT_IMPERSONATED_BY = 'audit.impersonated_by';
+
+    public const string CONTEXT_IN_JOB = 'audit.in_job';
 }

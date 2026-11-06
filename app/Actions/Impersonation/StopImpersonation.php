@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions\Impersonation;
 
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
+use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Services\ImpersonateManager;
 
 /**
@@ -19,9 +22,14 @@ class StopImpersonation
     /** The leave destination, or null when lab404 could not restore the impersonator. */
     public function handle(): ?string
     {
+        $target = Auth::user();
+
         if (! $this->manager->leave()) {
             return null;
         }
+
+        // The session has already swapped back, and an admin must never be stuck as someone else.
+        Audit::attempt('impersonation.left', $target, category: AuditCategory::ACCESS);
 
         return $this->manager->getLeaveRedirectTo();
     }

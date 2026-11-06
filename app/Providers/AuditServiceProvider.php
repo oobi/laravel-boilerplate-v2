@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\Audit\AuditActor;
+use App\Support\Audit\AuthEventSubscriber;
+use App\Support\Audit\SystemEventSubscriber;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Log\Context\Repository;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Lab404\Impersonate\Services\ImpersonateManager;
 
@@ -24,6 +31,12 @@ class AuditServiceProvider extends ServiceProvider
         }
 
         $this->rememberWhoDispatchedAJob();
+        $this->markWhileAJobRuns();
+
+        Event::subscribe(AuthEventSubscriber::class);
+        Event::subscribe(SystemEventSubscriber::class);
+
+        $this->scheduleRetentionClean();
     }
 
     /**
@@ -47,6 +60,39 @@ class AuditServiceProvider extends ServiceProvider
             if ($impersonatorId !== null) {
                 $context->addHidden(AuditActor::CONTEXT_IMPERSONATED_BY, $impersonatorId);
             }
+        });
+    }
+
+    /**
+     * So an entry from a job nobody dispatched, such as a webhook's, still says
+     * `queue`. A count, because a sync job can run inside another job.
+     */
+    private function markWhileAJobRuns(): void
+    {
+        Event::listen(JobProcessing::class, fn () => Context::addHidden(
+            AuditActor::CONTEXT_IN_JOB,
+            Context::getHidden(AuditActor::CONTEXT_IN_JOB, 0) + 1,
+        ));
+
+        Event::listen([JobProcessed::class, JobFailed::class], function (): void {
+            $stillRunning = Context::getHidden(AuditActor::CONTEXT_IN_JOB, 0) - 1;
+
+            $stillRunning > 0
+                ? Context::addHidden(AuditActor::CONTEXT_IN_JOB, $stillRunning)
+                : Context::forgetHidden(AuditActor::CONTEXT_IN_JOB);
+        });
+    }
+
+    /** 0 keeps entries forever, and spatie's command refuses it. */
+    private function scheduleRetentionClean(): void
+    {
+        if (config()->integer('activitylog.clean_after_days') <= 0) {
+            return;
+        }
+
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            // As text: the array form compiles to --force='1', which the command refuses.
+            $schedule->command('activitylog:clean --force')->daily();
         });
     }
 }
