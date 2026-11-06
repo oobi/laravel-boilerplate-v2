@@ -26,4 +26,16 @@ class AppShellComponentTest extends TestCase
         $this->assertSame(2, substr_count($response->getContent(), 'aria-controls="app-drawer"'));
         $this->assertSame(2, substr_count($response->getContent(), 'x-bind:aria-expanded="sidebarDrawerOpen"'));
     }
+
+    /**
+     * dialog[open] would also match a dialog opened with show(), which is part
+     * of the page: below lg that page could no longer scroll (GitHub #34).
+     */
+    public function test_only_a_modal_dialog_locks_the_page_behind_it(): void
+    {
+        $css = file_get_contents(resource_path('css/theme/components/ui/layout.css'));
+
+        $this->assertMatchesRegularExpression('/html:has\\([^{]*dialog:modal[^{]*\\)\s*\{\s*overflow: hidden;/', $css);
+        $this->assertStringNotContainsString('dialog[open]', $css);
+    }
 }
