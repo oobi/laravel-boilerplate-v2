@@ -384,7 +384,7 @@ toolbars. From `lg` up the shell stays locked to the screen and `<main>` scrolls
 beside the sidebar. Sticky elements follow whichever is scrolling, so
 `<x-form-actions>`, card footers and the table rail need nothing. To find the
 scroller in a script, check `<main>`'s `overflow-y`: it's `visible` below `lg`.
-Nothing scrolls behind an open drawer, dialog or Filament modal (`layout.css`).
+Nothing scrolls behind an open drawer, modal dialog or Filament modal (`layout.css`).
 Anchors and focused controls in `<main>` stop clear of the top bar, through
 `scroll-margin-top`; WebKit ignores that for keyboard focus, so
 `keep-focus-clear-of-top-bar.js` covers it. Don't use `scroll-padding-top` on

@@ -156,8 +156,8 @@
         scroll-margin-top: calc(5rem + var(--ui-top-banners-height, 0px));
     }
 
-    /* Nothing scrolls behind an open drawer or dialog. Filament locks the page for its own modals. */
-    html:has(.ui-drawer-backdrop:not([style*="display: none"]), dialog[open]) {
+    /* Nothing scrolls behind an open drawer or modal dialog. A dialog opened with show() is part of the page, which must still scroll. Filament locks the page for its own modals. */
+    html:has(.ui-drawer-backdrop:not([style*="display: none"]), dialog:modal) {
         overflow: hidden;
     }
 }
