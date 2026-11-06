@@ -387,8 +387,10 @@ scroller in a script, check `<main>`'s `overflow-y`: it's `visible` below `lg`.
 Nothing scrolls behind an open drawer, modal dialog or Filament modal (`layout.css`).
 Anchors and focused controls in `<main>` stop clear of the top bar, through
 `scroll-margin-top`; WebKit ignores that for keyboard focus, so
-`keep-focus-clear-of-top-bar.js` covers it. Don't use `scroll-padding-top` on
-`<html>`: it also catches the sticky bar, and focus landing there jumps the page.
+`keep-focus-clear-of-top-bar.js` covers it, for the keyboard only. A heading a page
+sticks in `<main>` takes `data-keep-focus-clear`, so focus stops clear of it too.
+Don't use `scroll-padding-top` on `<html>`: it also catches the sticky bar, and
+focus landing there jumps the page.
 
 ### The toolbar on a phone
 
