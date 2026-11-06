@@ -52,4 +52,18 @@ class TableHeaderComponentTest extends TestCase
             ->assertSee('aria-label="Active, 106 records"', false)
             ->assertDontSee("wire:click=\"\$set('tableFilters.trashed.value', '0')\"", false);
     }
+
+    /**
+     * Filament's header showing in every modal gave a table with our toolbar
+     * two search boxes. CSS has no automated browser cover here: the test
+     * guards the selector.
+     */
+    public function test_only_a_modal_table_without_our_toolbar_shows_filaments_header(): void
+    {
+        $css = file_get_contents(resource_path('css/theme/components/ui/filament-table.css'));
+
+        $this->assertStringContainsString('.fi-modal .fi-ta:not(.ui-toolbar + .fi-ta) .fi-ta-header-ctn {', $css);
+        $this->assertStringContainsString('.fi-modal .fi-ta:not(.ui-toolbar + .fi-ta) .fi-ta-header-toolbar > :not(.fi-ta-actions) {', $css);
+        $this->assertStringNotContainsString("\n.fi-modal .fi-ta-header-ctn {", $css);
+    }
 }

@@ -15,12 +15,12 @@
     display: none;
 }
 
-/* A table inside a modal or slide-over (a TableSelect field) has no <x-table-header> of ours, so it keeps Filament's own search and filters. */
-.fi-modal .fi-ta-header-ctn {
+/* A table inside a modal or slide-over with no <x-table-header> of ours (a TableSelect field) keeps Filament's own search and filters. One with ours stays hidden above. */
+.fi-modal .fi-ta:not(.ui-toolbar + .fi-ta) .fi-ta-header-ctn {
     display: block;
 }
 
-.fi-modal .fi-ta-header-toolbar > :not(.fi-ta-actions) {
+.fi-modal .fi-ta:not(.ui-toolbar + .fi-ta) .fi-ta-header-toolbar > :not(.fi-ta-actions) {
     display: flex;
 }
 
