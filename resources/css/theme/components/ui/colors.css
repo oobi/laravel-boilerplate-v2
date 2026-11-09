@@ -43,6 +43,10 @@
     .bg-soft-success     { background-color: color-mix(in oklab, var(--color-success) 8%, var(--color-base-100)); }
     .avatar-success      { --avatar-color: var(--color-success); --avatar-color-content: var(--color-success-content); }
 
+    /* The added part of a changed value (the audit log's before and after), on a bg-soft-success cell. */
+    /* Underlined too, so colour isn't the only sign of what changed. */
+    .ui-diff-added       { background-color: color-mix(in oklab, var(--color-success) 28%, var(--color-base-100)); color: var(--color-base-content); border-radius: var(--radius-selector); padding-inline: 0.125em; text-decoration: underline; text-decoration-color: var(--color-success); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
     .ui-banner-warning   { --ui-banner-color: var(--color-warning); }
     .bg-soft-warning     { background-color: color-mix(in oklab, var(--color-warning) 8%, var(--color-base-100)); }
     .avatar-warning      { --avatar-color: var(--color-warning); --avatar-color-content: var(--color-warning-content); }

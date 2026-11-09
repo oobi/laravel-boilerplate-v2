@@ -48,6 +48,11 @@ class AdminNav
 ```
 
 `AdminNav::define()` runs once per request from `NavigationServiceProvider::boot()`.
+It also defines a `system` group (order 30) holding **Audit log**, behind
+`view audit log`, when the audit log is on (see [audit-log.md](audit-log.md)).
+A project's own system tools belong in that group. With the audit log off the
+group isn't defined, so a project adding to it sets its label, order and `can`
+itself.
 
 ## The two node types
 

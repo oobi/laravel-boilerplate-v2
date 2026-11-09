@@ -6,6 +6,7 @@ namespace App\Support\Audit;
 
 use App\Models\AuditEntry;
 use App\Support\Theme\DaisyColor;
+use BackedEnum;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -13,8 +14,9 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 
 /**
- * How the audit screens show what the log stores. A project registers its own
- * actor types and subjects from a provider's boot(), as core and the teams tier do.
+ * How the audit screens show what the log stores. A project names its own
+ * categories, events, actor types and subjects from a provider's boot(), as core
+ * and the teams tier do, so it never edits core's lang/en/audit.php.
  */
 final class AuditDisplay
 {
@@ -23,6 +25,12 @@ final class AuditDisplay
 
     /** @var array<class-string<Model>, Closure(Model): array{label: string, url?: string|null}> */
     private static array $subjects = [];
+
+    /** @var array<string, string> */
+    private static array $categories = [];
+
+    /** @var array<string, array{label: string, sentence: string|null}> */
+    private static array $events = [];
 
     public static function registerActor(string $type, string $label, DaisyColor $color = DaisyColor::NEUTRAL): void
     {
@@ -40,10 +48,38 @@ final class AuditDisplay
         self::$subjects[$model] = $resolver;
     }
 
+    /**
+     * A category's name on the screens and in the filter, for one a project logs
+     * with its own string (`Audit::record(..., category: 'billing')`).
+     */
+    public static function registerCategory(BackedEnum|string $category, string $label): void
+    {
+        self::$categories[$category instanceof BackedEnum ? (string) $category->value : $category] = $label;
+    }
+
+    /**
+     * An event in words ("Invoice sent"), and optionally the detail page's
+     * sentence, with `:actor` and `:subject` (":actor sent :subject an invoice").
+     * Registered before the event is first logged, since an entry's description
+     * is stored when it's written.
+     */
+    public static function registerEvent(string $event, string $label, ?string $sentence = null): void
+    {
+        self::$events[$event] = ['label' => $label, 'sentence' => $sentence];
+    }
+
+    /** The registered words for an event, if a project gave any. */
+    public static function eventLabel(string $event): ?string
+    {
+        return self::$events[$event]['label'] ?? null;
+    }
+
     public static function flush(): void
     {
         self::$actors = [];
         self::$subjects = [];
+        self::$categories = [];
+        self::$events = [];
     }
 
     public static function actorLabel(string $type): string
@@ -62,7 +98,7 @@ final class AuditDisplay
 
     public static function categoryLabel(string $category): string
     {
-        return self::fromLang("audit.categories.{$category}", $category);
+        return self::$categories[$category] ?? self::fromLang("audit.categories.{$category}", $category);
     }
 
     /**
@@ -98,6 +134,65 @@ final class AuditDisplay
             is_array($value) => (string) json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE),
             default => (string) $value,
         };
+    }
+
+    /**
+     * What happened, under the entry's heading. A description written for the
+     * entry comes first ("Deactivated after 5 failed logins"). Otherwise a
+     * sentence ("Super Admin updated Michel Adams"): registered with the event,
+     * from lang `sentences`, or from `verbs` for a model's own events. Otherwise
+     * nothing.
+     */
+    public static function summary(AuditEntry $entry): ?string
+    {
+        if (self::hasWrittenDescription($entry)) {
+            return $entry->description;
+        }
+
+        $actor = $entry->actor_name ?: self::actorLabel($entry->actor_type);
+        $subject = self::subject($entry)['label'] ?? null;
+        $event = (string) $entry->event;
+        $key = str_replace('.', '_', $event);
+        $verb = Str::afterLast($event, '.');
+
+        $sentence = match (true) {
+            isset(self::$events[$event]['sentence']) => self::$events[$event]['sentence'],
+            Lang::has("audit.sentences.{$key}") => __("audit.sentences.{$key}"),
+            Lang::has("audit.verbs.{$verb}") => ':actor '.__("audit.verbs.{$verb}").' :subject',
+            default => null,
+        };
+
+        if ($sentence !== null && ($subject !== null || ! str_contains($sentence, ':subject'))) {
+            return strtr($sentence, [':actor' => $actor, ':subject' => (string) $subject]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether someone wrote the description, rather than it being the event in
+     * words: as it reads now, or as the bare event code tidied. An event's wording
+     * that changes later still leaves its older entries with a description that
+     * reads as written; see docs/boilerplate/audit-log.md.
+     */
+    public static function hasWrittenDescription(AuditEntry $entry): bool
+    {
+        $description = (string) $entry->description;
+
+        // With no event, the description is already the entry's heading.
+        if ($description === '' || $entry->event === null) {
+            return false;
+        }
+
+        return ! in_array($description, [Audit::describe($entry->event), Audit::tidy($entry->event)], true);
+    }
+
+    /** An attribute or property name in words: `email` reads "Email address". */
+    public static function fieldLabel(string $field): string
+    {
+        $key = "audit.fields.{$field}";
+
+        return Lang::has($key) ? __($key) : Str::ucfirst(str_replace('_', ' ', Str::snake($field)));
     }
 
     private static function fromLang(string $key, string $fallback): string

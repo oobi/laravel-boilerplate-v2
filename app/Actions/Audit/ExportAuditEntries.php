@@ -33,12 +33,44 @@ class ExportAuditEntries
             fwrite($file, self::BYTE_ORDER_MARK);
             fputcsv($file, $this->headings(), escape: '');
 
-            $entries->lazyByIdDesc(self::CHUNK)->each(function (AuditEntry $entry) use ($file): void {
+            foreach ($this->newestFirst($entries) as $entry) {
                 fputcsv($file, array_map($this->neutraliseFormula(...), $this->row($entry)), escape: '');
-            });
+            }
 
             fclose($file);
         }, 'audit-log-'.now()->format('Y-m-d-His').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * In the screen's order (when, then id), a chunk at a time. Each chunk starts
+     * after the last row of the one before, so a backdated entry sits where its date
+     * puts it and a long log is never read with an offset.
+     *
+     * @param  Builder<AuditEntry>  $entries
+     * @return iterable<AuditEntry>
+     */
+    private function newestFirst(Builder $entries): iterable
+    {
+        $last = null;
+
+        do {
+            $chunk = (clone $entries)
+                // The first condition alone bounds the index scan on every database.
+                ->when($last !== null, fn (Builder $query) => $query
+                    ->where('created_at', '<=', $last->getRawOriginal('created_at'))
+                    ->where(fn (Builder $query) => $query
+                        ->where('created_at', '<', $last->getRawOriginal('created_at'))
+                        ->orWhere('id', '<', $last->getKey())))
+                ->reorder()
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->limit(self::CHUNK)
+                ->get();
+
+            yield from $chunk;
+
+            $last = $chunk->last();
+        } while ($chunk->count() === self::CHUNK);
     }
 
     /** @return list<string> */

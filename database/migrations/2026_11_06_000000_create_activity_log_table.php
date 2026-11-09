@@ -33,7 +33,8 @@ return new class extends Migration
             $table->json('properties')->nullable();
             $table->timestamps();
 
-            $table->index('created_at');
+            // The screen and the export read newest first by when, then id.
+            $table->index(['created_at', 'id']);
             $table->index(['log_name', 'created_at']);
         });
     }

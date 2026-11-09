@@ -38,6 +38,7 @@ php artisan test --parallel --compact                         # before merging
 | Recipes (SaaS, invitation-only, back office, vanilla) | [config-recipes.md](docs/boilerplate/config-recipes.md) |
 | Roles and permissions | [permissions.md](docs/boilerplate/permissions.md) |
 | Login, passwords, two-factor, impersonation | [authentication.md](docs/boilerplate/authentication.md) |
+| Audit log and logging your own events | [audit-log.md](docs/boilerplate/audit-log.md) |
 | Sidebar navigation | [navigation.md](docs/boilerplate/navigation.md) |
 | Show and Edit page panels | [panels.md](docs/boilerplate/panels.md) |
 | Components and styling | [design-system.md](docs/boilerplate/design-system.md) |

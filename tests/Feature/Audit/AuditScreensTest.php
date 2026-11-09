@@ -22,6 +22,7 @@ use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Theme\DaisyColor;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -303,7 +304,7 @@ class AuditScreensTest extends TestCase
 
         $first = $options();
 
-        $this->assertSame('Signed in', $first['auth.login']);
+        $this->assertSame('Logged in', $first['auth.login']);
         $this->assertSame('Invoice sent', $first['invoice.sent']);
 
         $events = array_keys($first);
@@ -336,15 +337,39 @@ class AuditScreensTest extends TestCase
         $this->get(route('audit.export'))->assertMethodNotAllowed();
     }
 
-    public function test_a_very_long_description_is_shortened_in_the_heading_and_whole_in_the_details(): void
+    public function test_the_detail_heading_is_the_event_and_a_written_description_is_shown_whole(): void
     {
         $description = str_repeat('a', 500);
-        $entry = AuditEntry::factory()->create(['description' => $description]);
+        $written = AuditEntry::factory()->create(['event' => 'note.added', 'description' => $description]);
+        $noEvent = AuditEntry::factory()->create(['event' => null, 'description' => str_repeat('b', 500)]);
+        $viewer = User::factory()->superAdmin()->create();
 
-        Livewire::actingAs(User::factory()->superAdmin()->create())
-            ->test(ShowAuditEntry::class, ['entry' => $entry])
-            ->assertSeeHtml('<h1 class="ui-page-title">'.Str::limit($description, 120).'</h1>')
+        Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $written])
+            ->assertSeeHtml('<h1 class="ui-page-title">Note added</h1>')
             ->assertSee($description);
+
+        Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $noEvent])
+            ->assertSeeHtml('<h1 class="ui-page-title">'.Str::limit(str_repeat('b', 500), 120).'</h1>');
+    }
+
+    public function test_the_detail_page_says_what_happened_as_a_sentence(): void
+    {
+        $viewer = User::factory()->superAdmin()->create(['first_name' => 'Super', 'last_name' => 'Admin']);
+        $person = User::factory()->create(['first_name' => 'Michel', 'last_name' => 'Adams']);
+        $this->actingAs($viewer);
+        $person->update(['last_name' => 'J. Adams']);
+        Audit::record('user.roles_changed', $person, category: AuditCategory::ACCESS);
+        Audit::record('invoice.sent', $person);
+        Audit::record('payout.approved', description: 'Payout approved for INV-12');
+        $entry = fn (string $event): AuditEntry => AuditEntry::query()->where('event', $event)->sole();
+
+        $this->assertSame('Super Admin updated Michel J. Adams', AuditDisplay::summary($entry('user.updated')));
+        $this->assertSame('Super Admin changed the roles of Michel J. Adams', AuditDisplay::summary($entry('user.roles_changed')));
+        $this->assertNull(AuditDisplay::summary($entry('invoice.sent')));
+        $this->assertSame('Payout approved for INV-12', AuditDisplay::summary($entry('payout.approved')));
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $entry('user.updated')])
+            ->assertSeeInOrder(['User updated', 'Super Admin updated Michel J. Adams', 'user.updated']);
     }
 
     public function test_everything_a_visitor_could_have_typed_is_escaped_on_every_screen(): void
@@ -418,10 +443,12 @@ class AuditScreensTest extends TestCase
         $viewer = User::factory()->superAdmin()->create();
 
         Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $signedIn])
-            ->assertSeeInOrder([__('audit.event'), 'Signed in', 'auth.login']);
+            ->assertSeeHtml('<h1 class="ui-page-title">Logged in</h1>')
+            ->assertSee('auth.login');
 
         Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $projectEvent])
-            ->assertSeeInOrder([__('audit.event'), Audit::describe('parcel.lost'), 'parcel.lost']);
+            ->assertSeeHtml('<h1 class="ui-page-title">'.Audit::describe('parcel.lost').'</h1>')
+            ->assertSee('parcel.lost');
     }
 
     public function test_an_event_that_reads_the_same_as_its_code_is_not_shown_twice(): void
@@ -443,7 +470,7 @@ class AuditScreensTest extends TestCase
         $this->assertSame(__('audit.false'), AuditDisplay::value(false));
         $this->assertSame('["a"]', AuditDisplay::value(['a']));
 
-        $this->assertSame('Signed in', Audit::describe('auth.login'));
+        $this->assertSame('Logged in', Audit::describe('auth.login'));
         $this->assertSame('Invoice sent', Audit::describe('invoice.sent'));
         $this->assertSame('Invoice permanently deleted', Audit::describe('invoice.force_deleted'));
     }
@@ -458,21 +485,125 @@ class AuditScreensTest extends TestCase
         $entry = AuditEntry::query()->where('event', 'user.updated')->sole();
 
         Livewire::test(ShowAuditEntry::class, ['entry' => $entry])
-            ->assertSee('first_name')
-            ->assertSee('Before')
-            ->assertSee('<script>alert(1)</script>')
-            ->assertDontSeeHtml('<script>alert(1)</script>');
+            ->assertSeeInOrder(['First name', 'first_name', 'Before', '<script>alert(1)</script>'])
+            ->assertDontSeeHtml('<script>alert(1)</script>')
+            ->assertSee(trans_choice('audit.field_count', 1));
     }
 
-    public function test_the_detail_page_shows_other_properties(): void
+    public function test_the_changed_part_of_a_short_similar_value_is_highlighted_and_nothing_else(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+        $person = User::factory()->create(['email' => 'jo@example.com', 'first_name' => 'Jo']);
+        $person->update(['email' => 'jo@example.com.au', 'first_name' => 'Christopher']);
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => AuditEntry::query()->where('event', 'user.updated')->sole()])
+            ->assertSeeHtml('jo@example.com<mark class="ui-diff-added">.au</mark>')
+            ->assertSee('Christopher')
+            ->assertDontSeeHtml('<mark class="ui-diff-added">Christopher</mark>')
+            ->assertSee('Email address');
+    }
+
+    public function test_every_part_of_a_change_and_the_performer_are_escaped(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+        $entry = AuditEntry::factory()->create([
+            'event' => 'invoice.updated',
+            'actor_name' => '<b>actor</b>',
+            'attribute_changes' => [
+                'old' => ['note' => '<b>before</b>', 'tag' => 'a<i>'],
+                'attributes' => ['note' => 'plain', 'tag' => 'a<i>x<u>'],
+            ],
+        ]);
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $entry])
+            ->assertSeeHtml(e('<b>before</b>'))
+            ->assertSeeHtml('a&lt;i&gt;<mark class="ui-diff-added">x&lt;u&gt;</mark>')
+            ->assertSeeHtml(e('<b>actor</b>'))
+            ->assertDontSeeHtml('<b>before</b>')
+            ->assertDontSeeHtml('<u>')
+            ->assertDontSeeHtml('<b>actor</b>');
+    }
+
+    public function test_an_accented_change_is_highlighted_whole_and_a_list_reads_as_indented_json(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+        $accented = AuditEntry::factory()->create(['event' => 'shop.updated', 'attribute_changes' => [
+            'old' => ['name' => 'Café', 'sign' => 'Cafe'],
+            // The accent typed as its own mark: it stays with its letter.
+            'attributes' => ['name' => 'Cafés', 'sign' => "Cafe\u{0301}"],
+        ]]);
+        $listed = AuditEntry::factory()->create(['properties' => ['tags' => ['red', 'blue']]]);
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $accented])
+            ->assertSeeHtml('Café<mark class="ui-diff-added">s</mark>')
+            ->assertSeeHtml("Caf<mark class=\"ui-diff-added\">e\u{0301}</mark>");
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $listed])
+            ->assertSeeHtml("<pre class=\"font-mono text-sm whitespace-pre-wrap wrap-anywhere\">[\n    &quot;red&quot;,\n    &quot;blue&quot;\n]</pre>");
+    }
+
+    public function test_a_created_record_has_no_before_a_deleted_one_no_after_and_hidden_values_say_so(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+        $created = AuditEntry::factory()->create(['event' => 'invoice.created', 'attribute_changes' => ['attributes' => ['total' => 10, 'note' => null]]]);
+        $deleted = AuditEntry::factory()->create(['event' => 'invoice.deleted', 'attribute_changes' => ['old' => ['total' => 10]]]);
+        $hidden = AuditEntry::factory()->create(['event' => 'invoice.updated', 'attribute_changes' => ['old' => ['api_key' => '[redacted]'], 'attributes' => ['api_key' => '[redacted]']]]);
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $created])
+            ->assertSee(__('audit.after'))
+            ->assertDontSee(__('audit.before'))
+            ->assertSee(__('audit.empty_value'));
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $deleted])
+            ->assertSee(__('audit.before'))
+            ->assertDontSee(__('audit.after'));
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $hidden])
+            ->assertSee(__('audit.hidden_value'))
+            ->assertDontSee('[redacted]');
+    }
+
+    public function test_the_detail_page_shows_other_properties_in_words(): void
     {
         $viewer = User::factory()->superAdmin()->create();
         $this->actingAs($viewer);
-        Audit::record('user.roles_changed', properties: ['before' => ['Support'], 'after' => ['Editor']], category: AuditCategory::ACCESS);
+        Audit::record('user.roles_changed', properties: ['before' => ['Support'], 'after' => ['Editor'], 'holder_count' => 3], category: AuditCategory::ACCESS);
 
         Livewire::test(ShowAuditEntry::class, ['entry' => AuditEntry::query()->where('event', 'user.roles_changed')->sole()])
-            ->assertSee('["Support"]')
-            ->assertSee('["Editor"]');
+            ->assertSee(__('audit.event_data'))
+            ->assertSee('"Support"')
+            ->assertSee('"Editor"')
+            ->assertSeeInOrder(['People who held it', 'holder_count', '3']);
+    }
+
+    public function test_the_detail_page_links_the_person_who_did_it_only_for_someone_who_may_open_them(): void
+    {
+        $person = User::factory()->create(['first_name' => 'Named', 'last_name' => 'Person']);
+        Audit::record('note.added', by: $person);
+        $entry = AuditEntry::query()->where('event', 'note.added')->sole();
+
+        Livewire::actingAs(User::factory()->withPermission(SystemPermission::VIEW_AUDIT_LOG, SystemPermission::VIEW_USERS)->create())
+            ->test(ShowAuditEntry::class, ['entry' => $entry])
+            ->assertSeeHtml(route('users.show', $person));
+
+        Livewire::actingAs(User::factory()->withPermission(SystemPermission::VIEW_AUDIT_LOG)->create())
+            ->test(ShowAuditEntry::class, ['entry' => $entry])
+            ->assertSee('Named Person')
+            ->assertDontSeeHtml(route('users.show', $person));
+    }
+
+    public function test_request_details_show_only_when_a_browser_was_recorded(): void
+    {
+        $viewer = User::factory()->superAdmin()->create();
+        $web = AuditEntry::factory()->create(['user_agent' => 'Mozilla/5.0 TestBrowser']);
+        $console = AuditEntry::factory()->create(['user_agent' => null]);
+
+        Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $web])
+            ->assertSee(__('audit.request_details'))
+            ->assertSee('Mozilla/5.0 TestBrowser');
+
+        Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $console])
+            ->assertDontSee(__('audit.request_details'));
     }
 
     public function test_a_subject_that_no_longer_exists_still_says_what_it_was(): void
@@ -515,6 +646,144 @@ class AuditScreensTest extends TestCase
         $this->assertSame('CRM sync', AuditDisplay::actorLabel('crm'));
         $this->assertSame(DaisyColor::SUCCESS, AuditDisplay::actorColor('crm'));
         $this->assertSame(['url' => 'https://example.test/x', 'label' => 'Custom '.$user->getKey()], AuditDisplay::subject($entry));
+    }
+
+    public function test_a_project_names_its_own_category_and_event_without_editing_core_lang(): void
+    {
+        AuditDisplay::registerCategory('billing', 'Invoices and payments');
+        AuditDisplay::registerCategory(AuditCategory::AUTH, 'Access log');
+        AuditDisplay::registerEvent('invoice.sent', 'Invoice emailed', ':actor emailed an invoice to :subject');
+        AuditDisplay::registerEvent('invoice.voided', 'Invoice cancelled');
+        $viewer = User::factory()->superAdmin()->create(['first_name' => 'Super', 'last_name' => 'Admin']);
+        $customer = User::factory()->create(['first_name' => 'Jo', 'last_name' => 'Customer']);
+        $this->actingAs($viewer);
+
+        Audit::record('invoice.sent', $customer, category: 'billing');
+        Audit::record('invoice.voided', $customer, category: 'billing');
+        $sent = AuditEntry::query()->where('event', 'invoice.sent')->sole();
+        $voided = AuditEntry::query()->where('event', 'invoice.voided')->sole();
+
+        $this->assertSame('Invoice emailed', $sent->description);
+        $this->assertSame('Super Admin emailed an invoice to Jo Customer', AuditDisplay::summary($sent));
+        $this->assertNull(AuditDisplay::summary($voided));
+
+        // A registered name wins over the tidied fallback and over core's own wording.
+        $this->assertSame('Invoices and payments', AuditDisplay::categoryLabel('billing'));
+        $this->assertSame('Access log', AuditDisplay::categoryLabel(AuditCategory::AUTH->value));
+
+        $page = Livewire::test(ListAuditEntries::class);
+        $this->assertSame('Invoices and payments', $page->instance()->categoryOptions()['billing']);
+        $this->assertSame('Invoice emailed', $page->instance()->eventOptions()['invoice.sent']);
+        $page->assertSee('Invoices and payments');
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $sent])
+            ->assertSeeHtml('<h1 class="ui-page-title">Invoice emailed</h1>')
+            ->assertSee('Super Admin emailed an invoice to Jo Customer');
+    }
+
+    public function test_an_entry_with_no_event_shows_its_description_once_as_the_heading(): void
+    {
+        $entry = AuditEntry::factory()->create(['event' => null, 'description' => 'Bare description here']);
+
+        $html = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ShowAuditEntry::class, ['entry' => $entry])
+            ->assertSeeHtml('<h1 class="ui-page-title">Bare description here</h1>')
+            ->html();
+
+        $this->assertNull(AuditDisplay::summary($entry));
+        $this->assertSame(1, substr_count(strip_tags($html), 'Bare description here'));
+    }
+
+    public function test_a_section_with_nothing_to_show_and_an_empty_main_column_are_left_out(): void
+    {
+        $viewer = User::factory()->superAdmin()->create();
+        $changesOnly = AuditEntry::factory()->create(['attribute_changes' => ['old' => ['total' => 1], 'attributes' => ['total' => 2]], 'properties' => [], 'user_agent' => null]);
+        $bare = AuditEntry::factory()->create(['attribute_changes' => null, 'properties' => [], 'user_agent' => null]);
+
+        Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $changesOnly])
+            ->assertSee(__('audit.changes'))
+            ->assertDontSee(__('audit.event_data'))
+            ->assertDontSee(__('audit.request_details'));
+
+        Livewire::actingAs($viewer)->test(ShowAuditEntry::class, ['entry' => $bare])
+            ->assertDontSee(__('audit.changes'))
+            ->assertDontSeeHtml('lg:col-span-2')
+            ->assertSee(__('audit.event_context'));
+    }
+
+    public function test_a_written_description_shows_on_the_detail_page_before_any_sentence(): void
+    {
+        $viewer = User::factory()->superAdmin()->create(['first_name' => 'Super', 'last_name' => 'Admin']);
+        $person = User::factory()->create(['first_name' => 'Jo', 'last_name' => 'Bloggs']);
+        $this->actingAs($viewer);
+        Audit::record('user.deactivated', $person, description: 'Deactivated after 5 failed logins', category: AuditCategory::ACCESS);
+        $entry = AuditEntry::query()->where('event', 'user.deactivated')->sole();
+
+        $this->assertSame('Deactivated after 5 failed logins', AuditDisplay::summary($entry));
+
+        Livewire::test(ShowAuditEntry::class, ['entry' => $entry])
+            ->assertSee('Deactivated after 5 failed logins')
+            ->assertDontSee('Super Admin deactivated Jo Bloggs');
+    }
+
+    public function test_an_entry_written_before_its_event_had_wording_still_reads_as_a_sentence(): void
+    {
+        $viewer = User::factory()->superAdmin()->create(['first_name' => 'Super', 'last_name' => 'Admin']);
+        $this->actingAs($viewer);
+        // Written while the event read as its code tidied, then given words and a sentence.
+        Audit::record('invoice.sent', $viewer);
+        AuditDisplay::registerEvent('invoice.sent', 'Invoice emailed', ':actor emailed an invoice to :subject');
+        $entry = AuditEntry::query()->where('event', 'invoice.sent')->sole();
+
+        $this->assertSame('Invoice sent', $entry->description);
+        $this->assertFalse(AuditDisplay::hasWrittenDescription($entry));
+        $this->assertSame('Super Admin emailed an invoice to Super Admin', AuditDisplay::summary($entry));
+    }
+
+    public function test_a_history_imported_under_a_morph_map_reads_on_the_list_detail_and_person_filter(): void
+    {
+        // Shaped like CDB's: a morph map, its own actor type, entries backdated from the old table.
+        $previousMap = Relation::morphMap();
+        Relation::morphMap(['crew_role' => Role::class, 'person' => User::class]);
+
+        try {
+            $person = User::factory()->create(['first_name' => 'Mapped', 'last_name' => 'Person']);
+            Audit::record('note.added', $person, description: 'Entry about a mapped person');
+            AuditDisplay::registerActor('import', 'Import', DaisyColor::ACCENT);
+            $role = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+            Audit::as('import', function () use ($role): void {
+                Audit::record('rules.reordered', $role, description: 'Imported entry about a role', at: now()->subYear());
+                AuditEntry::factory()->create([
+                    'description' => 'Imported entry about a run',
+                    'subject_type' => 'import_run',
+                    'subject_id' => 5,
+                    'created_at' => now()->subYear(),
+                ]);
+            }, actorName: 'CDB history');
+            $entry = AuditEntry::query()->where('event', 'rules.reordered')->sole();
+            $viewer = User::factory()->superAdmin()->create();
+
+            $this->assertSame('crew_role', $entry->subject_type);
+            $this->assertTrue($entry->created_at->isSameDay(now()->subYear()));
+
+            Livewire::actingAs($viewer)->test(ListAuditEntries::class)
+                ->assertSee('Imported entry about a role')
+                ->assertSee('CDB history')
+                ->assertSeeHtml('badge badge-'.DaisyColor::ACCENT->value)
+                ->assertSeeHtml(route('roles.edit', $role))
+                ->assertSee('Imported entry about a run')
+                ->assertSee('Import Run 5');
+
+            $this->actingAs($viewer)->get(route('audit.show', $entry))->assertOk()->assertSee(route('roles.edit', $role), false);
+
+            Livewire::actingAs($viewer)
+                ->withQueryParams(['user' => (string) $person->getKey()])
+                ->test(ListAuditEntries::class)
+                ->assertSee('Entry about a mapped person')
+                ->assertDontSee('Imported entry about a role');
+        } finally {
+            Relation::morphMap($previousMap, false);
+        }
     }
 
     public function test_an_unknown_actor_type_or_category_is_still_readable(): void
@@ -675,21 +944,44 @@ class AuditScreensTest extends TestCase
     public function test_the_export_covers_more_than_one_chunk_newest_first(): void
     {
         $exporter = User::factory()->withPermission(SystemPermission::EXPORT_AUDIT_LOG)->create();
-        AuditEntry::query()->insert(array_fill(0, 1005, [
+        $person = User::factory()->create();
+        $row = fn (string $description, User $about): array => [
             'log_name' => 'data',
-            'description' => 'Bulk entry',
+            'description' => $description,
             'actor_type' => AuditActor::SYSTEM,
+            'subject_type' => $about->getMorphClass(),
+            'subject_id' => $about->getKey(),
             'created_at' => now(),
             'updated_at' => now(),
-        ]));
+        ];
+        // Someone else's rows, older by id: each chunk's start must not widen the person filter.
+        AuditEntry::query()->insert([
+            ...array_fill(0, 5, $row('Someone else', $exporter)),
+            ...array_fill(0, 1005, $row('Bulk entry', $person)),
+        ]);
 
-        $ids = $this->exportRows($this->actingAs($exporter)->post(route('audit.export'))->streamedContent())
-            ->where('description', 'Bulk entry')
-            ->pluck('id')
-            ->map(fn (string $id): int => (int) $id);
+        $rows = $this->exportRows($this->actingAs($exporter)->post(route('audit.export'), ['user' => (string) $person->getKey()])->streamedContent());
+        $ids = $rows->where('description', 'Bulk entry')->pluck('id')->map(fn (string $id): int => (int) $id);
 
+        $this->assertNotContains('Someone else', $rows->pluck('description'));
         $this->assertCount(1005, $ids);
         $this->assertSame($ids->sortDesc()->values()->all(), $ids->values()->all());
+    }
+
+    public function test_the_export_puts_a_backdated_entry_where_its_date_does_as_the_screen_does(): void
+    {
+        $this->actingAs(User::factory()->withPermission(SystemPermission::EXPORT_AUDIT_LOG)->create());
+        Audit::record('note.added', description: 'Recent entry');
+        Audit::record('note.imported', description: 'Imported entry', at: now()->subYear());
+        Audit::record('note.added', description: 'Latest entry', at: now()->addMinute());
+
+        $descriptions = $this->exportRows($this->post(route('audit.export'))->streamedContent())
+            ->pluck('description')
+            ->filter(fn (string $description): bool => str_ends_with($description, ' entry'))
+            ->values()
+            ->all();
+
+        $this->assertSame(['Latest entry', 'Recent entry', 'Imported entry'], $descriptions);
     }
 
     public function test_the_export_refuses_a_filter_that_isnt_text_but_not_a_long_search(): void

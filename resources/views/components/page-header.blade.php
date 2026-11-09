@@ -2,6 +2,7 @@
     Page header: title + optional description, with an actions slot aligned
     to the right. The description wraps at a readable width beside the
     actions; they drop underneath only when they don't fit beside it.
+    The default slot, if given, is a line under the description.
     Mirrors Buzz's <x-page-header>.
 --}}
 @props([
@@ -15,6 +16,7 @@
         @if ($description)
             <p class="ui-page-title-description">{{ $description }}</p>
         @endif
+        {{ $slot }}
     </div>
 
     @isset($actions)

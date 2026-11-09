@@ -1,7 +1,11 @@
 <div>
-    @section('page-title', \Illuminate\Support\Str::limit($entry->description, 60))
+    @section('page-title', \Illuminate\Support\Str::limit($this->heading(), 60))
 
-    <x-page-header :title="\Illuminate\Support\Str::limit($entry->description, 120)">
+    <x-page-header :title="\Illuminate\Support\Str::limit($this->heading(), 120)" :description="$this->summary()">
+        @if ($this->eventCode())
+            <p class="mt-1 font-mono text-sm text-muted wrap-anywhere">{{ $this->eventCode() }}</p>
+        @endif
+
         <x-slot:actions>
             <x-button.back href="{{ route('audit.index') }}">
                 {{ __('audit.back_to_audit_log') }}
@@ -9,55 +13,15 @@
         </x-slot:actions>
     </x-page-header>
 
-    <div class="flex flex-col gap-6">
-        {{ $this->entryInfolist }}
-
-        @if ($this->changes()->isNotEmpty())
-            <x-card :title="__('audit.changes')" type="panel">
-                <x-table-scroll>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>{{ __('audit.field') }}</th>
-                                <th>{{ __('audit.before') }}</th>
-                                <th>{{ __('audit.after') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($this->changes() as $change)
-                                <tr>
-                                    <td class="font-medium">{{ $change['field'] }}</td>
-                                    <td class="wrap-anywhere">{{ $change['before'] }}</td>
-                                    <td class="wrap-anywhere">{{ $change['after'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </x-table-scroll>
-            </x-card>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        @if ($this->hasDetails())
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                {{ $this->detailInfolist }}
+            </div>
         @endif
 
-        @if ($this->properties()->isNotEmpty())
-            <x-card :title="__('audit.more')" type="panel">
-                <x-table-scroll>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>{{ __('audit.name') }}</th>
-                                <th>{{ __('audit.value') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($this->properties() as $property)
-                                <tr>
-                                    <td class="font-medium">{{ $property['name'] }}</td>
-                                    <td class="wrap-anywhere">{{ $property['value'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </x-table-scroll>
-            </x-card>
-        @endif
+        <div class="flex flex-col gap-6">
+            {{ $this->contextInfolist }}
+        </div>
     </div>
 </div>

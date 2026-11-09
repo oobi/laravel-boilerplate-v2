@@ -6,6 +6,7 @@ namespace App\Actions\Fortify;
 
 use App\Models\User;
 use App\Support\Auth\GoogleLogin;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\ResetsUserPasswords;
@@ -28,11 +29,15 @@ class ResetUserPassword implements ResetsUserPasswords
             ],
         ])->validate();
 
-        $user->forceFill([
-            'password' => Hash::make($input['password']),
-        ])->save();
+        // One write: if the unlink can't be recorded, the password stays as it was
+        // and the link isn't left behind on a changed password.
+        DB::transaction(function () use ($user, $input): void {
+            $user->forceFill([
+                'password' => Hash::make($input['password']),
+            ])->save();
 
-        // A recovery: a Google link someone else made must not outlive it (#61).
-        GoogleLogin::unlink($user);
+            // A recovery: a Google link someone else made must not outlive it (#61).
+            GoogleLogin::unlink($user);
+        });
     }
 }

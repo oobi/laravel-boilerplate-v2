@@ -109,7 +109,7 @@
     }
 
     .ui-page-title-description {
-        @apply text-muted mt-1 text-sm max-w-3xl;
+        @apply text-muted mt-1 text-sm max-w-3xl wrap-break-word;
     }
 
     .ui-page-actions {

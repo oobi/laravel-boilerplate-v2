@@ -60,6 +60,7 @@ way `packages/teams` does:
 | Sidebar links | `NavRegistry::group(...)->add(...)` | [navigation.md](navigation.md) |
 | User Show/Edit cards | `PanelRegistry::for('users.show')->add(...)` | [panels.md](panels.md) |
 | A new family of roles | `RoleScopeRegistry::register(...)` | [permissions.md](permissions.md) |
+| Audit log categories, events, actor types, subject names and links | `AuditDisplay::registerCategory(...)`, `registerEvent(...)`, `registerActor(...)`, `registerSubject(...)` | [audit-log.md](audit-log.md) |
 
 - Put client domain code in its own folders (`app/Livewire/{Area}/{Domain}`,
   `tests/Feature/{Area}/{Domain}`), following the "group by domain" rule.

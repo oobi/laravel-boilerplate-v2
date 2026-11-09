@@ -29,6 +29,9 @@ Not exhaustive.
   Super admin is the one exception: a hardcoded `is_super_admin` boolean, not
   a package role, so it can never be edited via the Roles admin screen. See
   `.ai/rules/policies.md`.
+- **spatie/laravel-activitylog**: storage and change detection for the audit
+  log. Our own `AuditEntry` model, `Auditable` trait, capture, screens and
+  export sit on top. See `docs/boilerplate/audit-log.md`.
 - **Tailwind CSS 4 + daisyUI 5** — the entire visual design system
   (`resources/css/theme/*`), scaffolded into the app rather than a package so
   it can be freely restyled per project.
@@ -60,6 +63,11 @@ Not exhaustive.
   without one; a job whose team is gone runs without a team, so its storage and
   cache calls fail the same way. `TeamIsolationTest` and `TeamJobContextTest`
   show them in use.
+- **Audit log**: who did what and when: logins, security changes,
+  impersonation, roles, scheduled tasks, and every change to a model with
+  `use Auditable;`. Admin > System > Audit log, behind its own `view audit log`
+  and `export audit log` permissions. Switched off with `AUDIT_ENABLED=false`.
+  See `docs/boilerplate/audit-log.md`.
 - **Admin page composition (panels)** — Show/Edit admin pages are built
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own

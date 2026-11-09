@@ -105,16 +105,27 @@ final class Audit
 
     /**
      * An event in words: `invoice.sent` reads "Invoice sent". Core's own events
-     * read better written out (lang/en/audit.php, `events`), as can a project's.
+     * are written out in lang/en/audit.php (`events`); a project's are registered
+     * with AuditDisplay::registerEvent().
      */
     public static function describe(string $event): string
     {
+        if (($registered = AuditDisplay::eventLabel($event)) !== null) {
+            return $registered;
+        }
+
         $key = 'audit.events.'.str_replace('.', '_', $event);
 
         if (Lang::has($key)) {
             return __($key);
         }
 
+        return self::tidy($event);
+    }
+
+    /** The event code itself as words, with no wording given for it. */
+    public static function tidy(string $event): string
+    {
         return Str::ucfirst(str_replace(' force deleted', ' permanently deleted', str_replace(['.', '_'], ' ', $event)));
     }
 

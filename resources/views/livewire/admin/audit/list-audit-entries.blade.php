@@ -32,12 +32,14 @@
                 class="min-w-36"
             />
 
-            <x-table-filter-select
+            {{-- A project can log dozens of kinds of event, so this one can be searched. --}}
+            <x-listbox
                 id="audit-event-filter"
                 model="tableFilters.event.value"
                 :label="__('audit.event')"
                 :placeholder="__('audit.all_events')"
                 :options="$this->eventOptions()"
+                searchable
                 class="min-w-36"
             />
 
