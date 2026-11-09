@@ -77,7 +77,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Before any provider boots, so Filament's routes get it too.
+        $this->constrainRouteIds();
     }
 
     /**
@@ -109,6 +110,17 @@ class AppServiceProvider extends ServiceProvider
         AccountAreaRegistry::register('admin', fn (User $user): ?AccountShell => $user->canAccessAdmin() ? new AccountShell('layouts.admin') : null);
 
         User::observe(UserObserver::class);
+    }
+
+    /**
+     * Route parameters that bind a model by its bigint id only match digits that
+     * fit one, so a junk id is a 404 before any query runs. Postgres errors on a
+     * value it can't cast rather than finding nothing (GitHub oobi#89). Global,
+     * so Filament's own routes get it too; a new numeric-id parameter belongs here.
+     */
+    private function constrainRouteIds(): void
+    {
+        Route::patterns(array_fill_keys(['user', 'role', 'entry', 'export', 'import'], '[0-9]{1,18}'));
     }
 
     /**

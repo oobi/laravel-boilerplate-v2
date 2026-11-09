@@ -52,6 +52,10 @@ $adminTeamsPrefix = $hostMode ? 'teams' : 'admin/teams';
 // DomainPolicy).
 Route::pattern('teamHost', DomainPolicy::teamHostPattern());
 
+// An invitation id is digits that fit a bigint, so a junk one is a 404 before
+// it's bound (ahead of `signed`); Postgres errors on it otherwise (GitHub oobi#89).
+Route::pattern('invitation', '[0-9]{1,18}');
+
 // The team-scoped pages (members-only, one team's context at a time — scope §6/§7).
 // The {team}/{teamHost} parameter is resolved + authorized by ResolveTeamContext.
 $teamPages = function (): void {
