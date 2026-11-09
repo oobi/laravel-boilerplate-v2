@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\Audit\AuditActor;
 use App\Support\Audit\AuditDisplay;
 use App\Support\Audit\AuthEventSubscriber;
+use App\Support\Audit\SessionTrail;
 use App\Support\Audit\SystemEventSubscriber;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Log\Context\Repository;
@@ -61,12 +62,16 @@ class AuditServiceProvider extends ServiceProvider
 
     /**
      * A queued job has no signed-in user or session, so carry the person who
-     * dispatched it, and anyone impersonating them, with the job. A job dispatched
-     * by a job keeps the original people.
+     * dispatched it, anyone impersonating them and the session's trail with the
+     * job. A job dispatched by a job keeps the original people and trail.
      */
     private function rememberWhoDispatchedAJob(): void
     {
         Context::dehydrating(function (Repository $context): void {
+            if (! $context->hasHidden(SessionTrail::CONTEXT) && ($trail = SessionTrail::forRequest()) !== null) {
+                $context->addHidden(SessionTrail::CONTEXT, $trail);
+            }
+
             $userId = Auth::id();
 
             if ($userId === null || $context->hasHidden(AuditActor::CONTEXT_DISPATCHED_BY)) {

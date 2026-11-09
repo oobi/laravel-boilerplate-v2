@@ -7,6 +7,12 @@
         @endif
 
         <x-slot:actions>
+            @if ($this->sessionUrl())
+                <x-button.action href="{{ $this->sessionUrl() }}">
+                    {{ __('audit.view_session') }}
+                </x-button.action>
+            @endif
+
             <x-button.back href="{{ route('audit.index') }}">
                 {{ __('audit.back_to_audit_log') }}
             </x-button.back>
@@ -20,7 +26,8 @@
             </div>
         @endif
 
-        <div class="flex flex-col gap-6">
+        {{-- Alone, the context takes the page, its fields in columns (contextInfolist). --}}
+        <div @class(['flex flex-col gap-6', 'lg:col-span-3' => ! $this->hasDetails()])>
             {{ $this->contextInfolist }}
         </div>
     </div>

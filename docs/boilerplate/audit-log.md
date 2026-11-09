@@ -26,7 +26,8 @@ Without any work from you:
 Each entry stores the actor (a person, a visitor, a queued job, the scheduler or
 the system), their name at the time, who was impersonating them if anyone, the
 IP address and browser for web requests, the category, the event and the
-subject.
+subject. It also stores the browser session it came from, so one session can be
+read back in order (see [Sessions](#sessions)).
 
 ## Reading it
 
@@ -35,16 +36,51 @@ filters for category, event (searchable), actor type and date. Each entry has a
 detail page (`audit.show`): the event in words with a sentence saying what
 happened ("Super Admin updated Michel Adams"), each changed field before and
 after with the changed part of a short value marked, any other properties, and
-the request's browser behind a disclosure. A user's page has an
+the request's browser behind a disclosure. Its **Session timeline** button (also in
+each row's menu on the list) lists everything from the same browser session,
+oldest first. A user's page has an
 **Activity** panel with their latest five entries and a link to the full list,
 filtered to them.
+
+### Sessions
+
+Every entry from a web request with a session carries a session trail: a random
+ULID in `session_trail`, started the first time a browser session needs one (its
+first entry, or a job it queues) and kept in the session until it ends. So one
+trail reads as one sitting, in order: failed
+logins, the login, each change, the logout. After a breach, the actions taken
+with a stolen session share the victim's trail but not their IP address or
+browser.
+
+- **Not the session ID.** Laravel's session ID would let anyone reading the log
+  or a backup take over a live session, and it changes at login. The trail is
+  minted by `App\Support\Audit\SessionTrail` and means nothing outside the log.
+- **When one starts and ends.** It survives the login (Laravel keeps session data
+  when it renews the ID), so failed attempts and the login that follows share
+  it. Logout and an expired session end it; a remember-me login after that
+  starts a new one. Impersonation stays in the admin's trail, and its entries
+  name the impersonator.
+- **Queued jobs** dispatched in a session carry its trail, as they carry the
+  person who dispatched it. Artisan commands and the scheduler have none.
+- **No trail:** a route without a session (an API route), and work done after
+  the response is sent (`defer()`, `dispatchAfterResponse()`, a terminating
+  callback). By then Laravel has saved the session, so a trail minted there
+  could never be stored.
+- **Opening one:** **Session timeline** on an entry's page or in its row's menu,
+  or `?session=<trail>` on the list. The list then reads oldest first, and
+  **Export CSV** follows it. The export has a `session` column either way.
+- **Only audited events**, not page views: the trail shows what changed and who
+  logged in, not each page visited between.
+- A seeder or import can lend its entries a trail with
+  `Context::scope($callback, hidden: [SessionTrail::CONTEXT => (string) Str::ulid()])`,
+  as the demo seeder does.
 
 Two permissions, assignable to any role on the Roles screen:
 
 | Permission | Opens |
 |---|---|
 | `view audit log` | The list, detail pages and the Activity panel. Shows names and email addresses, even to someone without `view users`. |
-| `export audit log` | The **Export CSV** button: a file holding what the filters show, newest first as the screen shows by default. Each export is itself recorded. |
+| `export audit log` | The **Export CSV** button: a file holding what the filters show, in the screen's default order (newest first; one session oldest first). Each export is itself recorded. |
 
 `view audit log` implies `access admin panel`; `export audit log` implies
 `view audit log`. A super admin has both, and so does the seeded Administrator

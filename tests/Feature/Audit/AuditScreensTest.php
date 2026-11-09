@@ -38,6 +38,8 @@ class AuditScreensTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const string TRAIL = '01KAAB3XJ2Q8M7N4P5R6S7T8V9';
+
     public function test_a_guest_is_sent_to_login(): void
     {
         $this->get(route('audit.index'))->assertRedirect(route('login'));
@@ -826,6 +828,7 @@ class AuditScreensTest extends TestCase
             'created_at' => '2026-03-10 12:00:00',
             'causer_type' => $person->getMorphClass(),
             'causer_id' => $person->getKey(),
+            'session_trail' => self::TRAIL,
         ]);
         AuditEntry::factory()->create([
             'description' => 'Other entry',
@@ -842,6 +845,7 @@ class AuditScreensTest extends TestCase
             'date' => '2026-03-10',
             'search' => 'Kept',
             'user' => (string) $person->getKey(),
+            'session' => self::TRAIL,
         ];
 
         foreach ($filters as $filter => $value) {
@@ -857,7 +861,7 @@ class AuditScreensTest extends TestCase
         $person = User::factory()->create();
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
-            ->withQueryParams(['user' => (string) $person->getKey()])
+            ->withQueryParams(['user' => (string) $person->getKey(), 'session' => self::TRAIL])
             ->test(ListAuditEntries::class)
             ->set('tableFilters.category.value', 'auth')
             ->set('tableFilters.event.value', 'auth.login')
@@ -869,7 +873,124 @@ class AuditScreensTest extends TestCase
             ->assertSeeHtml('name="actor_type" value="'.AuditActor::GUEST.'"')
             ->assertSeeHtml('name="date" value="2026-03-10"')
             ->assertSeeHtml('name="search" value="Kept"')
-            ->assertSeeHtml('name="user" value="'.$person->getKey().'"');
+            ->assertSeeHtml('name="user" value="'.$person->getKey().'"')
+            ->assertSeeHtml('name="session" value="'.self::TRAIL.'"');
+    }
+
+    public function test_one_session_lists_only_its_entries_in_the_order_they_happened(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        AuditEntry::factory()->create(['description' => 'Second step', 'session_trail' => self::TRAIL, 'created_at' => now()->subHour()]);
+        AuditEntry::factory()->create(['description' => 'First step', 'session_trail' => self::TRAIL, 'created_at' => now()->subHours(2)]);
+        AuditEntry::factory()->create(['description' => 'Third step', 'session_trail' => self::TRAIL, 'created_at' => now()->subMinute()]);
+        AuditEntry::factory()->create(['description' => 'Another session', 'session_trail' => (string) Str::ulid()]);
+        AuditEntry::factory()->create(['description' => 'No session']);
+
+        // A trail typed or pasted in lower case is the same trail.
+        $this->actingAs($admin)->get(route('audit.index', ['session' => strtolower(self::TRAIL)]))
+            ->assertOk()
+            ->assertSee(__('audit.showing_session'))
+            ->assertSeeInOrder(['First step', 'Second step', 'Third step'])
+            ->assertDontSee('Another session')
+            ->assertDontSee('No session');
+
+        $this->actingAs($admin)->get(route('audit.index', ['session' => 'not-a-trail']))
+            ->assertOk()
+            ->assertDontSee(__('audit.showing_session'))
+            ->assertSeeInOrder(['Third step', 'Second step', 'First step'])
+            ->assertSee('Another session')
+            ->assertSee('No session');
+    }
+
+    public function test_each_banner_clears_only_its_own_filter(): void
+    {
+        $person = User::factory()->create();
+
+        $this->actingAs(User::factory()->superAdmin()->create())
+            ->get(route('audit.index', ['user' => $person->getKey(), 'session' => self::TRAIL]))
+            ->assertSee('href="'.e(route('audit.index', ['user' => $person->getKey()])).'"', false)
+            ->assertSee('href="'.e(route('audit.index', ['session' => self::TRAIL])).'"', false);
+    }
+
+    public function test_an_entry_in_a_session_offers_view_session_and_one_outside_does_not(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $inSession = AuditEntry::factory()->create(['session_trail' => self::TRAIL]);
+        $outside = AuditEntry::factory()->create();
+
+        $this->actingAs($admin)->get(route('audit.show', $inSession))
+            ->assertSee(__('audit.view_session'))
+            ->assertSee('href="'.e(route('audit.index', ['session' => self::TRAIL])).'"', false);
+
+        $this->actingAs($admin)->get(route('audit.show', $outside))
+            ->assertDontSee(__('audit.view_session'))
+            ->assertDontSee('session=', false);
+    }
+
+    public function test_a_row_in_a_session_offers_the_rest_of_it_until_the_list_is_that_session(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $inSession = AuditEntry::factory()->create(['session_trail' => self::TRAIL]);
+        $outside = AuditEntry::factory()->create();
+        $sessionUrl = route('audit.index', ['session' => self::TRAIL]);
+
+        Livewire::actingAs($admin)
+            ->test(ListAuditEntries::class)
+            ->assertTableActionVisible('session', $inSession)
+            ->assertTableActionHasUrl('session', $sessionUrl, $inSession)
+            ->assertTableActionHidden('session', $outside);
+
+        Livewire::actingAs($admin)
+            ->withQueryParams(['session' => self::TRAIL])
+            ->test(ListAuditEntries::class)
+            ->assertTableActionHidden('session', $inSession);
+    }
+
+    public function test_the_context_takes_the_page_in_columns_only_when_there_is_nothing_else(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $alone = AuditEntry::factory()->create(['user_agent' => null, 'properties' => [], 'attribute_changes' => []]);
+        $withDetails = AuditEntry::factory()->create(['user_agent' => 'Mozilla/5.0']);
+
+        $threeColumns = '--cols-lg: repeat(3, minmax(0, 1fr))';
+
+        $this->actingAs($admin)->get(route('audit.show', $alone))
+            ->assertSee('lg:col-span-3', false)
+            ->assertSee($threeColumns, false);
+
+        $this->actingAs($admin)->get(route('audit.show', $withDetails))
+            ->assertSee(__('audit.request_details'))
+            ->assertDontSee('lg:col-span-3', false)
+            ->assertDontSee($threeColumns, false);
+    }
+
+    public function test_one_session_exports_oldest_first_across_chunks_with_its_trail(): void
+    {
+        $exporter = User::factory()->withPermission(SystemPermission::EXPORT_AUDIT_LOG)->create();
+        $start = now()->startOfMinute();
+        $row = fn (string $description, ?string $trail, int $minutes): array => [
+            'log_name' => 'data',
+            'description' => $description,
+            'actor_type' => AuditActor::SYSTEM,
+            'session_trail' => $trail,
+            'created_at' => $start->copy()->addMinutes($minutes),
+            'updated_at' => $start,
+        ];
+        // Times run against id order, in threes that share a time, one three straddling the
+        // 1,000-row chunk: only when, then id, puts them in order across the chunks.
+        AuditEntry::query()->insert([
+            ...array_fill(0, 5, $row('Another session', (string) Str::ulid(), 0)),
+            ...array_map(fn (int $i): array => $row('In the session', self::TRAIL, intdiv(1004 - $i, 3)), range(0, 1004)),
+        ]);
+        $expected = AuditEntry::query()->where('session_trail', self::TRAIL)->orderBy('created_at')->orderBy('id')->pluck('id')->all();
+
+        $rows = $this->exportRows($this->actingAs($exporter)->post(route('audit.export'), ['session' => self::TRAIL])->streamedContent());
+        $ids = $rows->pluck('id')->map(fn (string $id): int => (int) $id)->all();
+
+        $this->assertSame(['In the session'], $rows->pluck('description')->unique()->values()->all());
+        $this->assertSame([self::TRAIL], $rows->pluck('session')->unique()->values()->all());
+        $this->assertNotSame(collect($expected)->sort()->values()->all(), $expected, 'the times must disagree with id order');
+        $this->assertSame($expected, $ids);
     }
 
     public function test_a_search_of_several_words_finds_the_same_rows_on_the_screen_and_in_the_export(): void
@@ -993,6 +1114,8 @@ class AuditScreensTest extends TestCase
         foreach (['nonsense', '1.5', '-5', '0', '99999999999999999999'] as $user) {
             $this->actingAs($exporter)->post(route('audit.export'), ['user' => $user])->assertSessionHasErrors('user');
         }
+
+        $this->actingAs($exporter)->post(route('audit.export'), ['session' => 'not-a-trail'])->assertSessionHasErrors('session');
 
         $this->actingAs($exporter)->post(route('audit.export'), ['search' => str_repeat('a', 300)])->assertOk();
     }

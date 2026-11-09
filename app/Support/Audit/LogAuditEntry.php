@@ -101,13 +101,20 @@ class LogAuditEntry extends LogActivityAction
         $activity->setAttribute('actor_name', $this->snapshotName(Context::getHidden(AuditActor::CONTEXT_NAME) ?? $causer?->getAttribute('name')));
     }
 
-    /** Where it came from. A job has no IP or browser, but still knows who was impersonating when it was dispatched. */
+    /**
+     * Where it came from. A job has no IP or browser, but still knows who was
+     * impersonating, and the session it was dispatched in.
+     */
     private function recordOrigin(Model $activity): void
     {
         if ($this->isWebRequest()) {
             $activity->setAttribute('ip_address', request()->ip());
             $activity->setAttribute('user_agent', Str::limit(mb_scrub((string) request()->userAgent()), 512, '') ?: null);
         }
+
+        $activity->setAttribute('session_trail', $this->isWebRequest()
+            ? SessionTrail::forRequest()
+            : SessionTrail::normalize(Context::getHidden(SessionTrail::CONTEXT)));
 
         $impersonatorId = $this->isWebRequest()
             ? app(ImpersonateManager::class)->getImpersonatorId()

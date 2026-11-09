@@ -29,12 +29,16 @@ return new class extends Migration
             $table->string('impersonator_name')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->string('user_agent', 512)->nullable();
+            // Links one browser session's entries (App\Support\Audit\SessionTrail); never the session ID.
+            $table->ulid('session_trail')->nullable();
             $table->json('attribute_changes')->nullable();
             $table->json('properties')->nullable();
             $table->timestamps();
 
             // The screen and the export read newest first by when, then id.
             $table->index(['created_at', 'id']);
+            // One session, in the order it happened.
+            $table->index(['session_trail', 'created_at', 'id']);
             $table->index(['log_name', 'created_at']);
         });
     }

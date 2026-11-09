@@ -10,8 +10,21 @@
             {{ $filteredUser ? __('audit.showing_for', ['name' => $filteredUser->name]) : __('audit.showing_for_deleted') }}
 
             <x-slot:actions>
-                <x-button.cancel href="{{ route('audit.index') }}">
+                {{-- Each banner clears only its own filter. --}}
+                <x-button.cancel href="{{ route('audit.index', array_filter(['session' => $this->isFilteredToSession() ? $this->sessionTrail : null])) }}">
                     {{ __('audit.show_everyone') }}
+                </x-button.cancel>
+            </x-slot:actions>
+        </x-banner>
+    @endif
+
+    @if ($this->isFilteredToSession())
+        <x-banner role="status" class="mb-6">
+            {{ __('audit.showing_session') }}
+
+            <x-slot:actions>
+                <x-button.cancel href="{{ route('audit.index', array_filter(['user' => $this->isFilteredToUser() ? $this->userId : null])) }}">
+                    {{ __('audit.show_every_session') }}
                 </x-button.cancel>
             </x-slot:actions>
         </x-banner>
