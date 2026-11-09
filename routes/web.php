@@ -113,8 +113,7 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
             Route::prefix('audit')->name('audit.')->group(function (): void {
                 Route::middleware('can:'.SystemPermission::VIEW_AUDIT_LOG->value)->group(function (): void {
                     Route::get('/', ListAuditEntries::class)->name('index');
-                    // Digits that fit a bigint: Postgres errors on anything else rather than finding nothing.
-                    Route::get('/{entry}', ShowAuditEntry::class)->where('entry', '[0-9]{1,18}')->name('show');
+                    Route::get('/{entry}', ShowAuditEntry::class)->name('show');
                 });
 
                 Route::post('/export', AuditExportController::class)
