@@ -59,6 +59,12 @@ class ShowAuditEntry extends Component implements HasSchemas
         return $event === null || strcasecmp(Audit::describe($event), $event) === 0 ? null : $event;
     }
 
+    /** Everything else from the same browser session, oldest first; null for an entry made outside one. */
+    public function sessionUrl(): ?string
+    {
+        return $this->entry->session_trail === null ? null : route('audit.index', ['session' => $this->entry->session_trail]);
+    }
+
     public function contextInfolist(Schema $schema): Schema
     {
         $subject = AuditDisplay::subject($this->entry);
@@ -67,6 +73,8 @@ class ShowAuditEntry extends Component implements HasSchemas
             ->record($this->entry)
             ->components([
                 Section::make(__('audit.event_context'))
+                    // Beside the details a narrow column; alone, it spreads across the page.
+                    ->columns($this->hasDetails() ? 1 : ['md' => 2, 'lg' => 3])
                     ->schema([
                         TextEntry::make('created_at')->label(__('audit.occurred_at'))->dateTime(),
                         TextEntry::make('log_name')

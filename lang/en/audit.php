@@ -43,6 +43,9 @@ return [
     'showing_for' => 'Showing what :name did, and what was done to them.',
     'showing_for_deleted' => 'Showing entries for a user who no longer exists.',
     'show_everyone' => 'Show everyone',
+    'view_session' => 'Session timeline',
+    'showing_session' => 'Showing one browser session, in the order it happened.',
+    'show_every_session' => 'Show every session',
 
     'events' => [
         'auth_login' => 'Logged in',

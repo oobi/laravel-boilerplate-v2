@@ -20,7 +20,7 @@ final class AuditEntryFilters
 
     /**
      * @param  Builder<AuditEntry>  $query
-     * @param  array{category?: ?string, event?: ?string, actor_type?: ?string, date?: ?string, search?: ?string, user?: int|string|null}  $filters
+     * @param  array{category?: ?string, event?: ?string, actor_type?: ?string, date?: ?string, search?: ?string, user?: int|string|null, session?: ?string}  $filters
      * @return Builder<AuditEntry>
      */
     public static function apply(Builder $query, array $filters): Builder
@@ -31,8 +31,23 @@ final class AuditEntryFilters
         self::date($query, $filters['date'] ?? null);
         self::search($query, $filters['search'] ?? null);
         self::forUser($query, $filters['user'] ?? null);
+        self::forSession($query, $filters['session'] ?? null);
 
         return $query;
+    }
+
+    /**
+     * Everything in one browser session. Ignored unless it's a trail ID.
+     *
+     * @param  Builder<AuditEntry>  $query
+     */
+    public static function forSession(Builder $query, ?string $trail): void
+    {
+        $trail = SessionTrail::normalize($trail);
+
+        if ($trail !== null) {
+            $query->where('session_trail', $trail);
+        }
     }
 
     /** @param  Builder<AuditEntry>  $query */

@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Streams entries as a CSV, newest first, so a long log never sits in memory.
- * Anything a visitor could have typed reaches the file, so a value a spreadsheet
- * would run as a formula is neutralised.
+ * Streams entries as a CSV, newest first (or oldest first, for one session), so a
+ * long log never sits in memory. Anything a visitor could have typed reaches the
+ * file, so a value a spreadsheet would run as a formula is neutralised.
  */
 class ExportAuditEntries
 {
@@ -22,9 +22,9 @@ class ExportAuditEntries
     private const string BYTE_ORDER_MARK = "\xEF\xBB\xBF";
 
     /** @param  Builder<AuditEntry>  $entries */
-    public function stream(Builder $entries): StreamedResponse
+    public function stream(Builder $entries, bool $oldestFirst = false): StreamedResponse
     {
-        return response()->streamDownload(function () use ($entries): void {
+        return response()->streamDownload(function () use ($entries, $oldestFirst): void {
             // PHP's limit would cut a long file short, with the download already looking fine.
             set_time_limit(0);
 
@@ -33,7 +33,7 @@ class ExportAuditEntries
             fwrite($file, self::BYTE_ORDER_MARK);
             fputcsv($file, $this->headings(), escape: '');
 
-            foreach ($this->newestFirst($entries) as $entry) {
+            foreach ($this->inOrder($entries, $oldestFirst) as $entry) {
                 fputcsv($file, array_map($this->neutraliseFormula(...), $this->row($entry)), escape: '');
             }
 
@@ -49,21 +49,24 @@ class ExportAuditEntries
      * @param  Builder<AuditEntry>  $entries
      * @return iterable<AuditEntry>
      */
-    private function newestFirst(Builder $entries): iterable
+    private function inOrder(Builder $entries, bool $oldestFirst): iterable
     {
+        $direction = $oldestFirst ? 'asc' : 'desc';
+        $after = $oldestFirst ? '>' : '<';
+        $from = $oldestFirst ? '>=' : '<=';
         $last = null;
 
         do {
             $chunk = (clone $entries)
                 // The first condition alone bounds the index scan on every database.
                 ->when($last !== null, fn (Builder $query) => $query
-                    ->where('created_at', '<=', $last->getRawOriginal('created_at'))
+                    ->where('created_at', $from, $last->getRawOriginal('created_at'))
                     ->where(fn (Builder $query) => $query
-                        ->where('created_at', '<', $last->getRawOriginal('created_at'))
-                        ->orWhere('id', '<', $last->getKey())))
+                        ->where('created_at', $after, $last->getRawOriginal('created_at'))
+                        ->orWhere('id', $after, $last->getKey())))
                 ->reorder()
-                ->orderByDesc('created_at')
-                ->orderByDesc('id')
+                ->orderBy('created_at', $direction)
+                ->orderBy('id', $direction)
                 ->limit(self::CHUNK)
                 ->get();
 
@@ -78,7 +81,7 @@ class ExportAuditEntries
     {
         return [
             'id', 'created_at', 'category', 'event', 'description', 'actor_type', 'actor', 'impersonator',
-            'subject_type', 'subject_id', 'ip_address', 'user_agent', 'changes', 'properties',
+            'subject_type', 'subject_id', 'ip_address', 'user_agent', 'session', 'changes', 'properties',
         ];
     }
 
@@ -98,6 +101,7 @@ class ExportAuditEntries
             $entry->subject_id,
             $entry->ip_address,
             $entry->user_agent,
+            $entry->session_trail,
             $entry->getRawOriginal('attribute_changes'),
             $entry->getRawOriginal('properties'),
         ]);

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\Audit\Audit;
 use App\Support\Audit\AuditDisplay;
 use App\Support\Audit\AuditEntryFilters;
+use App\Support\Audit\SessionTrail;
 use App\Support\DateRange;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -33,7 +34,7 @@ use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-/** The audit log: read only, newest first, filtered with the toolbar in the view. */
+/** The audit log: read only, newest first (one session oldest first), filtered with the toolbar in the view. */
 class ListAuditEntries extends Component implements HasActions, HasSchemas, HasTable
 {
     use InteractsWithActions;
@@ -43,6 +44,10 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
     /** One person's activity, when arriving from their page. A string: the URL can hold anything. */
     #[Url(as: 'user')]
     public ?string $userId = null;
+
+    /** One browser session's entries, from an entry's page. */
+    #[Url(as: 'session')]
+    public ?string $sessionTrail = null;
 
     /** @var array<string, Collection<int, string>> */
     private array $distinctValues = [];
@@ -54,6 +59,7 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         // Only a real id is kept: anything else, even text Livewire can't save, means everyone.
         $userId = AuditEntryFilters::userId($this->userId);
         $this->userId = $userId === null ? null : (string) $userId;
+        $this->sessionTrail = SessionTrail::normalize($this->sessionTrail);
     }
 
     public function table(Table $table): Table
@@ -61,9 +67,15 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         return $table
             ->query(fn (): Builder => tap(
                 AuditEntry::query()->with(['subject', 'causer']),
-                fn (Builder $query) => AuditEntryFilters::forUser($query, $this->userId),
+                function (Builder $query): void {
+                    AuditEntryFilters::forUser($query, $this->userId);
+                    AuditEntryFilters::forSession($query, $this->sessionTrail);
+                },
             ))
-            ->defaultSort(fn (Builder $query): Builder => $query->orderByDesc('created_at')->orderByDesc('id'))
+            // One session reads in the order it happened; everything else, newest first.
+            ->defaultSort(fn (Builder $query): Builder => $this->isFilteredToSession()
+                ? $query->orderBy('created_at')->orderBy('id')
+                : $query->orderByDesc('created_at')->orderByDesc('id'))
             ->extraAttributes(['class' => 'ui-cells-top'])
             // The whole phrase, as the export searches: the two must hold the same rows.
             ->splitSearchTerms(false)
@@ -128,6 +140,13 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
                         ->label(__('admin.view'))
                         ->icon('heroicon-o-eye')
                         ->url(fn (AuditEntry $record): string => route('audit.show', $record)),
+
+                    // What else happened in the same sitting; pointless once the list is one session.
+                    Action::make('session')
+                        ->label(__('audit.view_session'))
+                        ->icon('heroicon-o-queue-list')
+                        ->url(fn (AuditEntry $record): ?string => $record->session_trail === null ? null : route('audit.index', ['session' => $record->session_trail]))
+                        ->visible(fn (AuditEntry $record): bool => $record->session_trail !== null && ! $this->isFilteredToSession()),
                 ]),
             ]);
     }
@@ -155,6 +174,11 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         return AuditEntryFilters::userId($this->userId) !== null;
     }
 
+    public function isFilteredToSession(): bool
+    {
+        return SessionTrail::normalize($this->sessionTrail) !== null;
+    }
+
     /** The person the list is narrowed to. A permanently deleted one still has entries. */
     public function filteredUser(): ?User
     {
@@ -175,6 +199,7 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
             'date' => data_get($this->tableFilters, 'date.value'),
             'search' => $this->tableSearch,
             'user' => $this->isFilteredToUser() ? $this->userId : null,
+            'session' => $this->isFilteredToSession() ? $this->sessionTrail : null,
         ];
     }
 
