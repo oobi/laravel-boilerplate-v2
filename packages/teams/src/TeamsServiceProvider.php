@@ -10,6 +10,7 @@ use App\Support\AccountArea\AccountAreaRegistry;
 use App\Support\AccountArea\AccountShell;
 use App\Support\AccountMenu\AccountMenuRegistry;
 use App\Support\Audit\AuditDisplay;
+use App\Support\Auth\ExpiredForms;
 use App\Support\Auth\LoginRedirectRegistry;
 use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavItem;
@@ -124,6 +125,9 @@ class TeamsServiceProvider extends ServiceProvider
         $this->registerAccountArea();
         $this->registerTrustedHosts();
         $this->registerUserDeletionGuard();
+
+        // Sign-up from an invitation is a guest form too: a stale one goes back to itself, not the 419 page.
+        ExpiredForms::register('team.invitations.register.store');
 
         // The owner is always a member. Ownership itself is structural
         // (teams.user_id) — a shield, not a permission bypass — so the owner's

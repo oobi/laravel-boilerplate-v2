@@ -4,12 +4,14 @@ use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureRememberedUserIsNotLockedOut;
 use App\Http\Middleware\WarnAboutUntrustedProxy;
 use App\Support\Auth\Destination;
+use App\Support\Auth\ExpiredForms;
 use App\Support\TrustedHosts;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\AuthenticateSession;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -57,5 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // A sign-in form left open past the session lifetime goes back to the form
+        // with a notice instead of the 419 page. Other forms keep the 419 page.
+        $exceptions->render(fn (HttpException $e, Request $request) => ExpiredForms::recover($e, $request));
     })->create();

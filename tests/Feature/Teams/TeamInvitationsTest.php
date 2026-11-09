@@ -333,6 +333,29 @@ class TeamInvitationsTest extends TestCase
         $this->assertModelMissing($invitation);
     }
 
+    public function test_a_stale_invitation_sign_up_goes_back_to_its_form_with_a_notice(): void
+    {
+        $this->enforceCsrfTokens();
+        $team = $this->team(User::factory()->create());
+        $invitation = TeamInvitation::factory()->create(['team_id' => $team->id, 'email' => 'newcomer@example.com', 'role' => 'Member']);
+        $storeUrl = URL::signedRoute('team.invitations.register.store', ['invitation' => $invitation]);
+
+        $this->post($storeUrl, [
+            '_token' => 'stale',
+            'first_name' => 'New',
+            'password' => 'Str0ng-passw0rd!',
+        ])
+            ->assertRedirect($storeUrl)
+            ->assertSessionHasInput('first_name', 'New')
+            ->assertSessionMissing('_old_input.password');
+
+        $this->get($storeUrl)
+            ->assertOk()
+            ->assertSeeText(__('auth.page_expired'))
+            ->assertSee('value="New"', false);
+        $this->assertDatabaseMissing('users', ['email' => 'newcomer@example.com']);
+    }
+
     public function test_the_invitation_registration_pages_must_be_signed(): void
     {
         $team = $this->team(User::factory()->create());

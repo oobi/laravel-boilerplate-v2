@@ -284,6 +284,28 @@ sees `http://`, see `TRUSTED_PROXIES`), or with `www` in one and not the other.
   proxy keeps blocking everyone, the fix is `TRUSTED_PROXIES`, not unblocking.
 - A throttled request gets the branded `errors/429` page.
 
+## Forms left open too long
+
+A sign-in page left open past `SESSION_LIFETIME` (120 minutes) posts a CSRF
+token whose session has gone, which is a 419. So does a login tab left open
+while you sign in or out in another. On the sign-in forms, that doesn't show
+the "Page expired" page: `App\Support\Auth\ExpiredForms` sends the
+user back to the form with what they typed (never a password, code or reset
+token) and a notice above it, so they just submit again.
+
+- **Which forms:** login, register, forgot password, confirm password and reset
+  password (back to its emailed link). An expired 2FA challenge goes back to
+  login, since the challenge was in the session too. Anything else, JSON
+  requests included, keeps the 419 page.
+- **Your own form** on the sign-in layout (`layouts.login`): call
+  `ExpiredForms::register('your.route.store')` from your provider's `boot()`.
+  It goes back to the posted URL by default; pass a closure to send it
+  elsewhere. The teams tier registers its invitation sign-up this way.
+- CSRF protection stays on: the target comes from that list, never the
+  Referer header. A cross-site post to one of these forms now gets a redirect
+  back to it (fields filled in, notice shown) instead of a 419. It still can't
+  sign anyone in, so that trade-off is deliberate.
+
 ## Mandatory two-factor
 
 2FA can be made mandatory **per role**. Turn on **Require two factor
