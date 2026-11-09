@@ -5,6 +5,7 @@ namespace Tests;
 use App\Support\AccountArea\AccountAreaRegistry;
 use App\Support\AccountMenu\AccountMenuRegistry;
 use App\Support\Audit\AuditDisplay;
+use App\Support\Auth\ExpiredForms;
 use App\Support\Auth\LoginRedirectRegistry;
 use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavRegistry;
@@ -15,6 +16,9 @@ use App\Support\TrustedHosts;
 use App\Support\UserDeletionGuards;
 use App\Support\UserListColumns;
 use Database\Seeders\PermissionSeeder;
+use Illuminate\Contracts\Encryption\Encrypter;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Http\Request;
 use Illuminate\Testing\TestResponse;
@@ -41,6 +45,7 @@ abstract class TestCase extends BaseTestCase
         RoleScopeRegistry::flush();
         SystemPermissionRegistry::flush();
         LoginRedirectRegistry::flush();
+        ExpiredForms::flush();
         AccountAreaRegistry::flush();
         Breadcrumbs::flush();
         TrustedHosts::flush();
@@ -84,6 +89,21 @@ abstract class TestCase extends BaseTestCase
             '_token' => csrf_token(),
             'components' => [['snapshot' => html_entity_decode($snapshot[1]), 'updates' => (object) [], 'calls' => []]],
         ]);
+    }
+
+    /**
+     * Check CSRF tokens as production does. Laravel skips the check while unit
+     * tests run, so a test of what a stale or missing token does needs this.
+     */
+    protected function enforceCsrfTokens(): void
+    {
+        $this->app->bind(ValidateCsrfToken::class, fn (Application $app): ValidateCsrfToken => new class($app, $app->make(Encrypter::class)) extends ValidateCsrfToken
+        {
+            protected function runningUnitTests(): bool
+            {
+                return false;
+            }
+        });
     }
 
     /**

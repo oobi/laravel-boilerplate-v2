@@ -11,6 +11,7 @@ return [
     'inactive' => 'These credentials do not match our records.',
     'no_workspace' => 'Your account isn’t set up to access anything yet. Please contact an administrator.',
     'current_password_mismatch' => 'The provided password does not match your current password.',
+    'page_expired' => 'This form expired. Please try again.',
     'reset_link_sent' => 'If an account exists for that email, a password reset link has been sent.',
 
     'two_factor_locked_out' => 'Your account is locked because two factor authentication was not set up in time. Please contact an administrator to restore access.',

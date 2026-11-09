@@ -29,7 +29,7 @@
 
         <div class="flex items-center justify-between">
             <label class="label cursor-pointer gap-2">
-                <input type="checkbox" name="remember" class="checkbox checkbox-sm">
+                <input type="checkbox" name="remember" class="checkbox checkbox-sm" @checked(old('remember'))>
                 {{ __('Remember me') }}
             </label>
 

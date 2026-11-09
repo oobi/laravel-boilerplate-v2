@@ -23,6 +23,11 @@
         <x-application-logo size="h-16" />
 
         <x-card bordered="false" class="w-full shadow-xl">
+            {{-- Set by App\Support\Auth\ExpiredForms when a form here was submitted after its session expired. --}}
+            @session(\App\Support\Auth\ExpiredForms::FLASH_KEY)
+                <x-alert color="warning">{{ __('auth.page_expired') }}</x-alert>
+            @endsession
+
             @yield('content')
         </x-card>
     </main>
