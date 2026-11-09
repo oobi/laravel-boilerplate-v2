@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Panels;
 
+use App\Panels\Users\ActivityPanel;
 use App\Panels\Users\SecurityPanel;
 use App\Panels\Users\StatisticsPanel;
 use App\Panels\Users\UserInformationFormSection;
@@ -18,6 +19,10 @@ class AdminPanels
             StatisticsPanel::class,
             SecurityPanel::class,
         );
+
+        if (config('activitylog.enabled')) {
+            PanelRegistry::for('users.show')->add(ActivityPanel::class);
+        }
 
         PanelRegistry::for('users.edit')->add(
             UserInformationFormSection::class,

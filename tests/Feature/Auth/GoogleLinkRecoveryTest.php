@@ -10,9 +10,12 @@ use App\Models\SocialAccount;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 use Livewire\Livewire;
+use RuntimeException;
+use Spatie\Activitylog\Actions\LogActivityAction;
 use Tests\TestCase;
 
 /**
@@ -51,6 +54,29 @@ class GoogleLinkRecoveryTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $this->assertNull($user->fresh()->googleAccount);
+    }
+
+    /** All or nothing: a changed password must not leave a hijacker's link behind. */
+    public function test_a_reset_by_email_link_changes_nothing_if_the_unlink_cannot_be_recorded(): void
+    {
+        $user = $this->linkedUser();
+        $token = Password::createToken($user);
+        LogActivityAction::beforeLogging(fn () => throw new RuntimeException('The audit log is down.'));
+
+        try {
+            $this->post(route('password.update'), [
+                'token' => $token,
+                'email' => $user->email,
+                'password' => 'a-new-long-password-1',
+                'password_confirmation' => 'a-new-long-password-1',
+            ])->assertServerError();
+        } finally {
+            LogActivityAction::clearBeforeLoggingCallbacks();
+        }
+
+        $this->assertTrue(Hash::check('password', $user->fresh()->password));
+        $this->assertNotNull($user->fresh()->googleAccount);
+        $this->assertTrue(Password::tokenExists($user, $token));
     }
 
     public function test_an_admin_setting_the_password_drops_the_google_link_and_says_so(): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Models;
 
+use App\Models\Concerns\Auditable;
 use Concise\Teams\Database\Factories\DomainFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -31,7 +33,7 @@ use Illuminate\Support\Str;
 class Domain extends Model
 {
     /** @use HasFactory<DomainFactory> */
-    use HasFactory;
+    use Auditable, HasFactory;
 
     /** Cache key for verifiedHosts(). */
     public const VERIFIED_HOSTS_CACHE_KEY = 'teams:verified-domains';
@@ -53,9 +55,15 @@ class Domain extends Model
             }
         });
 
-        // A verified, changed or removed domain is trusted (or not) from the next request.
-        static::saved(fn (): bool => Cache::forget(self::VERIFIED_HOSTS_CACHE_KEY));
-        static::deleted(fn (): bool => Cache::forget(self::VERIFIED_HOSTS_CACHE_KEY));
+        // A verified, changed or removed domain is trusted (or not) from the next
+        // request. After the commit: another request could otherwise re-cache the
+        // old list in between, and a removed domain would stay trusted for a day.
+        $forgetVerifiedHosts = function (): void {
+            DB::afterCommit(fn (): bool => Cache::forget(self::VERIFIED_HOSTS_CACHE_KEY));
+        };
+
+        static::saved($forgetVerifiedHosts);
+        static::deleted($forgetVerifiedHosts);
     }
 
     /**

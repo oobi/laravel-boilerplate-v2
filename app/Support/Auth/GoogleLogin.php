@@ -7,6 +7,9 @@ namespace App\Support\Auth;
 use App\Enums\SocialProvider;
 use App\Models\SocialAccount;
 use App\Models\User;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\AbstractUser as GoogleUser;
@@ -67,7 +70,17 @@ final class GoogleLogin
      */
     public static function unlink(User $user): bool
     {
-        return $user->googleAccount()->delete() > 0;
+        return DB::transaction(function () use ($user): bool {
+            $googleEmail = $user->googleAccount()->value('email');
+
+            if ($user->googleAccount()->delete() === 0) {
+                return false;
+            }
+
+            Audit::record('user.google_unlinked', $user, ['google_email' => $googleEmail], category: AuditCategory::SECURITY);
+
+            return true;
+        });
     }
 
     /** The link for this Google account, matched on its stable id. */

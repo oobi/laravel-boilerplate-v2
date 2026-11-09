@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Role;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Roles\Implications;
 use App\Support\Roles\RoleScope;
 use App\Support\Roles\RoleScopeRegistry;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -83,12 +86,21 @@ class SyncRoleImplicationsCommand extends Command
         foreach ($gaps as $gap) {
             // Straight from the table, as Team::createRole() does — findOrCreate's
             // cache can be stale when model events are off.
-            $gap['role']->givePermissionTo(collect($gap['missing'])
-                ->map(fn (string $name): Permission => Permission::query()->firstOrCreate([
-                    'name' => $name,
-                    'guard_name' => $guard,
-                ]))
-                ->all());
+            DB::transaction(function () use ($gap, $guard): void {
+                $before = $gap['role']->permissions()->pluck('name')->sort()->values()->all();
+
+                $gap['role']->givePermissionTo(collect($gap['missing'])
+                    ->map(fn (string $name): Permission => Permission::query()->firstOrCreate([
+                        'name' => $name,
+                        'guard_name' => $guard,
+                    ]))
+                    ->all());
+
+                Audit::record('role.permissions_changed', $gap['role'], [
+                    'before' => $before,
+                    'after' => $gap['role']->permissions()->pluck('name')->sort()->values()->all(),
+                ], category: AuditCategory::ACCESS);
+            });
 
             $granted += count($gap['missing']);
         }

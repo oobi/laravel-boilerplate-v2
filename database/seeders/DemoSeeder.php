@@ -6,6 +6,7 @@ namespace Database\Seeders;
 use Concise\Teams\Database\Seeders\Demo\TeamSeeder;
 use Concise\Teams\Database\Seeders\TeamRolesSeeder;
 // teams:end
+use Database\Seeders\Demo\AuditSeeder;
 use Database\Seeders\Demo\RefusesProduction;
 use Database\Seeders\Demo\UserSeeder;
 use Illuminate\Database\Seeder;
@@ -40,5 +41,7 @@ class DemoSeeder extends Seeder
             $this->call(TeamSeeder::class);
         }
         // teams:end
+
+        $this->call(AuditSeeder::class);
     }
 }

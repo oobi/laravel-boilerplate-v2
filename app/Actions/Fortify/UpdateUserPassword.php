@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions\Fortify;
 
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
@@ -23,8 +26,12 @@ class UpdateUserPassword implements UpdatesUserPasswords
             'current_password.current_password' => __('auth.current_password_mismatch'),
         ])->validateWithBag('updatePassword');
 
-        $user->forceFill([
-            'password' => Hash::make($input['password']),
-        ])->save();
+        DB::transaction(function () use ($user, $input): void {
+            $user->forceFill([
+                'password' => Hash::make($input['password']),
+            ])->save();
+
+            Audit::record('user.password_changed', $user, category: AuditCategory::SECURITY);
+        });
     }
 }

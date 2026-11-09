@@ -7,6 +7,8 @@ namespace App\Livewire\Admin\Roles;
 use App\Enums\SystemPermission;
 use App\Livewire\Admin\Roles\Concerns\HasPermissionsSchema;
 use App\Models\Role;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Roles\Coverage;
 use App\Support\Roles\RoleScope;
 use App\Support\Roles\RoleScopeRegistry;
@@ -24,6 +26,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -168,15 +171,26 @@ class ManageRoles extends Component implements HasActions, HasSchemas
         // Covered before (canEditRole) and after: no adding a permission the editor lacks.
         abort_unless($this->mayGrantAll($permissions), 403);
 
-        $this->role->update([
-            'name' => $data['name'],
-            'color' => $data['color'],
-            'requires_two_factor' => $this->scopeKey === Role::SYSTEM_SCOPE && ($data['requires_two_factor'] ?? false),
-        ]);
+        DB::transaction(function () use ($data, $permissions): void {
+            $before = $this->role->permissions()->pluck('name')->sort()->values()->all();
 
-        $this->role->syncPermissions(collect($permissions)
-            ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
-            ->all());
+            $this->role->update([
+                'name' => $data['name'],
+                'color' => $data['color'],
+                'requires_two_factor' => $this->scopeKey === Role::SYSTEM_SCOPE && ($data['requires_two_factor'] ?? false),
+            ]);
+
+            $this->role->syncPermissions(collect($permissions)
+                ->map(fn (string $permission): Permission => Permission::findOrCreate($permission))
+                ->all());
+
+            $after = $this->role->permissions()->pluck('name')->sort()->values()->all();
+
+            // Permission grants are pivot writes, which no model event reports.
+            if ($before !== $after) {
+                Audit::record('role.permissions_changed', $this->role, ['before' => $before, 'after' => $after], category: AuditCategory::ACCESS);
+            }
+        });
 
         Notification::make()
             ->title(__('admin.role_updated'))

@@ -8,6 +8,8 @@ use App\Enums\SocialProvider;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Notifications\Auth\GoogleAccountLinked;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Auth\GoogleLogin;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -35,11 +37,15 @@ class LinkGoogleAccount
                     GoogleLogin::refuse('auth.google_already_linked');
                 }
 
-                return $user->googleAccount()->create([
+                $account = $user->googleAccount()->create([
                     'provider' => SocialProvider::GOOGLE,
                     'provider_user_id' => (string) $googleUser->getId(),
                     'email' => $email,
                 ]);
+
+                Audit::record('user.google_linked', $user, ['google_email' => $email], category: AuditCategory::SECURITY);
+
+                return $account;
             });
         } catch (UniqueConstraintViolationException) {
             // Another request linked the same account (or this user) a moment ago.

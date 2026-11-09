@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Panels\Users;
 
 use App\Enums\UserAbility;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Auth\GoogleLogin;
 use App\Support\Panels\Concerns\HasPanelMetadata;
 use App\Support\Panels\Contracts\HasGuardedActions;
@@ -15,6 +17,7 @@ use App\Support\TwoFactor\GracePeriod;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -53,11 +56,15 @@ class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
             'force-disable-2fa' => function (Model $subject): void {
                 Gate::authorize(UserAbility::RESET_TWO_FACTOR_AUTHENTICATION, $subject);
 
-                $subject->forceFill([
-                    'two_factor_secret' => null,
-                    'two_factor_recovery_codes' => null,
-                    'two_factor_confirmed_at' => null,
-                ])->save();
+                DB::transaction(function () use ($subject): void {
+                    $subject->forceFill([
+                        'two_factor_secret' => null,
+                        'two_factor_recovery_codes' => null,
+                        'two_factor_confirmed_at' => null,
+                    ])->save();
+
+                    Audit::record('two_factor.force_disabled', $subject, category: AuditCategory::ACCESS);
+                });
 
                 Notification::make()
                     ->title(__('admin.two_factor_force_disabled'))
@@ -77,7 +84,11 @@ class SecurityPanel implements HasGuardedActions, HasPanelActions, ShowPanel
             'reset-2fa-grace' => function (Model $subject): void {
                 Gate::authorize(UserAbility::MANAGE_TWO_FACTOR_GRACE, $subject);
 
-                GracePeriod::reset($subject);
+                DB::transaction(function () use ($subject): void {
+                    GracePeriod::reset($subject);
+
+                    Audit::record('two_factor.grace_reset', $subject, category: AuditCategory::ACCESS);
+                });
 
                 Notification::make()
                     ->title(__('admin.two_factor_grace_reset'))

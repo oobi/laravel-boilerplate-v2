@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\SocialProvider;
 use App\Enums\SystemPermission;
 use App\Enums\UserStatus;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\HasProfilePhoto;
 use App\Models\Concerns\HasSuperAdminFlag;
 use App\Notifications\Auth\QueuedResetPassword;
@@ -35,8 +36,8 @@ class User extends Authenticatable implements MustVerifyEmail
     // teams:start — teams composes HasTeams alongside HasRoles here to resolve the
     // teams() name clash (spatie's HasRoles also declares an introspection-only teams()).
     // On uninstall bp:remove-teams replaces this whole block with the canonical line below:
-    // teams:canonical: use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
-    use HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, HasTeams, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
+    // teams:canonical: use Auditable, HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use Auditable, HasFactory, HasProfilePhoto, HasRoles, HasSuperAdminFlag, HasTeams, Impersonate, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
         HasTeams::teams insteadof HasRoles;
     }
     // teams:end
@@ -64,6 +65,26 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
+    ];
+
+    /**
+     * Left out of `user.updated`. Each is either noise, such as the rehash on login
+     * and the last login time, or has its own named entry: `user.deactivated`,
+     * `user.super_admin_granted`, `user.password_changed`, `two_factor.disabled`.
+     *
+     * @var list<string>
+     */
+    protected array $auditExcept = [
+        'password',
+        'remember_token',
+        'active',
+        'is_super_admin',
+        'email_verified_at',
+        'last_login_at',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
+        'two_factor_grace_started_at',
     ];
 
     /**

@@ -38,6 +38,8 @@ enum SystemPermission: string implements SystemPermissionDefinition
     case IMPERSONATE_USERS = 'impersonate users';
     case SET_USER_PASSWORDS = 'set user passwords';
     case MANAGE_ROLES = 'manage roles';
+    case VIEW_AUDIT_LOG = 'view audit log';
+    case EXPORT_AUDIT_LOG = 'export audit log';
 
     public function label(): string
     {
@@ -50,6 +52,8 @@ enum SystemPermission: string implements SystemPermissionDefinition
             self::IMPERSONATE_USERS => __('permissions.labels.impersonate_users'),
             self::SET_USER_PASSWORDS => __('permissions.labels.set_user_passwords'),
             self::MANAGE_ROLES => __('permissions.labels.manage_roles'),
+            self::VIEW_AUDIT_LOG => __('permissions.labels.view_audit_log'),
+            self::EXPORT_AUDIT_LOG => __('permissions.labels.export_audit_log'),
         };
     }
 
@@ -65,6 +69,9 @@ enum SystemPermission: string implements SystemPermissionDefinition
             self::MANAGE_ROLES => __('permissions.categories.user_management'),
 
             self::ACCESS_ADMIN_PANEL => __('permissions.categories.system_administration'),
+
+            self::VIEW_AUDIT_LOG,
+            self::EXPORT_AUDIT_LOG => __('permissions.categories.audit_log'),
         };
     }
 
@@ -89,7 +96,10 @@ enum SystemPermission: string implements SystemPermissionDefinition
             self::IMPERSONATE_USERS,
             self::SET_USER_PASSWORDS => [self::VIEW_USERS],
 
-            self::MANAGE_ROLES => [self::ACCESS_ADMIN_PANEL],
+            self::MANAGE_ROLES,
+            self::VIEW_AUDIT_LOG => [self::ACCESS_ADMIN_PANEL],
+
+            self::EXPORT_AUDIT_LOG => [self::VIEW_AUDIT_LOG],
 
             default => [],
         };

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\User;
 use App\Support\Auth\MailedLinks;
 use Concise\Teams\Database\Factories\TeamInvitationFactory;
@@ -37,7 +38,7 @@ use Illuminate\Support\Facades\URL;
 class TeamInvitation extends Model
 {
     /** @use HasFactory<TeamInvitationFactory> */
-    use HasFactory;
+    use Auditable, HasFactory;
 
     use Prunable;
 

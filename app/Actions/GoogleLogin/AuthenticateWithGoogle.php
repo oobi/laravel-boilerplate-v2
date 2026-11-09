@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\GoogleLogin;
 
 use App\Models\User;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Auth\GoogleLogin;
 use App\Support\Auth\LoginEligibility;
 use Laravel\Socialite\AbstractUser as GoogleUser;
@@ -54,7 +56,12 @@ class AuthenticateWithGoogle
         if ($account === null) {
             $this->linkGoogleAccount->handle($user, $googleUser);
         } elseif ($account->email !== $email) {
+            $previousEmail = $account->email;
+
             $account->update(['email' => $email]);
+
+            // Attempted, as this is a sign-in, which an audit outage must not stop.
+            Audit::attempt('user.google_email_changed', $user, ['before' => $previousEmail, 'after' => $email], AuditCategory::SECURITY);
         }
 
         return $user;

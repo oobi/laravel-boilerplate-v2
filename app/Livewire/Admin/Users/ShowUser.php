@@ -10,6 +10,8 @@ use App\Enums\UserAbility;
 use App\Livewire\Concerns\ConfirmsPassword;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Auth\Destination;
 use App\Support\Auth\GoogleLogin;
 use App\Support\Filament\AdminAction;
@@ -38,6 +40,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -213,7 +216,17 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
                     abort_unless($chosen->diff($held)->merge($held->diff($chosen))->every(fn (string $name): bool => $this->mayChangeRole($name)), 403);
 
-                    $this->user->syncRoles($chosen->all());
+                    // Role assignments are pivot writes, which no model event reports.
+                    DB::transaction(function () use ($held, $chosen): void {
+                        $this->user->syncRoles($chosen->all());
+
+                        if ($held->sort()->values()->all() !== $chosen->sort()->values()->all()) {
+                            Audit::record('user.roles_changed', $this->user, [
+                                'before' => $held->sort()->values()->all(),
+                                'after' => $chosen->sort()->values()->all(),
+                            ], category: AuditCategory::ACCESS);
+                        }
+                    });
                 }
 
                 if (Gate::allows(UserAbility::GRANT_SUPER_ADMIN, $this->user)
@@ -282,10 +295,14 @@ class ShowUser extends Component implements HasActions, HasSchemas
                     // check and log out on its next request — no explicit
                     // logoutOtherDevices() is possible here (that acts on the
                     // acting guard, and the admin is not the target).
-                    $this->user->update(['password' => Hash::make($data['password'])]);
+                    $unlinkedGoogle = DB::transaction(function () use ($data): bool {
+                        $this->user->update(['password' => Hash::make($data['password'])]);
 
-                    // A recovery: a Google link someone else made must not outlive it (#61).
-                    $unlinkedGoogle = GoogleLogin::unlink($this->user);
+                        Audit::record('user.password_set_by_admin', $this->user, category: AuditCategory::ACCESS);
+
+                        // A recovery: a Google link someone else made must not outlive it (#61).
+                        return GoogleLogin::unlink($this->user);
+                    });
 
                     Notification::make()
                         ->title(__('admin.password_reset_success'))
@@ -304,7 +321,10 @@ class ShowUser extends Component implements HasActions, HasSchemas
                 abort_if($this->user->trashed(), 404);
                 Gate::authorize(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user);
 
-                Password::sendResetLink(['email' => $this->user->email]);
+                // A throttled repeat sends nothing, so there's nothing to record.
+                if (Password::sendResetLink(['email' => $this->user->email]) === Password::RESET_LINK_SENT) {
+                    Audit::record('user.password_reset_link_sent', $this->user, category: AuditCategory::ACCESS);
+                }
 
                 Notification::make()
                     ->title(__('admin.password_reset_link_sent'))

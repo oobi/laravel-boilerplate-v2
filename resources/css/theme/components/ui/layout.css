@@ -100,7 +100,7 @@
 
     /* Page Title Pattern */
     .ui-page-title {
-        @apply text-2xl font-bold text-base-content;
+        @apply text-2xl font-bold text-base-content wrap-break-word;
     }
 
     /* Takes the room beside the actions, never less than a readable column; below that the actions wrap underneath. */
@@ -109,7 +109,7 @@
     }
 
     .ui-page-title-description {
-        @apply text-muted mt-1 text-sm max-w-3xl;
+        @apply text-muted mt-1 text-sm max-w-3xl wrap-break-word;
     }
 
     .ui-page-actions {

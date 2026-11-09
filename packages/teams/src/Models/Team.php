@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Concise\Teams\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Audit\Audit;
+use App\Support\Audit\AuditCategory;
 use App\Support\Theme\DaisyColor;
 use Concise\Teams\Database\Factories\TeamFactory;
 use Concise\Teams\Enums\TeamPermission;
@@ -50,7 +53,7 @@ use Spatie\Permission\PermissionRegistrar;
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
-    use HasFactory, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
 
     /**
      * @var list<string>
@@ -311,14 +314,43 @@ class Team extends Model
             throw new InvalidArgumentException(sprintf('%s is not a member of %s.', $user->email, $this->name));
         }
 
-        $this->users()->updateExistingPivot($user->getKey(), ['suspended_at' => now()]);
+        DB::transaction(function () use ($user): void {
+            $wasSuspended = $this->isSuspended($user);
+
+            $this->users()->updateExistingPivot($user->getKey(), ['suspended_at' => now()]);
+
+            if (! $wasSuspended) {
+                $this->recordMemberEvent('team.member_suspended', $user);
+            }
+        });
+
         $this->forgetMembership($user);
     }
 
     public function reinstateMember(User $user): void
     {
-        $this->users()->updateExistingPivot($user->getKey(), ['suspended_at' => null]);
+        DB::transaction(function () use ($user): void {
+            $wasSuspended = $this->isSuspended($user);
+
+            $this->users()->updateExistingPivot($user->getKey(), ['suspended_at' => null]);
+
+            if ($wasSuspended) {
+                $this->recordMemberEvent('team.member_reinstated', $user);
+            }
+        });
+
         $this->forgetMembership($user);
+    }
+
+    /**
+     * Membership lives in pivots, which no model event reports, so each change to
+     * it records itself here.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    private function recordMemberEvent(string $event, User $user, array $properties = []): void
+    {
+        Audit::record($event, $this, ['member_id' => $user->getKey(), 'member' => $user->email, ...$properties], category: AuditCategory::ACCESS);
     }
 
     /**
@@ -378,7 +410,16 @@ class Team extends Model
             return;
         }
 
-        $this->users()->updateExistingPivot($user->getKey(), ['is_owner' => true]);
+        DB::transaction(function () use ($user): void {
+            $wasOwner = $this->isOwnedBy($user);
+
+            $this->users()->updateExistingPivot($user->getKey(), ['is_owner' => true]);
+
+            if (! $wasOwner) {
+                $this->recordMemberEvent('team.owner_added', $user);
+            }
+        });
+
         $this->forgetMembership($user);
     }
 
@@ -389,7 +430,16 @@ class Team extends Model
             throw new InvalidArgumentException('The primary owner cannot be demoted — transfer ownership first.');
         }
 
-        $this->users()->updateExistingPivot($user->getKey(), ['is_owner' => false]);
+        DB::transaction(function () use ($user): void {
+            $wasOwner = $this->isOwnedBy($user);
+
+            $this->users()->updateExistingPivot($user->getKey(), ['is_owner' => false]);
+
+            if ($wasOwner) {
+                $this->recordMemberEvent('team.owner_removed', $user);
+            }
+        });
+
         $this->forgetMembership($user);
     }
 
@@ -412,14 +462,20 @@ class Team extends Model
 
         $previous = $this->user_id;
 
-        $this->update(['user_id' => $to->getKey()]);
-        $this->users()->updateExistingPivot($to->getKey(), ['is_owner' => false]);
-        $this->users()->updateExistingPivot($previous, ['is_owner' => true]);
-        $this->forgetMembership($to);
-        $this->forgetMembership($this->owner);
-        $this->unsetRelation('owner');
+        DB::transaction(function () use ($to, $previous): void {
+            // The named entry below says it better than a team.updated beside it.
+            Audit::withoutLogging(fn () => $this->update(['user_id' => $to->getKey()]));
 
-        $this->ensureHoldsDefaultOwnerRole($to);
+            $this->users()->updateExistingPivot($to->getKey(), ['is_owner' => false]);
+            $this->users()->updateExistingPivot($previous, ['is_owner' => true]);
+            $this->forgetMembership($to);
+            $this->forgetMembership($this->owner);
+            $this->unsetRelation('owner');
+
+            $this->ensureHoldsDefaultOwnerRole($to);
+
+            Audit::record('team.ownership_transferred', $this, ['before' => $previous, 'after' => $to->getKey()], category: AuditCategory::ACCESS);
+        });
     }
 
     /** Whether a member may hold more than one team role (config `teams.multiple_roles_per_member`). */
@@ -593,29 +649,36 @@ class Team extends Model
             ));
         }
 
-        $role = Role::query()->create([
-            'name' => $name,
-            'guard_name' => $guard,
-            'color' => $color,
-            ...app(TeamRoleScope::class)->attributes(),
-        ]);
+        return DB::transaction(function () use ($name, $guard, $color, $permissions): Role {
+            $role = Role::query()->create([
+                'name' => $name,
+                'guard_name' => $guard,
+                'color' => $color,
+                ...app(TeamRoleScope::class)->attributes(),
+            ]);
 
-        if ($permissions !== []) {
-            // Stored closed over its implications (manage carries view), so the
-            // stored role is the truth. Straight from the table, not
-            // Permission::findOrCreate(): spatie answers that from a cache it
-            // flushes via model events, which are off inside WithoutModelEvents
-            // seeders — a stale "missing" there turns into a duplicate insert.
-            // givePermissionTo flushes explicitly.
-            $role->givePermissionTo(collect(TeamPermission::withImplied($permissions))
-                ->map(fn (TeamPermission $permission): Permission => Permission::query()->firstOrCreate([
-                    'name' => $permission->value,
-                    'guard_name' => $guard,
-                ]))
-                ->all());
-        }
+            if ($permissions !== []) {
+                // Stored closed over its implications (manage carries view), so the
+                // stored role is the truth. Straight from the table, not
+                // Permission::findOrCreate(): spatie answers that from a cache it
+                // flushes via model events, which are off inside WithoutModelEvents
+                // seeders: a stale "missing" there turns into a duplicate insert.
+                // givePermissionTo flushes explicitly.
+                $role->givePermissionTo(collect(TeamPermission::withImplied($permissions))
+                    ->map(fn (TeamPermission $permission): Permission => Permission::query()->firstOrCreate([
+                        'name' => $permission->value,
+                        'guard_name' => $guard,
+                    ]))
+                    ->all());
 
-        return $role;
+                Audit::record('role.permissions_changed', $role, [
+                    'before' => [],
+                    'after' => $role->permissions()->pluck('name')->sort()->values()->all(),
+                ], category: AuditCategory::ACCESS);
+            }
+
+            return $role;
+        });
     }
 
     /**
@@ -665,7 +728,17 @@ class Team extends Model
             }
         }
 
-        $membership->roles()->sync($ids->values()->all());
+        DB::transaction(function () use ($membership, $ids, $user): void {
+            $before = $membership->roles()->pluck('name')->sort()->values()->all();
+            $after = $ids->keys()->sort()->values()->all();
+
+            $membership->roles()->sync($ids->values()->all());
+
+            if ($before !== $after) {
+                $this->recordMemberEvent('team.member_roles_changed', $user, ['before' => $before, 'after' => $after]);
+            }
+        });
+
         $this->forgetMembership($user);
     }
 
@@ -685,7 +758,12 @@ class Team extends Model
             return;
         }
 
-        $this->users()->detach($user->getKey());
+        DB::transaction(function () use ($user): void {
+            if ($this->users()->detach($user->getKey()) > 0) {
+                $this->recordMemberEvent('team.member_removed', $user);
+            }
+        });
+
         $this->forgetMembership($user);
     }
 
@@ -702,11 +780,16 @@ class Team extends Model
     {
         $roles = array_values(array_filter((array) $roles));
 
-        $this->users()->syncWithoutDetaching([$user->getKey()]);
-        $this->forgetMembership($user);
+        DB::transaction(function () use ($user, $roles): void {
+            if ($this->users()->syncWithoutDetaching([$user->getKey()])['attached'] !== []) {
+                $this->recordMemberEvent('team.member_added', $user);
+            }
 
-        if ($roles !== []) {
-            $this->syncMemberRoles($user, $roles);
-        }
+            $this->forgetMembership($user);
+
+            if ($roles !== []) {
+                $this->syncMemberRoles($user, $roles);
+            }
+        });
     }
 }

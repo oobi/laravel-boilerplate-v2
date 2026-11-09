@@ -33,7 +33,8 @@ class TierFencesTest extends TestCase
                 $stripped = (new MarkerStripper)->strip($contents);
                 File::put($scratch.'/'.str_replace('/', '_', $path), $stripped);
 
-                $this->assertTrue(Process::run([PHP_BINARY, '-l', $scratch.'/'.str_replace('/', '_', $path)])->successful(), $path.' does not lint once stripped');
+                $lint = Process::run([PHP_BINARY, '-l', $scratch.'/'.str_replace('/', '_', $path)]);
+                $this->assertTrue($lint->successful(), $path.' does not lint once stripped: '.$lint->output().$lint->errorOutput());
                 $this->assertSame([], (new TierReferences)->in($stripped), $path.' still needs the tier');
             }
 

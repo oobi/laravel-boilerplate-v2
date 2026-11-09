@@ -27,6 +27,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -204,8 +205,10 @@ class ManageDomains extends Component implements HasActions, HasSchemas, HasTabl
             ->action(function (Domain $record): void {
                 abort_unless($this->canManage(), 403);
 
-                $this->team->domains()->update(['is_primary' => false]);
-                $record->update(['is_primary' => true]);
+                DB::transaction(function () use ($record): void {
+                    $this->team->domains()->update(['is_primary' => false]);
+                    $record->update(['is_primary' => true]);
+                });
 
                 Notification::make()->title(team_trans('domains.made_primary', ['domain' => $record->domain]))->success()->send();
             });

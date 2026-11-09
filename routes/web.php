@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\SystemPermission;
+use App\Http\Controllers\AuditExportController;
 use App\Http\Controllers\GoogleLoginController;
 use App\Http\Controllers\ImpersonationController;
 // public:start
@@ -8,6 +9,8 @@ use App\Http\Controllers\ImpersonationController;
 // public:end
 use App\Http\Middleware\DenyLowAssuranceSessions;
 use App\Http\Middleware\RememberAccountArea;
+use App\Livewire\Admin\Audit\ListAuditEntries;
+use App\Livewire\Admin\Audit\ShowAuditEntry;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Roles\CreateRole;
 use App\Livewire\Admin\Roles\ManageRoles;
@@ -105,6 +108,20 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
             Route::get('/create', CreateRole::class)->name('create');
             Route::get('/{role}/edit', ManageRoles::class)->name('edit');
         });
+
+        if (config('activitylog.enabled')) {
+            Route::prefix('audit')->name('audit.')->group(function (): void {
+                Route::middleware('can:'.SystemPermission::VIEW_AUDIT_LOG->value)->group(function (): void {
+                    Route::get('/', ListAuditEntries::class)->name('index');
+                    // Digits that fit a bigint: Postgres errors on anything else rather than finding nothing.
+                    Route::get('/{entry}', ShowAuditEntry::class)->where('entry', '[0-9]{1,18}')->name('show');
+                });
+
+                Route::post('/export', AuditExportController::class)
+                    ->middleware('can:'.SystemPermission::EXPORT_AUDIT_LOG->value)
+                    ->name('export');
+            });
+        }
     });
 });
 
