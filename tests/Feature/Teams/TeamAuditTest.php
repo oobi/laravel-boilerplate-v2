@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Teams;
 
+use App\Enums\SystemPermission;
 use App\Models\AuditEntry;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Audit\Audit;
 use App\Support\Audit\AuditCategory;
+use App\Support\Audit\AuditDisplay;
 use Concise\Teams\Actions\AcceptInvitation;
 use Concise\Teams\Enums\TeamPermission;
+use Concise\Teams\Enums\TeamSystemPermission;
 use Concise\Teams\Livewire\Team\ManageDomains;
 use Concise\Teams\Models\Domain;
 use Concise\Teams\Models\Team;
@@ -47,6 +51,24 @@ class TeamAuditTest extends TestCase
         LogActivityAction::clearBeforeLoggingCallbacks();
 
         parent::tearDown();
+    }
+
+    public function test_a_team_is_only_linked_for_someone_who_may_open_it_and_only_while_it_exists(): void
+    {
+        Audit::record('note.added', $this->team);
+        $entry = AuditEntry::query()->where('event', 'note.added')->sole();
+
+        $this->actingAs(User::factory()->withPermission(TeamSystemPermission::VIEW_TEAMS)->create());
+        $this->assertSame(route('teams.show', $this->team), AuditDisplay::subject($entry)['url']);
+
+        $this->actingAs(User::factory()->withPermission(SystemPermission::VIEW_AUDIT_LOG)->create());
+        $this->assertNull(AuditDisplay::subject($entry)['url']);
+
+        $this->actingAs(User::factory()->superAdmin()->create());
+        $this->team->delete();
+        $subject = AuditDisplay::subject($entry->fresh());
+        $this->assertSame($this->team->name, $subject['label']);
+        $this->assertNull($subject['url']);
     }
 
     public function test_a_team_lifecycle_is_logged(): void

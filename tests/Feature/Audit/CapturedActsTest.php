@@ -574,7 +574,7 @@ class CapturedActsTest extends TestCase
         $this->assertFalse($this->wasRecorded('user.force_deleted'));
 
         $user->forceDelete();
-        $this->assertSame('User force deleted', $this->entry('user.force_deleted')->description);
+        $this->assertSame('User permanently deleted', $this->entry('user.force_deleted')->description);
     }
 
     public function test_impersonation_starting_and_leaving_are_recorded(): void

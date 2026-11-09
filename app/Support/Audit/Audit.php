@@ -10,6 +10,7 @@ use Closure;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -102,10 +103,19 @@ final class Audit
         return activity()->withoutLogging($callback);
     }
 
-    /** An event in words: `invoice.sent` reads "Invoice sent". */
+    /**
+     * An event in words: `invoice.sent` reads "Invoice sent". Core's own events
+     * read better written out (lang/en/audit.php, `events`), as can a project's.
+     */
     public static function describe(string $event): string
     {
-        return Str::ucfirst(str_replace(['.', '_'], ' ', $event));
+        $key = 'audit.events.'.str_replace('.', '_', $event);
+
+        if (Lang::has($key)) {
+            return __($key);
+        }
+
+        return Str::ucfirst(str_replace(' force deleted', ' permanently deleted', str_replace(['.', '_'], ' ', $event)));
     }
 
     /**

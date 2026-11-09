@@ -24,7 +24,7 @@ return [
         'impersonate_users' => 'Impersonate users',
         'set_user_passwords' => 'Set user passwords',
         'manage_roles' => 'Manage roles',
-        'view_audit_log' => 'View audit log',
+        'view_audit_log' => 'View audit log (shows names and email addresses)',
         'export_audit_log' => 'Export audit log',
     ],
 

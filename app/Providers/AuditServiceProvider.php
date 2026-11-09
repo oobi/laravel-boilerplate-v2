@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Enums\SystemPermission;
+use App\Models\Role;
+use App\Models\User;
 use App\Support\Audit\AuditActor;
+use App\Support\Audit\AuditDisplay;
 use App\Support\Audit\AuthEventSubscriber;
 use App\Support\Audit\SystemEventSubscriber;
 use Illuminate\Console\Scheduling\Schedule;
@@ -15,6 +19,7 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Lab404\Impersonate\Services\ImpersonateManager;
 
@@ -37,6 +42,21 @@ class AuditServiceProvider extends ServiceProvider
         Event::subscribe(SystemEventSubscriber::class);
 
         $this->scheduleRetentionClean();
+        $this->describeCoreSubjects();
+    }
+
+    /** A link only for a viewer who may open the page behind it. */
+    private function describeCoreSubjects(): void
+    {
+        AuditDisplay::registerSubject(User::class, fn (User $user): array => [
+            'label' => $user->name,
+            'url' => Gate::allows(SystemPermission::VIEW_USERS->value) ? route('users.show', $user) : null,
+        ]);
+
+        AuditDisplay::registerSubject(Role::class, fn (Role $role): array => [
+            'label' => $role->name,
+            'url' => Gate::allows(SystemPermission::MANAGE_ROLES->value) ? route('roles.edit', $role) : null,
+        ]);
     }
 
     /**

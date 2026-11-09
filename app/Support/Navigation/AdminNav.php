@@ -43,5 +43,20 @@ class AdminNav
                     ->active('roles.*')
                     ->can(SystemPermission::MANAGE_ROLES),
             );
+
+        if (config('activitylog.enabled')) {
+            NavRegistry::group('system')
+                ->label(__('System'))
+                ->can(SystemPermission::ACCESS_ADMIN_PANEL)
+                ->order(30)
+                ->add(
+                    NavItem::make('audit')
+                        ->label(__('Audit log'))
+                        ->route('audit.index')
+                        ->icon('heroicon-o-clipboard-document-list')
+                        ->active('audit.*')
+                        ->can(SystemPermission::VIEW_AUDIT_LOG),
+                );
+        }
     }
 }

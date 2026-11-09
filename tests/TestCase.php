@@ -4,6 +4,7 @@ namespace Tests;
 
 use App\Support\AccountArea\AccountAreaRegistry;
 use App\Support\AccountMenu\AccountMenuRegistry;
+use App\Support\Audit\AuditDisplay;
 use App\Support\Auth\LoginRedirectRegistry;
 use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavRegistry;
@@ -45,6 +46,7 @@ abstract class TestCase extends BaseTestCase
         TrustedHosts::flush();
         UserDeletionGuards::flush();
         UserListColumns::flush();
+        AuditDisplay::flush();
         // Symfony keeps trusted hosts statically too; a test run as production sets them.
         Request::setTrustedHosts([]);
 

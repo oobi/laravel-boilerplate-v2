@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\AccountArea\AccountAreaRegistry;
 use App\Support\AccountArea\AccountShell;
 use App\Support\AccountMenu\AccountMenuRegistry;
+use App\Support\Audit\AuditDisplay;
 use App\Support\Auth\LoginRedirectRegistry;
 use App\Support\Breadcrumbs;
 use App\Support\Navigation\Registry\NavItem;
@@ -324,6 +325,19 @@ class TeamsServiceProvider extends ServiceProvider
         PanelRegistry::for('users.show')->add(TeamMembershipsPanel::class);
 
         $this->registerUsersListColumn();
+        $this->describeAuditSubjects();
+    }
+
+    /** How the audit screens name the tier's records. A link only for a viewer who may open it. */
+    private function describeAuditSubjects(): void
+    {
+        AuditDisplay::registerSubject(Team::class, fn (Team $team): array => [
+            'label' => $team->name,
+            'url' => ! $team->trashed() && Gate::allows(TeamSystemPermission::VIEW_TEAMS->value) ? route('teams.show', $team) : null,
+        ]);
+
+        AuditDisplay::registerSubject(Domain::class, fn (Domain $domain): array => ['label' => $domain->domain]);
+        AuditDisplay::registerSubject(TeamInvitation::class, fn (TeamInvitation $invitation): array => ['label' => $invitation->email]);
     }
 
     /**

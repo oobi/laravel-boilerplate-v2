@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'breadcrumb_root' => 'Admin',
+    'audit' => 'Audit log',
 
     'users' => 'Users',
     'users_description' => 'Manage system users and their roles.',
