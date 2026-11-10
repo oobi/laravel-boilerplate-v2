@@ -318,7 +318,7 @@ html:has(.ui-bulk-sheet[open]) {
 /*
 | position: sticky can't do the header: the sideways scroller is its scroll
 | container, and that never scrolls down. So the real cells slide down the table
-| as <main> scrolls, on the compositor, sort buttons and select-all included.
+| as the page scrolls, on the compositor, sort buttons and select-all included.
 | The rail's script measures the range. Without scroll-driven animations the
 | header scrolls away with the page. From lg up only: below it the document
 | scrolls under Safari's moving toolbars, and it draws this badly there (the
@@ -326,7 +326,8 @@ html:has(.ui-bulk-sheet[open]) {
 */
 @media (width >= 64rem) {
     @supports (animation-timeline: scroll()) {
-        .ui-app main {
+        /* The app shell's page only: another layout has no top bar for the header to stop under. */
+        html:has(.ui-app) {
             scroll-timeline: --ui-page block;
         }
 
@@ -342,6 +343,8 @@ html:has(.ui-bulk-sheet[open]) {
             z-index: 6;
             /* The line under the header row, which stays behind when the cells move. */
             box-shadow: 0 1px 0 var(--color-base-300);
+            /* Moved cells make a wrong scroll anchor: Chromium restores Back to it, off by the distance moved. */
+            overflow-anchor: none;
             animation: var(--ui-table-header-animation, ui-table-sticky-header) linear both;
             animation-timeline: --ui-page;
             animation-range: var(--ui-table-header-start, 0px) calc(var(--ui-table-header-start, 0px) + var(--ui-table-header-travel, 0px));
@@ -552,15 +555,15 @@ html:has(.ui-bulk-sheet[open]) {
     }
 }
 
-/* Keep a focused row clear of the stuck header and footer when tabbing scrolls it into view. */
-:where(main):has(.fi-ta-ctn .fi-pagination, .ui-table-main) {
-    scroll-padding-block: 3rem 6rem;
+/* Keep a focused row clear of the stuck footer when tabbing scrolls it into view; layout.css clears the top bar. */
+html:has(.ui-app .fi-ta-ctn .fi-pagination, .ui-app .ui-table-main):not(:has(.ui-form-actions)) {
+    scroll-padding-bottom: 6rem;
 }
 
-/* Below lg the document scrolls instead: layout.css clears the top bar. */
-@media (width < 64rem) {
-    html:has(.ui-app .fi-ta-ctn .fi-pagination, .ui-app .ui-table-main):not(:has(.ui-form-actions)) {
-        scroll-padding-bottom: 6rem;
+/* From lg up the column header sticks under the top bar too, so a focused row stops clear of both. */
+@media (width >= 64rem) {
+    .ui-app main :is(.fi-ta-content-ctn, .ui-table-scroller) tbody * {
+        scroll-margin-top: calc(8rem + var(--ui-top-banners-height, 0px));
     }
 }
 

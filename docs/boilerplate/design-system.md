@@ -372,19 +372,22 @@ when the table fits and whether or not its column is frozen.
 From `lg` up the header follows the page through a CSS scroll-driven animation
 on its real cells, because `position: sticky` can't work inside a sideways
 scroller. In a browser without them, the header scrolls away with the page.
-Below `lg` it always scrolls away: the document scrolls there so Safari's toolbars
-can collapse, and Safari draws that animation badly while they move (see "Page
-scrolling"). Sticking needs nothing between the table and its scroller to set
-`overflow` hidden or auto: use `overflow-clip`, as with `<x-form-actions>`.
+Below `lg` it always scrolls away: Safari on an iPhone draws that animation badly
+while its toolbars collapse and expand. Sticking needs nothing between the table
+and the page to set `overflow` hidden or auto: use `overflow-clip`, as with
+`<x-form-actions>`.
 
 ### Page scrolling
 
-Below `lg` (1024px) the document scrolls, so Safari on an iPhone can collapse its
-toolbars. From `lg` up the shell stays locked to the screen and `<main>` scrolls,
-beside the sidebar. Sticky elements follow whichever is scrolling, so
-`<x-form-actions>`, card footers and the table rail need nothing. To find the
-scroller in a script, check `<main>`'s `overflow-y`: it's `visible` below `lg`.
-Nothing scrolls behind an open drawer, modal dialog or Filament modal (`layout.css`).
+The document scrolls, at every width; `<main>` never does. That's what the browser
+expects, so Back and Forward return to the same place, Safari on an iPhone
+collapses its toolbars, and anchors and find-in-page scroll the page. The top bar
+sticks under the fixed banners, and the pinned sidebar (`xl` up) sticks beside the
+page with its own scroll. Sticky elements follow the page, so `<x-form-actions>`,
+card footers and the table rail need nothing, and a script listens to `window`'s
+scroll. Don't make `<main>` or a wrapper the scroller: the browser only restores
+the document's position. Nothing scrolls behind an open drawer, modal dialog or
+Filament modal (`layout.css`).
 Anchors and focused controls in `<main>` stop clear of the top bar, through
 `scroll-margin-top`; WebKit ignores that for keyboard focus, so
 `keep-focus-clear-of-top-bar.js` covers it, for the keyboard only. A heading a page
