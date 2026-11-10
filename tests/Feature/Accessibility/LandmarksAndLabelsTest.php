@@ -32,10 +32,10 @@ class LandmarksAndLabelsTest extends TestCase
         $this->assertStringContainsString('x-id="[\'nav-group\']"', $html);
         $this->assertStringContainsString(':aria-controls="$id(\'nav-group\')"', $html);
 
-        // The breadcrumb marks the current page, and its root is hidden on phones (no stray "inline").
+        // The breadcrumb marks the current page, and its root is hidden on phones (no stray "flex").
         $this->assertSame(1, preg_match('#<nav aria-label="Breadcrumb".*?</nav>#s', $html, $crumbs));
         $this->assertStringContainsString('aria-current="page"', $crumbs[0]);
-        $this->assertStringContainsString('<li class="hidden sm:inline">', $crumbs[0]);
+        $this->assertStringContainsString('<li class="min-w-0 items-center hidden sm:flex">', $crumbs[0]);
 
         // Every id on the page is unique.
         preg_match_all('/\sid="([^"]+)"/', $html, $ids);

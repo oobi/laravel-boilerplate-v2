@@ -61,9 +61,10 @@ class TeamAreaTest extends TestCase
         $owner = User::factory()->create();
         $team = Team::factory()->ownedBy($owner)->create();
 
-        $this->actingAs($owner)->get(team_route('team.dashboard', $team))
-            ->assertOk()
-            ->assertDontSee('<a href="'.team_route('team.dashboard', $team).'" class="ui-link">', false);
+        $html = $this->actingAs($owner)->get(team_route('team.dashboard', $team))->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#<nav aria-label="Breadcrumb".*?</nav>#s', $html, $crumbs));
+        $this->assertStringNotContainsString('href="'.team_route('team.dashboard', $team).'"', $crumbs[0]);
     }
 
     public function test_a_non_member_is_forbidden_from_the_team_area(): void

@@ -19,8 +19,9 @@ class BreadcrumbsTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/admin/users');
 
-        $response->assertDontSee('<a href="'.route('users.index').'" class="ui-link">', false);
-        $response->assertSee('<span>Users</span>', false);
+        $crumbs = $this->breadcrumbTrail($response->getContent());
+        $this->assertStringNotContainsString('href="'.route('users.index').'"', $crumbs);
+        $this->assertSame(1, substr_count(strip_tags($crumbs), 'Users'));
     }
 
     public function test_the_users_edit_breadcrumb_links_back_to_the_users_index(): void
@@ -31,7 +32,7 @@ class BreadcrumbsTest extends TestCase
         $response = $this->actingAs($admin)->get("/admin/users/{$target->id}/edit");
 
         $response->assertSee(
-            '<a href="'.route('users.index').'" class="ui-link">Users</a>',
+            '<a href="'.route('users.index').'" class="ui-link min-w-0 truncate">Users</a>',
             false,
         );
         $response->assertSeeInOrder(['Users', $target->name, 'Edit']);
@@ -44,22 +45,20 @@ class BreadcrumbsTest extends TestCase
         $response = $this->actingAs($admin)->get('/admin/users/create');
 
         $response->assertSee(
-            '<a href="'.route('users.index').'" class="ui-link">Users</a>',
+            '<a href="'.route('users.index').'" class="ui-link min-w-0 truncate">Users</a>',
             false,
         );
         $response->assertSeeInOrder(['Users', 'Create']);
     }
 
-    public function test_pages_without_a_sibling_index_route_render_a_single_crumb(): void
+    /** The dashboard's route has no `{resource}.` prefix, so its trail is just the root and the page. */
+    public function test_pages_without_a_sibling_index_route_get_no_resource_crumb(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->superAdmin()->create();
 
-        $response = $this->actingAs($user)->get('/admin/dashboard');
+        $response = $this->actingAs($admin)->get(route('dashboard'))->assertOk();
 
-        $response->assertDontSee(
-            '<a href="'.route('users.index').'" class="ui-link">',
-            false,
-        );
+        $this->assertSame(2, substr_count($this->breadcrumbTrail($response->getContent()), '<li'));
     }
 
     public function test_an_index_page_with_its_own_title_keeps_its_resource_crumb_unlinked(): void
@@ -83,7 +82,7 @@ class BreadcrumbsTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
 
         $this->actingAs($admin)->get(route('users.index'))->assertSee(
-            '<a href="'.route('dashboard').'" class="ui-link">'.__('admin.breadcrumb_root').'</a>',
+            '<a href="'.route('dashboard').'" class="ui-link min-w-0 truncate">'.__('admin.breadcrumb_root').'</a>',
             false,
         );
     }
@@ -93,8 +92,16 @@ class BreadcrumbsTest extends TestCase
     {
         $admin = User::factory()->superAdmin()->create();
 
-        $this->actingAs($admin)->get(route('dashboard'))
-            ->assertOk()
-            ->assertDontSee('<a href="'.route('dashboard').'" class="ui-link">', false);
+        $response = $this->actingAs($admin)->get(route('dashboard'))->assertOk();
+
+        $this->assertStringNotContainsString('href="'.route('dashboard').'"', $this->breadcrumbTrail($response->getContent()));
+    }
+
+    /** The breadcrumb <nav> alone, so the sidebar's links can't satisfy or spoil an assertion. */
+    private function breadcrumbTrail(string $html): string
+    {
+        $this->assertSame(1, preg_match('#<nav aria-label="Breadcrumb".*?</nav>#s', $html, $crumbs), 'no breadcrumb trail');
+
+        return $crumbs[0];
     }
 }

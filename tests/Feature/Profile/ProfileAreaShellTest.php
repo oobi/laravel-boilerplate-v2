@@ -52,7 +52,7 @@ class ProfileAreaShellTest extends TestCase
     public function test_the_my_profile_crumb_links_to_the_profile_tab(): void
     {
         $admin = User::factory()->superAdmin()->create();
-        $profileLink = '<a href="'.route('profile.edit').'" class="ui-link">'.__('admin.my_profile').'</a>';
+        $profileLink = '<a href="'.route('profile.edit').'" class="ui-link min-w-0 truncate">'.__('admin.my_profile').'</a>';
 
         $this->actingAs($admin)->get(route('dashboard'))->assertOk();
 
