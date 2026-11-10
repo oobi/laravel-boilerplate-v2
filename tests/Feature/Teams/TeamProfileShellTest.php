@@ -51,7 +51,7 @@ class TeamProfileShellTest extends TestCase
         $this->visitTeam($owner, $team);
 
         $this->get(route('profile.password'))->assertOk()->assertSee(
-            '<a href="'.team_route('team.dashboard', $team).'" class="ui-link">'.e(TeamLabels::singular()).'</a>',
+            '<a href="'.team_route('team.dashboard', $team).'" class="ui-link min-w-0 truncate">'.e(TeamLabels::singular()).'</a>',
             false,
         );
     }
