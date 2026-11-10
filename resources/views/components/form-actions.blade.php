@@ -19,10 +19,11 @@
         stuck: false,
         observer: null,
         init() {
-            {{-- It sits 1px past the scroller's edge when stuck, so whatever clips it cuts off its bottom. --}}
+            {{-- It sits 1px past the scroller's edge when stuck, so whatever clips it cuts off its bottom.
+                 Two thresholds, like the table's scroll rail: with only 1, a row that's 98% in view doesn't count as intersecting, so a row already stuck when the page loads, or stuck again on the way back up, is never marked. --}}
             this.observer = new IntersectionObserver(([entry]) => {
                 this.stuck = entry.isIntersecting && entry.intersectionRect.bottom < entry.boundingClientRect.bottom - 0.5;
-            }, { threshold: 1 });
+            }, { threshold: [0.5, 1] });
             this.observer.observe(this.$el);
         },
         destroy() {

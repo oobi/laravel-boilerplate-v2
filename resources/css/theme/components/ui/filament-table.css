@@ -795,11 +795,12 @@ th.fi-ta-selection-cell,
     }
 
     /*
-    | Data rows only (they hold labelled cells), not group header or summary
-    | rows. The entity cell is the first data cell, after the checkbox: a table
-    | that leads with another column needs its own tweak.
+    | Data rows only: they hold labelled cells, which a group header doesn't.
+    | A summary row has them too, so it's left out by name and keeps Filament's
+    | own stacked layout. The entity cell is the first data cell, after the
+    | checkbox: a table that leads with another column needs its own tweak.
     */
-    .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row:has(> td > .fi-ta-cell-label) {
+    .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row:not(.fi-ta-summary-row):has(> td > .fi-ta-cell-label) {
         padding-block: 0.5rem 0.75rem;
 
         & > .fi-ta-cell:not(.fi-ta-selection-cell):not(:has(> .fi-ta-actions)) {
@@ -896,7 +897,7 @@ th.fi-ta-selection-cell,
     | visually hidden (still read out), so a placeholder must only ever mean
     | "none".
     */
-    .ui-stacked-compact .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row:has(> td > .fi-ta-cell-label) {
+    .ui-stacked-compact .fi-ta-table-stacked-on-mobile > tbody > tr.fi-ta-row:not(.fi-ta-summary-row):has(> td > .fi-ta-cell-label) {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
