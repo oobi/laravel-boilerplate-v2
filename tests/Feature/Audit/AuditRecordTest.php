@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Support\Audit\Audit;
 use App\Support\Audit\AuditActor;
 use App\Support\Audit\AuditCategory;
+use App\Support\Audit\AuditProperties;
 use App\Support\Audit\LogAuditEntry;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Fixtures\AuditedWidget;
+use Tests\Fixtures\AuditedWidgetWithVisible;
 use Tests\TestCase;
 
 class AuditRecordTest extends TestCase
@@ -117,6 +120,93 @@ class AuditRecordTest extends TestCase
         Audit::record('invoice.sent', properties: ['mail' => collect(['password' => 'secret-value'])]);
 
         $this->assertStringNotContainsString('secret-value', DB::table('activity_log')->value('properties'));
+    }
+
+    public function test_a_model_in_the_properties_keeps_its_own_secrets_at_any_depth(): void
+    {
+        $widget = $this->widgetWithSecrets();
+
+        Audit::record('widget.shared', properties: ['widget' => $widget, 'nested' => ['widget' => $widget], 'list' => collect([$widget])]);
+
+        $this->assertNoSecretStored();
+        foreach (['widget', 'nested.widget', 'list.0'] as $path) {
+            $this->assertSame('Shared widget', $this->recorded()->getProperty("{$path}.name"));
+            $this->assertSame(LogAuditEntry::REDACTED, $this->recorded()->getProperty("{$path}.licence"));
+        }
+    }
+
+    public function test_a_model_in_the_properties_keeps_its_secrets_even_when_made_visible(): void
+    {
+        $widget = $this->widgetWithSecrets()->makeVisible('pin');
+        $listed = (new AuditedWidgetWithVisible)->forceFill(['name' => 'Listed widget', 'body' => 'body-secret'])->makeVisible('body');
+
+        Audit::record('widget.shared', properties: ['widget' => $widget, 'listed' => $listed]);
+
+        $this->assertNoSecretStored();
+        $this->assertSame('Listed widget', $this->recorded()->getProperty('listed.name'));
+    }
+
+    public function test_a_related_model_in_the_properties_keeps_its_own_secrets(): void
+    {
+        $widget = (new AuditedWidget)->forceFill(['name' => 'Parent widget'])->setRelation('twin', $this->widgetWithSecrets());
+
+        Audit::record('widget.shared', properties: ['widget' => $widget]);
+
+        $this->assertNoSecretStored();
+        $this->assertSame('Shared widget', $this->recorded()->getProperty('widget.twin.name'));
+    }
+
+    public function test_models_related_to_each_other_in_the_properties_do_not_loop(): void
+    {
+        $widget = $this->widgetWithSecrets()->forceFill(['id' => 7]);
+        $twin = (new AuditedWidget)->forceFill(['name' => 'Twin widget'])->setRelation('twin', $widget);
+        $widget->setRelation('twin', $twin);
+
+        Audit::record('widget.shared', properties: ['widget' => $widget]);
+
+        $this->assertSame(7, $this->recorded()->getProperty('widget.twin.twin'));
+        $this->assertNoSecretStored();
+    }
+
+    public function test_a_direct_activity_call_cannot_store_a_model_property_s_secrets(): void
+    {
+        activity()->withProperties(['widget' => $this->widgetWithSecrets()])->log('Shared');
+
+        $this->assertNoSecretStored();
+    }
+
+    public function test_a_model_in_the_properties_is_taken_apart_once(): void
+    {
+        $widget = new class extends AuditedWidget
+        {
+            public static int $timesTakenApart = 0;
+
+            public function attributesToArray(): array
+            {
+                self::$timesTakenApart++;
+
+                return parent::attributesToArray();
+            }
+        };
+
+        Audit::record('widget.shared', properties: ['widget' => $widget->forceFill(['name' => 'Shared widget'])]);
+
+        $this->assertSame(1, $widget::$timesTakenApart);
+    }
+
+    public function test_a_long_property_is_cut_once(): void
+    {
+        config(['audit.max_value_length' => 10]);
+
+        // A cut string is longer than the limit, so cutting it again would change it.
+        Audit::record('invoice.sent', properties: ['note' => str_repeat('a', 9).'  tail']);
+
+        $this->assertSame(str_repeat('a', 9).'...', $this->recorded()->getProperty('note'));
+    }
+
+    public function test_unreadable_properties_read_as_empty(): void
+    {
+        $this->assertSame([], (new AuditProperties)->get(new AuditEntry, 'properties', 'not json', [])->all());
     }
 
     public function test_a_direct_activity_call_cannot_store_a_sensitive_change_at_the_top_level(): void
@@ -589,6 +679,28 @@ class AuditRecordTest extends TestCase
         $this->assertTrue($exporter->canAccessAdmin());
         $this->assertTrue($viewer->canAccessAdmin());
         $this->assertFalse($viewer->hasSystemPermission(SystemPermission::EXPORT_AUDIT_LOG));
+    }
+
+    /** Unsaved, so it writes no entry of its own: casts encrypt and hash as they're set. */
+    private function widgetWithSecrets(): AuditedWidget
+    {
+        return (new AuditedWidget)->forceFill([
+            'name' => 'Shared widget',
+            'pin' => 'pin-secret',
+            'licence' => 'licence-secret',
+            'vault' => ['key' => 'vault-secret'],
+            'hashed_code' => 'hashed-secret',
+        ]);
+    }
+
+    private function assertNoSecretStored(): void
+    {
+        $stored = (string) $this->recorded()->getRawOriginal('properties');
+
+        // The hashed value is a bcrypt or argon hash: neither prefix may be stored.
+        foreach (['pin-secret', 'licence-secret', 'vault-secret', 'body-secret', '$2y$', '$argon'] as $secret) {
+            $this->assertStringNotContainsString($secret, $stored);
+        }
     }
 
     /** The one entry the test made, leaving out those for the users it set up and signed out. */

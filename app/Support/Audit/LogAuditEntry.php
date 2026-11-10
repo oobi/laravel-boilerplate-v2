@@ -7,6 +7,7 @@ namespace App\Support\Audit;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Enumerable;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Lab404\Impersonate\Services\ImpersonateManager;
@@ -23,6 +24,9 @@ class LogAuditEntry extends LogActivityAction
 {
     /** Stored instead of a sensitive value, so a change still shows without revealing it. */
     public const string REDACTED = '[redacted]';
+
+    /** @var array<int, true> The models being turned into properties, by object id, so a relation back to one ends there. */
+    private array $modelsInProgress = [];
 
     public function execute(Model $activity, string $description): Model
     {
@@ -48,13 +52,41 @@ class LogAuditEntry extends LogActivityAction
         $subject = $activity->getRelationValue('subject');
         $changes = collect($activity->attribute_changes ?? []);
         $hiddenAttributes = $this->sensitiveAttributesOf($subject);
-        $sensitiveAttributes = [...$hiddenAttributes, ...$this->attributesOutsideVisible($subject, $changes)];
+        $changed = $changes->only(['attributes', 'old'])
+            ->filter(fn (mixed $values): bool => is_array($values))
+            ->flatMap(fn (array $values): array => array_keys($values))
+            ->all();
+        $sensitiveAttributes = [...$hiddenAttributes, ...$this->attributesOutsideVisible($subject, $changed)];
 
         $activity->attribute_changes = $changes->map(fn (mixed $values, int|string $key): mixed => in_array($key, ['attributes', 'old'], true) && is_array($values)
             ? $this->sanitize($values, $sensitiveAttributes)
             : $this->sanitize([$key => $values], $sensitiveAttributes)[$key]);
 
         $activity->properties = collect($this->sanitize(collect($activity->properties ?? [])->all(), $hiddenAttributes));
+    }
+
+    /**
+     * Properties as they can be stored, called by their cast (AuditProperties) as
+     * they're set: models and collections taken apart, sensitive names redacted. The
+     * subject's own sensitive names, and the cut to length, are applied once, in
+     * transformChanges(): a cut string cut again would lose its end.
+     *
+     * @return array<array-key, mixed>
+     */
+    public function storableProperties(mixed $properties): array
+    {
+        $values = $this->sanitize($properties instanceof Enumerable ? $properties->all() : (array) $properties, cutStrings: false);
+
+        return (array) $this->storable($values);
+    }
+
+    /**
+     * Properties often hold what a visitor typed, and a malformed byte sequence
+     * can't be stored as JSON. Bad input must never stop an entry being written.
+     */
+    private function storable(mixed $value): mixed
+    {
+        return json_decode(json_encode($value, JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
     }
 
     /** A model's `updated` is stored as `user.updated`, and described as "User updated" unless it says otherwise. */
@@ -163,10 +195,10 @@ class LogAuditEntry extends LogActivityAction
     /**
      * A model that lists `$visible` hides everything else, so the same goes here.
      *
-     * @param  Collection<array-key, mixed>  $changes
+     * @param  list<array-key>  $names
      * @return list<string>
      */
-    private function attributesOutsideVisible(mixed $subject, Collection $changes): array
+    private function attributesOutsideVisible(mixed $subject, array $names): array
     {
         $visible = $subject instanceof Model ? $subject->newInstance()->getVisible() : [];
 
@@ -174,32 +206,60 @@ class LogAuditEntry extends LogActivityAction
             return [];
         }
 
-        $changed = $changes->only(['attributes', 'old'])
-            ->filter(fn (mixed $values): bool => is_array($values))
-            ->flatMap(fn (array $values): array => array_keys($values))
-            ->all();
-
-        return array_values(array_diff($changed, $visible));
+        return array_values(array_diff(array_map(strval(...), $names), $visible));
     }
 
     /**
-     * Redact sensitive names at any depth, and cut long strings. A null stays null,
+     * A model passed as a property, never serialized as it is: that would decrypt its
+     * encrypted attributes (#84). Its attributes and loaded relations, with its own
+     * sensitive ones redacted, whatever this instance has made visible.
+     *
+     * @param  list<string>  $sensitiveAttributes
+     * @return array<array-key, mixed>|int|string|null
+     */
+    private function modelProperties(Model $model, array $sensitiveAttributes, bool $cutStrings): array|int|string|null
+    {
+        $id = spl_object_id($model);
+
+        if (isset($this->modelsInProgress[$id])) {
+            return $model->getKey();
+        }
+
+        $this->modelsInProgress[$id] = true;
+
+        try {
+            $values = [...$model->attributesToArray(), ...$model->getRelations()];
+            $ownSensitive = [...$this->sensitiveAttributesOf($model), ...$this->attributesOutsideVisible($model, array_keys($values))];
+
+            return $this->sanitize($values, [...$sensitiveAttributes, ...$ownSensitive], $cutStrings);
+        } finally {
+            unset($this->modelsInProgress[$id]);
+        }
+    }
+
+    /**
+     * Redact sensitive names at any depth, and cut long strings. A model or collection
+     * is taken apart here, never serialized as it is. A null stays null,
      * so "set" and "cleared" stay distinguishable without revealing anything.
      *
      * @param  array<array-key, mixed>  $values
      * @param  list<string>  $sensitiveAttributes
      * @return array<array-key, mixed>
      */
-    private function sanitize(array $values, array $sensitiveAttributes = []): array
+    private function sanitize(array $values, array $sensitiveAttributes = [], bool $cutStrings = true): array
     {
-        return collect($values)->map(function (mixed $value, int|string $key) use ($sensitiveAttributes): mixed {
+        return collect($values)->map(function (mixed $value, int|string $key) use ($sensitiveAttributes, $cutStrings): mixed {
             if ($value !== null && $this->isSensitive((string) $key, $sensitiveAttributes)) {
                 return self::REDACTED;
             }
 
             return match (true) {
-                is_array($value) => $this->sanitize($value, $sensitiveAttributes),
-                is_string($value) => Str::limit($value, config()->integer('audit.max_value_length')),
+                $value instanceof Model => $this->modelProperties($value, $sensitiveAttributes, $cutStrings),
+                $value instanceof Enumerable => $this->sanitize($value->all(), $sensitiveAttributes, $cutStrings),
+                is_array($value) => $this->sanitize($value, $sensitiveAttributes, $cutStrings),
+                is_string($value) && $cutStrings => Str::limit($value, config()->integer('audit.max_value_length')),
+                // Anything else as it will be stored, so its own sensitive names are seen too.
+                is_object($value) => is_array($stored = $this->storable($value)) ? $this->sanitize($stored, $sensitiveAttributes, $cutStrings) : $stored,
                 default => $value,
             };
         })->all();

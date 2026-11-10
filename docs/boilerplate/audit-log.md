@@ -166,8 +166,11 @@ Audit::record(
 - **Field and property names** read in words for core's fields ("Email
   address"); anything else is tidied (`due_date` reads "Due date").
 - **Properties** hold anything else worth keeping. Pass the fields you chose,
-  never a whole model: a model's encrypted attributes would be stored as plain
-  text. Redaction applies here too.
+  not a whole model: it stores far more than the entry needs. One that slips
+  through is taken apart with its own hidden, encrypted and hashed attributes
+  redacted, and so are its loaded relations and any in a collection. A model
+  inside some other object (an `Arrayable` of your own) isn't. Redaction applies
+  here too.
 - **`by:`** sets the causer when it isn't the logged-in user. **`at:`** backdates
   an entry, for an import.
 - **`record()` throws** if the entry can't be written, so in a transaction it

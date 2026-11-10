@@ -45,10 +45,11 @@ before changing anything. This skill is the short procedure.
    `payout.approved`). Reuse an existing event name for the same act.
 2. Call `Audit::record()` inside the same transaction as the write, so the entry
    commits or rolls back with it. It throws on failure, on purpose.
-3. Properties: the fields you chose, never a model (`['to' => $invoice->email]`,
-   not `['invoice' => $invoice]`): a model's encrypted attributes would be stored
-   decrypted (#84). Anything a visitor typed goes through `Audit::record`, which
-   scrubs invalid UTF-8.
+3. Properties: the fields you chose, not a model (`['to' => $invoice->email]`,
+   not `['invoice' => $invoice]`): a model stores far more than the entry needs.
+   One that slips through has its own sensitive attributes redacted
+   (`AuditProperties`, #84), but not inside an object of your own. Invalid UTF-8
+   in anything a visitor typed is scrubbed.
 4. Category: `AuditCategory::DATA` (default) for records, `ACCESS` for who can do
    what, `SECURITY` for account security, `AUTH` for logins, `SYSTEM` for the
    app itself. A project's own category is any string; name it with
