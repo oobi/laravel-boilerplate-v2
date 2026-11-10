@@ -25,7 +25,7 @@ final class Audit
      * transaction commits or rolls back with the change it describes.
      *
      * @param  string  $event  dotted and past tense, e.g. `invoice.sent`
-     * @param  array<string, mixed>  $properties  anything else worth keeping; sensitive names are redacted
+     * @param  array<string, mixed>  $properties  anything else worth keeping; sensitive names, and a model's own sensitive attributes, are redacted
      * @param  string|null  $description  defaults to the event in words ("Invoice sent")
      * @param  Model|null  $by  the causer, when it isn't the signed-in user
      * @param  DateTimeInterface|null  $at  backdate an entry, for an import
@@ -42,7 +42,7 @@ final class Audit
         activity()
             ->useLog($category)
             ->event($event)
-            ->withProperties(self::scrub($properties))
+            ->withProperties($properties)
             ->when($subject !== null, fn ($logger) => $logger->performedOn($subject))
             ->when($by !== null, fn ($logger) => $logger->causedBy($by))
             ->when($at !== null, fn ($logger) => $logger->createdAt($at))
@@ -127,17 +127,5 @@ final class Audit
     public static function tidy(string $event): string
     {
         return Str::ucfirst(str_replace(' force deleted', ' permanently deleted', str_replace(['.', '_'], ' ', $event)));
-    }
-
-    /**
-     * Properties often hold what a visitor typed, and a malformed byte sequence
-     * can't be stored as JSON. Bad input must never stop an entry being written.
-     *
-     * @param  array<array-key, mixed>  $values
-     * @return array<array-key, mixed>
-     */
-    private static function scrub(array $values): array
-    {
-        return json_decode(json_encode($values, JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
     }
 }

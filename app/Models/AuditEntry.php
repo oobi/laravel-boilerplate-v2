@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\Audit\AuditProperties;
 use Database\Factories\AuditEntryFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -30,6 +31,12 @@ class AuditEntry extends Activity
 {
     /** @use HasFactory<AuditEntryFactory> */
     use HasFactory;
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return [...parent::casts(), 'properties' => AuditProperties::class];
+    }
 
     /** Not an `updating` listener, because saveQuietly() and withoutEvents() would skip one. */
     protected function performUpdate(Builder $query): never
