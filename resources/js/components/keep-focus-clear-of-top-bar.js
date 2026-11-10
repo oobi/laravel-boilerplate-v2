@@ -2,8 +2,8 @@
  * Keyboard focus in <main>: WebKit ignores scroll-margin when it reveals a focused
  * control, and no browser knows how tall a sticky heading is, so a control reached
  * by moving up the page can end up hidden. Waits for the browser's own scroll, then
- * moves the page just enough to show it, clear of the top bar below lg and of any
- * sticky heading marked data-keep-focus-clear at every width.
+ * moves the page just enough to show it, clear of the top bar, of a table's stuck
+ * column header and of any sticky heading marked data-keep-focus-clear at every width.
  *
  * A tap or click is left alone: text fields match :focus-visible however they get
  * focus, and the field shouldn't move out from under the pointer. So is anything in
@@ -17,16 +17,17 @@ const KEYBOARD_FOCUS = ':focus-visible, [type=time], [type=date], [type=datetime
 let focusIsFromPointer = false;
 let lastFocused = null;
 
-const coveredDownTo = (control, main, documentScrolls) => {
-    const edge = documentScrolls
-        ? document.querySelector('.ui-app-inner header')?.getBoundingClientRect().bottom ?? 0
-        : main.getBoundingClientRect().top;
+const coveredDownTo = (control, main) => {
+    const edge = document.querySelector('.ui-app-inner header')?.getBoundingClientRect().bottom ?? 0;
 
     // Only a heading earlier in the page can be stuck over the control. A later one is just further down.
     const headingsAbove = [...main.querySelectorAll('[data-keep-focus-clear]')]
         .filter((heading) => ! heading.contains(control) && heading.compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING);
 
-    return Math.max(edge, ...headingsAbove.map((heading) => heading.getBoundingClientRect().bottom));
+    // A row's table header follows the page from lg up. Its cells move, not the thead, so measure a cell.
+    const tableHeader = control.closest('tbody')?.closest('table')?.querySelector(':scope > thead th');
+
+    return Math.max(edge, tableHeader?.getBoundingClientRect().bottom ?? 0, ...headingsAbove.map((heading) => heading.getBoundingClientRect().bottom));
 };
 
 const revealIfCovered = (control) => {
@@ -36,12 +37,11 @@ const revealIfCovered = (control) => {
         return;
     }
 
-    const documentScrolls = getComputedStyle(main).overflowY === 'visible';
-    const coveredTo = coveredDownTo(control, main, documentScrolls);
+    const coveredTo = coveredDownTo(control, main);
     const top = control.getBoundingClientRect().top;
 
     if (top < coveredTo) {
-        (documentScrolls ? window : main).scrollBy({ top: top - coveredTo - GAP });
+        window.scrollBy({ top: top - coveredTo - GAP });
     }
 };
 

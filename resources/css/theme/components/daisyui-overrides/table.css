@@ -48,6 +48,8 @@
             /* The row's tint is on its <tr>, which stays behind when the cells move. */
             background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
             box-shadow: 0 1px 0 var(--color-base-300);
+            /* Moved cells make a wrong scroll anchor: Chromium restores Back to it, off by the distance moved. */
+            overflow-anchor: none;
             animation: var(--ui-table-header-animation, ui-table-sticky-header) linear both;
             animation-timeline: --ui-page;
             animation-range: var(--ui-table-header-start, 0px) calc(var(--ui-table-header-start, 0px) + var(--ui-table-header-travel, 0px));

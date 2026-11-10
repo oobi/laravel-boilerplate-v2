@@ -12,6 +12,9 @@
  * animation that moves it from lg up (filament-table.css), and tells stuck from resting
  * for whichever of the footer and the rail is sticking at the bottom.
  */
+// From lg up the column header follows the page (filament-table.css); below it, it scrolls away.
+const headerFollowsPage = window.matchMedia('(width >= 64rem)');
+
 export const tableScrollRail = (regionLabel) => {
     // Not on the component: Alpine writes a key the data object doesn't declare
     // to the outermost scope, the app shell's, which every table would then share.
@@ -24,6 +27,7 @@ export const tableScrollRail = (regionLabel) => {
     let scheduleSync;
     let settleTimer;
     let syncAfterResize;
+    let syncOnPageScroll;
     let resizeObserver;
     let mutationObserver;
     let stuckObserver;
@@ -67,7 +71,8 @@ export const tableScrollRail = (regionLabel) => {
                 return;
             }
 
-            page = this.$el.closest('.fi-modal, dialog') ? null : this.$el.closest('main');
+            // The app shell's page, which the header follows; none in a modal or another layout.
+            page = this.$el.closest('.fi-modal, dialog') ? null : this.$el.closest('.ui-app main');
 
             scheduleSync = () => {
                 cancelAnimationFrame(frame);
@@ -85,14 +90,17 @@ export const tableScrollRail = (regionLabel) => {
                 settleTimer = setTimeout(scheduleSync, 400);
             };
             window.addEventListener('resize', syncAfterResize);
-            page?.addEventListener('scroll', scheduleSync, { passive: true });
+            if (page) {
+                syncOnPageScroll = () => headerFollowsPage.matches && scheduleSync();
+                window.addEventListener('scroll', syncOnPageScroll, { passive: true });
+            }
 
             this.sync();
         },
 
         destroy() {
             window.removeEventListener('resize', syncAfterResize);
-            page?.removeEventListener('scroll', scheduleSync);
+            window.removeEventListener('scroll', syncOnPageScroll);
             clearTimeout(settleTimer);
             scroller?.removeEventListener('scroll', scheduleSync);
             scroller?.removeEventListener('focusin', keepFocusClearOfFrozenColumn);
@@ -196,12 +204,14 @@ export const tableScrollRail = (regionLabel) => {
             const header = scroller.querySelector('.fi-ta-table > thead, .table > thead');
 
             // No box means a hidden table: it measures 0, which would follow the page's scroll.
-            // Below lg <main> doesn't scroll, and there's no animation to measure for.
-            if (! page || ! header?.offsetHeight || getComputedStyle(page).overflowY === 'visible') {
+            // Below lg the header scrolls away, so there's no animation to measure for.
+            if (! page || ! header?.offsetHeight || ! headerFollowsPage.matches) {
                 return;
             }
 
-            const start = header.getBoundingClientRect().top - page.getBoundingClientRect().top + page.scrollTop;
+            // The page's scroll at which the header reaches the bottom of the sticky top bar.
+            const topBarBottom = document.querySelector('.ui-app-inner header')?.getBoundingClientRect().bottom ?? 0;
+            const start = header.getBoundingClientRect().top + window.scrollY - topBarBottom;
             const travel = `${Math.max(0, header.parentElement.offsetHeight - header.offsetHeight)}px`;
             const currentStart = parseFloat(main.style.getPropertyValue('--ui-table-header-start'));
 

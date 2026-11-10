@@ -100,7 +100,7 @@
 
     /* Keep a focused field clear of the stuck row when tabbing scrolls it into view,
        room for two rows of buttons (a narrow space wraps Cancel under the main action). */
-    :where(main, html):has(.ui-form-actions) {
+    html:has(.ui-form-actions) {
         scroll-padding-bottom: 9rem;
     }
 }

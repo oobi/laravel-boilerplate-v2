@@ -134,7 +134,7 @@
                  Base classes assume the default (pinned) state so it renders visible
                  immediately on page load; x-show only hides it once Alpine confirms
                  the user has actually unpinned it, avoiding a flash for pinned users. --}}
-            <aside class="hidden xl:flex shrink-0 w-64" x-show="sidebarPinned">
+            <aside class="ui-sidebar-pinned hidden xl:flex shrink-0 w-64" x-show="sidebarPinned">
                 <div class="flex h-full w-64 flex-col border-r border-base-300 bg-base-100">
                     <div class="flex h-16 shrink-0 items-center justify-between border-b border-base-300 px-4">
                         <x-application-logo class="min-w-0 flex-1" />
@@ -160,7 +160,7 @@
 
             {{-- Main column --}}
             <div class="flex min-w-0 flex-1 flex-col">
-                <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-base-300 bg-base-100/80 px-4 backdrop-blur sm:px-6 lg:px-8">
+                <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-base-300 bg-base-100 px-4 sm:px-6 lg:px-8">
                     @if ($hasNav)
                         {{-- Logo: visible on desktop only while the sidebar is unpinned --}}
                         <x-application-logo
@@ -201,7 +201,7 @@
                     <x-header-menu />
                 </header>
 
-                <main id="main-content" tabindex="-1" class="flex-1 overflow-y-auto focus:outline-none">
+                <main id="main-content" tabindex="-1" class="flex-1 focus:outline-none">
                     <div class="py-6">
                         {{-- No sidebar → cap the width at $width so content isn't spread across the whole viewport. --}}
                         <div @class(['ui-page flex flex-col gap-4', $width => ! $hasNav])>
