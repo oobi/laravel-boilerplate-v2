@@ -56,7 +56,7 @@
                 <span class="wrap-anywhere">
                     {{ __('audit.subject') }}:
                     @if ($subject['url'])
-                        <a href="{{ $subject['url'] }}" class="link link-hover">{{ $subject['label'] }}</a>
+                        <a href="{{ $subject['url'] }}" class="link link-hover font-semibold">{{ $subject['label'] }}</a>
                     @else
                         {{ $subject['label'] }}
                     @endif

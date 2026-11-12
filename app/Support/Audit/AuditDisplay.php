@@ -214,7 +214,7 @@ final class AuditDisplay
 
         // Escape the sentence first, then put the names in, each escaped once.
         return new HtmlString(strtr(e($sentence), [
-            ':actor' => self::link(self::actorName($entry), $actorUrl, 'font-medium'),
+            ':actor' => self::link(self::actorName($entry), $actorUrl, 'font-semibold'),
             ':subject' => self::link((string) ($subject['label'] ?? ''), $subject['url'] ?? null),
         ]));
     }
@@ -263,11 +263,19 @@ final class AuditDisplay
         return $sentence !== null && (self::subject($entry) !== null || ! str_contains($sentence, ':subject')) ? $sentence : null;
     }
 
-    private static function link(string $text, ?string $url, string $class = ''): string
+    /**
+     * A name in a sentence, linked when there's somewhere to go. A link is
+     * semibold as well as coloured, so it stands out from the words around it
+     * without relying on colour (WCAG 1.4.1, #43); $unlinkedClass styles the
+     * name when it isn't a link (the actor stays semibold either way). Only for
+     * a name in running text: a name that stands alone (user-column) stays
+     * regular weight. The row's "Applies to:" link matches (audit-feed-row).
+     */
+    private static function link(string $text, ?string $url, string $unlinkedClass = ''): string
     {
         return $url === null
-            ? ($class === '' ? e($text) : '<span class="'.$class.'">'.e($text).'</span>')
-            : '<a href="'.e($url).'" class="'.trim('link link-hover '.$class).'">'.e($text).'</a>';
+            ? ($unlinkedClass === '' ? e($text) : '<span class="'.$unlinkedClass.'">'.e($text).'</span>')
+            : '<a href="'.e($url).'" class="link link-hover font-semibold">'.e($text).'</a>';
     }
 
     /**
