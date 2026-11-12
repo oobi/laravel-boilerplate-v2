@@ -217,7 +217,8 @@ class AuditScreensTest extends TestCase
         }
     }
 
-    public function test_the_list_shows_the_email_of_who_did_it_who_it_applies_to_and_a_failed_login(): void
+    /** Each address says whose it is; the actor's only shows when the search matched it, as the row names them. */
+    public function test_the_list_labels_the_email_of_who_it_applies_to_who_did_it_and_a_failed_login(): void
     {
         // Created and deleted unlogged, so only the entries below can show each address.
         [$actor, $target, $deleted] = Audit::withoutLogging(fn (): array => [
@@ -232,11 +233,15 @@ class AuditScreensTest extends TestCase
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ListAuditEntries::class)
-            ->assertSee('actor@example.test')
-            ->assertSee('target@example.test')
-            ->assertSee('deleted@example.test')
+            ->assertSee('Affected account: target@example.test')
+            ->assertSee('Tried: typed@example.test')
+            ->assertDontSee('actor@example.test')
+            ->assertDontSee('deleted@example.test')
             ->assertSeeHtml('href="'.route('users.show', $deleted).'"')
-            ->assertSee('typed@example.test');
+            ->set('tableSearch', 'actor@')
+            ->assertSee('Done by: actor@example.test')
+            ->set('tableSearch', 'deleted@')
+            ->assertSee('Done by: deleted@example.test');
     }
 
     public function test_the_export_finds_a_users_entries_and_a_failed_login_by_email(): void

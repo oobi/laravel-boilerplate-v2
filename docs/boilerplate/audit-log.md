@@ -34,8 +34,9 @@ read back in order (see [Sessions](#sessions)).
 **Admin > System > Audit log** (`audit.index`) reads as a feed, newest first,
 under a heading for each day ("Today, Thursday 12 November", "Yesterday, …",
 then the date). Each entry is one sentence ("Super Admin changed the roles of
-Priya Patel"), the person and the subject linked, with the category, the
-people's emails and the IP address under it, and its time with how long ago on
+Priya Patel"), the person and the subject linked, with a line under it of the
+category, then dot-separated: the email of the person it was done to
+("Affected account: …"), and the IP address. Its time with how long ago on
 the right (worked out when the page loads or changes, not ticking). An entry
 with no sentence shows its description, who did it and what it applies to. A
 person's initials or a tile for the kind of actor (system, visitor, queued
@@ -57,8 +58,14 @@ address), the address typed into a failed login or lockout, and every entry by
 or about a user whose email or first or last name contains what was typed. So a
 word that is part of someone's email or name ("admin") finds everything by or
 about them too. It is their email and name as they are now: an address someone
-used before doesn't find them. Each row shows those emails, or the address
-typed into a failed login. The Person filter searches
+used before doesn't find them. A row says whose each address is: "Affected
+account" for the person it was done to, "Done by" for the actor's only when the
+search matched it (the sentence already names them), and "Tried" for the
+address typed into a failed login. While searching, the search's chip in the
+active filters bar counts what it finds ("3 entries matching “savannah77”"),
+where other tables say "Search: …" (`getTableSearchIndicator()` on
+`ListAuditEntries`).
+The Person filter searches
 people by name or email as you type (a deleted person too) and shows what they
 did and what was done to them; it is kept in the URL as `?user=<id>`, which is
 how a user's page links here. It lists every user, with their email, to anyone

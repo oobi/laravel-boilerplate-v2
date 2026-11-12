@@ -48,4 +48,30 @@
     :where(.link):hover {
         color: var(--color-link-hover);
     }
+
+    /*
+     * A wrapping row of meta items (gap-x-3) with a dot in the gap before each
+     * one, as in the audit list's rows. No dot before the first item or the one after a badge.
+     * A dot that would start a wrapped line falls just outside the box and is
+     * clipped; the 0.25rem allowance keeps a focus ring whole (the current 2px
+     * ring with a 2px offset: a thicker one needs more). The dot is silent to
+     * screen readers. inset() is physical, so right to left clips the other edge.
+     */
+    .ui-dot-list {
+        clip-path: inset(-1rem -1rem -1rem -0.25rem);
+
+        &:dir(rtl) {
+            clip-path: inset(-1rem -0.25rem -1rem -1rem);
+        }
+
+        & > * {
+            position: relative;
+        }
+
+        & > :not(:first-child, .badge + *)::before {
+            content: '·' / '';
+            position: absolute;
+            inset-inline-start: -0.55rem;
+        }
+    }
 }
