@@ -230,4 +230,5 @@ return [
     'two_factor_grace_super_admin' => 'Never locked out (super admin)',
     'reset_two_factor_grace' => 'Reset grace period',
     'two_factor_grace_reset' => 'Grace period reset. The user can log in again.',
+    'time_zone_label' => ':place time (:abbreviation)',
 ];

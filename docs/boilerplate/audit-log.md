@@ -31,15 +31,34 @@ read back in order (see [Sessions](#sessions)).
 
 ## Reading it
 
-**Admin > System > Audit log** (`audit.index`): newest first, with search and
-filters for category, event (searchable), person, actor type and date. Search
+**Admin > System > Audit log** (`audit.index`) reads as a feed, newest first,
+under a heading for each day ("Today, Thursday 12 November", "Yesterday, …",
+then the date). Each entry is one sentence ("Super Admin changed the roles of
+Priya Patel"), the person and the subject linked, with the category, the
+people's emails and the IP address under it, and its time with how long ago on
+the right (worked out when the page loads or changes, not ticking). An entry
+with no sentence shows its description, who did it and what it applies to. A
+person's initials or a tile for the kind of actor (system, visitor, queued
+job, scheduler) sits beside it. On a phone the row is the same, with the time
+on the line under the sentence and no IP address.
+
+Quick views sit above the list as tabs, each with a count: **All**,
+**Changes** (records and privileged acts: no logins or logouts), **Security**
+(logins, account security and privileged acts), **Email** and **System**
+(scheduled tasks and queued jobs). A count follows the search and filters, so
+it matches the rows. A view shows once the log holds any entry in its
+categories, so Email appears when email logging writes its first entry. The
+open view is kept in the URL as `?view=` and goes to the export. Search and
+filters for event (searchable), person, actor type and date sit under the tabs;
+the Event filter narrows a view further (there is no category filter).
+Search
 finds the words on an entry (its description, event, actor's name and IP
 address), the address typed into a failed login or lockout, and every entry by
 or about a user whose email or first or last name contains what was typed. So a
 word that is part of someone's email or name ("admin") finds everything by or
 about them too. It is their email and name as they are now: an address someone
-used before doesn't find them. Each row shows that email under the person's
-name, or the address typed into a failed login. The Person filter searches
+used before doesn't find them. Each row shows those emails, or the address
+typed into a failed login. The Person filter searches
 people by name or email as you type (a deleted person too) and shows what they
 did and what was done to them; it is kept in the URL as `?user=<id>`, which is
 how a user's page links here. It lists every user, with their email, to anyone
@@ -171,8 +190,10 @@ Audit::record(
   events still read as one ("Jo updated Invoice 12"); anything else shows
   nothing there.
 - **The category** is one of `AuditCategory`'s cases or your own string.
-  Records (`data`) is the default. Name your own:
-  `AuditDisplay::registerCategory('billing', 'Billing');`.
+  Records (`data`) is the default. Name your own, and say which quick views it
+  shows under besides All:
+  `AuditDisplay::registerCategory('billing', 'Billing', [AuditView::CHANGES]);`.
+  One that names none shows under All only.
 - **Field and property names** read in words for core's fields ("Email
   address"); anything else is tidied (`due_date` reads "Due date").
 - **Properties** hold anything else worth keeping. Pass the fields you chose,
@@ -211,14 +232,15 @@ Audit::as('import', fn () => $importer->run(), actorName: 'Nightly CRM import');
 
 This sets the actor type even when someone is logged in. They stay the causer,
 and their name stays on the entry unless you pass `actorName`. The actor reaches
-any job dispatched inside the block. Give a new actor type a label and colour
+any job dispatched inside the block. Give a new actor type a label, colour and
+optionally the icon on its tile (a heroicon component name; a cog otherwise)
 from a provider's `boot()`:
 
 ```php
 use App\Support\Audit\AuditDisplay;
 use App\Support\Theme\DaisyColor;
 
-AuditDisplay::registerActor('import', 'Import', DaisyColor::ACCENT);
+AuditDisplay::registerActor('import', 'Import', DaisyColor::ACCENT, 'heroicon-o-arrow-down-tray');
 ```
 
 To write nothing at all, for bulk work that would flood the log:
@@ -262,6 +284,7 @@ class has gone reads as the alias in words ("Import Run 5" from `import_run`).
 |---|---|---|
 | `AUDIT_ENABLED` | `true` | `false` writes nothing and removes the screens, the nav item, the panel and the daily clean. Existing entries stay, and the two permissions stay on the Roles screen. Re-cache config and routes after changing it. |
 | `AUDIT_RETENTION_DAYS` | `365` | Entries older than this are deleted daily (`activitylog:clean`, scheduled). `0` keeps them forever. A deleted person's name stays on their entries until then. |
+| `APP_DISPLAY_TIMEZONE` | the app's timezone (UTC) | The zone the audit screens show times in, named on the page ("Times in Brisbane time (AEST)"): the list, its day headings and date filter, the detail page and the Activity panel. Times are stored in UTC either way. Not a real zone stops the audit screens and a user's Activity panel with an error saying so. |
 | `AUDIT_LOG_SCHEDULE_ROUTINE` | `true` | Scheduled tasks that finish or are skipped. Failures are always logged. Turn it off if an every-minute task makes it noisy. |
 
 `config/audit.php` also holds the `redact` list and `max_value_length`.
@@ -286,9 +309,11 @@ class has gone reads as the alias in words ("Import Run 5" from `import_run`).
 - **The export** has no PHP time limit. A very long one needs the web server's
   timeout to match. The file starts with a byte order mark so Excel reads its
   encoding. A cell that could run as a spreadsheet formula gets an apostrophe in
-  front.
+  front. Its times stay in UTC, each with its offset (`+00:00`), whatever the
+  display zone: a file read elsewhere or joined with other data needs one zone.
 - **The filter dropdowns** list what is in the log, cached for five minutes, so
-  a new kind of entry can take that long to appear in them.
+  a new kind of entry can take that long to appear in them. The same goes for a
+  quick view appearing. The counts on the tabs aren't cached.
 - **A scheduled task's description** is stored as written in
   `routes/console.php`: don't put secrets in it.
 

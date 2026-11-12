@@ -94,7 +94,7 @@ class AuditScreensTest extends TestCase
             ->assertSeeHtml(route('users.show', $target));
     }
 
-    public function test_only_an_actor_without_a_persons_name_has_a_badge(): void
+    public function test_a_named_person_has_their_initials_and_any_other_actor_a_tile_for_its_kind(): void
     {
         AuditEntry::factory()->create(['actor_type' => AuditActor::USER, 'actor_name' => 'Named Person']);
         AuditEntry::factory()->create(['actor_type' => AuditActor::GUEST, 'actor_name' => null]);
@@ -102,17 +102,20 @@ class AuditScreensTest extends TestCase
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ListAuditEntries::class)
             ->assertSee('Named Person')
-            ->assertSeeHtml('badge badge-'.AuditDisplay::actorColor(AuditActor::GUEST)->value)
-            ->assertDontSeeHtml('badge badge-'.AuditDisplay::actorColor(AuditActor::USER)->value);
+            ->assertSeeHtml('title="Named Person"')
+            ->assertSeeHtml('avatar-'.AuditDisplay::actorColor(AuditActor::GUEST)->value.' avatar-soft')
+            ->assertSeeHtml('title="Visitor"')
+            ->assertSee('Visitor');
     }
 
-    public function test_a_person_with_no_stored_name_still_has_a_badge(): void
+    public function test_a_person_with_no_stored_name_has_the_tile_for_a_person(): void
     {
         AuditEntry::factory()->create(['actor_type' => AuditActor::USER, 'actor_name' => null]);
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ListAuditEntries::class)
-            ->assertSeeHtml('badge badge-'.AuditDisplay::actorColor(AuditActor::USER)->value);
+            ->assertSeeHtml('avatar-'.AuditDisplay::actorColor(AuditActor::USER)->value.' avatar-soft')
+            ->assertSeeHtml('title="Person"');
     }
 
     public function test_the_newest_entry_comes_first(): void
@@ -125,13 +128,13 @@ class AuditScreensTest extends TestCase
             ->assertSeeInOrder(['Newer entry', 'Older entry']);
     }
 
-    public function test_it_filters_by_category_event_and_actor_type(): void
+    public function test_it_filters_by_event_and_actor_type(): void
     {
         AuditEntry::factory()->create(['description' => 'Kept entry', 'log_name' => 'auth', 'event' => 'auth.login', 'actor_type' => AuditActor::GUEST]);
         AuditEntry::factory()->create(['description' => 'Other entry', 'log_name' => 'data', 'event' => 'x.y', 'actor_type' => AuditActor::SYSTEM]);
         $component = Livewire::actingAs(User::factory()->superAdmin()->create())->test(ListAuditEntries::class);
 
-        foreach (['category' => 'auth', 'event' => 'auth.login', 'actor_type' => AuditActor::GUEST] as $filter => $value) {
+        foreach (['event' => 'auth.login', 'actor_type' => AuditActor::GUEST] as $filter => $value) {
             $component->set("tableFilters.{$filter}.value", $value)
                 ->assertSee('Kept entry')
                 ->assertDontSee('Other entry')
@@ -479,7 +482,7 @@ class AuditScreensTest extends TestCase
         $events = array_keys($first);
         $this->assertLessThan(array_search('step10.done', $events), array_search('step2.done', $events));
 
-        foreach ([$first, $page()->categoryOptions(), $page()->actorTypeOptions()] as $dropdown) {
+        foreach ([$first, $page()->actorTypeOptions()] as $dropdown) {
             $labels = array_values($dropdown);
             $sorted = $labels;
             sort($sorted, SORT_NATURAL | SORT_FLAG_CASE);
@@ -841,7 +844,6 @@ class AuditScreensTest extends TestCase
         $this->assertSame('Access log', AuditDisplay::categoryLabel(AuditCategory::AUTH->value));
 
         $page = Livewire::test(ListAuditEntries::class);
-        $this->assertSame('Invoices and payments', $page->instance()->categoryOptions()['billing']);
         $this->assertSame('Invoice emailed', $page->instance()->eventOptions()['invoice.sent']);
         $page->assertSee('Invoices and payments');
 
@@ -938,7 +940,8 @@ class AuditScreensTest extends TestCase
             Livewire::actingAs($viewer)->test(ListAuditEntries::class)
                 ->assertSee('Imported entry about a role')
                 ->assertSee('CDB history')
-                ->assertSeeHtml('badge badge-'.DaisyColor::ACCENT->value)
+                ->assertSeeHtml('avatar-'.DaisyColor::ACCENT->value.' avatar-soft')
+                ->assertSeeHtml('title="Import"')
                 ->assertSeeHtml(route('roles.edit', $role))
                 ->assertSee('Imported entry about a run')
                 ->assertSee('Import Run 5');
@@ -967,7 +970,7 @@ class AuditScreensTest extends TestCase
         AuditEntry::factory()->create(['description' => 'Kept entry', 'log_name' => 'auth']);
         AuditEntry::factory()->create(['description' => 'Other entry', 'log_name' => 'data']);
 
-        $response = $this->actingAs($exporter)->post(route('audit.export'), ['category' => 'auth']);
+        $response = $this->actingAs($exporter)->post(route('audit.export'), ['view' => 'security']);
 
         $response->assertOk();
         $this->assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
@@ -980,7 +983,7 @@ class AuditScreensTest extends TestCase
         $recorded = AuditEntry::query()->where('event', 'audit.exported')->sole();
 
         $this->assertTrue($recorded->causer->is($exporter));
-        $this->assertSame(['category' => 'auth'], $recorded->getProperty('filters'));
+        $this->assertSame(['view' => 'security'], $recorded->getProperty('filters'));
     }
 
     public function test_each_filter_on_the_screen_narrows_the_export(): void
@@ -1006,7 +1009,7 @@ class AuditScreensTest extends TestCase
         ]);
 
         $filters = [
-            'category' => 'auth',
+            'view' => 'security',
             'event' => 'auth.login',
             'actor_type' => AuditActor::GUEST,
             'date' => '2026-03-10',
@@ -1030,12 +1033,12 @@ class AuditScreensTest extends TestCase
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->withQueryParams(['user' => (string) $person->getKey(), 'session' => self::TRAIL])
             ->test(ListAuditEntries::class)
-            ->set('tableFilters.category.value', 'auth')
+            ->call('showView', 'security')
             ->set('tableFilters.event.value', 'auth.login')
             ->set('tableFilters.actor_type.value', AuditActor::GUEST)
             ->set('tableFilters.date.value', '2026-03-10')
             ->set('tableSearch', 'Kept')
-            ->assertSeeHtml('name="category" value="auth"')
+            ->assertSeeHtml('name="view" value="security"')
             ->assertSeeHtml('name="event" value="auth.login"')
             ->assertSeeHtml('name="actor_type" value="'.AuditActor::GUEST.'"')
             ->assertSeeHtml('name="date" value="2026-03-10"')
@@ -1275,7 +1278,9 @@ class AuditScreensTest extends TestCase
     {
         $exporter = User::factory()->withPermission(SystemPermission::EXPORT_AUDIT_LOG)->create();
 
-        $this->actingAs($exporter)->post(route('audit.export'), ['category' => ['a', 'b']])->assertSessionHasErrors('category');
+        foreach ([['a', 'b'], 'nonsense'] as $view) {
+            $this->actingAs($exporter)->post(route('audit.export'), ['view' => $view])->assertSessionHasErrors('view');
+        }
 
         foreach (['nonsense', '1.5', '-5', '0', '99999999999999999999'] as $user) {
             $this->actingAs($exporter)->post(route('audit.export'), ['user' => $user])->assertSessionHasErrors('user');

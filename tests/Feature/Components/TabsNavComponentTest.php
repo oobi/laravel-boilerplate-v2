@@ -28,6 +28,25 @@ class TabsNavComponentTest extends TestCase
             ->assertSeeInOrder(['href="/current"', 'aria-current="page"', 'Current', 'href="/versions"', 'Versions', 'badge', '4', 'href="/changes"', 'Proposed changes', 'Current document'], false);
     }
 
+    public function test_button_tabs_say_which_is_selected_and_name_the_panel_when_asked(): void
+    {
+        $this->blade(<<<'BLADE'
+            <x-tabs-nav label="Quick views" panel-labelled-by="view-open">
+                <x-tabs-item id="view-other">Other</x-tabs-item>
+                <x-tabs-item id="view-open" active>Open</x-tabs-item>
+                <x-slot:content>Panel body</x-slot:content>
+            </x-tabs-nav>
+            BLADE)
+            ->assertSeeInOrder(['role="tablist"', 'aria-label="Quick views"', 'class="tabs'], false)
+            ->assertSeeInOrder(['type="button"', 'aria-selected="false"', 'id="view-other"', 'aria-selected="true"', 'id="view-open"', 'role="tabpanel" aria-labelledby="view-open"', 'Panel body'], false)
+            ->assertDontSee('aria-current', false);
+
+        // Link tabs and a panel nobody names keep their plain markup.
+        $this->blade('<x-tabs-nav><x-tabs-item href="/a" active>A</x-tabs-item><x-slot:content>Body</x-slot:content></x-tabs-nav>')
+            ->assertDontSee('aria-selected', false)
+            ->assertDontSee('role="tabpanel"', false);
+    }
+
     public function test_scroll_controls_are_named_buttons_after_the_tab_viewport_hidden_until_the_tabs_overflow(): void
     {
         $this->blade('<x-tabs-nav :scrollable="true"><x-tabs-item href="/overview">Overview</x-tabs-item></x-tabs-nav>')

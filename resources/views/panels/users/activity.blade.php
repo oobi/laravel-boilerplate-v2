@@ -12,7 +12,10 @@
                 <li class="text-sm">
                     <a href="{{ route('audit.show', $entry) }}" class="link link-hover line-clamp-2 wrap-anywhere">{{ $entry->description }}</a>
                     <div class="text-muted wrap-anywhere">
-                        {{ $entry->created_at?->diffForHumans() }}
+                        @if ($entry->created_at)
+                            {{-- The exact time, in the zone the audit log shows, on hover. --}}
+                            <time datetime="{{ $entry->created_at->toIso8601String() }}" title="{{ \App\Support\DisplayTimezone::of($entry->created_at)->translatedFormat('j F Y, g:i a') }} {{ \App\Support\DisplayTimezone::abbreviation($entry->created_at) }}">{{ $entry->created_at->diffForHumans() }}</time>
+                        @endif
                         @if ($entry->actor_name)
                             · {{ $entry->actor_name }}
                         @endif

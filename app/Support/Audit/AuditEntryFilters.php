@@ -7,6 +7,7 @@ namespace App\Support\Audit;
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Support\DateRange;
+use App\Support\DisplayTimezone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -21,12 +22,12 @@ final class AuditEntryFilters
 
     /**
      * @param  Builder<AuditEntry>  $query
-     * @param  array{category?: ?string, event?: ?string, actor_type?: ?string, date?: ?string, search?: ?string, user?: int|string|null, session?: ?string}  $filters
+     * @param  array{view?: ?string, event?: ?string, actor_type?: ?string, date?: ?string, search?: ?string, user?: int|string|null, session?: ?string}  $filters
      * @return Builder<AuditEntry>
      */
     public static function apply(Builder $query, array $filters): Builder
     {
-        self::equals($query, 'log_name', $filters['category'] ?? null);
+        AuditView::tryFrom((string) ($filters['view'] ?? ''))?->apply($query);
         self::equals($query, 'event', $filters['event'] ?? null);
         self::equals($query, 'actor_type', $filters['actor_type'] ?? null);
         self::date($query, $filters['date'] ?? null);
@@ -59,10 +60,14 @@ final class AuditEntryFilters
         }
     }
 
-    /** @param  Builder<AuditEntry>  $query */
+    /**
+     * Days as people read them: in the display zone, as the list's day headings are.
+     *
+     * @param  Builder<AuditEntry>  $query
+     */
     public static function date(Builder $query, ?string $value): void
     {
-        DateRange::parse($value)?->apply($query, 'created_at', config('app.timezone'));
+        DateRange::parse($value)?->apply($query, 'created_at', DisplayTimezone::name());
     }
 
     /**

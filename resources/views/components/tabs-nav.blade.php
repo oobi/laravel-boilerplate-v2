@@ -1,10 +1,10 @@
 {{--
-    <x-tabs-nav> — tabs ATTACHED to their content as one bordered "island"
-    (never a floating bar over a separate box) — pass the panel via the
+    <x-tabs-nav>: tabs ATTACHED to their content as one bordered "island"
+    (never a floating bar over a separate box). Pass the panel via the
     `content` slot. That island can itself nest others (cards, toolbars,
     tables) inside `content`, same as the rest of the design system.
 
-    tabs-border (not tabs-lift) — daisyUI's own "radio tabs-border + tab
+    tabs-border (not tabs-lift): daisyUI's own "radio tabs-border + tab
     content" example is exactly this pairing; tabs-lift's corner-notch CSS
     is tuned for its content sitting immediately after the checked radio
     among ALL tabs in the DOM, which doesn't hold for us (one tab per page
@@ -24,8 +24,14 @@
     Arrow buttons sit beside the viewport, shown only when the tabs overflow.
     Explicit false retains the plain, wrapping tab layout without scroll controls.
     Pages don't pass it, so this default sets the behaviour app-wide.
+
+    label: names the tab list for a screen reader when the page heading
+    doesn't already say what the tabs choose between ("Quick views").
+
+    panel-labelled-by: for button tabs that switch the content in place, the
+    active tab's id. The content becomes its tab panel, named by that tab.
 --}}
-@props(['scrollable' => true, 'flush' => false])
+@props(['scrollable' => true, 'flush' => false, 'label' => null, 'panelLabelledBy' => null])
 {{-- overflow-clip keeps sticky content inside the panel attached to the page scroller. --}}
 <div {{ $attributes->class(['tabs-connected overflow-clip rounded-box border border-base-300 bg-base-100 ui-island-shadow']) }}>
     <div class="tabs-connected__header px-4 pt-3 sm:px-6">
@@ -34,7 +40,7 @@
                 class="tabs-connected__scroll-viewport @if ($scrollable) tabs-connected__scroll-viewport--scrollable @endif"
                 @if ($scrollable) data-tab-scroll @endif
             >
-                <div role="tablist" class="tabs tabs-border gap-2 sm:gap-6 @if ($scrollable) tabs--scrollable @endif">
+                <div role="tablist" @if ($label) aria-label="{{ $label }}" @endif class="tabs tabs-border gap-2 sm:gap-6 @if ($scrollable) tabs--scrollable @endif">
                     {{ $slot }}
                 </div>
             </div>
@@ -63,10 +69,10 @@
     @endif
 
     @isset($content)
-        {{-- Forces display regardless of which tab is "active" — daisyUI's own
+        {{-- Forces display regardless of which tab is "active": daisyUI's own
              show/hide-on-checked wiring is for co-located panels; ours are
              separate pages, so there's always exactly one panel to show. --}}
-        <div @class(['tab-content tabs-connected__content bg-base-100', 'ui-flush-content' => $flush]) style="display: block">
+        <div @class(['tab-content tabs-connected__content bg-base-100', 'ui-flush-content' => $flush]) style="display: block" @if ($panelLabelledBy) role="tabpanel" aria-labelledby="{{ $panelLabelledBy }}" @endif>
             {{ $content }}
         </div>
     @endisset

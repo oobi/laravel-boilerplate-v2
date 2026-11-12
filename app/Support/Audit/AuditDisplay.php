@@ -11,6 +11,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 /**
@@ -20,7 +21,7 @@ use Illuminate\Support\Str;
  */
 final class AuditDisplay
 {
-    /** @var array<string, array{label: string, color: DaisyColor}> */
+    /** @var array<string, array{label: string, color: DaisyColor, icon: string|null}> */
     private static array $actors = [];
 
     /** @var array<class-string<Model>, Closure(Model): array{label: string, url?: string|null}> */
@@ -29,12 +30,16 @@ final class AuditDisplay
     /** @var array<string, string> */
     private static array $categories = [];
 
+    /** @var array<string, list<AuditView>> */
+    private static array $categoryViews = [];
+
     /** @var array<string, array{label: string, sentence: string|null}> */
     private static array $events = [];
 
-    public static function registerActor(string $type, string $label, DaisyColor $color = DaisyColor::NEUTRAL): void
+    /** An actor type's name, colour and icon (a heroicon component name; a cog by default). */
+    public static function registerActor(string $type, string $label, DaisyColor $color = DaisyColor::NEUTRAL, ?string $icon = null): void
     {
-        self::$actors[$type] = ['label' => $label, 'color' => $color];
+        self::$actors[$type] = ['label' => $label, 'color' => $color, 'icon' => $icon];
     }
 
     /**
@@ -49,12 +54,28 @@ final class AuditDisplay
     }
 
     /**
-     * A category's name on the screens and in the filter, for one a project logs
-     * with its own string (`Audit::record(..., category: 'billing')`).
+     * A category's name on the screens, for one a project logs with its own
+     * string (`Audit::record(..., category: 'billing')`), and the quick views it
+     * shows under besides All.
+     *
+     * @param  list<AuditView>  $views
      */
-    public static function registerCategory(BackedEnum|string $category, string $label): void
+    public static function registerCategory(BackedEnum|string $category, string $label, array $views = []): void
     {
-        self::$categories[$category instanceof BackedEnum ? (string) $category->value : $category] = $label;
+        $category = $category instanceof BackedEnum ? (string) $category->value : $category;
+
+        self::$categories[$category] = $label;
+        self::$categoryViews[$category] = $views;
+    }
+
+    /**
+     * The project categories registered into a quick view.
+     *
+     * @return list<string>
+     */
+    public static function categoriesInView(AuditView $view): array
+    {
+        return array_keys(array_filter(self::$categoryViews, fn (array $views): bool => in_array($view, $views, true)));
     }
 
     /**
@@ -79,6 +100,7 @@ final class AuditDisplay
         self::$actors = [];
         self::$subjects = [];
         self::$categories = [];
+        self::$categoryViews = [];
         self::$events = [];
     }
 
@@ -93,6 +115,17 @@ final class AuditDisplay
             AuditActor::USER => DaisyColor::INFO,
             AuditActor::GUEST => DaisyColor::WARNING,
             default => DaisyColor::NEUTRAL,
+        };
+    }
+
+    /** The tile shown for an actor with no face: the system, a visitor, a queued job. */
+    public static function actorIcon(string $type): string
+    {
+        return self::$actors[$type]['icon'] ?? match ($type) {
+            AuditActor::GUEST => 'heroicon-o-globe-alt',
+            AuditActor::QUEUE => 'heroicon-o-queue-list',
+            AuditActor::SCHEDULER => 'heroicon-o-clock',
+            default => 'heroicon-o-cog-6-tooth',
         };
     }
 
@@ -149,8 +182,73 @@ final class AuditDisplay
             return $entry->description;
         }
 
-        $actor = $entry->actor_name ?: self::actorLabel($entry->actor_type);
-        $subject = self::subject($entry)['label'] ?? null;
+        $sentence = self::sentence($entry);
+
+        if ($sentence === null) {
+            return null;
+        }
+
+        return strtr($sentence, [
+            ':actor' => self::actorName($entry),
+            ':subject' => (string) (self::subject($entry)['label'] ?? ''),
+        ]);
+    }
+
+    /**
+     * The summary as HTML for the list, the actor and subject linked where the
+     * viewer may open them; null when there is no sentence for the entry.
+     */
+    public static function summaryHtml(AuditEntry $entry, ?string $actorUrl = null): ?HtmlString
+    {
+        if (self::hasWrittenDescription($entry)) {
+            return new HtmlString(e($entry->description));
+        }
+
+        $sentence = self::sentence($entry);
+
+        if ($sentence === null) {
+            return null;
+        }
+
+        $subject = self::subject($entry);
+
+        // Escape the sentence first, then put the names in, each escaped once.
+        return new HtmlString(strtr(e($sentence), [
+            ':actor' => self::link(self::actorName($entry), $actorUrl, 'font-medium'),
+            ':subject' => self::link((string) ($subject['label'] ?? ''), $subject['url'] ?? null),
+        ]));
+    }
+
+    /** "By Super Admin", linked as summaryHtml() links the actor: for an entry with no sentence. */
+    public static function byHtml(AuditEntry $entry, ?string $actorUrl = null): HtmlString
+    {
+        return new HtmlString(strtr(e(__('audit.by', ['actor' => ':actor'])), [
+            ':actor' => self::link(self::actorName($entry), $actorUrl),
+        ]));
+    }
+
+    /**
+     * Whether the summary names the actor or the subject (`:actor`, `:subject`),
+     * so the list needn't say it again. A written description names neither.
+     */
+    public static function summaryNames(AuditEntry $entry, string $placeholder): bool
+    {
+        return ! self::hasWrittenDescription($entry) && str_contains((string) self::sentence($entry), $placeholder);
+    }
+
+    /** Who did it, by name, or the kind of actor ("System", "Visitor"). */
+    public static function actorName(AuditEntry $entry): string
+    {
+        return $entry->actor_name ?: self::actorLabel($entry->actor_type);
+    }
+
+    /**
+     * The entry's sentence with its placeholders, when one applies: registered
+     * with the event, from lang `sentences`, or from `verbs` for a model's own
+     * events. One that names a subject the entry doesn't have doesn't apply.
+     */
+    private static function sentence(AuditEntry $entry): ?string
+    {
         $event = (string) $entry->event;
         $key = str_replace('.', '_', $event);
         $verb = Str::afterLast($event, '.');
@@ -162,11 +260,14 @@ final class AuditDisplay
             default => null,
         };
 
-        if ($sentence !== null && ($subject !== null || ! str_contains($sentence, ':subject'))) {
-            return strtr($sentence, [':actor' => $actor, ':subject' => (string) $subject]);
-        }
+        return $sentence !== null && (self::subject($entry) !== null || ! str_contains($sentence, ':subject')) ? $sentence : null;
+    }
 
-        return null;
+    private static function link(string $text, ?string $url, string $class = ''): string
+    {
+        return $url === null
+            ? ($class === '' ? e($text) : '<span class="'.$class.'">'.e($text).'</span>')
+            : '<a href="'.e($url).'" class="'.trim('link link-hover '.$class).'">'.e($text).'</a>';
     }
 
     /**

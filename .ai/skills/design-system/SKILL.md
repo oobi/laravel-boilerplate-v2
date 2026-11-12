@@ -129,8 +129,8 @@ A Filament table with tall rows adds `->extraAttributes(['class' => 'ui-cells-to
 
 | Component | Use instead of | Key props |
 |---|---|---|
-| `<x-tabs-nav>` | tabs as a bordered "island" attached to their own panel (never a floating bar over a separate box) | `scrollable` (default true; pages never pass it, so the default sets it app-wide), `flush`; slot: `content` |
-| `<x-tabs-item>` | a single `role="tab"` link | `active`, `href`, `icon`, `badge` |
+| `<x-tabs-nav>` | tabs as a bordered "island" attached to their own panel (never a floating bar over a separate box) | `scrollable` (default true; pages never pass it, so the default sets it app-wide), `flush`, `label` (names the tab list for a screen reader when the page doesn't, e.g. "Quick views"); slot: `content` |
+| `<x-tabs-item>` | a single `role="tab"` link, or a button without `href` (switching a Livewire view on the same page, e.g. the audit log's quick views: `wire:click` plus `active`, which sets `aria-selected`) | `active`, `href`, `icon`, `badge` |
 
 ### Admin shell (usually wired via a registry, not hand-written in a page)
 
