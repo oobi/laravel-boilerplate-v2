@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LogicException;
 use ReflectionClass;
 use Spatie\Activitylog\Models\Activity;
@@ -58,6 +59,17 @@ class AuditEntry extends Activity
     protected function performDeleteOnModel(): never
     {
         throw new LogicException('An audit entry cannot be deleted.');
+    }
+
+    /**
+     * Who did it, a soft-deleted person included, as spatie's subject() is with
+     * include_soft_deleted_subjects: their entries keep their link and email.
+     *
+     * @return MorphTo<Model, $this>
+     */
+    public function causer(): MorphTo
+    {
+        return $this->morphTo()->withoutGlobalScope(SoftDeletingScope::class);
     }
 
     /** @return BelongsTo<User, $this> */

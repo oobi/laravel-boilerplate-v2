@@ -2,7 +2,7 @@
 
 return [
     'description' => 'Who did what, and when.',
-    'search' => 'Search descriptions, events, people and addresses',
+    'search' => 'Search name, email or event…',
     'when' => 'When',
     'what' => 'What',
     'actor' => 'Who',

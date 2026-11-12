@@ -8,6 +8,7 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Support\DateRange;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 /**
  * What the audit screen can filter by, in one place, so the CSV export always
@@ -64,12 +65,28 @@ final class AuditEntryFilters
         DateRange::parse($value)?->apply($query, 'created_at', config('app.timezone'));
     }
 
-    /** @param  Builder<AuditEntry>  $query */
+    /**
+     * The words on the entry, the address typed into a failed login, and the
+     * people involved: an entry by or about a user whose email or name (as it
+     * is now) contains the term. A soft-deleted user is still found.
+     *
+     * @param  Builder<AuditEntry>  $query
+     */
     public static function search(Builder $query, ?string $term): void
     {
-        if (filled($term)) {
-            $query->whereAnyContains(['description', 'event', 'actor_name', 'ip_address'], $term);
+        if (blank($term)) {
+            return;
         }
+
+        $type = (new User)->getMorphClass();
+        $people = User::withTrashed()->select('id')->whereAnyContains(['email', 'first_name', 'last_name'], $term);
+
+        $query->where(fn (Builder $query): Builder => $query
+            ->whereAnyContains(['description', 'event', 'actor_name', 'ip_address'], $term)
+            // MySQL compares JSON text case-sensitively; the address is stored lowercased, so the term is too.
+            ->orWhere(fn (Builder $query): Builder => $query->whereAnyContains(['properties->identifier'], Str::lower($term)))
+            ->orWhere(fn (Builder $query): Builder => $query->where('causer_type', $type)->whereIn('causer_id', $people))
+            ->orWhere(fn (Builder $query): Builder => $query->where('subject_type', $type)->whereIn('subject_id', $people)));
     }
 
     /**
