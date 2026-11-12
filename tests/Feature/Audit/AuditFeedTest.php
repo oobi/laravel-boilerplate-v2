@@ -44,7 +44,7 @@ class AuditFeedTest extends TestCase
         Audit::record('user.roles_changed', $target, by: $admin, category: AuditCategory::ACCESS);
 
         $this->list($admin)
-            ->assertSeeHtml('<a href="'.route('users.show', $admin).'" class="link link-hover font-medium">Super Admin</a> changed the roles of <a href="'.route('users.show', $target).'" class="link link-hover">Priya Patel</a>')
+            ->assertSeeHtml('<a href="'.route('users.show', $admin).'" class="link link-hover font-semibold">Super Admin</a> changed the roles of <a href="'.route('users.show', $target).'" class="link link-hover font-semibold">Priya Patel</a>')
             // The address of the person it was done to, labelled; the actor's isn't repeated.
             ->assertSee('Affected account: priya@example.test')
             ->assertDontSee('admin@example.test')
@@ -90,7 +90,8 @@ class AuditFeedTest extends TestCase
             ->assertSee('Parcel weighed')
             ->assertSee(__('audit.by', ['actor' => 'Queue']))
             ->assertSeeHtml(e(__('audit.subject')).':')
-            ->assertSee('Named Person');
+            // A link in running text stands out by weight as well as colour (#43).
+            ->assertSeeHtml('class="link link-hover font-semibold">Named Person</a>');
     }
 
     public function test_a_failed_login_reads_as_a_sentence_with_the_address_typed(): void
@@ -105,7 +106,7 @@ class AuditFeedTest extends TestCase
         ]);
 
         $this->list($this->viewer())
-            ->assertSeeHtml('<span class="font-medium">Visitor</span> failed to log in')
+            ->assertSeeHtml('<span class="font-semibold">Visitor</span> failed to log in')
             ->assertSee('Tried: nobody@example.test');
     }
 
