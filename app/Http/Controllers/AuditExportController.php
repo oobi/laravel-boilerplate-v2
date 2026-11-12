@@ -9,8 +9,10 @@ use App\Models\AuditEntry;
 use App\Support\Audit\Audit;
 use App\Support\Audit\AuditCategory;
 use App\Support\Audit\AuditEntryFilters;
+use App\Support\Audit\AuditView;
 use App\Support\Audit\SessionTrail;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -21,9 +23,9 @@ class AuditExportController extends Controller
 {
     public function __invoke(Request $request, ExportAuditEntries $export): StreamedResponse
     {
-        /** @var array{category?: ?string, event?: ?string, actor_type?: ?string, date?: ?string, search?: ?string, user?: ?string, session?: ?string} $filters */
+        /** @var array{view?: ?string, event?: ?string, actor_type?: ?string, date?: ?string, search?: ?string, user?: ?string, session?: ?string} $filters */
         $filters = $request->validate([
-            'category' => ['nullable', 'string'],
+            'view' => ['nullable', Rule::enum(AuditView::class)],
             'event' => ['nullable', 'string'],
             'actor_type' => ['nullable', 'string'],
             'date' => ['nullable', 'string'],

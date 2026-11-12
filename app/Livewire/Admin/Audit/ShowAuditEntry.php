@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\Audit\Audit;
 use App\Support\Audit\AuditDisplay;
 use App\Support\Audit\LogAuditEntry;
+use App\Support\DisplayTimezone;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Section;
@@ -76,7 +77,11 @@ class ShowAuditEntry extends Component implements HasSchemas
                     // Beside the details a narrow column; alone, it spreads across the page.
                     ->columns($this->hasDetails() ? 1 : ['md' => 2, 'lg' => 3])
                     ->schema([
-                        TextEntry::make('created_at')->label(__('audit.occurred_at'))->dateTime(),
+                        // In the display zone, named, as the list shows it.
+                        TextEntry::make('created_at')
+                            ->label(__('audit.occurred_at'))
+                            ->dateTime('j F Y, g:i a', DisplayTimezone::name())
+                            ->suffix(fn (AuditEntry $record): string => ' '.DisplayTimezone::abbreviation($record->created_at)),
                         TextEntry::make('log_name')
                             ->label(__('audit.category'))
                             ->formatStateUsing(fn (string $state): string => AuditDisplay::categoryLabel($state)),

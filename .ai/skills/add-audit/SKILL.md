@@ -53,7 +53,10 @@ before changing anything. This skill is the short procedure.
 4. Category: `AuditCategory::DATA` (default) for records, `ACCESS` for who can do
    what, `SECURITY` for account security, `AUTH` for logins, `SYSTEM` for the
    app itself. A project's own category is any string; name it with
-   `AuditDisplay::registerCategory('billing', 'Billing')` in a provider's `boot()`.
+   `AuditDisplay::registerCategory('billing', 'Billing', [AuditView::CHANGES])`
+   in a provider's `boot()`. The third argument lists the list's quick views
+   (`App\Support\Audit\AuditView`: CHANGES, SECURITY, EMAIL, SYSTEM) it shows
+   under besides All; leave it out and it shows under All only.
 5. Wording: the screens show the event as words ("Invoice sent"). For better
    wording and a detail-page sentence, call
    `AuditDisplay::registerEvent('invoice.sent', 'Invoice emailed', ':actor emailed an invoice to :subject')`
@@ -67,8 +70,9 @@ before changing anything. This skill is the short procedure.
 
 ## A new actor type
 
-`AuditDisplay::registerActor('import', 'Import', DaisyColor::ACCENT);` in a
-provider's `boot()`, then `Audit::as('import', ...)` around the work.
+`AuditDisplay::registerActor('import', 'Import', DaisyColor::ACCENT, 'heroicon-o-arrow-down-tray');`
+in a provider's `boot()` (the icon is the actor's tile on the list; a cog if left
+out), then `Audit::as('import', ...)` around the work.
 
 ## Tests
 

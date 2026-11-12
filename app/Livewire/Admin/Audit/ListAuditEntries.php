@@ -10,8 +10,10 @@ use App\Models\User;
 use App\Support\Audit\Audit;
 use App\Support\Audit\AuditDisplay;
 use App\Support\Audit\AuditEntryFilters;
+use App\Support\Audit\AuditView;
 use App\Support\Audit\SessionTrail;
 use App\Support\DateRange;
+use App\Support\DisplayTimezone;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -24,13 +26,13 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Json;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -55,6 +57,10 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
     #[Url(as: 'session')]
     public ?string $sessionTrail = null;
 
+    /** The quick view (an AuditView value). A string: the URL can hold anything. */
+    #[Url(as: 'view', except: 'all')]
+    public string $activeView = 'all';
+
     /** @var array<string, Collection<int, string>> */
     private array $distinctValues = [];
 
@@ -74,6 +80,7 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         $userId = AuditEntryFilters::userId($this->userId);
         $this->userId = $userId === null ? null : (string) $userId;
         $this->sessionTrail = SessionTrail::normalize($this->sessionTrail);
+        $this->activeView = $this->quickView()->value;
 
         // Set here, not as the filter's default: resetting the filters must clear it.
         if ($this->userId !== null) {
@@ -86,51 +93,41 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         return $table
             ->query(fn (): Builder => tap(
                 AuditEntry::query()->with(['subject', 'causer']),
-                fn (Builder $query) => AuditEntryFilters::forSession($query, $this->sessionTrail),
+                function (Builder $query): void {
+                    AuditEntryFilters::forSession($query, $this->sessionTrail);
+                    $this->quickView()->apply($query);
+                },
             ))
             // One session reads in the order it happened; everything else, newest first.
             ->defaultSort(fn (Builder $query): Builder => $this->isFilteredToSession()
                 ? $query->orderBy('created_at')->orderBy('id')
                 : $query->orderByDesc('created_at')->orderByDesc('id'))
-            ->extraAttributes(['class' => 'ui-cells-top'])
             // The whole phrase, as the export searches: the two must hold the same rows.
             ->splitSearchTerms(false)
             ->columns([
+                // One sentence per entry; the day headings come from the grouping below.
                 Tables\Columns\ViewColumn::make('description')
                     ->label(__('audit.what'))
-                    ->view('filament.tables.columns.audit-entry-column')
+                    ->view('filament.tables.columns.audit-feed-row')
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         AuditEntryFilters::search($query, $search);
 
                         return $query;
                     }),
-
-                Tables\Columns\ViewColumn::make('actor_name')
-                    ->label(__('audit.actor'))
-                    ->view('filament.tables.columns.audit-actor-column'),
-
-                Tables\Columns\ViewColumn::make('subject_id')
-                    ->label(__('audit.subject'))
-                    ->view('filament.tables.columns.audit-subject-column'),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label(__('audit.when'))
-                    ->dateTime()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('ip_address')
-                    ->label(__('audit.ip_address'))
-                    // A dash, still read out as what it means, as in the Users list.
-                    ->placeholder(new HtmlString('<span aria-hidden="true">–</span><span class="sr-only">'.e(__('audit.none')).'</span>'))
-                    ->visibleFrom('lg'),
             ])
+            ->defaultGroup(
+                Group::make('created_at')
+                    ->collapsible(false)
+                    ->titlePrefixedWithLabel(false)
+                    ->getKeyFromRecordUsing(fn (AuditEntry $record): string => DisplayTimezone::of($record->created_at)->toDateString())
+                    ->getTitleFromRecordUsing(fn (AuditEntry $record): string => $this->dayHeading($record))
+                    // The sort below already orders by time: grouping adds nothing.
+                    ->orderQueryUsing(fn (Builder $query): Builder => $query),
+            )
+            ->groupingSettingsHidden()
+            ->columnManager(false)
+            ->extraAttributes(['class' => 'ui-cells-top ui-feed-rows'])
             ->filters([
-                SelectFilter::make('category')
-                    ->label(__('audit.category'))
-                    ->options(fn (): array => $this->categoryOptions())
-                    ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
-                    ->query(fn (Builder $query, array $data) => AuditEntryFilters::equals($query, 'log_name', $data['value'] ?? null)),
-
                 SelectFilter::make('event')
                     ->label(__('audit.event'))
                     ->options(fn (): array => $this->eventOptions())
@@ -173,10 +170,53 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
             ]);
     }
 
-    /** @return array<string, string> */
-    public function categoryOptions(): array
+    /** The quick view shown; anything the URL holds that isn't one means All. */
+    public function quickView(): AuditView
     {
-        return $this->byLabel($this->distinctValues('log_name')->mapWithKeys(fn (string $category): array => [$category => AuditDisplay::categoryLabel($category)]));
+        return AuditView::tryFrom($this->activeView) ?? AuditView::ALL;
+    }
+
+    /**
+     * The quick views as tabs, each with how many entries it holds under the
+     * search and filters in use, so a tab's count matches the rows it shows.
+     * One grouped count; Filament already counts the rows for its pagination.
+     * A view whose categories the log has never held (Email, until email
+     * logging exists) is left out, unless it's the one open.
+     *
+     * @return list<array{view: AuditView, label: string, count: int, active: bool}>
+     */
+    public function quickViews(): array
+    {
+        $logged = $this->distinctValues('log_name');
+        $query = AuditEntry::query();
+        AuditEntryFilters::apply($query, [...$this->exportFilters(), 'view' => null]);
+
+        $counts = AuditView::counts($query->toBase()
+            ->reorder()
+            ->selectRaw('log_name, count(*) as aggregate')
+            ->groupBy('log_name')
+            ->pluck('aggregate', 'log_name')
+            ->map(fn (mixed $count): int => (int) $count));
+
+        return collect(AuditView::cases())
+            ->filter(fn (AuditView $view): bool => $view === AuditView::ALL
+                || $view === $this->quickView()
+                || $logged->intersect($view->categories())->isNotEmpty())
+            ->map(fn (AuditView $view): array => [
+                'view' => $view,
+                'label' => $view->label(),
+                'count' => $counts[$view->value],
+                'active' => $view === $this->quickView(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    public function showView(string $view): void
+    {
+        $this->activeView = (AuditView::tryFrom($view) ?? AuditView::ALL)->value;
+        $this->resetPage($this->getTablePaginationPageName());
+        $this->flushCachedTableRecords();
     }
 
     /** @return array<string, string> */
@@ -272,7 +312,7 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
     public function exportFilters(): array
     {
         return [
-            'category' => data_get($this->tableFilters, 'category.value'),
+            'view' => $this->quickView() === AuditView::ALL ? null : $this->quickView()->value,
             'event' => data_get($this->tableFilters, 'event.value'),
             'actor_type' => data_get($this->tableFilters, 'actor_type.value'),
             'date' => data_get($this->tableFilters, 'date.value'),
@@ -290,6 +330,20 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
     public function render(): View
     {
         return view('livewire.admin.audit.list-audit-entries');
+    }
+
+    /** The day an entry falls on in the display zone: "Today, Thursday 12 November", "Yesterday, …", then the date. */
+    private function dayHeading(AuditEntry $record): string
+    {
+        $day = DisplayTimezone::of($record->created_at);
+        $today = DisplayTimezone::now();
+        $date = $day->translatedFormat($day->year === $today->year ? 'l j F' : 'l j F Y');
+
+        return match (true) {
+            $day->isSameDay($today) => __('audit.today_heading', ['date' => $date]),
+            $day->isSameDay($today->subDay()) => __('audit.yesterday_heading', ['date' => $date]),
+            default => $date,
+        };
     }
 
     private function describePerson(User $user): string

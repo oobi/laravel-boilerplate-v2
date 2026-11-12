@@ -747,6 +747,15 @@ th.fi-ta-selection-cell,
 }
 
 /*
+| A feed: one cell per row that says everything (the audit log). The column
+| header would only repeat it, so it is hidden from sight but still names the
+| column for a screen reader.
+*/
+.ui-feed-rows .fi-ta-table > thead {
+    @apply sr-only;
+}
+
+/*
 | Filament paints an empty cell's placeholder ("Never", "None") gray-400,
 | 3.35:1 on white; muted text clears AA. Infolists match (filament-infolist.css).
 */

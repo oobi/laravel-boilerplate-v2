@@ -105,6 +105,13 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | The zone people read times in on the audit screens. Storage stays in the
+    | timezone above; empty means the same zone.
+    */
+
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
