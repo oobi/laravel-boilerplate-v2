@@ -30,7 +30,7 @@
 @layer components {
     /* Links */
     .ui-link {
-        @apply text-info hover:text-info/70 hover:underline;
+        @apply text-info hover:text-(--color-link-hover) hover:underline;
     }
 
     /*
@@ -46,6 +46,6 @@
         color: var(--color-info);
     }
     :where(.link):hover {
-        color: color-mix(in oklab, var(--color-info) 80%, #000);
+        color: var(--color-link-hover);
     }
 }

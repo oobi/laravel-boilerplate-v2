@@ -127,6 +127,10 @@ class AppServiceProvider extends ServiceProvider
      * Every table only shows the page sizes it offers: a tampered
      * `tableRecordsPerPage` (say 100000) falls back to the default instead of
      * loading that many rows (GitHub oobi#63, Filament 5.11's opt-in guard).
+     * Those sizes and the default are config/pagination.php's, for every table,
+     * so a new one can't fall back to Filament's own (10, of 5 to 50). A table
+     * that needs others sets its own (the theme demo); ->paginated(false) still
+     * turns paging off.
      *
      * Every table stacks each row into a card on a phone instead of scrolling
      * sideways; a genuinely wide data grid opts out with `->stackedOnMobile(false)`.
@@ -141,6 +145,8 @@ class AppServiceProvider extends ServiceProvider
     private function registerFilamentTableDefaults(): void
     {
         Table::configureUsing(fn (Table $table): Table => $table
+            ->paginated(config('pagination.page_sizes'))
+            ->defaultPaginationPageOption(config('pagination.default_page_size'))
             ->enforcePaginationPageOptions()
             ->stackedOnMobile());
 
@@ -327,13 +333,17 @@ class AppServiceProvider extends ServiceProvider
         }
     }
 
-    /** Sortable-but-unsorted columns get a double chevron; once sorted, a single chevron shows the direction (daisyUI style). */
+    /**
+     * Sortable-but-unsorted columns get a double chevron; once sorted, a single chevron shows the direction (daisyUI style).
+     * A collapsible row's toggle is the show-and-hide chevron: pointing right, turned down when open (filament-table.css).
+     */
     private function registerFilamentIcons(): void
     {
         FilamentIcon::register([
             TablesIconAlias::HEADER_CELL_SORT_BUTTON => Heroicon::ChevronUpDown,
             TablesIconAlias::HEADER_CELL_SORT_ASC_BUTTON => Heroicon::ChevronUp,
             TablesIconAlias::HEADER_CELL_SORT_DESC_BUTTON => Heroicon::ChevronDown,
+            TablesIconAlias::COLUMNS_COLLAPSE_BUTTON => Heroicon::ChevronRight,
         ]);
     }
 

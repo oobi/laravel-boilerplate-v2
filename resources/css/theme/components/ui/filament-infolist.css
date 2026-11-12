@@ -33,10 +33,10 @@
     &:hover {
         @apply underline;
 
-        color: --alpha(var(--color-info) / 70%);
+        color: var(--color-link-hover);
 
         & .fi-in-text-item:not([class*="fi-color"]) {
-            color: --alpha(var(--color-info) / 70%);
+            color: var(--color-link-hover);
         }
     }
 }

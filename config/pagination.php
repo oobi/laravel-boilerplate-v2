@@ -18,7 +18,8 @@ return [
     | Available Page Sizes
     |--------------------------------------------------------------------------
     |
-    | Define the page size options available in admin interfaces.
+    | Define the page size options available in admin interfaces. Applied to
+    | every Filament table in AppServiceProvider::registerFilamentTableDefaults().
     |
     */
 

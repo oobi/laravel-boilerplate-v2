@@ -273,9 +273,7 @@ class ListUsers extends Component implements HasActions, HasSchemas, HasTable
             ->searchPlaceholder(__('admin.search_placeholder'))
             ->emptyStateHeading(__('admin.no_users_found'))
             // On a phone, the role and status badges sit under the name (filament-table.css).
-            ->extraAttributes(['class' => 'ui-stacked-compact'])
-            ->paginated(config('pagination.page_sizes'))
-            ->defaultPaginationPageOption(config('pagination.default_page_size'));
+            ->extraAttributes(['class' => 'ui-stacked-compact']);
     }
 
     /** Never let "Empty trash" force-delete the current admin's own trashed account. */

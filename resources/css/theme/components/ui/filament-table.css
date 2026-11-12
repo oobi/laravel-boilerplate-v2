@@ -764,13 +764,15 @@ th.fi-ta-selection-cell,
 }
 
 /*
-| A collapsible row's chevron (a layout table with a collapsible Panel) points
-| down while the row is closed and up once it's open, the usual disclosure
-| convention; Filament ships it the other way round. Assumes the default
-| chevron-down icon (the COLUMNS_COLLAPSE_BUTTON alias).
+| A collapsible row's toggle (a layout table with a collapsible Panel) is the
+| show-and-hide chevron (.ai/rules/views.md): at the start of the row, before
+| the checkbox, pointing right while the row is closed and turned down once
+| it's open. Filament puts it at the end; the icon is the chevron-right
+| registered for the COLUMNS_COLLAPSE_BUTTON alias (AppServiceProvider).
 */
 .fi-ta-content .fi-ta-record .fi-ta-record-collapse-btn {
-    rotate: 180deg;
+    order: -1;
+    rotate: 90deg;
 
     @media (prefers-reduced-motion: no-preference) {
         transition: rotate 150ms;
@@ -779,6 +781,39 @@ th.fi-ta-selection-cell,
 
 .fi-ta-content .fi-ta-record.fi-ta-record-collapsed .fi-ta-record-collapse-btn {
     rotate: none;
+}
+
+/*
+| Opening the row leaves its controls where they were: the chevron, checkbox
+| and ⋮ stay level with the summary line instead of re-centring on the taller
+| row. They centre on --ui-record-controls-line, 2.5rem down: a one-line
+| summary with a 2.5rem avatar, as the maximalist demo has. A table whose
+| summary line sits elsewhere sets --ui-record-controls-line on its rows
+| (a fallback, not a declaration, so any class wins). Only while the
+| table is wide: under 56rem the card below places them (the same container
+| query, so the two never both apply).
+*/
+@container (width >= 56rem) {
+    .fi-ta-content .fi-ta-record:has(> .fi-ta-record-collapse-btn) {
+        align-items: flex-start;
+
+        & > .fi-ta-record-collapse-btn {
+            margin-block-start: calc(var(--ui-record-controls-line, 2.5rem) - 1.125rem);
+        }
+
+        & > .fi-ta-record-checkbox {
+            margin-block-start: calc(var(--ui-record-controls-line, 2.5rem) - 0.5rem);
+        }
+
+        & > .fi-ta-record-content-ctn {
+            align-items: flex-start;
+
+            /* The ⋮ (1.25rem) below the content's own 1rem of padding. */
+            & > .fi-ta-actions {
+                margin-block-start: calc(var(--ui-record-controls-line, 2.5rem) - 0.625rem - 1rem);
+            }
+        }
+    }
 }
 
 /*
@@ -993,8 +1028,9 @@ th.fi-ta-selection-cell,
 
         /*
         | Room for the checkbox and ⋮: the whole summary, or just its first cell
-        | when it's a Grid. The collapse chevron's column already keeps the
-        | content clear of the edge; without it, the pair needs more.
+        | when it's a Grid. One of them needs 2.5rem; both need 4rem (the
+        | checkbox sits 3.25rem in). The collapse chevron starts the row, so it
+        | keeps nothing clear at this end.
         */
         &:has(> .fi-ta-record-checkbox, > .fi-ta-record-content-ctn > .fi-ta-actions) > .fi-ta-record-content-ctn > :first-child > .fi-ta-record-content:first-child {
             --ui-record-controls-room: 2.5rem;
@@ -1006,13 +1042,14 @@ th.fi-ta-selection-cell,
             }
         }
 
-        &:has(> .fi-ta-record-checkbox):has(> .fi-ta-record-content-ctn > .fi-ta-actions):not(:has(> .fi-ta-record-collapse-btn)) > .fi-ta-record-content-ctn > :first-child > .fi-ta-record-content:first-child {
+        &:has(> .fi-ta-record-checkbox):has(> .fi-ta-record-content-ctn > .fi-ta-actions) > .fi-ta-record-content-ctn > :first-child > .fi-ta-record-content:first-child {
             --ui-record-controls-room: 4rem;
         }
 
+        /* The show-and-hide chevron starts the card, level with its first line. */
         & > .fi-ta-record-collapse-btn {
-            align-self: flex-end;
-            margin-block-end: 0.5rem;
+            align-self: flex-start;
+            margin-block-start: 0.75rem;
         }
     }
 
