@@ -4,6 +4,7 @@ use App\Enums\SystemPermission;
 use App\Http\Controllers\AuditExportController;
 use App\Http\Controllers\GoogleLoginController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\WelcomeLinkController;
 // public:start
 // public:canonical: use App\Http\Controllers\LoginOnlyHomeController;
 // public:end
@@ -81,6 +82,13 @@ Route::domain($accountHost)->middleware(['auth', 'verified', DenyLowAssuranceSes
 Route::domain($accountHost)->middleware('throttle:google-login')->group(function (): void {
     Route::get('/auth/google/redirect', [GoogleLoginController::class, 'redirect'])->middleware('guest')->name('google.redirect');
     Route::get('/auth/google/callback', [GoogleLoginController::class, 'callback'])->name('google.callback');
+});
+
+// A new user's emailed "choose a password" link (WelcomeLink), beside Fortify's reset
+// pages it hands on to. The controller checks the signature itself, so an expired or
+// used link lands on forgot-password with a notice rather than a 403.
+Route::domain($accountHost)->middleware(['guest', 'throttle:6,1'])->group(function (): void {
+    Route::get('/welcome/{user}/{hash}', WelcomeLinkController::class)->name('password.welcome');
 });
 
 // The admin area requires an active system role (e.g. dashboard, users) — route names keep their existing flat prefixes regardless of the URL path.

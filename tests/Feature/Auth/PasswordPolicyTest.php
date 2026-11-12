@@ -61,6 +61,7 @@ class PasswordPolicyTest extends TestCase
             ->assertSeeHtml('id="password-hint"');
 
         Livewire::actingAs(User::factory()->superAdmin()->create())->test(CreateUser::class)
+            ->set('data.sign_in', 'password')
             ->assertSee($hint)
             ->assertSeeHtml('minlength="12"');
     }
@@ -78,6 +79,7 @@ class PasswordPolicyTest extends TestCase
     public function test_creating_a_user_follows_it(): void
     {
         $page = Livewire::actingAs(User::factory()->superAdmin()->create())->test(CreateUser::class)
+            ->set('data.sign_in', 'password')
             ->set('data.first_name', 'Brand')
             ->set('data.last_name', 'New')
             ->set('data.email', 'brand-new@example.com');

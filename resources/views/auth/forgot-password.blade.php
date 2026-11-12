@@ -13,6 +13,10 @@
         <x-alert color="success">{{ $value }}</x-alert>
     @endsession
 
+    @session('link_invalid')
+        <x-alert color="warning">{{ $value }}</x-alert>
+    @endsession
+
     <x-form-errors :fields="['email']" />
 
     <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-4">
