@@ -21,8 +21,8 @@ Not exhaustive.
 - **Filament** (`filament/tables` + the forms/infolists/schemas/actions that
   come with it) — used *standalone*, not as a full Filament admin panel.
   Tables power list screens (e.g. `ListUsers`); forms/infolists/schemas power
-  create/edit/show screens. Actions (e.g. impersonate, reset password) attach
-  to those same Livewire components.
+  create/edit/show screens. Actions (e.g. impersonate, send a password reset
+  link) attach to those same Livewire components.
 - **lab404/laravel-impersonate** — lets an authorized admin log in as another
   user ("impersonate"), with a banner shown while active.
 - **spatie/laravel-permission** — admin-configurable roles and permissions.

@@ -65,8 +65,8 @@ class UserPolicy
     }
 
     /**
-     * Setting a password directly is its own permission; without it, a reset
-     * link. Never your own, including a super admin: that goes through the
+     * Setting a password directly is its own permission, offered beside the
+     * reset link. Never your own, including a super admin: that goes through the
      * profile, which asks for the current password.
      */
     public function updatePasswordDirectly(User $actor, User $target): bool

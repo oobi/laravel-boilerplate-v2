@@ -97,7 +97,7 @@ class PasswordPolicyTest extends TestCase
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ShowUser::class, ['user' => $target])
-            ->callAction('resetPassword', data: ['password' => self::SHORT, 'password_confirmation' => self::SHORT])
+            ->callAction('setPassword', data: ['password' => self::SHORT, 'password_confirmation' => self::SHORT])
             ->assertHasFormErrors(['password']);
     }
 

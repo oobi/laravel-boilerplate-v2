@@ -94,9 +94,11 @@ return [
     'search_placeholder' => 'Search users by name or email…',
     'no_users_found' => 'No users found',
 
-    'reset_password' => 'Reset password',
-    'password_reset_success' => 'Password reset successfully.',
+    'set_password' => 'Set password',
+    'password_set' => 'Password set.',
     'send_password_reset_link' => 'Send password reset link',
+    'send_password_reset_link_confirm' => 'We\'ll email :email a link to choose a new password. Their current password keeps working until they use it.',
+    'send_link' => 'Send link',
     'password_reset_link_sent' => 'Password reset link sent.',
     'user_updated' => 'User updated successfully.',
     'user_email_needs_verifying' => 'We sent a verification link to the new email address. Until they follow it, signing in takes them to the verify-email page.',

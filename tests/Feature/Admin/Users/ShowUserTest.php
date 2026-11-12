@@ -112,7 +112,8 @@ class ShowUserTest extends TestCase
             ->assertDontSee(route('users.edit', $target))
             ->assertActionHidden('impersonate')
             ->assertActionHidden('manageRoles')
-            ->assertActionHidden('resetPassword')
+            ->assertActionHidden('setPassword')
+            ->assertActionHidden('sendPasswordResetLink')
             ->assertActionVisible('restore');
     }
 
@@ -442,7 +443,7 @@ class ShowUserTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $target])
-            ->callAction('resetPassword', data: [
+            ->callAction('setPassword', data: [
                 'password' => 'new-password',
                 'password_confirmation' => 'new-password',
             ]);
@@ -452,13 +453,14 @@ class ShowUserTest extends TestCase
     }
 
     /** Your own password changes on your profile, which asks for the current one (GitHub #17). */
-    public function test_reset_password_isnt_offered_on_your_own_page(): void
+    public function test_password_actions_arent_offered_on_your_own_page(): void
     {
         $admin = User::factory()->superAdmin()->create();
 
         Livewire::actingAs($admin)
             ->test(ShowUser::class, ['user' => $admin])
-            ->assertActionHidden('resetPassword');
+            ->assertActionHidden('setPassword')
+            ->assertActionHidden('sendPasswordResetLink');
     }
 
     /** A view-only admin isn't offered force-disable at all (#40). */
@@ -497,7 +499,38 @@ class ShowUserTest extends TestCase
 
         Livewire::actingAs($support)
             ->test(ShowUser::class, ['user' => $target])
-            ->callAction('resetPassword');
+            ->callAction('sendPasswordResetLink');
+
+        $this->assertSame($originalPassword, $target->fresh()->password);
+        Notification::assertSentTo($target, QueuedResetPassword::class);
+    }
+
+    public function test_support_isnt_offered_set_password(): void
+    {
+        $support = User::factory()->support()->create();
+        $target = User::factory()->create();
+
+        Livewire::actingAs($support)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertActionVisible('sendPasswordResetLink')
+            ->assertActionHidden('setPassword');
+    }
+
+    /** Being allowed to set a password directly mustn't hide the safer emailed link. */
+    public function test_a_super_admin_can_also_send_a_password_reset_link(): void
+    {
+        Notification::fake();
+
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        $originalPassword = $target->password;
+
+        Livewire::actingAs($admin)
+            ->test(ShowUser::class, ['user' => $target])
+            ->assertActionVisible('setPassword')
+            ->mountAction('sendPasswordResetLink')
+            ->assertMountedActionModalSee($target->email)
+            ->callMountedAction();
 
         $this->assertSame($originalPassword, $target->fresh()->password);
         Notification::assertSentTo($target, QueuedResetPassword::class);

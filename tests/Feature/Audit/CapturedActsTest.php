@@ -220,14 +220,14 @@ class CapturedActsTest extends TestCase
         $user = User::factory()->create();
         $component = Livewire::actingAs($admin)->test(ShowUser::class, ['user' => $user]);
 
-        $component->callAction('resetPassword');
+        $component->callAction('sendPasswordResetLink');
 
         $entry = $this->entry('user.password_reset_link_sent');
 
         $this->assertTrue($entry->causer->is($admin));
         $this->assertTrue($entry->subject->is($user));
 
-        $component->callAction('resetPassword');
+        $component->callAction('sendPasswordResetLink');
 
         $this->assertSame(1, AuditEntry::query()->where('event', 'user.password_reset_link_sent')->count());
     }
@@ -415,7 +415,7 @@ class CapturedActsTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $user = User::factory()->create();
 
-        Livewire::actingAs($admin)->test(ShowUser::class, ['user' => $user])->callAction('resetPassword', data: [
+        Livewire::actingAs($admin)->test(ShowUser::class, ['user' => $user])->callAction('setPassword', data: [
             'password' => 'a-new-long-password-1',
             'password_confirmation' => 'a-new-long-password-1',
         ]);
@@ -435,7 +435,7 @@ class CapturedActsTest extends TestCase
         $this->breakTheAuditLog();
 
         try {
-            Livewire::actingAs($admin)->test(ShowUser::class, ['user' => $user])->callAction('resetPassword', data: [
+            Livewire::actingAs($admin)->test(ShowUser::class, ['user' => $user])->callAction('setPassword', data: [
                 'password' => 'a-new-long-password-1',
                 'password_confirmation' => 'a-new-long-password-1',
             ]);

@@ -40,7 +40,8 @@
                     $this->impersonateAction,
                     $this->verifyEmailAction,
                     $this->manageRolesAction,
-                    $this->resetPasswordAction,
+                    $this->sendPasswordResetLinkAction,
+                    $this->setPasswordAction,
                 ])->filter(fn ($action): bool => $action->isVisible());
             @endphp
 

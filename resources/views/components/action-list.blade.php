@@ -7,8 +7,11 @@
     children (so it works with Filament's `{{ $action }}` output too).
 
     The `basis-40` floor is the wrap threshold: buttons tile across on a wide
-    container and stack full-width once only one fits per row.
+    container and stack full-width once only one fits per row. Labels never
+    wrap inside a button (its height is fixed), so a long one takes a row of
+    its own rather than spilling out. A label must still fit the narrowest
+    container the list sits in.
 --}}
-<div {{ $attributes->class('flex flex-wrap gap-2 [&>*]:grow [&>*]:basis-40') }}>
+<div {{ $attributes->class('flex flex-wrap gap-2 [&>*]:grow [&>*]:basis-40 [&>*]:whitespace-nowrap') }}>
     {{ $slot }}
 </div>
