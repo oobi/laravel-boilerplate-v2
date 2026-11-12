@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Notifications\Auth\QueuedResetPassword;
 use App\Support\TwoFactor\GracePeriod;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -450,6 +451,26 @@ class ShowUserTest extends TestCase
 
         $this->assertTrue(Hash::check('new-password', $target->fresh()->password));
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $target->email]);
+    }
+
+    public function test_set_password_can_generate_a_strong_password(): void
+    {
+        $target = User::factory()->create();
+
+        $page = Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ShowUser::class, ['user' => $target])
+            ->mountAction('setPassword')
+            ->callAction(TestAction::make('generatePassword')->schemaComponent('password', 'mountedActionSchema0'));
+
+        $this->assertSame(__('admin.set_password'), $page->instance()->getMountedAction()->getModalSubmitActionLabel());
+
+        $password = $page->get('mountedActions.0.data.password');
+        $this->assertMatchesRegularExpression('/^([a-km-np-zA-HJ-NP-Z2-9]{5}-){3}[a-km-np-zA-HJ-NP-Z2-9]{5}$/', $password);
+        $this->assertSame($password, $page->get('mountedActions.0.data.password_confirmation'));
+
+        $page->callMountedAction()->assertHasNoErrors();
+
+        $this->assertTrue(Hash::check($password, $target->fresh()->password));
     }
 
     /** Your own password changes on your profile, which asks for the current one (GitHub #17). */

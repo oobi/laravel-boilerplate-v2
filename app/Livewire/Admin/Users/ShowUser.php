@@ -15,6 +15,7 @@ use App\Support\Audit\AuditCategory;
 use App\Support\Auth\Destination;
 use App\Support\Auth\GoogleLogin;
 use App\Support\Filament\AdminAction;
+use App\Support\Filament\GeneratePasswordAction;
 use App\Support\Panels\Contracts\HasGuardedActions;
 use App\Support\Panels\Contracts\HasPanelActions;
 use App\Support\Panels\Contracts\PanelRegion;
@@ -298,15 +299,16 @@ class ShowUser extends Component implements HasActions, HasSchemas
             ->color(DaisyColor::WARNING->toFilamentColor())
             // Two stacked password fields don't need Filament's default 4xl.
             ->modalWidth(Width::Medium)
+            ->modalSubmitActionLabel(__('admin.set_password'))
             ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user))
             ->schema([
                 Forms\Components\TextInput::make('password')
                     ->label(__('admin.new_password'))
                     ->password()
                     ->revealable()
+                    ->tap(GeneratePasswordAction::on(...))
                     ->required()
                     ->minLength(fn (): int => config()->integer('auth.password_min_length'))
-                    ->helperText(fn (): string => __('auth.password_min_hint', ['min' => config()->integer('auth.password_min_length')]))
                     ->rule(PasswordRule::default())
                     ->confirmed(),
                 Forms\Components\TextInput::make('password_confirmation')

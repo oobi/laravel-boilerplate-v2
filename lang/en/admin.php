@@ -95,6 +95,11 @@ return [
     'no_users_found' => 'No users found',
 
     'set_password' => 'Set password',
+    'generate_password' => 'Generate password',
+    'regenerate_password' => 'Regenerate',
+    'copy_password' => 'Copy password',
+    'password_generated' => 'Password generated. Copy it to pass on.',
+    'password_copied' => 'Password copied',
     'password_set' => 'Password set.',
     'send_password_reset_link' => 'Send password reset link',
     'send_password_reset_link_confirm' => 'We\'ll email :email a link to choose a new password. Their current password keeps working until they use it.',
