@@ -38,3 +38,6 @@ Open a modal by setting its bound property, e.g. a trigger `x-on:click="$wire.sh
 
 ## Button wrappers forward href as a prop, never through $attributes
 Bound attributes are escaped when they enter the attribute bag, and x-button escapes its href prop again, so a forwarded href with a query string rendered as &amp;amp;. Each x-button.* wrapper declares @props(['href' => null]) and passes :href="$href". Do the same in any new wrapper around x-button, and for any other prop the inner component echoes.
+
+## No double quote anywhere in an x-data object, comments included
+An x-data="…" (or x-init, :class, x-on) value is a double-quoted HTML attribute, so a literal " anywhere in its JavaScript, even inside a // comment, ends the attribute early: Alpine then throws a syntax error and the component silently does nothing (the server-side tests still pass). Use single quotes in the JS and its comments, and pass PHP values with @js(), which escapes quotes. Found when a comment quoting "3 matches" broke the audit Person filter (listbox, 2026-11-12); ListboxComponentTest::test_the_alpine_component_survives_being_an_html_attribute_in_every_mode guards that component, and the same check suits any component with a large x-data.
