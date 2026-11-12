@@ -85,12 +85,12 @@ class GoogleLinkRecoveryTest extends TestCase
 
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->test(ShowUser::class, ['user' => $user])
-            ->callAction('resetPassword', data: [
+            ->callAction('setPassword', data: [
                 'password' => 'a-new-long-password-1',
                 'password_confirmation' => 'a-new-long-password-1',
             ])
             ->assertNotified(Notification::make()
-                ->title(__('admin.password_reset_success'))
+                ->title(__('admin.password_set'))
                 ->body(__('admin.password_reset_google_unlinked'))
                 ->success());
 

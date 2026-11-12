@@ -255,68 +255,20 @@ class ShowUser extends Component implements HasActions, HasSchemas
     }
 
     /**
-     * With "set user passwords", a new password set directly; otherwise, for
-     * anyone authorized to manage users, the standard password reset link email.
-     * Each branch guards its own visibility so the button never shows to a
-     * viewer who could only reach the Show page to look.
+     * Email the standard password reset link, so the owner chooses the new
+     * password. Offered alongside Set password to anyone allowed both, since
+     * it's the safer route: the admin never learns the password.
      */
-    public function resetPasswordAction(): Action
+    public function sendPasswordResetLinkAction(): Action
     {
-        if (Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user)) {
-            return AdminAction::make('resetPassword')
-                ->label(__('admin.reset_password'))
-                ->icon('heroicon-o-key')
-                // Two stacked password fields don't need Filament's default 4xl.
-                ->modalWidth(Width::Medium)
-                ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user))
-                ->schema([
-                    Forms\Components\TextInput::make('password')
-                        ->label(__('admin.new_password'))
-                        ->password()
-                        ->revealable()
-                        ->required()
-                        ->minLength(fn (): int => config()->integer('auth.password_min_length'))
-                        ->helperText(fn (): string => __('auth.password_min_hint', ['min' => config()->integer('auth.password_min_length')]))
-                        ->rule(PasswordRule::default())
-                        ->confirmed(),
-                    Forms\Components\TextInput::make('password_confirmation')
-                        ->label(__('admin.confirm_password'))
-                        ->password()
-                        ->revealable()
-                        ->required()
-                        ->dehydrated(false),
-                ])
-                ->action(function (array $data): void {
-                    abort_if($this->user->trashed(), 404);
-                    Gate::authorize(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user);
-
-                    // Changing the stored hash makes every live session the
-                    // target still has elsewhere fail AuthenticateSession's hash
-                    // check and log out on its next request — no explicit
-                    // logoutOtherDevices() is possible here (that acts on the
-                    // acting guard, and the admin is not the target).
-                    $unlinkedGoogle = DB::transaction(function () use ($data): bool {
-                        $this->user->update(['password' => Hash::make($data['password'])]);
-
-                        Audit::record('user.password_set_by_admin', $this->user, category: AuditCategory::ACCESS);
-
-                        // A recovery: a Google link someone else made must not outlive it (#61).
-                        return GoogleLogin::unlink($this->user);
-                    });
-
-                    Notification::make()
-                        ->title(__('admin.password_reset_success'))
-                        ->body($unlinkedGoogle ? __('admin.password_reset_google_unlinked') : null)
-                        ->success()
-                        ->send();
-                });
-        }
-
-        return AdminAction::make('resetPassword')
+        return AdminAction::make('sendPasswordResetLink')
             ->label(__('admin.send_password_reset_link'))
-            ->icon('heroicon-o-key')
+            ->icon('heroicon-o-envelope')
             ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user))
             ->requiresConfirmation()
+            ->modalIcon('heroicon-o-envelope')
+            ->modalDescription(fn (): string => __('admin.send_password_reset_link_confirm', ['email' => $this->user->email]))
+            ->modalSubmitActionLabel(__('admin.send_link'))
             ->action(function (): void {
                 abort_if($this->user->trashed(), 404);
                 Gate::authorize(UserAbility::SEND_PASSWORD_RESET_LINK, $this->user);
@@ -328,6 +280,63 @@ class ShowUser extends Component implements HasActions, HasSchemas
 
                 Notification::make()
                     ->title(__('admin.password_reset_link_sent'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /**
+     * Type a new password straight into the account. Needs "set user
+     * passwords", and guards its own visibility so the button never shows to
+     * a viewer who could only reach the Show page to look.
+     */
+    public function setPasswordAction(): Action
+    {
+        return AdminAction::make('setPassword')
+            ->label(__('admin.set_password'))
+            ->icon('heroicon-o-key')
+            ->color(DaisyColor::WARNING->toFilamentColor())
+            // Two stacked password fields don't need Filament's default 4xl.
+            ->modalWidth(Width::Medium)
+            ->visible(fn (): bool => ! $this->user->trashed() && Gate::allows(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user))
+            ->schema([
+                Forms\Components\TextInput::make('password')
+                    ->label(__('admin.new_password'))
+                    ->password()
+                    ->revealable()
+                    ->required()
+                    ->minLength(fn (): int => config()->integer('auth.password_min_length'))
+                    ->helperText(fn (): string => __('auth.password_min_hint', ['min' => config()->integer('auth.password_min_length')]))
+                    ->rule(PasswordRule::default())
+                    ->confirmed(),
+                Forms\Components\TextInput::make('password_confirmation')
+                    ->label(__('admin.confirm_password'))
+                    ->password()
+                    ->revealable()
+                    ->required()
+                    ->dehydrated(false),
+            ])
+            ->action(function (array $data): void {
+                abort_if($this->user->trashed(), 404);
+                Gate::authorize(UserAbility::UPDATE_PASSWORD_DIRECTLY, $this->user);
+
+                // Changing the stored hash makes every live session the
+                // target still has elsewhere fail AuthenticateSession's hash
+                // check and log out on its next request. No explicit
+                // logoutOtherDevices() is possible here (that acts on the
+                // acting guard, and the admin is not the target).
+                $unlinkedGoogle = DB::transaction(function () use ($data): bool {
+                    $this->user->update(['password' => Hash::make($data['password'])]);
+
+                    Audit::record('user.password_set_by_admin', $this->user, category: AuditCategory::ACCESS);
+
+                    // A recovery: a Google link someone else made must not outlive it (#61).
+                    return GoogleLogin::unlink($this->user);
+                });
+
+                Notification::make()
+                    ->title(__('admin.password_set'))
+                    ->body($unlinkedGoogle ? __('admin.password_reset_google_unlinked') : null)
                     ->success()
                     ->send();
             });

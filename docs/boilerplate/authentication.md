@@ -42,7 +42,7 @@ channel), self-service is **deliberately exempt** from the "send a reset link"
 rule that applies to admins. Forcing a reset email here would be worse UX *and*
 weaker security.
 
-### 2. Admin sets a password directly: `ShowUser::resetPasswordAction()`
+### 2. Admin sets a password directly: `ShowUser::setPasswordAction()`
 
 Typing a new password straight into another user's account needs the **`set
 user passwords`** permission (and a super admin always can), gated by the
@@ -57,11 +57,12 @@ setting *someone else's* secret is a takeover primitive. They end up knowing a
 working credential for an account that isn't theirs, so it's granted
 deliberately, never as part of routine user management.
 
-### 3. Admin sends a reset link: `ShowUser::resetPasswordAction()`
+### 3. Admin sends a reset link: `ShowUser::sendPasswordResetLinkAction()`
 
-Everyone else authorized to manage users gets this path instead of path 2. It
-triggers `Password::sendResetLink()`, so the **owner** is the only one who ever
-chooses the new secret. Gated by the `sendPasswordResetLink` ability, which
+Everyone authorized to manage users gets this path, including those who can
+also take path 2: it is the safer choice, so holding `set user passwords`
+never hides it. It triggers `Password::sendResetLink()`, so the **owner** is
+the only one who ever chooses the new secret. Gated by the `sendPasswordResetLink` ability, which
 requires the `manage users` permission **and** that the actor covers the
 target (`Coverage::coversUser()`, which nobody but a super admin passes for a
 super admin), so you cannot even email a reset link at a super admin. Not for

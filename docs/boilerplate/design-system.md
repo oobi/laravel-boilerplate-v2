@@ -18,7 +18,7 @@ fixes the styling everywhere:
 | `<x-button.action>` | The affirmative action — save, create, submit, confirm, **impersonate is not this** | Primary (solid) |
 | `<x-button.cancel>` | Dismiss / abort — cancel, close, discard | Neutral, ghost |
 | `<x-button.danger>` | **Destructive or irreversible** — delete, force-delete, purge, force-disable 2FA, suspend, revoke | Error / red |
-| `<x-button.warning>` | **Consequential but reversible** — impersonate, grant super-admin, reset password | Warning / amber |
+| `<x-button.warning>` | **Consequential but reversible** — impersonate, grant super-admin, set a password | Warning / amber |
 
 The line that trips people up is danger vs warning: if it **destroys data or
 cuts off access**, it's `danger`; if it's **powerful but reversible and
