@@ -174,7 +174,7 @@ class ShowAuditEntry extends Component implements HasSchemas
         return [
             'name' => $this->entry->actor_name ?: AuditDisplay::actorLabel($this->entry->actor_type),
             'type' => AuditDisplay::actorLabel($this->entry->actor_type),
-            // The causer relation leaves out a soft-deleted person, so there's never a trashed one to link.
+            // A soft-deleted person is linked too: their page still opens, as it does from "Applies to".
             'url' => $person !== null && Gate::allows(SystemPermission::VIEW_USERS->value) ? route('users.show', $person) : null,
             'initials' => filled($this->entry->actor_name),
         ];

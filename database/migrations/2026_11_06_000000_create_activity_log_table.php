@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\Schema;
  * spatie/laravel-activitylog's table plus who and where. The actor's and
  * impersonator's names are snapshots, so an entry stays readable after the user
  * is permanently deleted. Filtered columns are real columns and indexed, never
- * JSON paths, so the audit screen behaves the same on every database.
+ * JSON paths, so the audit screen behaves the same on every database. The one
+ * exception is search reading `properties->identifier` (the address typed into a
+ * failed login): it is stored lowercased and searched with a lowercased term,
+ * since MySQL compares JSON text case-sensitively.
  */
 return new class extends Migration
 {

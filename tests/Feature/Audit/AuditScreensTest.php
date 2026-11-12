@@ -164,6 +164,93 @@ class AuditScreensTest extends TestCase
         $component->set('tableSearch', '%')->assertDontSee('Kept entry')->assertDontSee('Other entry');
     }
 
+    public function test_searching_a_users_email_or_name_finds_what_they_did_and_what_was_done_to_them(): void
+    {
+        $person = User::factory()->create(['first_name' => 'Ada', 'last_name' => 'Lovelace', 'email' => 'ada@example.test']);
+        $other = User::factory()->create(['first_name' => 'Grace', 'last_name' => 'Hopper', 'email' => 'grace@example.test']);
+        Audit::record('did.something', by: $person, description: 'They did this');
+        Audit::record('done.to.them', $person, by: $other, description: 'This was done to them');
+        Audit::record('unrelated.thing', $other, by: $other, description: 'Nothing to do with them');
+        AuditEntry::factory()->create([
+            'description' => 'Another kind of record with the same id',
+            'subject_type' => Role::class,
+            'subject_id' => $person->getKey(),
+            'causer_type' => Role::class,
+            'causer_id' => $person->getKey(),
+        ]);
+        $component = Livewire::actingAs(User::factory()->superAdmin()->create())->test(ListAuditEntries::class);
+
+        foreach (['ada@example.test', 'ADA@EXAMPLE', 'Lovelace'] as $term) {
+            $component->set('tableSearch', $term)
+                ->assertSee('They did this')
+                ->assertSee('This was done to them')
+                ->assertDontSee('Nothing to do with them')
+                ->assertDontSee('Another kind of record with the same id');
+        }
+    }
+
+    public function test_searching_a_soft_deleted_users_email_still_finds_their_entries(): void
+    {
+        $person = User::factory()->create(['email' => 'gone@example.test']);
+        Audit::record('done.to.them', $person, description: 'This was done to them');
+        $person->delete();
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListAuditEntries::class)
+            ->set('tableSearch', 'gone@example')
+            ->assertSee('This was done to them');
+    }
+
+    public function test_searching_the_address_typed_into_a_failed_login_finds_it_with_no_account(): void
+    {
+        AuditEntry::factory()->create(['description' => 'Kept entry', 'properties' => ['identifier' => 'nobody@example.test']]);
+        AuditEntry::factory()->create(['description' => 'Other entry', 'properties' => ['identifier' => 'someone@example.test']]);
+
+        $component = Livewire::actingAs(User::factory()->superAdmin()->create())->test(ListAuditEntries::class);
+
+        // Uppercase too: MySQL compares JSON text case-sensitively.
+        foreach (['nobody@example', 'NOBODY@Example'] as $term) {
+            $component->set('tableSearch', $term)->assertSee('Kept entry')->assertDontSee('Other entry');
+        }
+    }
+
+    public function test_the_list_shows_the_email_of_who_did_it_who_it_applies_to_and_a_failed_login(): void
+    {
+        // Created and deleted unlogged, so only the entries below can show each address.
+        [$actor, $target, $deleted] = Audit::withoutLogging(fn (): array => [
+            User::factory()->create(['email' => 'actor@example.test']),
+            User::factory()->create(['email' => 'target@example.test']),
+            User::factory()->create(['email' => 'deleted@example.test']),
+        ]);
+        Audit::record('done.to.them', $target, by: $actor);
+        Audit::record('note.added', by: $deleted);
+        Audit::withoutLogging(fn () => $deleted->delete());
+        AuditEntry::factory()->create(['properties' => ['identifier' => 'typed@example.test']]);
+
+        Livewire::actingAs(User::factory()->superAdmin()->create())
+            ->test(ListAuditEntries::class)
+            ->assertSee('actor@example.test')
+            ->assertSee('target@example.test')
+            ->assertSee('deleted@example.test')
+            ->assertSeeHtml('href="'.route('users.show', $deleted).'"')
+            ->assertSee('typed@example.test');
+    }
+
+    public function test_the_export_finds_a_users_entries_and_a_failed_login_by_email(): void
+    {
+        $exporter = User::factory()->superAdmin()->create();
+        $person = User::factory()->create(['email' => 'ada@example.test']);
+        Audit::record('done.to.them', $person, description: 'This was done to them');
+        AuditEntry::factory()->create(['description' => 'Failed sign in', 'properties' => ['identifier' => 'ada@example.test']]);
+        AuditEntry::factory()->create(['description' => 'Unrelated entry']);
+
+        $rows = $this->exportRows($this->actingAs($exporter)->post(route('audit.export'), ['search' => 'ada@example'])->streamedContent());
+
+        $this->assertContains('This was done to them', $rows->pluck('description'));
+        $this->assertContains('Failed sign in', $rows->pluck('description'));
+        $this->assertNotContains('Unrelated entry', $rows->pluck('description'));
+    }
+
     public function test_a_persons_link_shows_what_they_did_and_what_was_done_to_them(): void
     {
         $person = User::factory()->create(['first_name' => 'Named', 'last_name' => 'Person']);
