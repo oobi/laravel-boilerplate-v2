@@ -31,6 +31,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\HtmlString;
+use Livewire\Attributes\Json;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -39,9 +40,14 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
 {
     use InteractsWithActions;
     use InteractsWithSchemas;
-    use InteractsWithTable;
+    use InteractsWithTable {
+        InteractsWithTable::handleTableFilterUpdates as filamentHandleTableFilterUpdates;
+    }
 
-    /** One person's activity, when arriving from their page. A string: the URL can hold anything. */
+    /**
+     * One person's activity: the Person filter, kept in the URL so a user's page
+     * can link here and a reload keeps it. A string: the URL can hold anything.
+     */
     #[Url(as: 'user')]
     public ?string $userId = null;
 
@@ -52,6 +58,14 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
     /** @var array<string, Collection<int, string>> */
     private array $distinctValues = [];
 
+    /**
+     * People looked up this request, by id (false: no such user), so the picker
+     * and the filter chip don't each query for the same one.
+     *
+     * @var array<int, User|false>
+     */
+    private array $people = [];
+
     public function mount(): void
     {
         Gate::authorize(SystemPermission::VIEW_AUDIT_LOG->value);
@@ -60,6 +74,11 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         $userId = AuditEntryFilters::userId($this->userId);
         $this->userId = $userId === null ? null : (string) $userId;
         $this->sessionTrail = SessionTrail::normalize($this->sessionTrail);
+
+        // Set here, not as the filter's default: resetting the filters must clear it.
+        if ($this->userId !== null) {
+            $this->tableFilters['person']['value'] = $this->userId;
+        }
     }
 
     public function table(Table $table): Table
@@ -67,10 +86,7 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         return $table
             ->query(fn (): Builder => tap(
                 AuditEntry::query()->with(['subject', 'causer']),
-                function (Builder $query): void {
-                    AuditEntryFilters::forUser($query, $this->userId);
-                    AuditEntryFilters::forSession($query, $this->sessionTrail);
-                },
+                fn (Builder $query) => AuditEntryFilters::forSession($query, $this->sessionTrail),
             ))
             // One session reads in the order it happened; everything else, newest first.
             ->defaultSort(fn (Builder $query): Builder => $this->isFilteredToSession()
@@ -127,6 +143,12 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
                     ->modifyFormFieldUsing(fn ($field) => $field->live(debounce: '1ms'))
                     ->query(fn (Builder $query, array $data) => AuditEntryFilters::equals($query, 'actor_type', $data['value'] ?? null)),
 
+                // Set by the Person <x-listbox> in the toolbar, or a user's page through ?user=.
+                Filter::make('person')
+                    ->schema([Hidden::make('value')->default('')])
+                    ->query(fn (Builder $query, array $data) => AuditEntryFilters::forUser($query, $data['value'] ?? null))
+                    ->indicateUsing(fn (array $data): ?string => AuditEntryFilters::userId($data['value'] ?? null) === null ? null : __('audit.person').': '.$this->personLabel()),
+
                 // Set by <x-date-picker> in the toolbar.
                 Filter::make('date')
                     ->schema([Hidden::make('value')->default('')])
@@ -169,9 +191,60 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         return $this->byLabel($this->distinctValues('actor_type')->mapWithKeys(fn (string $type): array => [$type => AuditDisplay::actorLabel($type)]));
     }
 
+    /**
+     * People matching what was typed into the Person filter, a deleted one too:
+     * their entries outlive them. Called from the browser, so it checks access itself.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    #[Json]
+    public function searchPeople(string $search): array
+    {
+        // abort, not Gate::authorize(): a #[Json] call reports only an HTTP status, and
+        // an AuthorizationException would read as a 500.
+        abort_unless(Gate::allows(SystemPermission::VIEW_AUDIT_LOG->value), 403);
+
+        $search = mb_substr(trim($search), 0, 100);
+
+        if ($search === '') {
+            return [];
+        }
+
+        return User::withTrashed()
+            ->whereAnyContains(['first_name', 'last_name', 'email'], $search)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->orderBy('id')
+            ->limit(20)
+            ->get()
+            ->map(fn (User $user): array => ['value' => (string) $user->getKey(), 'label' => $this->describePerson($user)])
+            ->all();
+    }
+
+    /** The person the list is narrowed to, as the Person filter shows them. */
+    public function personLabel(): ?string
+    {
+        if (! $this->isFilteredToUser()) {
+            return null;
+        }
+
+        $user = $this->filteredUser();
+
+        return $user === null ? __('audit.deleted_person') : $this->describePerson($user);
+    }
+
+    /** Keeps ?user= in step with the Person filter, however it changed (picked, removed, reset). */
+    protected function handleTableFilterUpdates(): void
+    {
+        $this->filamentHandleTableFilterUpdates();
+
+        $userId = AuditEntryFilters::userId(data_get($this->tableFilters, 'person.value'));
+        $this->userId = $userId === null ? null : (string) $userId;
+    }
+
     public function isFilteredToUser(): bool
     {
-        return AuditEntryFilters::userId($this->userId) !== null;
+        return AuditEntryFilters::userId(data_get($this->tableFilters, 'person.value')) !== null;
     }
 
     public function isFilteredToSession(): bool
@@ -182,7 +255,13 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
     /** The person the list is narrowed to. A permanently deleted one still has entries. */
     public function filteredUser(): ?User
     {
-        return $this->isFilteredToUser() ? User::withTrashed()->find(AuditEntryFilters::userId($this->userId)) : null;
+        $id = AuditEntryFilters::userId(data_get($this->tableFilters, 'person.value'));
+
+        if ($id === null) {
+            return null;
+        }
+
+        return ($this->people[$id] ??= User::withTrashed()->find($id) ?? false) ?: null;
     }
 
     /**
@@ -198,7 +277,7 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
             'actor_type' => data_get($this->tableFilters, 'actor_type.value'),
             'date' => data_get($this->tableFilters, 'date.value'),
             'search' => $this->tableSearch,
-            'user' => $this->isFilteredToUser() ? $this->userId : null,
+            'user' => $this->isFilteredToUser() ? (string) data_get($this->tableFilters, 'person.value') : null,
             'session' => $this->isFilteredToSession() ? $this->sessionTrail : null,
         ];
     }
@@ -211,6 +290,11 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
     public function render(): View
     {
         return view('livewire.admin.audit.list-audit-entries');
+    }
+
+    private function describePerson(User $user): string
+    {
+        return __($user->trashed() ? 'audit.person_option_deleted' : 'audit.person_option', ['name' => $user->name, 'email' => $user->email]);
     }
 
     /**
