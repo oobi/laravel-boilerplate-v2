@@ -10,6 +10,9 @@ use App\Notifications\Auth\WelcomeNewUser;
 use App\Support\Audit\Audit;
 use App\Support\Audit\AuditCategory;
 use App\Support\Auth\WelcomeLink;
+use App\Support\Filament\GeneratePasswordAction;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
@@ -32,8 +35,9 @@ use Livewire\Component;
  * auth.welcome.email_by_default) or types one in. The link needs Fortify's
  * password reset feature, so without it only "Set a password now" is offered.
  */
-class CreateUser extends Component implements HasSchemas
+class CreateUser extends Component implements HasActions, HasSchemas
 {
+    use InteractsWithActions;
     use InteractsWithSchemas;
 
     private const string SIGN_IN_EMAIL_LINK = 'email_link';
@@ -99,9 +103,9 @@ class CreateUser extends Component implements HasSchemas
                             ->label(__('Password'))
                             ->password()
                             ->revealable()
+                            ->tap(GeneratePasswordAction::on(...))
                             ->required()
                             ->minLength(fn (): int => config()->integer('auth.password_min_length'))
-                            ->helperText(fn (): string => __('auth.password_min_hint', ['min' => config()->integer('auth.password_min_length')]))
                             ->rule(Password::default())
                             ->same('password_confirmation')
                             ->visible(fn (Get $get): bool => ! $this->sendsEmailLink($get('sign_in'))),

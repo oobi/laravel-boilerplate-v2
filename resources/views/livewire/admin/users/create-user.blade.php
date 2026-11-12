@@ -14,4 +14,6 @@
             <x-button.cancel href="{{ route('users.index') }}" />
         </x-form-actions>
     </form>
+
+    <x-filament-actions::modals />
 </div>
