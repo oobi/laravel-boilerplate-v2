@@ -116,6 +116,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | New User Welcome Link
+    |--------------------------------------------------------------------------
+    |
+    | Admin > Users > New user can email the new user a link to choose their
+    | own password (App\Support\Auth\WelcomeLink), instead of the admin typing
+    | one. 'expire' is the link's lifetime in minutes, longer than a reset
+    | link's because a new starter may not open it the same day. Once any
+    | password is set, or the address changes, the link stops working.
+    | 'email_by_default' preselects the emailed link on the form; set it false
+    | where most accounts sign in some other way.
+    |
+    */
+
+    'welcome' => [
+        'expire' => 7 * 24 * 60,
+        'email_by_default' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Minimum Password Length
     |--------------------------------------------------------------------------
     |

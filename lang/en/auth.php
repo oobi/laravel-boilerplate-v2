@@ -45,6 +45,11 @@ return [
     // Laravel's reset and verification emails, in the app's sentence case (App\Notifications\Auth).
     'reset_password_subject' => 'Reset password notification',
     'reset_password_action' => 'Reset password',
+    'welcome_subject' => 'Your :app account',
+    'welcome_line' => 'An account has been set up for you on :app.',
+    'welcome_choose_line' => 'Choose a password to sign in. This link expires in :time.',
+    'welcome_action' => 'Choose a password',
+    'welcome_link_invalid' => 'That link has expired or has already been used. Enter your email address and we\'ll send you a new one.',
     'verify_email_subject' => 'Verify email address',
     'verify_email_action' => 'Verify email address',
     'google_linked_not_you' => 'If you did this, there is nothing else to do. If you didn\'t, change your password, unlink it on your profile and contact an administrator straight away.',

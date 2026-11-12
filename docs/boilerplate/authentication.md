@@ -70,10 +70,36 @@ your own account either: that is path 1. Net effect: a super admin's password
 can only ever be changed by themselves (path 1) or another super admin
 (path 2).
 
+### 4. A new user chooses their own: `App\Support\Auth\WelcomeLink`
+
+Admin > Users > New user asks "How will they sign in?". **Email them a link
+to choose a password** (the default, `auth.welcome.email_by_default`) gives
+the account a random password nobody is told and queues `WelcomeNewUser`, a
+welcome email rather than the reset one: "reset your password" for an account
+they never had reads as phishing. **Set a password now** is the old form,
+where the admin types one and passes it on. Choosing the link records
+`user.welcome_link_sent` in the same transaction as the account, so if either fails,
+neither is kept and no email goes out.
+
+The link lasts `auth.welcome.expire` minutes (a week), longer than a reset
+token, so it carries none. It is a signed route (`password.welcome`,
+`WelcomeLinkController`) holding a fingerprint of the account's email address
+and password hash. Opening it mints a fresh reset token and hands on to
+Fortify's reset page. Once any password is set (by them or by an admin) or the
+address changes, the fingerprint no longer matches and the link is dead, so an
+admin correcting a mistyped address leaves nothing working at the wrong one.
+Rotating `APP_KEY` ends outstanding links too. An expired, used or tampered
+link, or one for an inactive or deleted account, lands on forgot-password with
+a notice, so they can ask for a fresh link there, or an admin can send one
+(path 3). Like Fortify's reset pages it is for signed-out visitors: a
+signed-in admin opening one to try it lands on their home page and nothing
+happens. It needs Fortify's `resetPasswords` feature; without it the form
+offers only Set a password now.
+
 ### Cutting off other sessions — `AuthenticateSession`
 
 A password change is only half a security control if the attacker's *existing*
-session survives it. All three paths above rely on Laravel's
+session survives it. All the paths above rely on Laravel's
 `Illuminate\Session\Middleware\AuthenticateSession`, registered on the web
 group in `bootstrap/app.php`.
 
@@ -233,11 +259,11 @@ Socialite with PKCE (`App\Support\Auth\GoogleLogin`,
 
 ## Links sent by email
 
-Reset, verification and team invitation links are built from `APP_URL`
-(`App\Support\Auth\MailedLinks`), never from the host of the request that
-sent them, which the sender controls (#58). A route bound to a host (the
-account host in teams host mode) keeps that host. So `APP_URL` must be the
-app's real public address in every environment, scheme included.
+Reset, verification, new user welcome and team invitation links are built
+from `APP_URL` (`App\Support\Auth\MailedLinks`), never from the host of the
+request that sent them, which the sender controls (#58). A route bound to a
+host (the account host in teams host mode) keeps that host. So `APP_URL` must
+be the app's real public address in every environment, scheme included.
 
 As a second layer, the app answers only to hosts it serves (#59): `APP_URL`'s
 host and its subdomains, the teams tier's hosts in host mode, and any listed in
@@ -252,7 +278,7 @@ target groups and Kubernetes probes do by default) gets that 400 too, and can
 mark the app unhealthy. Configure it to send the app's host name as the Host
 header, or list its fixed address in `TRUSTED_HOSTS`.
 
-Signed links (verification, invitations) are then checked against the address
+Signed links (verification, welcome, invitations) are then checked against the address
 the app sees when they're followed. If that differs from `APP_URL`, they fail
 with a 403: behind a proxy that terminates HTTPS but isn't trusted (the app
 sees `http://`, see `TRUSTED_PROXIES`), or with `www` in one and not the other.
@@ -271,6 +297,8 @@ sees `http://`, see `TRUSTED_PROXIES`), or with `www` in one and not the other.
   email and address (5 a minute), plus a ceiling per address so one source
   can't work through a list of emails: 30 a minute for login, 10 for sign-up
   and for password reset.
+- **New user welcome links** (`password.welcome`) allow 6 a minute per
+  address, like Fortify's verification link.
 - **The address is the visitor's** only once the proxy in front of the app is
   trusted (`TRUSTED_PROXIES`; automatic on Laravel Cloud, and on Forge and
   Vapor's own domains; see [adopting.md](adopting.md#7-deploying-behind-a-proxy)).
