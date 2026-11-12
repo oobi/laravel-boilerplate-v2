@@ -25,14 +25,17 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Number;
 use Livewire\Attributes\Json;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -109,6 +112,8 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
                 Tables\Columns\ViewColumn::make('description')
                     ->label(__('audit.what'))
                     ->view('filament.tables.columns.audit-feed-row')
+                    // What was searched for, so the row can show the actor's address when that's what matched.
+                    ->viewData(fn (): array => ['search' => (string) $this->tableSearch])
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         AuditEntryFilters::search($query, $search);
 
@@ -271,6 +276,20 @@ class ListAuditEntries extends Component implements HasActions, HasSchemas, HasT
         $user = $this->filteredUser();
 
         return $user === null ? __('audit.deleted_person') : $this->describePerson($user);
+    }
+
+    /**
+     * The search's chip in the active filters bar says how many entries it
+     * finds under the view and filters: "3 entries matching “savannah77”".
+     * Filament's own header is hidden, and the bar shows at every width.
+     */
+    public function getTableSearchIndicator(): Indicator
+    {
+        $records = $this->getTableRecords();
+        $count = $records instanceof LengthAwarePaginator ? $records->total() : $records->count();
+
+        return Indicator::make(trans_choice('audit.matching', $count, ['count' => Number::format($count), 'search' => trim((string) $this->getTableSearch())]))
+            ->removeLivewireClickHandler('resetTableSearch');
     }
 
     /** Keeps ?user= in step with the Person filter, however it changed (picked, removed, reset). */

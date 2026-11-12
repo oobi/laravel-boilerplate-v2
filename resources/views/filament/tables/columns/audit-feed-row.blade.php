@@ -10,12 +10,13 @@
         : \App\Support\Audit\AuditDisplay::subject($record);
     $local = \App\Support\DisplayTimezone::of($record->created_at);
 
-    // The addresses search matches: the actor's (or what was typed into a failed
-    // login), then the person it was done to. A login names its person once.
+    // Each address the row shows says whose it is: the person it was done to; the
+    // actor's only when that's what the search matched (the sentence names them);
+    // and what was typed into a failed login. Search matches all of them.
+    $search ??= '';
     $subjectEmail = $record->subject instanceof \App\Models\User && ! $record->subject->is($person) ? $record->subject->email : null;
-    $emails = collect([$person?->email ?? $record->getProperty('identifier'), $subjectEmail])
-        ->filter(fn (mixed $email): bool => is_string($email) && $email !== '')
-        ->unique();
+    $actorEmail = filled($search) && filled($person?->email) && str_contains(mb_strtolower($person->email), mb_strtolower(trim($search))) ? $person->email : null;
+    $triedEmail = $person === null && is_string($tried = $record->getProperty('identifier')) && $tried !== '' ? $tried : null;
 @endphp
 
 {{-- One entry as a sentence. The time links to the entry; the row menu has the rest. --}}
@@ -41,7 +42,8 @@
             @endif
         </p>
 
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+        {{-- A dot between each item after the category; ui-dot-list keeps one off the start of a wrapped line. --}}
+        <div class="ui-dot-list flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
             <x-badge>{{ \App\Support\Audit\AuditDisplay::categoryLabel((string) $record->log_name) }}</x-badge>
 
             {{-- Who did it, when the sentence doesn't already say. --}}
@@ -61,8 +63,16 @@
                 </span>
             @endif
 
-            @if ($emails->isNotEmpty())
-                <span class="wrap-anywhere">{{ $emails->join(' → ') }}</span>
+            @if (filled($subjectEmail))
+                <span class="wrap-anywhere">{{ __('audit.affected_account') }}: {{ $subjectEmail }}</span>
+            @endif
+
+            @if (filled($actorEmail))
+                <span class="wrap-anywhere">{{ __('audit.done_by') }}: {{ $actorEmail }}</span>
+            @endif
+
+            @if (filled($triedEmail))
+                <span class="wrap-anywhere">{{ __('audit.tried') }}: {{ $triedEmail }}</span>
             @endif
 
             @if ($record->impersonator_name)

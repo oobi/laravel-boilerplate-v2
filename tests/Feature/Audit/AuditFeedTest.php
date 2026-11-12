@@ -45,20 +45,40 @@ class AuditFeedTest extends TestCase
 
         $this->list($admin)
             ->assertSeeHtml('<a href="'.route('users.show', $admin).'" class="link link-hover font-medium">Super Admin</a> changed the roles of <a href="'.route('users.show', $target).'" class="link link-hover">Priya Patel</a>')
-            ->assertSee('admin@example.test → priya@example.test')
+            // The address of the person it was done to, labelled; the actor's isn't repeated.
+            ->assertSee('Affected account: priya@example.test')
+            ->assertDontSee('admin@example.test')
             // The sentence names both, so neither is repeated under it.
             ->assertDontSee(__('audit.by', ['actor' => 'Super Admin']))
             ->assertDontSee(__('audit.subject').':');
     }
 
-    public function test_a_login_names_its_person_once(): void
+    /** The sentence names the actor, so their address shows only when it's why the search found the row. */
+    public function test_the_actors_address_shows_only_when_the_search_matched_it(): void
     {
         $person = Audit::withoutLogging(fn (): User => User::factory()->create(['first_name' => 'Jo', 'last_name' => 'Smith', 'email' => 'jo@example.test']));
         Audit::record('auth.login', $person, by: $person, category: AuditCategory::AUTH);
 
-        $html = $this->list($this->viewer())->assertSee('Jo Smith')->assertSee('logged in')->html();
+        $this->list($this->viewer())
+            ->assertSeeText('Jo Smith logged in')
+            ->assertDontSee('jo@example.test')
+            ->set('tableSearch', 'JO@EXAMPLE')
+            ->assertSee('Done by: jo@example.test')
+            ->set('tableSearch', 'Smith')
+            ->assertSeeText('Jo Smith logged in')
+            ->assertDontSee('jo@example.test');
+    }
 
-        $this->assertSame(1, substr_count($html, 'jo@example.test'));
+    public function test_a_search_says_how_many_entries_match(): void
+    {
+        $this->entries(['data' => 'Parcel weighed', 'auth' => 'Parcel lost']);
+
+        $this->list($this->viewer())
+            ->assertDontSee('matching')
+            ->set('tableSearch', 'parcel')
+            ->assertSee('2 entries matching “parcel”')
+            ->set('tableSearch', 'weighed')
+            ->assertSee('1 entry matching “weighed”');
     }
 
     public function test_an_entry_without_a_sentence_says_who_did_it_and_what_it_applies_to(): void
@@ -86,7 +106,7 @@ class AuditFeedTest extends TestCase
 
         $this->list($this->viewer())
             ->assertSeeHtml('<span class="font-medium">Visitor</span> failed to log in')
-            ->assertSee('nobody@example.test');
+            ->assertSee('Tried: nobody@example.test');
     }
 
     public function test_entries_sit_under_their_day_in_the_display_time_zone(): void
