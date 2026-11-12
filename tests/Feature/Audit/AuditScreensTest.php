@@ -251,6 +251,85 @@ class AuditScreensTest extends TestCase
         $this->assertNotContains('Unrelated entry', $rows->pluck('description'));
     }
 
+    public function test_the_person_filter_finds_people_by_name_or_email_deleted_ones_too(): void
+    {
+        $ada = User::factory()->create(['first_name' => 'Ada', 'last_name' => 'Lovelace', 'email' => 'ada@example.test']);
+        $gone = User::factory()->create(['first_name' => 'Adam', 'last_name' => 'Gone', 'email' => 'adam@example.test']);
+        $gone->delete();
+        User::factory()->create(['first_name' => 'Grace', 'last_name' => 'Hopper', 'email' => 'grace@example.test']);
+        $viewer = User::factory()->superAdmin()->create(['first_name' => 'Viewer', 'last_name' => 'One', 'email' => 'viewer@example.test']);
+        $component = Livewire::actingAs($viewer)->test(ListAuditEntries::class);
+
+        $this->assertSame([
+            ['value' => (string) $ada->getKey(), 'label' => 'Ada Lovelace (ada@example.test)'],
+            ['value' => (string) $gone->getKey(), 'label' => 'Adam Gone (adam@example.test), deleted'],
+        ], $this->searchPeople($component, 'ada'));
+        $this->assertSame([(string) $ada->getKey()], array_column($this->searchPeople($component, 'LOVELACE'), 'value'));
+        $this->assertSame([], $this->searchPeople($component, '   '));
+        $this->assertSame([], $this->searchPeople($component, '%'));
+    }
+
+    public function test_the_person_filter_returns_at_most_twenty_people(): void
+    {
+        User::factory()->count(25)->create(['last_name' => 'Many']);
+
+        $component = Livewire::actingAs(User::factory()->superAdmin()->create())->test(ListAuditEntries::class);
+
+        $this->assertCount(20, $this->searchPeople($component, 'Many'));
+    }
+
+    public function test_the_person_search_is_refused_once_the_viewer_loses_the_audit_log(): void
+    {
+        User::factory()->create(['first_name' => 'Ada']);
+        $component = Livewire::actingAs(User::factory()->withPermission(SystemPermission::VIEW_AUDIT_LOG)->create())->test(ListAuditEntries::class);
+
+        $this->actingAs(User::factory()->withPermission(SystemPermission::VIEW_USERS)->create());
+        $component->call('searchPeople', 'Ada');
+
+        $this->assertSame([null], $component->effects['returns']);
+        $this->assertSame([['status' => 403]], $component->effects['returnsMeta']);
+    }
+
+    public function test_picking_a_person_narrows_the_list_and_the_export_and_clearing_shows_everyone(): void
+    {
+        $exporter = User::factory()->superAdmin()->create();
+        $person = User::factory()->create(['first_name' => 'Named', 'last_name' => 'Person']);
+        Audit::record('did.something', by: $person, description: 'They did this');
+        AuditEntry::factory()->create(['description' => 'Nothing to do with them']);
+
+        $component = Livewire::actingAs($exporter)
+            ->test(ListAuditEntries::class)
+            ->set('tableFilters.person.value', (string) $person->getKey())
+            ->assertSee('They did this')
+            ->assertDontSee('Nothing to do with them')
+            ->assertSet('userId', (string) $person->getKey())
+            ->assertSee(__('audit.person').': '.__('audit.person_option', ['name' => 'Named Person', 'email' => $person->email]));
+
+        $this->assertSame((string) $person->getKey(), $component->instance()->exportFilters()['user']);
+
+        $component->call('resetTableFiltersForm')
+            ->assertSee('Nothing to do with them')
+            ->assertSet('userId', null);
+    }
+
+    public function test_a_person_from_the_url_is_cleared_by_removing_the_filter_or_resetting_them_all(): void
+    {
+        $person = User::factory()->create();
+        AuditEntry::factory()->create(['description' => 'Nothing to do with them']);
+
+        foreach ([fn (Testable $page) => $page->call('removeTableFilter', 'person'), fn (Testable $page) => $page->call('resetTableFiltersForm')] as $clear) {
+            $page = Livewire::actingAs(User::factory()->superAdmin()->create())
+                ->withQueryParams(['user' => (string) $person->getKey()])
+                ->test(ListAuditEntries::class)
+                ->assertDontSee('Nothing to do with them');
+
+            $clear($page)
+                ->assertSet('userId', null)
+                ->assertSet('tableFilters.person.value', null)
+                ->assertSee('Nothing to do with them');
+        }
+    }
+
     public function test_a_persons_link_shows_what_they_did_and_what_was_done_to_them(): void
     {
         $person = User::factory()->create(['first_name' => 'Named', 'last_name' => 'Person']);
@@ -273,7 +352,8 @@ class AuditScreensTest extends TestCase
             ->assertSee('This was done to them')
             ->assertDontSee('Nothing to do with them')
             ->assertDontSee('Another kind of record with the same id')
-            ->assertSee(__('audit.showing_for', ['name' => 'Named Person']));
+            ->assertSet('tableFilters.person.value', (string) $person->getKey())
+            ->assertSee(__('audit.person_option', ['name' => 'Named Person', 'email' => $person->email]));
     }
 
     public function test_a_user_in_the_url_that_could_not_be_an_id_is_no_filter_at_all(): void
@@ -286,7 +366,7 @@ class AuditScreensTest extends TestCase
                 ->withQueryParams(['user' => $value])
                 ->test(ListAuditEntries::class)
                 ->assertSee('Kept entry')
-                ->assertDontSee(__('audit.show_everyone'))
+                ->assertSet('userId', null)
                 ->assertDontSeeHtml('name="user"');
         }
 
@@ -303,7 +383,7 @@ class AuditScreensTest extends TestCase
             ->withQueryParams(['user' => '999999'])
             ->test(ListAuditEntries::class)
             ->assertDontSee('Unrelated entry')
-            ->assertSee(__('audit.showing_for_deleted'));
+            ->assertSee(__('audit.deleted_person'));
     }
 
     public function test_a_soft_deleted_user_still_narrows_the_list_by_name(): void
@@ -314,8 +394,8 @@ class AuditScreensTest extends TestCase
         Livewire::actingAs(User::factory()->superAdmin()->create())
             ->withQueryParams(['user' => (string) $person->getKey()])
             ->test(ListAuditEntries::class)
-            ->assertSee(__('audit.showing_for', ['name' => 'Named Person']))
-            ->assertDontSee(__('audit.showing_for_deleted'));
+            ->assertSee(__('audit.person_option_deleted', ['name' => 'Named Person', 'email' => $person->email]))
+            ->assertDontSee(__('audit.deleted_person'));
     }
 
     public function test_an_entry_whose_class_no_longer_exists_still_shows_on_every_screen(): void
@@ -989,14 +1069,13 @@ class AuditScreensTest extends TestCase
             ->assertSee('No session');
     }
 
-    public function test_each_banner_clears_only_its_own_filter(): void
+    public function test_the_session_banner_clears_only_the_session_and_keeps_the_person(): void
     {
         $person = User::factory()->create();
 
         $this->actingAs(User::factory()->superAdmin()->create())
             ->get(route('audit.index', ['user' => $person->getKey(), 'session' => self::TRAIL]))
-            ->assertSee('href="'.e(route('audit.index', ['user' => $person->getKey()])).'"', false)
-            ->assertSee('href="'.e(route('audit.index', ['session' => self::TRAIL])).'"', false);
+            ->assertSee('href="'.e(route('audit.index', ['user' => $person->getKey()])).'"', false);
     }
 
     public function test_an_entry_in_a_session_offers_view_session_and_one_outside_does_not(): void
@@ -1320,6 +1399,16 @@ class AuditScreensTest extends TestCase
         DB::disableQueryLog();
 
         return $count;
+    }
+
+    /**
+     * What the Person filter's search answers, as the browser receives it.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function searchPeople(Testable $component, string $search): array
+    {
+        return $component->call('searchPeople', $search)->effects['returns'][0];
     }
 
     /**

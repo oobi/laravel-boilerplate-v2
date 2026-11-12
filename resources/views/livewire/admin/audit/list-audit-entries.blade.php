@@ -3,21 +3,6 @@
 
     <x-page-header :title="__('admin.audit')" :description="__('audit.description')" />
 
-    @if ($this->isFilteredToUser())
-        @php $filteredUser = $this->filteredUser(); @endphp
-
-        <x-banner role="status" class="mb-6">
-            {{ $filteredUser ? __('audit.showing_for', ['name' => $filteredUser->name]) : __('audit.showing_for_deleted') }}
-
-            <x-slot:actions>
-                {{-- Each banner clears only its own filter. --}}
-                <x-button.cancel href="{{ route('audit.index', array_filter(['session' => $this->isFilteredToSession() ? $this->sessionTrail : null])) }}">
-                    {{ __('audit.show_everyone') }}
-                </x-button.cancel>
-            </x-slot:actions>
-        </x-banner>
-    @endif
-
     @if ($this->isFilteredToSession())
         <x-banner role="status" class="mb-6">
             {{ __('audit.showing_session') }}
@@ -54,6 +39,17 @@
                 :options="$this->eventOptions()"
                 searchable
                 class="min-w-36"
+            />
+
+            {{-- Too many people to list up front: it searches on the server as you type. --}}
+            <x-listbox
+                id="audit-person-filter"
+                model="tableFilters.person.value"
+                :label="__('audit.person')"
+                :placeholder="__('audit.all_people')"
+                search="searchPeople"
+                :selected-label="$this->personLabel()"
+                class="min-w-44 max-w-64"
             />
 
             <x-table-filter-select

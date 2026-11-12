@@ -32,21 +32,25 @@ read back in order (see [Sessions](#sessions)).
 ## Reading it
 
 **Admin > System > Audit log** (`audit.index`): newest first, with search and
-filters for category, event (searchable), actor type and date. Search finds the
-words on an entry (its description, event, actor's name and IP address), the
-address typed into a failed login or lockout, and every entry by or about a user
-whose email or first or last name contains what was typed. So a word that is
-part of someone's email or name ("admin") finds everything by or about them too.
-It is their email and name as they are now: an address someone used before
-doesn't find them. Each row shows that email under the person's name, or the
-address typed into a failed login. Each entry has a detail page (`audit.show`):
-the event in words with a sentence saying what happened ("Super Admin updated
-Michel Adams"), each changed field before and after with the changed part of a
-short value marked, any other properties, and the request's browser behind a
-disclosure. Its **Session timeline** button (also in each row's menu on the
-list) lists everything from the same browser session, oldest first. A user's
-page has an **Activity** panel with their latest five entries and a link to the
-full list, filtered to them.
+filters for category, event (searchable), person, actor type and date. Search
+finds the words on an entry (its description, event, actor's name and IP
+address), the address typed into a failed login or lockout, and every entry by
+or about a user whose email or first or last name contains what was typed. So a
+word that is part of someone's email or name ("admin") finds everything by or
+about them too. It is their email and name as they are now: an address someone
+used before doesn't find them. Each row shows that email under the person's
+name, or the address typed into a failed login. The Person filter searches
+people by name or email as you type (a deleted person too) and shows what they
+did and what was done to them; it is kept in the URL as `?user=<id>`, which is
+how a user's page links here. It lists every user, with their email, to anyone
+who can read the log, as the log's own entries do. Each entry has a detail page
+(`audit.show`): the event in words with a sentence saying what happened ("Super
+Admin updated Michel Adams"), each changed field before and after with the
+changed part of a short value marked, any other properties, and the request's
+browser behind a disclosure. Its **Session timeline** button (also in each row's
+menu on the list) lists everything from the same browser session, oldest first.
+A user's page has an **Activity** panel with their latest five entries and a
+link to the full list, filtered to them.
 
 ### Sessions
 
