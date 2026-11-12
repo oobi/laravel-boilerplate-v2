@@ -17,7 +17,8 @@
             @endif
             {{ $label }}
         </span>
-        <x-heroicon-o-chevron-down class="h-4 w-4 transition-transform" ::class="{ 'rotate-180': open }" aria-hidden="true" />
+        {{-- Points right while closed and turns down when open, as every show-and-hide does (views.md); it stays at the end here. --}}
+        <x-heroicon-o-chevron-right class="h-4 w-4 motion-safe:transition-transform" ::class="{ 'rotate-90': open }" aria-hidden="true" />
     </button>
     <div :id="$id('nav-group')" x-show="open" x-collapse>
         {{ $slot }}

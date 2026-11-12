@@ -150,9 +150,7 @@ class PendingInvitations extends Component implements HasActions, HasSchemas, Ha
                 ]),
             ])
             ->searchPlaceholder(team_trans('invitations.search'))
-            ->emptyStateHeading(team_trans('invitations.empty'))
-            ->paginated(config('pagination.page_sizes'))
-            ->defaultPaginationPageOption(config('pagination.default_page_size'));
+            ->emptyStateHeading(team_trans('invitations.empty'));
     }
 
     public function render(): View

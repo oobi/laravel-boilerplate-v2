@@ -56,8 +56,6 @@ class TeamPickerTable
                         '0' => $query->where('active', false),
                         default => $query,
                     }),
-            ])
-            ->paginated(config('pagination.page_sizes'))
-            ->defaultPaginationPageOption(config('pagination.default_page_size'));
+            ]);
     }
 }

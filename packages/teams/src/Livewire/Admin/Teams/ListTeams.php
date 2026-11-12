@@ -165,9 +165,7 @@ class ListTeams extends Component implements HasActions, HasSchemas, HasTable
                 ]),
             ])
             ->searchPlaceholder(team_trans('admin.search'))
-            ->emptyStateHeading(team_trans('admin.empty'))
-            ->paginated(config('pagination.page_sizes'))
-            ->defaultPaginationPageOption(config('pagination.default_page_size'));
+            ->emptyStateHeading(team_trans('admin.empty'));
     }
 
     /** Admin-provisioned creation: a name and an owner, who becomes the first member. */

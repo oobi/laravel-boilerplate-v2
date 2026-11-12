@@ -232,6 +232,15 @@ class AuditFeedTest extends TestCase
             ->assertSeeHtml('name="view" value="security"');
     }
 
+    /** A table that sets no page sizes of its own gets the app's, as every list does, not Filament's 10 of 5 to 50. */
+    public function test_the_list_pages_by_the_shared_page_sizes(): void
+    {
+        $list = $this->list($this->viewer());
+
+        $this->assertSame(config('pagination.page_sizes'), $list->instance()->getTable()->getPaginationPageOptions());
+        $this->assertSame(config('pagination.default_page_size'), $list->instance()->getTableRecordsPerPage());
+    }
+
     /** Made unlogged: creating a user writes an entry of its own, which would show and count. */
     private function viewer(): User
     {

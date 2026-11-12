@@ -204,9 +204,7 @@ class UserMemberships extends Component implements HasActions, HasSchemas, HasTa
                         ->deselectRecordsAfterCompletion(),
                 ])->visible(fn (): bool => Gate::allows(TeamSystemPermission::MANAGE_TEAMS->value)),
             ])
-            ->emptyStateHeading(team_trans('memberships.none'))
-            ->paginated(config('pagination.page_sizes'))
-            ->defaultPaginationPageOption(config('pagination.default_page_size'));
+            ->emptyStateHeading(team_trans('memberships.none'));
     }
 
     /**

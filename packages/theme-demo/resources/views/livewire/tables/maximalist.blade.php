@@ -42,6 +42,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th class="w-10"><span class="sr-only">{{ __('Details') }}</span></th>
                             <th class="w-10">
                                 <input type="checkbox" class="checkbox checkbox-sm" wire:click="toggleSelectAll" aria-label="{{ __('admin.select_all') }}" @checked(count($selected) && count($selected) === $this->rows->total())>
                             </th>
@@ -53,12 +54,17 @@
                                     @endif
                                 </th>
                             @endforeach
-                            <th class="w-10 ui-table-actions"></th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($this->rows as $row)
                             <tr wire:key="maximalist-row-{{ $row->id }}">
+                                {{-- Show and hide: the leading chevron, pointing right, turned down when the details row is open. --}}
+                                <td>
+                                    <x-button.icon :aria-label="__('Details for :name', ['name' => $row->name])" aria-controls="maximalist-row-{{ $row->id }}-detail" :aria-expanded="in_array($row->id, $expanded, true) ? 'true' : 'false'" wire:click="toggleExpand({{ $row->id }})">
+                                        <x-heroicon-m-chevron-right class="h-4 w-4 motion-safe:transition-transform {{ in_array($row->id, $expanded, true) ? 'rotate-90' : '' }}" aria-hidden="true" />
+                                    </x-button.icon>
+                                </td>
                                 <td>
                                     <input type="checkbox" class="checkbox checkbox-sm" wire:model.live="selected" value="{{ $row->id }}" aria-label="{{ __('Select :name', ['name' => $row->name]) }}">
                                 </td>
@@ -73,15 +79,10 @@
                                 </td>
                                 <td><x-status :value="$row->status" /></td>
                                 <td>{{ $row->joinedAt }}</td>
-                                <td>
-                                    <x-button.icon :aria-label="__('Show details')" :aria-expanded="in_array($row->id, $expanded, true) ? 'true' : 'false'" wire:click="toggleExpand({{ $row->id }})">
-                                        <x-heroicon-o-chevron-down class="h-4 w-4 transition-transform {{ in_array($row->id, $expanded, true) ? 'rotate-180' : '' }}" />
-                                    </x-button.icon>
-                                </td>
                             </tr>
                             @if (in_array($row->id, $expanded, true))
-                                <tr wire:key="maximalist-row-{{ $row->id }}-detail">
-                                    <td colspan="5" class="bg-base-200/50 text-sm text-base-content/70">{{ $row->detail }}</td>
+                                <tr id="maximalist-row-{{ $row->id }}-detail" wire:key="maximalist-row-{{ $row->id }}-detail">
+                                    <td colspan="5" class="bg-base-200/50 text-sm text-muted">{{ $row->detail }}</td>
                                 </tr>
                             @endif
                         @empty

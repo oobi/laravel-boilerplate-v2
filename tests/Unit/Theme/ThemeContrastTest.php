@@ -43,6 +43,36 @@ class ThemeContrastTest extends TestCase
         }
     }
 
+    /**
+     * A link (info) and a hovered one (--color-link-hover, moved toward the text) clear AA on
+     * the page, the raised surface and a selected row, in both themes, and hovering never
+     * lowers the contrast. Mixing in black (or fading it) once dropped a hovered link to
+     * 3.47:1 on a hovered dark row.
+     */
+    public function test_a_hovered_link_never_reads_worse_than_the_link(): void
+    {
+        foreach (['boilerplate', 'boilerplate-dark'] as $theme) {
+            $this->assertSame(1, preg_match('/--color-link-hover:\s*color-mix\(in oklab, var\(--color-info\) (\d+)%, var\(--color-base-content\)\);/', $this->themeBlock($theme), $mix), "{$theme}: --color-link-hover is missing or reshaped");
+
+            $link = $this->token('info', $theme);
+            $hover = $this->mixInOklab($link, $this->token('base-content', $theme), $mix[1] / 100);
+
+            // The page, the raised surface, and a selected row and its hover.
+            $backgrounds = ['base-100' => $this->token('base-100', $theme), 'base-200' => $this->token('base-200', $theme)];
+
+            foreach (['ui-selected-bg', 'ui-selected-bg-hover'] as $token) {
+                $this->assertSame(1, preg_match('/--'.$token.':\s*color-mix\(in oklab, var\(--color-primary\) (\d+)%, var\(--color-base-100\)\);/', $this->themeBlock($theme), $tint), "{$theme}: --{$token} is missing or reshaped");
+                $backgrounds[$token] = $this->mixInOklab($this->token('primary', $theme), $this->token('base-100', $theme), $tint[1] / 100);
+            }
+
+            foreach ($backgrounds as $name => $background) {
+                $this->assertContrast($link, $background, "a link on {$name} ({$theme})");
+                $this->assertContrast($hover, $background, "a hovered link on {$name} ({$theme})");
+                $this->assertGreaterThanOrEqual($this->contrast($link, $background), $this->contrast($hover, $background), "a hovered link reads worse on {$name} ({$theme})");
+            }
+        }
+    }
+
     public function test_white_text_on_the_status_colours_clears_aa(): void
     {
         foreach (['success', 'info', 'error', 'primary'] as $name) {
@@ -119,11 +149,23 @@ class ThemeContrastTest extends TestCase
      */
     private function assertContrast(array $foreground, array $background, string $what, float $minimum = 4.5): void
     {
-        $lighter = max($this->luminance($foreground), $this->luminance($background));
-        $darker = min($this->luminance($foreground), $this->luminance($background));
-        $ratio = ($lighter + 0.05) / ($darker + 0.05);
+        $ratio = $this->contrast($foreground, $background);
 
         $this->assertGreaterThanOrEqual($minimum, round($ratio, 2), sprintf('%s is %.2f:1', $what, $ratio));
+    }
+
+    /**
+     * The WCAG contrast ratio of two colours.
+     *
+     * @param  array{float, float, float}  $foreground
+     * @param  array{float, float, float}  $background
+     */
+    private function contrast(array $foreground, array $background): float
+    {
+        $lighter = max($this->luminance($foreground), $this->luminance($background));
+        $darker = min($this->luminance($foreground), $this->luminance($background));
+
+        return ($lighter + 0.05) / ($darker + 0.05);
     }
 
     /**

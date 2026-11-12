@@ -74,6 +74,10 @@
      on both clears AA (ThemeContrastTest), which caps the tint. */
   --ui-selected-bg: color-mix(in oklab, var(--color-primary) 7%, var(--color-base-100));
   --ui-selected-bg-hover: color-mix(in oklab, var(--color-primary) 9%, var(--color-base-100));
+
+  /* A hovered link: the link colour moved a step toward the text, darker in light and lighter
+     in dark, so hovering never lowers its contrast (ThemeContrastTest). The underline says hover. */
+  --color-link-hover: color-mix(in oklab, var(--color-info) 75%, var(--color-base-content));
 }
 
 @plugin "daisyui/theme" {
@@ -138,6 +142,10 @@
      on both clears AA (ThemeContrastTest), which caps the tint. */
   --ui-selected-bg: color-mix(in oklab, var(--color-primary) 7%, var(--color-base-100));
   --ui-selected-bg-hover: color-mix(in oklab, var(--color-primary) 9%, var(--color-base-100));
+
+  /* A hovered link: the link colour moved a step toward the text, darker in light and lighter
+     in dark, so hovering never lowers its contrast (ThemeContrastTest). The underline says hover. */
+  --color-link-hover: color-mix(in oklab, var(--color-info) 75%, var(--color-base-content));
 }
 
 /* ── Design tokens ──────────────────────────────────────────────
