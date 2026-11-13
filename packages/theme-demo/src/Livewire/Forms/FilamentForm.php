@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Concise\ThemeDemo\Livewire\Forms;
 
 use App\Enums\SystemPermission;
+use App\Support\Filament\SecretInput;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DatePicker;
@@ -18,6 +19,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -50,6 +52,9 @@ class FilamentForm extends Component implements HasSchemas
                 TextInput::make('text')->label(__('theme-demo::messages.field_text'))->required(),
                 TextInput::make('email')->label(__('theme-demo::messages.field_email'))->email()->required(),
                 TextInput::make('password')->label(__('theme-demo::messages.field_password'))->password()->revealable(),
+                // A secret that never reaches the page: one with a value stored, one without.
+                SecretInput::make('secret_stored')->label(__('theme-demo::messages.field_secret_stored'))->noun(__('theme-demo::messages.secret_noun'))->stored(),
+                SecretInput::make('secret_unset')->label(__('theme-demo::messages.field_secret_unset'))->noun(__('theme-demo::messages.secret_noun')),
                 TextInput::make('number')->label(__('theme-demo::messages.field_number'))->numeric(),
                 Textarea::make('textarea')->label(__('theme-demo::messages.field_textarea'))->columnSpanFull(),
                 Select::make('select')->label(__('theme-demo::messages.field_select'))->options([
@@ -87,9 +92,22 @@ class FilamentForm extends Component implements HasSchemas
 
     public function submit(): void
     {
-        $this->form->getState();
+        $state = $this->form->getState();
 
-        session()->flash('status', __('Form submitted (demo only — nothing was saved).'));
+        // What a save would do with each secret: left out (kept), a value (replaced) or null (cleared).
+        $secrets = collect(['secret_stored', 'secret_unset'])
+            ->map(fn (string $name): string => __('theme-demo::messages.field_'.$name).': '.match (true) {
+                ! array_key_exists($name, $state) => __('theme-demo::messages.secret_kept'),
+                $state[$name] === null => __('theme-demo::messages.secret_cleared'),
+                default => __('theme-demo::messages.secret_replaced'),
+            })
+            ->implode('; ');
+
+        // As a real form fills itself again after saving: the secret fields go back to saying what's stored.
+        $this->data['secret_stored'] = null;
+        $this->data['secret_unset'] = null;
+
+        Notification::make()->title(__('theme-demo::messages.form_submitted'))->body($secrets.'.')->success()->send();
     }
 
     public function render(): View
