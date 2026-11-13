@@ -201,6 +201,42 @@ these.
 - Text in brand blue, grey or red uses `--color-primary-text`, `--color-neutral-text` or
   `--color-error-text` (utilities `text-primary-text`, `text-error-text`).
 
+## Secret fields
+
+A stored secret (an API key, a password for another service) is never sent to
+the page, so it never goes in a `TextInput`, even a `password()` one: a form
+filled with it puts it in the page's Livewire state. Use
+`App\Support\Filament\SecretInput`:
+
+```php
+SecretInput::make('api_key')
+    ->label(__('invoices.api_key'))
+    ->noun(__('invoices.key'))
+    ->stored(fn (): bool => filled(app(InvoiceSettings::class)->api_key)),
+```
+
+It's a recessed row (an inset card) under the field's label: what's saved on
+the left, its buttons on the right, stacked under it on a phone. `noun()`
+names the thing in lower case ("key", "token"; default "value") for the
+wording below.
+
+- **Kept:** dots when one is saved ("No key saved" otherwise), with
+  **Remove key** (quiet red text: it ends in a removed key, but only on save)
+  and **Replace key** (or **Add key**), a secondary outline button so the
+  form's Save stays the strongest. Left like this the field isn't in
+  `getState()`, so saving the rest of the form keeps the secret.
+- **Replace:** an empty password input with **Keep current key** (or
+  **Cancel**). Saved as typed; saved empty, the secret is removed (null).
+- **Remove:** "Key removed when you save." with **Undo**. Saving makes it null.
+
+Whatever the form is filled with, the field starts empty in the browser, and
+a form should fill it again after saving (the Settings screen does) so it
+returns to saying what's saved. Rules (`->rule('max:200')`) check what was
+typed, and a value that isn't a string fails. `required()` means a secret
+must be saved: left alone it passes while one is stored; emptied, it fails,
+and it offers no Remove. Store a removed secret as null (a nullable property or column).
+The Style demo's Filament form has one with a stored value and one without.
+
 ## Date picker
 
 `<x-date-picker>` is one component for every date or date range: a

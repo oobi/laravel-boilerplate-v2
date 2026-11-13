@@ -26,12 +26,14 @@ return [
         'manage_roles' => 'Manage roles',
         'view_audit_log' => 'View audit log (shows names and email addresses)',
         'export_audit_log' => 'Export audit log',
+        'manage_settings' => 'Manage settings',
     ],
 
     'categories' => [
         'user_management' => 'User management',
         'system_administration' => 'System administration',
         'audit_log' => 'Audit log',
+        'settings' => 'Settings',
     ],
 
 ];

@@ -8,6 +8,7 @@ use App\Livewire\Admin\Audit\ListAuditEntries;
 use App\Livewire\Admin\Audit\ShowAuditEntry;
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Settings\OrganisationSettings;
 use App\Support\Audit\Audit;
 use App\Support\Audit\AuditActor;
 use App\Support\Audit\AuditCategory;
@@ -32,7 +33,7 @@ class AuditFeedTest extends TestCase
 
         // 3 am on Thursday 12 November in UTC is 1 pm the same day in Brisbane.
         $this->travelTo(Carbon::parse('2026-11-12 03:00:00', 'UTC'));
-        config(['app.display_timezone' => 'Australia/Brisbane']);
+        OrganisationSettings::fake(['timezone' => 'Australia/Brisbane']);
     }
 
     public function test_an_entry_reads_as_a_sentence_with_the_actor_and_subject_linked(): void
@@ -131,7 +132,7 @@ class AuditFeedTest extends TestCase
     {
         $this->list($this->viewer())->assertSee('Times in Brisbane time (AEST).');
 
-        config(['app.display_timezone' => null]);
+        OrganisationSettings::fake(['timezone' => 'UTC']);
 
         $this->list($this->viewer())->assertSee('Times in UTC.');
     }
@@ -158,7 +159,7 @@ class AuditFeedTest extends TestCase
 
     public function test_a_display_time_zone_that_isnt_one_is_refused(): void
     {
-        config(['app.display_timezone' => 'Brisbane']);
+        OrganisationSettings::fake(['timezone' => 'Brisbane']);
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -167,7 +168,7 @@ class AuditFeedTest extends TestCase
 
     public function test_a_zone_with_no_lettered_abbreviation_reads_as_an_offset(): void
     {
-        config(['app.display_timezone' => 'Asia/Dubai']);
+        OrganisationSettings::fake(['timezone' => 'Asia/Dubai']);
 
         $this->assertSame('UTC+4', DisplayTimezone::abbreviation(now()));
         $this->assertSame('Dubai time (UTC+4)', DisplayTimezone::label());

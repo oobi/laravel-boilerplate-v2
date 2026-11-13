@@ -40,6 +40,7 @@ enum SystemPermission: string implements SystemPermissionDefinition
     case MANAGE_ROLES = 'manage roles';
     case VIEW_AUDIT_LOG = 'view audit log';
     case EXPORT_AUDIT_LOG = 'export audit log';
+    case MANAGE_SETTINGS = 'manage settings';
 
     public function label(): string
     {
@@ -54,6 +55,7 @@ enum SystemPermission: string implements SystemPermissionDefinition
             self::MANAGE_ROLES => __('permissions.labels.manage_roles'),
             self::VIEW_AUDIT_LOG => __('permissions.labels.view_audit_log'),
             self::EXPORT_AUDIT_LOG => __('permissions.labels.export_audit_log'),
+            self::MANAGE_SETTINGS => __('permissions.labels.manage_settings'),
         };
     }
 
@@ -72,6 +74,8 @@ enum SystemPermission: string implements SystemPermissionDefinition
 
             self::VIEW_AUDIT_LOG,
             self::EXPORT_AUDIT_LOG => __('permissions.categories.audit_log'),
+
+            self::MANAGE_SETTINGS => __('permissions.categories.settings'),
         };
     }
 
@@ -97,7 +101,8 @@ enum SystemPermission: string implements SystemPermissionDefinition
             self::SET_USER_PASSWORDS => [self::VIEW_USERS],
 
             self::MANAGE_ROLES,
-            self::VIEW_AUDIT_LOG => [self::ACCESS_ADMIN_PANEL],
+            self::VIEW_AUDIT_LOG,
+            self::MANAGE_SETTINGS => [self::ACCESS_ADMIN_PANEL],
 
             self::EXPORT_AUDIT_LOG => [self::VIEW_AUDIT_LOG],
 

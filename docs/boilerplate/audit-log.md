@@ -20,8 +20,8 @@ Without any work from you:
 - **Records:** every create, change, delete and restore on an `Auditable`
   model, with before and after values. Core opts in `User` and `Role`; the
   teams tier opts in `Team`, `TeamInvitation` and `Domain`.
-- **System:** scheduled tasks that finish, fail or are skipped, and queued jobs
-  that fail.
+- **System:** scheduled tasks that finish, fail or are skipped, queued jobs
+  that fail, and settings changed on the Settings screen.
 
 Each entry stores the actor (a person, a visitor, a queued job, the scheduler or
 the system), their name at the time, who was impersonating them if anyone, the
@@ -291,7 +291,7 @@ class has gone reads as the alias in words ("Import Run 5" from `import_run`).
 |---|---|---|
 | `AUDIT_ENABLED` | `true` | `false` writes nothing and removes the screens, the nav item, the panel and the daily clean. Existing entries stay, and the two permissions stay on the Roles screen. Re-cache config and routes after changing it. |
 | `AUDIT_RETENTION_DAYS` | `365` | Entries older than this are deleted daily (`activitylog:clean`, scheduled). `0` keeps them forever. A deleted person's name stays on their entries until then. |
-| `APP_DISPLAY_TIMEZONE` | the app's timezone (UTC) | The zone the audit screens show times in, named on the page ("Times in Brisbane time (AEST)"): the list, its day headings and date filter, the detail page and the Activity panel. Times are stored in UTC either way. Not a real zone stops the audit screens and a user's Activity panel with an error saying so. |
+| `APP_DISPLAY_TIMEZONE` | the app's timezone (UTC) | Only the first value of the Settings screen's time zone, set when `php artisan migrate` first runs the settings migration (see `docs/boilerplate/settings.md`). That zone is what the audit screens show times in, named on the page ("Times in Brisbane time (AEST)"): the list, its day headings and date filter, the detail page and the Activity panel. Times are stored in UTC either way. |
 | `AUDIT_LOG_SCHEDULE_ROUTINE` | `true` | Scheduled tasks that finish or are skipped. Failures are always logged. Turn it off if an every-minute task makes it noisy. |
 
 `config/audit.php` also holds the `redact` list and `max_value_length`.
