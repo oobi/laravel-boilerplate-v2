@@ -25,6 +25,7 @@ enum SystemPermission: string implements SystemPermissionDefinition
     case MANAGE_ROLES = 'manage roles';
     case VIEW_AUDIT_LOG = 'view audit log';
     case EXPORT_AUDIT_LOG = 'export audit log';
+    case MANAGE_SETTINGS = 'manage settings';
 
     public function label(): string { /* ... */ }
     public function category(): string { /* ... */ }
@@ -154,8 +155,8 @@ page load. So:
 
 - **An area's read floor goes on its route** as `can:` middleware (the users
   group: `view users`; roles: `manage roles`; the audit log: `view audit log`;
-  the teams admin group:
-  `view teams`), as well as in the page's `mount()`. Someone who loses it with
+  settings: `manage settings`; the teams admin group: `view teams`), as well
+  as in the page's `mount()`. Someone who loses it with
   the page open is refused at their next click, not at their next reload.
 - **Our own route middleware is registered as persistent**:
   `DenyLowAssuranceSessions` (AppServiceProvider) and the teams tier's

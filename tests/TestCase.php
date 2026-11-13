@@ -12,6 +12,7 @@ use App\Support\Navigation\Registry\NavRegistry;
 use App\Support\Panels\Registry\PanelRegistry;
 use App\Support\Roles\RoleScopeRegistry;
 use App\Support\Roles\SystemPermissionRegistry;
+use App\Support\Settings\SettingsSections;
 use App\Support\TrustedHosts;
 use App\Support\UserDeletionGuards;
 use App\Support\UserListColumns;
@@ -52,6 +53,7 @@ abstract class TestCase extends BaseTestCase
         UserDeletionGuards::flush();
         UserListColumns::flush();
         AuditDisplay::flush();
+        SettingsSections::flush();
         // Symfony keeps trusted hosts statically too; a test run as production sets them.
         Request::setTrustedHosts([]);
 

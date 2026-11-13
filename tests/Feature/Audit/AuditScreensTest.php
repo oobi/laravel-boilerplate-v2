@@ -1383,7 +1383,7 @@ class AuditScreensTest extends TestCase
             $this->assertFalse($app['config']->get('activitylog.enabled'));
             $this->assertFalse($app['router']->has('audit.index'));
             $this->assertFalse($app['router']->has('audit.export'));
-            $this->assertSame([], NavRegistry::group('system')->items);
+            $this->assertNotContains('audit', collect(NavRegistry::group('system')->items)->pluck('name'));
             $this->assertFalse($hasPanel());
         } finally {
             foreach ($previous as $name => $value) {

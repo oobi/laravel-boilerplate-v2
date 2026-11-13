@@ -15,6 +15,7 @@ use App\Livewire\Admin\Audit\ShowAuditEntry;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Roles\CreateRole;
 use App\Livewire\Admin\Roles\ManageRoles;
+use App\Livewire\Admin\Settings\EditSettings;
 use App\Livewire\Admin\Users\CreateUser;
 use App\Livewire\Admin\Users\EditUser;
 use App\Livewire\Admin\Users\ListUsers;
@@ -116,6 +117,10 @@ Route::domain($adminHost)->prefix($adminPath)->group(function (): void {
             Route::get('/create', CreateRole::class)->name('create');
             Route::get('/{role}/edit', ManageRoles::class)->name('edit');
         });
+
+        Route::get('/settings', EditSettings::class)
+            ->middleware('can:'.SystemPermission::MANAGE_SETTINGS->value)
+            ->name('settings.edit');
 
         if (config('activitylog.enabled')) {
             Route::prefix('audit')->name('audit.')->group(function (): void {

@@ -68,6 +68,10 @@ Not exhaustive.
   `use Auditable;`. Admin > System > Audit log, behind its own `view audit log`
   and `export audit log` permissions. Switched off with `AUDIT_ENABLED=false`.
   See `docs/boilerplate/audit-log.md`.
+- **Settings**: the organisation's choices (the display time zone), made on
+  Admin > System > Settings behind `manage settings` instead of in `.env`.
+  spatie/laravel-settings classes; apps and add-ons add sections with
+  `SettingsSections::add()`. See `docs/boilerplate/settings.md`.
 - **Admin page composition (panels)** — Show/Edit admin pages are built
   from small, registered "panel" classes rather than one monolithic form/
   infolist, specifically so additive tiers like Teams can add their own

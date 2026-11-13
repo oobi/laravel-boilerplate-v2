@@ -17,10 +17,12 @@ use App\Http\Responses\RegisterResponse;
 use App\Http\Responses\VerifyEmailResponse;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Settings\OrganisationSettings;
 use App\Support\AccountArea\AccountAreaRegistry;
 use App\Support\AccountArea\AccountShell;
 use App\Support\Auth\MailedLinks;
 use App\Support\Auth\PasswordChecks;
+use App\Support\DisplayTimezone;
 use App\Support\Roles\AdminRoleScopes;
 use App\Support\Theme\DaisyColor;
 use App\Support\Theme\StatusDot;
@@ -35,6 +37,7 @@ use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\Facades\FilamentIcon;
+use Filament\Support\Facades\FilamentTimezone;
 use Filament\Support\Facades\FilamentView;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -106,10 +109,24 @@ class AppServiceProvider extends ServiceProvider
 
         AdminRoleScopes::define();
 
+        $this->registerDisplayTimezone();
+
         // Account pages (profile) opened from the admin area keep the admin shell while the user can still enter it.
         AccountAreaRegistry::register('admin', fn (User $user): ?AccountShell => $user->canAccessAdmin() ? new AccountShell('layouts.admin') : null);
 
         User::observe(UserObserver::class);
+    }
+
+    /**
+     * Times are stored in UTC and shown in the organisation's time zone, chosen
+     * on the Settings screen. Both are closures, asked only when a time is
+     * shown, so installing and migrating never read the settings table.
+     * Filament's own date columns and pickers follow it too.
+     */
+    private function registerDisplayTimezone(): void
+    {
+        DisplayTimezone::resolveUsing(fn (): string => app(OrganisationSettings::class)->timezone);
+        FilamentTimezone::set(fn (): string => DisplayTimezone::name());
     }
 
     /**

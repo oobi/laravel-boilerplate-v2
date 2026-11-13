@@ -89,6 +89,7 @@ return [
         'schedule_task_skipped' => 'Scheduled task skipped',
         'queue_job_failed' => 'Queued job failed',
         'audit_exported' => 'Audit log exported',
+        'settings_updated' => 'Settings changed',
     ],
 
     /* The entry as a sentence on its detail page; see AuditDisplay::summary(). */
@@ -112,6 +113,7 @@ return [
         'impersonation_left' => ':actor stopped impersonating :subject',
         'role_permissions_changed' => ':actor changed the permissions of :subject',
         'audit_exported' => ':actor exported the audit log',
+        'settings_updated' => ':actor changed the settings',
     ],
 
     /* A model's own events, as ":actor {verb} :subject". */
@@ -138,6 +140,7 @@ return [
         'before' => 'Before',
         'after' => 'After',
         'holder_count' => 'People who held it',
+        'changed' => 'Changed',
         'google_email' => 'Google email address',
     ],
 
