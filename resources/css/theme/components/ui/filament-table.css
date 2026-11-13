@@ -749,10 +749,16 @@ th.fi-ta-selection-cell,
 /*
 | A feed: one cell per row that says everything (the audit log). The column
 | header would only repeat it, so it is hidden from sight but still names the
-| column for a screen reader.
+| column for a screen reader. With the header out of the layout, the browser
+| shares the spare width with the row menu too, leaving a gap before it; the
+| entry's cell takes all of it instead.
 */
 .ui-feed-rows .fi-ta-table > thead {
     @apply sr-only;
+}
+
+.ui-feed-rows .fi-ta-table > tbody > tr > td.fi-ta-cell:not(:has(> .fi-ta-actions)) {
+    width: 100%;
 }
 
 /*
