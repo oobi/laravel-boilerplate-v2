@@ -187,7 +187,8 @@ class ShowAuditEntry extends Component implements HasSchemas
 
     /**
      * Each changed attribute, before and after. A created record has no "before",
-     * and a deleted one no "after", so those columns go.
+     * and a deleted one no "after", so those columns go. Labels recorded with the
+     * changes (Audit::recordChanges()) win over the field's name in words.
      *
      * @return Collection<int, array{field: string, label: string, before: array{text: string, quiet: bool}, after: array{text: string, quiet: bool, changed: array{0: string, 1: string, 2: string}|null}}>
      */
@@ -196,11 +197,12 @@ class ShowAuditEntry extends Component implements HasSchemas
         $changes = collect($this->entry->attribute_changes ?? []);
         $before = collect($changes->get('old', []));
         $after = collect($changes->get('attributes', []));
+        $labels = collect($changes->get('labels', []));
 
         return $before->keys()->merge($after->keys())->unique()->sort()->values()
             ->map(fn (string $field): array => [
                 'field' => $field,
-                'label' => AuditDisplay::fieldLabel($field),
+                'label' => is_string($labels->get($field)) ? $labels->get($field) : AuditDisplay::fieldLabel($field),
                 'before' => $this->shown($before->get($field)),
                 'after' => [
                     ...$this->shown($after->get($field)),

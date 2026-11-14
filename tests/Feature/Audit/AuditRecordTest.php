@@ -204,6 +204,29 @@ class AuditRecordTest extends TestCase
         $this->assertSame(str_repeat('a', 9).'...', $this->recorded()->getProperty('note'));
     }
 
+    public function test_vetted_changes_keep_values_whatever_their_names_and_are_still_cut(): void
+    {
+        config(['audit.max_value_length' => 25]);
+
+        Audit::recordChanges('settings.updated', [
+            'ask.daily_token_allowance' => ['label' => 'Daily token allowance', 'before' => 100, 'after' => 200],
+            'ask.greeting' => ['label' => 'Greeting', 'before' => null, 'after' => str_repeat('a', 30)],
+        ], category: AuditCategory::SYSTEM);
+
+        $changes = $this->recorded()->attribute_changes;
+        $this->assertSame(['ask.daily_token_allowance' => 100, 'ask.greeting' => null], $changes['old']);
+        $this->assertSame(['ask.daily_token_allowance' => 200, 'ask.greeting' => str_repeat('a', 25).'...'], $changes['attributes']);
+        $this->assertSame(['ask.daily_token_allowance' => 'Daily token allowance', 'ask.greeting' => 'Greeting'], $changes['labels']);
+    }
+
+    public function test_changes_logged_after_vetted_ones_are_redacted_by_name_again(): void
+    {
+        Audit::recordChanges('settings.updated', ['ask.token' => ['label' => 'Token', 'before' => 1, 'after' => 2]]);
+        activity()->withChanges(['attributes' => ['password' => 'secret-value']])->log('Changed');
+
+        $this->assertStringNotContainsString('secret-value', DB::table('activity_log')->orderByDesc('id')->value('attribute_changes'));
+    }
+
     public function test_unreadable_properties_read_as_empty(): void
     {
         $this->assertSame([], (new AuditProperties)->get(new AuditEntry, 'properties', 'not json', [])->all());

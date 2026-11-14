@@ -7,6 +7,7 @@ return [
     'title' => 'Settings',
     'description' => 'Choices for the whole organisation. Changes apply straight away, for everyone.',
     'saved' => 'Settings saved',
+    'unchanged' => 'Nothing changed',
 
     'organisation' => 'Organisation',
     'timezone' => 'Time zone',

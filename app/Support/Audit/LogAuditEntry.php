@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Audit;
 
+use App\Models\AuditEntry;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -57,10 +58,11 @@ class LogAuditEntry extends LogActivityAction
             ->flatMap(fn (array $values): array => array_keys($values))
             ->all();
         $sensitiveAttributes = [...$hiddenAttributes, ...$this->attributesOutsideVisible($subject, $changed)];
+        $byName = ! ($activity instanceof AuditEntry && $activity->changesVetted);
 
         $activity->attribute_changes = $changes->map(fn (mixed $values, int|string $key): mixed => in_array($key, ['attributes', 'old'], true) && is_array($values)
-            ? $this->sanitize($values, $sensitiveAttributes)
-            : $this->sanitize([$key => $values], $sensitiveAttributes)[$key]);
+            ? $this->sanitize($values, $sensitiveAttributes, byName: $byName)
+            : $this->sanitize([$key => $values], $sensitiveAttributes, byName: $byName)[$key]);
 
         $activity->properties = collect($this->sanitize(collect($activity->properties ?? [])->all(), $hiddenAttributes));
     }
@@ -241,25 +243,27 @@ class LogAuditEntry extends LogActivityAction
      * Redact sensitive names at any depth, and cut long strings. A model or collection
      * is taken apart here, never serialized as it is. A null stays null,
      * so "set" and "cleared" stay distinguishable without revealing anything.
+     * Without $byName, as for changes the caller vetted, names aren't checked;
+     * a model inside is still redacted as usual.
      *
      * @param  array<array-key, mixed>  $values
      * @param  list<string>  $sensitiveAttributes
      * @return array<array-key, mixed>
      */
-    private function sanitize(array $values, array $sensitiveAttributes = [], bool $cutStrings = true): array
+    private function sanitize(array $values, array $sensitiveAttributes = [], bool $cutStrings = true, bool $byName = true): array
     {
-        return collect($values)->map(function (mixed $value, int|string $key) use ($sensitiveAttributes, $cutStrings): mixed {
-            if ($value !== null && $this->isSensitive((string) $key, $sensitiveAttributes)) {
+        return collect($values)->map(function (mixed $value, int|string $key) use ($sensitiveAttributes, $cutStrings, $byName): mixed {
+            if ($byName && $value !== null && $this->isSensitive((string) $key, $sensitiveAttributes)) {
                 return self::REDACTED;
             }
 
             return match (true) {
                 $value instanceof Model => $this->modelProperties($value, $sensitiveAttributes, $cutStrings),
-                $value instanceof Enumerable => $this->sanitize($value->all(), $sensitiveAttributes, $cutStrings),
-                is_array($value) => $this->sanitize($value, $sensitiveAttributes, $cutStrings),
+                $value instanceof Enumerable => $this->sanitize($value->all(), $sensitiveAttributes, $cutStrings, $byName),
+                is_array($value) => $this->sanitize($value, $sensitiveAttributes, $cutStrings, $byName),
                 is_string($value) && $cutStrings => Str::limit($value, config()->integer('audit.max_value_length')),
                 // Anything else as it will be stored, so its own sensitive names are seen too.
-                is_object($value) => is_array($stored = $this->storable($value)) ? $this->sanitize($stored, $sensitiveAttributes, $cutStrings) : $stored,
+                is_object($value) => is_array($stored = $this->storable($value)) ? $this->sanitize($stored, $sensitiveAttributes, $cutStrings, $byName) : $stored,
                 default => $value,
             };
         })->all();

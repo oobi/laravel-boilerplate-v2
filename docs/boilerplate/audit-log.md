@@ -209,6 +209,14 @@ Audit::record(
   redacted, and so are its loaded relations and any in a collection. A model
   inside some other object (an `Arrayable` of your own) isn't. Redaction applies
   here too.
+- **Values whose secrets you mark yourself** go in with
+  `Audit::recordChanges($event, ['field' => ['label' => ..., 'before' => ...,
+  'after' => ...]], category:, by:)` and show as the entry's Changes table under
+  those labels. No value is redacted for its name, so pass a secret as
+  `LogAuditEntry::REDACTED`; long strings are still cut. Settings use it,
+  because a secret setting is known in code (encrypted, or shown with a
+  `SecretInput`). Where you can't say which values are secret, use `record()`'s
+  properties and let the name list catch them.
 - **`by:`** sets the causer when it isn't the logged-in user. **`at:`** backdates
   an entry, for an import.
 - **`record()` throws** if the entry can't be written, so in a transaction it
