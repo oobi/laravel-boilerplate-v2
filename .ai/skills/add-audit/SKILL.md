@@ -16,6 +16,7 @@ before changing anything. This skill is the short procedure.
 | Something that happened that isn't one model save (sent, approved, imported, a relation sync) or a write that fires no model event (query-builder `update()`/`delete()`/`insert()`/`upsert()`, `saveQuietly()`, `updateQuietly()`, `Model::withoutEvents()`) | `App\Support\Audit\Audit::record($event, $subject, $properties, ...)` |
 | Something that must carry on even if the log can't be written (rare: login style events) | `Audit::attempt(...)` |
 | Work done by an import or integration, not a person | wrap it in `Audit::as('import', fn () => ..., actorName: '...')` |
+| Values that changed, where your code knows which are secret (settings) | `Audit::recordChanges($event, ['field' => ['label' => ..., 'before' => ..., 'after' => ...]], ...)`: a Changes table, no name-based redaction, so pass a secret as `LogAuditEntry::REDACTED` |
 | Bulk work that would flood the log | `Audit::withoutLogging(fn () => ...)`, then one `Audit::record()` summarising it |
 
 ## Procedure: a model

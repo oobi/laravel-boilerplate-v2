@@ -11,6 +11,7 @@ use App\Livewire\Admin\Users\ShowUser;
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Settings\OrganisationSettings;
+use App\Support\Audit\LogAuditEntry;
 use App\Support\DisplayTimezone;
 use App\Support\Settings\SettingsSections;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -18,6 +19,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\LaravelSettings\Migrations\SettingsMigrator;
 use Tests\Fixtures\PlainSecretWidgetSection;
+use Tests\Fixtures\WidgetNoteSection;
 use Tests\Fixtures\WidgetSettings;
 use Tests\Fixtures\WidgetSettingsSection;
 use Tests\TestCase;
@@ -32,6 +34,7 @@ class EditSettingsTest extends TestCase
         parent::setUp();
 
         WidgetSettingsSection::$visible = true;
+        WidgetNoteSection::$visible = true;
     }
 
     public function test_only_people_who_manage_settings_see_the_link_and_reach_the_screen(): void
@@ -66,9 +69,12 @@ class EditSettingsTest extends TestCase
         $entry = AuditEntry::query()->where('event', 'settings.updated')->sole();
         $this->assertTrue($entry->causer->is($admin));
         $this->assertSame('system', $entry->log_name);
-        $this->assertSame(['organisation.timezone'], $entry->properties['changed']);
-        $this->assertSame(['organisation.timezone' => 'UTC'], $entry->properties['before']);
-        $this->assertSame(['organisation.timezone' => 'Australia/Brisbane'], $entry->properties['after']);
+        $this->assertSame(['organisation.timezone' => 'UTC'], $entry->attribute_changes['old']);
+        $this->assertSame(['organisation.timezone' => 'Australia/Brisbane'], $entry->attribute_changes['attributes']);
+
+        $this->actingAs(User::factory()->withPermission(SystemPermission::VIEW_AUDIT_LOG)->create())->get(route('audit.show', $entry))
+            ->assertOk()
+            ->assertSeeInOrder(['Time zone', 'organisation.timezone', 'UTC', 'Australia/Brisbane']);
     }
 
     public function test_a_save_that_changes_nothing_logs_nothing(): void
@@ -76,7 +82,8 @@ class EditSettingsTest extends TestCase
         Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_SETTINGS)->create())
             ->test(EditSettings::class)
             ->call('save')
-            ->assertHasNoFormErrors();
+            ->assertHasNoFormErrors()
+            ->assertNotified(__('settings.unchanged'));
 
         $this->assertFalse(AuditEntry::query()->where('event', 'settings.updated')->exists());
     }
@@ -125,9 +132,58 @@ class EditSettingsTest extends TestCase
         $this->assertSame('secret-key', $widgets->api_key);
 
         $entry = AuditEntry::query()->where('event', 'settings.updated')->sole();
-        $this->assertSame(['widgets.greeting', 'widgets.api_key'], $entry->properties['changed']);
-        $this->assertSame(['widgets.greeting' => 'Welcome'], $entry->properties['after']);
-        $this->assertStringNotContainsString('secret-key', $entry->getRawOriginal('properties'));
+        $this->assertSame(['widgets.greeting' => 'Hello', 'widgets.api_key' => null], $entry->attribute_changes['old']);
+        $this->assertSame(['widgets.greeting' => 'Welcome', 'widgets.api_key' => LogAuditEntry::REDACTED], $entry->attribute_changes['attributes']);
+        $this->assertSame(['widgets.greeting' => 'Widget greeting', 'widgets.api_key' => 'Widget key'], $entry->attribute_changes['labels']);
+        $this->assertStringNotContainsString('secret-key', $entry->getRawOriginal('attribute_changes'));
+        $this->assertStringNotContainsString('secret-key', (string) $entry->getRawOriginal('properties'));
+    }
+
+    public function test_a_direct_save_ignores_a_setting_its_section_has_no_field_for(): void
+    {
+        $this->addWidgetSettings();
+        $admin = User::factory()->withPermission(SystemPermission::MANAGE_SETTINGS)->create();
+
+        $changed = app(SaveSettings::class)->handle(['widgets' => ['internal_note' => 'Sneaky']], $admin);
+
+        $this->assertSame([], $changed);
+        $this->assertSame('internal-only-note', app(WidgetSettings::class)->refresh()->internal_note);
+    }
+
+    public function test_a_section_sharing_a_settings_class_cant_write_what_only_a_hidden_section_shows(): void
+    {
+        $this->addWidgetSettings();
+        SettingsSections::add(WidgetNoteSection::class);
+        WidgetNoteSection::$visible = false;
+        $admin = User::factory()->withPermission(SystemPermission::MANAGE_SETTINGS)->create();
+        $sneaky = ['internal_note' => 'Sneaky'];
+
+        $changed = app(SaveSettings::class)->handle(['widgets' => $sneaky, 'widget_notes' => $sneaky], $admin);
+
+        $this->assertSame([], $changed);
+        $this->assertSame('internal-only-note', app(WidgetSettings::class)->refresh()->internal_note);
+
+        WidgetNoteSection::$visible = true;
+        $this->assertSame(['widgets.internal_note'], app(SaveSettings::class)->handle(['widget_notes' => $sneaky], $admin));
+    }
+
+    public function test_a_settings_change_keeps_values_whatever_their_names_and_hides_every_secret(): void
+    {
+        $this->addWidgetSettings();
+        SettingsSections::add(WidgetNoteSection::class);
+
+        Livewire::actingAs(User::factory()->withPermission(SystemPermission::MANAGE_SETTINGS)->create())
+            ->test(EditSettings::class)
+            ->set('data.widget_notes.daily_token_allowance', 500)
+            ->set('data.widgets.webhook_secret', ['value' => 'new-hook-pass'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $entry = AuditEntry::query()->where('event', 'settings.updated')->sole();
+        $this->assertSame(['widgets.webhook_secret' => LogAuditEntry::REDACTED, 'widgets.daily_token_allowance' => 100], $entry->attribute_changes['old']);
+        $this->assertSame(['widgets.webhook_secret' => LogAuditEntry::REDACTED, 'widgets.daily_token_allowance' => 500], $entry->attribute_changes['attributes']);
+        $this->assertStringNotContainsString('plain-secret-value', $entry->getRawOriginal('attribute_changes'));
+        $this->assertStringNotContainsString('new-hook-pass', $entry->getRawOriginal('attribute_changes'));
     }
 
     public function test_a_section_the_person_cant_see_is_neither_shown_nor_saved(): void
@@ -202,7 +258,9 @@ class EditSettingsTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertNull(app(WidgetSettings::class)->refresh()->api_key);
-        $this->assertSame(['widgets.api_key'], AuditEntry::query()->where('event', 'settings.updated')->latest('id')->first()->properties['changed']);
+        $cleared = AuditEntry::query()->where('event', 'settings.updated')->latest('id')->first()->attribute_changes;
+        $this->assertSame(['widgets.api_key' => LogAuditEntry::REDACTED], $cleared['old']);
+        $this->assertSame(['widgets.api_key' => null], $cleared['attributes']);
     }
 
     public function test_with_no_secret_stored_the_field_offers_set_and_no_clear(): void
@@ -324,6 +382,7 @@ class EditSettingsTest extends TestCase
         $migrator->addEncrypted('widgets.api_key', null);
         $migrator->add('widgets.internal_note', 'internal-only-note');
         $migrator->add('widgets.webhook_secret', 'plain-secret-value');
+        $migrator->add('widgets.daily_token_allowance', 100);
 
         SettingsSections::add(WidgetSettingsSection::class);
     }

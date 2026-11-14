@@ -54,15 +54,32 @@ A section can narrow it further: `visible()` false hides the section and
 ## Saving and the audit log
 
 `App\Actions\Settings\SaveSettings` writes each visible section's values to
-its settings class: only that class's own properties, never a locked one
-(spatie's `lock()`). It records one `settings.updated` entry (System category)
-when anything changed, inside the same transaction:
+its settings class: only through the fields that section defines, and never a
+locked setting (spatie's `lock()`). Whatever else is passed is ignored, so a
+command or tool calling the action directly can't reach a setting through a
+section with no field for it, even when two sections share one settings class
+and only one is visible to that person.
 
-- `changed`: every changed setting, as `group.name`
-- `before` / `after`: their values, **leaving out encrypted settings**
-  (`encrypted()` on the class), which are named in `changed` only
+**Access is the section's `visible()` and `lock()`, never a field's
+condition.** A field hidden or disabled by a condition still counts as the
+section's field when the action is called directly: judging the condition needs
+the screen's whole state. To keep a setting from some people, give it its own
+section with a narrower `visible()`; to keep it from everyone, lock it. The
+values aren't validated in the action either: the screen validates them, and a
+direct caller must pass valid ones.
 
-A save that changes nothing records nothing.
+It records one `settings.updated` entry (System category) when anything
+changed, inside the same transaction, with `Audit::recordChanges()`: the
+detail page's Changes table shows each setting under its field's label, before
+and after. **A secret** (encrypted with `encrypted()` on the class, or shown
+with a `SecretInput`) is listed with its values as `[redacted]`. Nothing else
+is redacted: settings are defined in code and their secrets are marked there,
+so the audit log's name list (`*token*` and the rest) would only hide ordinary
+values. Entries written before this kept `changed`, `before` and `after` in
+their properties, and still show them as event data.
+
+A save that changes nothing records nothing, and the screen says "Nothing
+changed".
 
 ## Adding a section
 
@@ -121,7 +138,9 @@ A save that changes nothing records nothing.
    Organisation section is 10), `settings()` (the class), `visible()` and
    `components()`. Name each field after a property of the class; the screen
    fills them from it and `SaveSettings` writes them back. Put the fields in a
-   Filament `Section` with a heading, as core's does.
+   Filament `Section` with a heading, as core's does. Give fields plain labels:
+   `SaveSettings` reads them for the audit log outside the screen, where a label
+   built from the form's state or the signed-in user has nothing to go on.
 
    - The screen fills only the fields a section shows, and never an encrypted
      setting. Show a secret with `App\Support\Filament\SecretInput` (see
@@ -185,5 +204,5 @@ item. On a merge:
 - An app whose screen doesn't use `SettingsSections` won't show sections core
   or add-ons register later; move its sections onto the registry to get them.
   Until then core's `tests/Feature/Admin/Settings/EditSettingsTest.php` fails
-  there (it expects the registry and `SaveSettings`' before and after values):
+  there (it expects the registry and `SaveSettings`' Changes table):
   keep the app's own tests for its screen and drop or adapt core's.

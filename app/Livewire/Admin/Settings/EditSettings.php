@@ -55,12 +55,14 @@ class EditSettings extends Component implements HasSchemas
     {
         Gate::authorize(SystemPermission::MANAGE_SETTINGS);
 
-        $saveSettings->handle($this->form->getState(), Auth::user());
+        $changed = $saveSettings->handle($this->form->getState(), Auth::user());
 
         // From what's now stored: a secret field goes back to saying whether one is saved, and drops what was typed.
         $this->fillForm();
 
-        Notification::make()->title(__('settings.saved'))->success()->send();
+        $changed === []
+            ? Notification::make()->title(__('settings.unchanged'))->info()->send()
+            : Notification::make()->title(__('settings.saved'))->success()->send();
     }
 
     public function render(): View

@@ -33,6 +33,13 @@ class AuditEntry extends Activity
     /** @use HasFactory<AuditEntryFactory> */
     use HasFactory;
 
+    /**
+     * Set by Audit::recordChanges() while the entry is written: the caller
+     * vetted its changes, so LogAuditEntry redacts none of them by name. Never
+     * stored.
+     */
+    public bool $changesVetted = false;
+
     /** @return array<string, string> */
     protected function casts(): array
     {

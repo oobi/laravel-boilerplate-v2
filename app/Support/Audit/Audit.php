@@ -50,6 +50,39 @@ final class Audit
     }
 
     /**
+     * Record values that changed, shown as the entry's Changes table, for
+     * values the caller has vetted itself: settings, whose secrets are marked
+     * in code (encrypted, or shown with a SecretInput). So no value is
+     * redacted for its name, as properties are; pass a secret's value as
+     * LogAuditEntry::REDACTED. Long strings are still cut.
+     *
+     * @param  string  $event  dotted and past tense, e.g. `settings.updated`
+     * @param  array<string, array{label: string, before: mixed, after: mixed}>  $changes  keyed by field
+     */
+    public static function recordChanges(
+        string $event,
+        array $changes,
+        BackedEnum|string $category = AuditCategory::DATA,
+        ?Model $by = null,
+    ): void {
+        $changes = collect($changes);
+
+        activity()
+            ->useLog($category)
+            ->event($event)
+            ->withChanges([
+                'old' => $changes->map(fn (array $change): mixed => $change['before'])->all(),
+                'attributes' => $changes->map(fn (array $change): mixed => $change['after'])->all(),
+                'labels' => $changes->map(fn (array $change): string => $change['label'])->all(),
+            ])
+            ->when($by !== null, fn ($logger) => $logger->causedBy($by))
+            ->tap(function (AuditEntry $entry): void {
+                $entry->changesVetted = true;
+            })
+            ->log(self::describe($event));
+    }
+
+    /**
      * Record something that must carry on even if the audit log can't: a login, a
      * logout, a scheduled task. A failure is reported instead of thrown. The
      * transaction is a savepoint inside any surrounding one, which Postgres would
